@@ -1,9 +1,27 @@
+#
+# Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+# Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
 import os
 import glob
 import re
 
 MARK_ID = "###->"
 MLNX_KFG_MARKER = "mellanox"
+SDK_MARKER = "mellanox_sdk"
 HW_MGMT_MARKER = "mellanox_hw_mgmt"
 SLK_PATCH_LOC = "src/sonic-linux-kernel/patch/"
 SLK_KCONFIG = SLK_PATCH_LOC + "kconfig-inclusions"
@@ -13,6 +31,7 @@ NON_UP_PATCH_DIR = "platform/mellanox/non-upstream-patches/"
 NON_UP_PATCH_LOC = NON_UP_PATCH_DIR + "patches"
 NON_UP_PATCH_DIFF = NON_UP_PATCH_DIR + "series.patch"
 KCFG_HDR_RE = "\[(.*)\]"
+KERNEL_BACKPORTS = "kernel_backports"
  # kconfig_inclusion headers to consider
 HDRS = ["common", "amd64"]
 
@@ -169,3 +188,22 @@ class Action():
 
     def write_user_out(self):
         pass
+
+
+def build_commit_description(changes):
+    if not changes:
+        return ""
+    content = "\n"
+    content = content + " ## Patch List\n"
+    for key, value in changes.items():
+        content = content + f"* {key} : {value}\n"
+    return content
+
+def parse_id(id_):
+    if id_ and id_ != "N/A":
+        id_ = "https://github.com/torvalds/linux/commit/" + id_
+    
+    if id_ == "N/A":
+        id_ = ""
+
+    return id_
