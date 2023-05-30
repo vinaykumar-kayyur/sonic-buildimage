@@ -24,7 +24,7 @@ class TestJ2Files(TestCase):
         self.t0_minigraph_two_mgmt = os.path.join(self.test_dir, 't0-sample-graph-two-mgmt.xml')
         self.t0_mvrf_minigraph_nomgmt = os.path.join(self.test_dir, 't0-sample-graph-mvrf-nomgmt.xml')
         self.pc_minigraph = os.path.join(self.test_dir, 'pc-test-graph.xml')
-        self.t0_port_config = os.path.join(self.test_dir, 't0-sample-port-config.ini')
+        self.t0_port_config = os.path.join(self.test_dir, 't0-sample-port-config-J2.ini')
         self.t0_port_config_tiny = os.path.join(self.test_dir, 't0-sample-port-config-tiny.ini')
         self.l1_l3_port_config = os.path.join(self.test_dir, 'l1-l3-sample-port-config.ini')
         self.t0_7050cx3_port_config = os.path.join(self.test_dir, 't0_7050cx3_d48c8_port_config.ini')
