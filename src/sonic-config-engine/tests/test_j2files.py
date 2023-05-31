@@ -32,6 +32,8 @@ class TestJ2Files(TestCase):
         self.radv_test_minigraph = os.path.join(self.test_dir, 'radv-test-sample-graph.xml')
         self.no_ip_helper_minigraph = os.path.join(self.test_dir, 't0-sample-no-ip-helper-graph.xml')
         self.output_file = os.path.join(self.test_dir, 'output')
+        self.nokia_ixr7250e_36x100g_t2_minigraph = os.path.join(self.test_dir, 'sample-nokia-ixr7250e-36x100g-t2-minigraph.xml')
+        self.nokia_ixr7250e_36x400g_t2_minigraph = os.path.join(self.test_dir, 'sample-nokia-ixr7250e-36x400g-t2-minigraph.xml')
         os.environ["CFGGEN_UNIT_TESTING"] = "2"
 
     def run_script(self, argument):
@@ -265,8 +267,8 @@ class TestJ2Files(TestCase):
 
         for template_file, cfg_file, sample_output_file in [(qos_file, 'qos_config.j2', qos_sample_output),
                                                             (buffer_file, 'buffers_config.j2', buffer_sample_output) ]:
-            argument = ['-m', minigraph, '-p', port_config_ini_file, '-t', template_file]
-            self.run_script(argument, output_file=self.output_file)
+            argument = '-m ' + minigraph + ' -p ' + port_config_ini_file + ' -t ' + template_file + ' > ' + self.output_file
+            self.run_script(argument)
 
             # cleanup
             cfg_file_new = os.path.join(dir_path, cfg_file)
