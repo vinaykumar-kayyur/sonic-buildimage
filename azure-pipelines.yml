@@ -64,3 +64,7 @@ stages:
       buildOptions: 'USERNAME=admin SONIC_BUILD_JOBS=$(nproc) ${{ variables.VERSION_CONTROL_OPTIONS }}'
       jobGroups:
       - name: marvell-arm64
+        pool: sonicbld-arm64
+        timeoutInMinutes: 2880
+        variables:
+          PLATFORM_ARCH: arm64
