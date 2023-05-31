@@ -1,5 +1,4 @@
 from unittest.mock import patch
-#from unittest.mock import MagicMock, patch
 
 from staticroutebfd.main import *
 from swsscommon import swsscommon
@@ -167,6 +166,28 @@ def test_set_del():
             "del_default:default:192.168.2.2" : {}
         },
         {'del_default:2.2.2.0/24': {}}
+    )
+
+    # test add a non-bfd static route
+    set_del_test(dut, "srt",
+        "SET",
+        ("3.3.3.0/24", {
+            "nexthop": "192.168.1.2 , 192.168.2.2",
+            "ifname": "if1, if2",
+        }),
+        {},
+        {}
+    )
+
+    # test delete a non-bfd static route
+    set_del_test(dut, "srt",
+        "DEL",
+        ("3.3.3.0/24", {
+            "nexthop": "192.168.1.2 , 192.168.2.2",
+            "ifname": "if1, if2",
+        }),
+        {},
+        {}
     )
 
 def test_bfd_del():
