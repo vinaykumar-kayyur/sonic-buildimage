@@ -100,7 +100,7 @@ do
         exit 1
     fi
     filename=$(basename "$url")
-    SKIP_BUILD_HOOK=y wget $url -O $ARCHIEVES/$filename
+    SKIP_BUILD_HOOK=y http_proxy=$HTTP_PROXY wget $url -O $ARCHIEVES/$filename
     echo $packagename >> $DEBOOTSTRAP_REQUIRED
     echo "$packagename /var/cache/apt/archives/$filename" >> $DEBPATHS
 done
