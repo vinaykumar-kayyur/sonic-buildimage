@@ -11,11 +11,6 @@ except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
 
-Disable_Fcs_mode = "0x3a 0x26 0x01 0x00"
-Led_Manual_Control = "0x3a 0x42 0x02 0x00"
-Set_Led_Color = "0x3a 0x39 0x02 {} {}"
-
-
 class Fan(PddfFan):
     """PDDF Platform-Specific Fan class"""
 
@@ -41,7 +36,6 @@ class Fan(PddfFan):
         """
         if not self.get_status():
             return 'N/A'
-
         return super().get_direction()
 
     def get_speed(self):
@@ -63,72 +57,8 @@ class Fan(PddfFan):
         output = self.pddf_obj.get_attr_name_output("FAN-CTRL", attr)
         if not output:
             return 0
-        mode = output['mode']
         val = output['status'].rstrip()
         f_r_fan = "Front" if fan_name.endswith("1") else "Rear"
         max_fan_rpm = eval(self.plugin_data['FAN']['FAN_MAX_RPM_SPEED'][val][f_r_fan])
         speed_percentage = round(speed_rpm / max_fan_rpm * 100)
         return speed_rpm if speed_percentage > 100 else speed_percentage
-
-    def set_status_led(self, color):
-        """
-        Overwrite.
-        Set fans status led
-        return: True/False
-        """
-        if self.is_psu_fan:
-            raise NotImplementedError
-        else:
-            # set LED mode to Manual Control
-            status_ctl, result_ctl = self.helper.ipmi_raw(Led_Manual_Control)
-            if not status_ctl:
-                print("Fail! Set LED mode to Manual Control fail!")
-            color_dict = {
-                self.STATUS_LED_COLOR_OFF: "0",
-                self.STATUS_LED_COLOR_GREEN: "1",
-                self.STATUS_LED_COLOR_AMBER: "2",
-            }
-            color_data = color_dict.get(color.lower())
-            if not color_data:
-                print("Fail! Can't set fan%s status led to %s.Cause fan doesn't have this module"
-                      % (self.fantray_index, color))
-                return False
-            set_color_cmd = Set_Led_Color.format(hex(self.fantray_index + 3), color_data)
-            status, result = self.helper.ipmi_raw(set_color_cmd)
-            if not status:
-                print("Fail! Set fan%s to %s fail" % (self.fantray_index, color))
-            return status
-
-    def set_speed(self, speed):
-        """
-        Set the fan speed(pwm)
-
-        Args:
-            speed: An integer, the percentage of full fan speed to set fan to,
-                   in the range 0 (off) to 100 (full speed)
-
-        Returns:
-            A boolean, True if speed is set successfully, False if not
-        """
-        if speed < 20 or speed > 100:
-            print("Error: Invalid speed %d. Please provide a valid speed percentage(20~100)" % speed)
-            return False
-
-        # Disable FCS auto control mode
-        status, result = self.helper.ipmi_raw(Disable_Fcs_mode)
-        if not status:
-            print("Fail! Disable FCS auto control mode fail!")
-            return status
-
-        if self.is_psu_fan:
-            psu_data = 7 if str(self.fans_psu_index) == "1" else 8
-            set_pwm_cmd = Set_Pwm_Cmd.format(hex(psu_data), speed)
-            status, result = self.helper.ipmi_raw(set_pwm_cmd)
-            if not status:
-                print("Fail! Set PSU%d speed=%d fail!" % (self.fans_psu_index, speed))
-        else:
-            set_pwm_cmd = Set_Pwm_Cmd.format(hex(self.fantray_index - 1), speed)
-            status, result = self.helper.ipmi_raw(set_pwm_cmd)
-            if not status:
-                print("Fail! Set Fan%d speed=%d fail!" % (self.fantray_index, speed))
-        return status
