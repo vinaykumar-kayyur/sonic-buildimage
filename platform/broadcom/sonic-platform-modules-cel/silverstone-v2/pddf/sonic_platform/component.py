@@ -11,19 +11,16 @@ except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
 FPGA_VERSION_PATH = "/sys/devices/platform/fpga-sys/version"
-SWCPLD1_VERSION_PATH = "/sys/bus/i2c/devices/i2c-10/10-0030/version"
-SWCPLD2_VERSION_PATH = "/sys/bus/i2c/devices/i2c-10/10-0031/version"
-BCPLD_VERSION_PATH = "/sys/devices/platform/sys_cpld/version"
-BIOS_VERSION_PATH = "/sys/class/dmi/id/bios_version"
-
-
-###################
 Check_Bios_Boot = "0x3a 0x25 0x02"
-Fan_CPLD_Cmd = "0x3a 0x64 02 01 00"
-COME_CPLD_Cmd = "0x3a 0x3e 1 0x1a 1 0xe0"
+Bios_Version_Cmd = "dmidecode -t bios | grep Version"
+Fan_CPLD_Cmd = "ipmitool raw 0x3a 0x64 02 01 00"
+COME_CPLD_Cmd = "ipmitool raw 0x3a 0x3e 1 0x1a 1 0xe0"
+Sys_Cpld_Cmd = "ipmitool raw 0x3a 0x64 0x00 0x01 0x00"
+Sw_Cpld1_Cmd = "i2cget -y -f 108 0x30 0 | tr a-z A-Z | cut -d 'X' -f 2"
+Sw_Cpld2_Cmd = "i2cget -y -f 108 0x31 0 | tr a-z A-Z | cut -d 'X' -f 2"
 Main_BMC_Cmd = "0x32 0x8f 0x08 0x01"
 Backup_BMC_Cmd = "0x32 0x8f 0x08 0x01"
-#########
+
 COMPONENT_NAME_LIST = ["FPGA", "COME_CPLD", "SWCPLD1", "SWCPLD2", "FANCPLD", "SYSCPLD",
                        "Main_BMC", "Backup_BMC", "Main_BIOS", "Backup_BIOS"]
 COMPONENT_DES_LIST = ["Used for managering the CPU and expanding I2C channels",
@@ -54,37 +51,40 @@ class Component(ComponentBase):
         Get Bios version by command 'dmidecode -t bios | grep Version'
         return: Bios Version
         """
-        bios_version_cmd = "dmidecode -t bios | grep Version"
         status, result = self.helper.ipmi_raw(Check_Bios_Boot)
         bios_version = "N/A"
         if not status:
             print("Fail! Unable to get the current Main bios or backup bios!")
             return bios_version
-        status_ver, version_str = self.helper.run_command(bios_version_cmd)
+        status_ver, version_str = self.helper.run_command(Bios_Version_Cmd)
         if not status:
             print("Fail! Unable to get the bios version!")
             return bios_version
 
-        if result.strip() == "01":
-            if self.name == "Main_BIOS":
-                bios_version = re.findall(r"Version:(.*)", version_str)[0]
-                return bios_version.strip()
-            elif self.name == "Backup_BIOS":
-                return bios_version
+        bios_version = re.findall(r"Version:(.*)", version_str)[0]
+        if result.strip() == "01" and self.name == "Main_BIOS":
+            return bios_version.strip()
 
-        elif result.strip() == "03":
-            if self.name == "Backup_BIOS":
-                bios_version = re.findall(r"Version:(.*)", version_str)[0]
-                return bios_version.strip()
-            elif self.name == "Main_BIOS":
-                return bios_version
+        elif result.strip() == "03" and self.name == "Backup_BIOS":
+            return bios_version.strip()
+        else:
+            return bios_version
 
     def __get_cpld_version(self):
-        # TODO need to overwrite -- Yagami
+        """
+        Get Come cpld/Fan cpld/Sys cpld/Switch 1 cpld/Switch 2 cpld version
+        """
         version = "N/A"
-        if self.name in ["COME_CPLD", "FANCPLD"]:
-            version_cmd = COME_CPLD_Cmd if self.name == "COME_CPLD" else Fan_CPLD_Cmd
-            status, ver = self.helper.ipmi_raw(version_cmd)
+        cpld_version_dict = {
+            "COME_CPLD": COME_CPLD_Cmd,
+            "FANCPLD": Fan_CPLD_Cmd,
+            "SWCPLD1": Sw_Cpld1_Cmd,
+            "SWCPLD2": Sw_Cpld2_Cmd,
+            "SYSCPLD": Sys_Cpld_Cmd,
+        }
+        if self.name in cpld_version_dict.keys():
+            version_cmd = cpld_version_dict[self.name]
+            status, ver = self.helper.run_command(version_cmd)
             if not status:
                 print("Fail! Can't get %s version by command:%s" % (self.name, version_cmd))
                 return version
@@ -92,17 +92,15 @@ class Component(ComponentBase):
             version2 = int(ver.strip()) % 10
             version = "%d.%d" % (version1, version2)
             return version
-        else:
-            if self.name == "SWCPLD1":
-                return version
-            elif self.name == "SYSCPLD":
-                return version
-            elif self.name == "SWCPLD2":
-                return version
 
     def __get_fpga_version(self):
-        # TODO need to overwrite -- Yagami
-        return "N/A"
+        """
+        Get fpga version by fpga version bus path.
+        """
+        status, fpga_version = self.helper.run_command("cat %s" % FPGA_VERSION_PATH)
+        if not status:
+            return "N/A"
+        return fpga_version.replace("0x", "")
 
     def __get_bmc_version(self):
         """
