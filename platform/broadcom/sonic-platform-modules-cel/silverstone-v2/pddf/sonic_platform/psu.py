@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # @Company ：Celestica
-# @Time    : 2023/3/10 10:plugins
+# @Time    : 2023/5/31 13:38
 # @Mail    : yajiang@celestica.com
 # @Author  : jiang tao
 try:
@@ -10,8 +10,6 @@ try:
     from . import helper
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
-
-Change_Channel_Cmd = "0x3a 0x3e 6 0xe0 0 {}"
 
 
 class Psu(PddfPsu):
@@ -29,23 +27,12 @@ class Psu(PddfPsu):
     def get_type():
         return 'AC'
 
-    def get_revision(self):
+    @staticmethod
+    def get_revision():
         """
         Get PSU HW Revision by read psu eeprom data.
         data address(hex) 46-49.The response is the ascii value of hex
         return: HW Revision or 'N/A'
         """
-        channel_data = "0x01" if self.psu_index == 1 else "0x02"
-        change_channel_status, result_channel = self.helper.ipmi_raw(Change_Channel_Cmd.format(channel_data))
-        if not change_channel_status:
-            print("Fail! Change channel to ch%d fail" % (self.psu_index - 1))
-            return "N/A"
-        rev = ""
-        for address in range(46, 50):
-            data_status, data = self.helper.ipmi_raw("0x3a 0x3e 6 0xa0 1 0x%d" % address)
-            if not data_status:
-                print("Fail! Get Ch%d PSU eeprom address %d fail" % (self.psu_index - 1, address))
-                return "N/A"
-            rev = rev + chr(int(data, 16))
-        return rev.strip()
 
+        return "N/A"
