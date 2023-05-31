@@ -502,18 +502,26 @@ class StaticRouteBfd(object):
         arg_list    = lambda v: [x.strip() for x in v.split(',')] if len(v.strip()) != 0 else None
         nh_list     = arg_list(data['nexthop']) if 'nexthop' in data else None
         nh_vrf_list = arg_list(data['nexthop-vrf']) if 'nexthop-vrf' in data else None
-        for index in range(len(nh_list)):
-            nh_ip = nh_list[index]
-            nh_vrf = nh_vrf_list[index]
-            nh_key = nh_vrf + "|" + nh_ip
-            self.remove_from_nh_table_entry(nh_key, route_cfg_key)
+        bfd_field   = arg_list(data['bfd']) if 'bfd' in data else ["false"]
+        bfd_enabled = self.isFieldTrue(bfd_field)
 
-            if len(self.get_local_db(LOCAL_NEXTHOP_TABLE, nh_key)) == 0:
-                bfd_key = nh_vrf + ":default:" + nh_ip
-                self.remove_from_local_db(LOCAL_BFD_TABLE, bfd_key)
-                self.del_bfd_session_from_appl_db(bfd_key)
+        # for a bfd_enabled static route, the nh_vrf_list was processed, has same length with nh_list
+        if bfd_enabled and nh_list and nh_vrf_list and len(nh_list) == len(nh_vrf_list):
+            for index in range(len(nh_list)):
+                nh_ip = nh_list[index]
+                nh_vrf = nh_vrf_list[index]
+                nh_key = nh_vrf + "|" + nh_ip
+                self.remove_from_nh_table_entry(nh_key, route_cfg_key)
 
-        self.del_static_route_from_appl_db(route_cfg_key.replace("|", ":"))
+                if len(self.get_local_db(LOCAL_NEXTHOP_TABLE, nh_key)) == 0:
+                    bfd_key = nh_vrf + ":default:" + nh_ip
+                    self.remove_from_local_db(LOCAL_BFD_TABLE, bfd_key)
+                    self.del_bfd_session_from_appl_db(bfd_key)
+
+        # do not delete it from appl_db if the route is not bfd enabled
+        if bfd_enabled:
+            self.del_static_route_from_appl_db(route_cfg_key.replace("|", ":"))
+
         self.remove_from_local_db(LOCAL_SRT_TABLE, route_cfg_key)
 
         if redis_del:
