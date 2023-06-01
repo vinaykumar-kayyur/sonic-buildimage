@@ -436,7 +436,7 @@ write_machine_config() {
     ## Detect SKU and create a hardware description file
     aboot_version=$(cmdline_get Aboot | sed 's/^.*norcal.-//')
     if [ -x /bin/sysinit ]; then
-       aboot_build_date=$(stat -c %y /bin/sysinit | sed 's/ /T/')
+       aboot_build_date=$(stat -c %y /bin/sysinit | sed 's/ /T/g')
     else
        aboot_build_date="unknown"
     fi
@@ -610,10 +610,10 @@ write_platform_specific_cmdline() {
     else
         varlog_size=256
         cmdline_add logs_inram=on
+        cmdline_add docker_inram=on
         if [ $flash_size -le 2000 ]; then
             # enable docker_inram for switches with less than 2G of flash
             varlog_size=128
-            cmdline_add docker_inram=on
         fi
     fi
 
