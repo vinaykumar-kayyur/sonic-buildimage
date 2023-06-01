@@ -1,6 +1,6 @@
 {
   "chassis": {
-          "DX400": {
+          "DS4000": {
                   "component": {
                           "Main_BMC": {},
                           "Backup_BMC": {},
