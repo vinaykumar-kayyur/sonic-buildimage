@@ -4,12 +4,10 @@
             "default_brkout_mode": "1x100G[40G]"
         },
         "Ethernet4": {
-            "default_brkout_mode": "2x50G",
-            "mode": "trunk"
+            "default_brkout_mode": "2x50G"
         },
         "Ethernet8": {
-            "default_brkout_mode": "4x25G[10G]",
-            "mode": "trunk"
+            "default_brkout_mode": "4x25G[10G]"
         },
         "Ethernet12": {
             "default_brkout_mode": "2x25G(2)+1x50G(2)"
@@ -87,8 +85,7 @@
             "default_brkout_mode": "4x25G[10G]"
         },
         "Ethernet112": {
-            "default_brkout_mode": "2x25G(2)+1x50G(2)",
-            "mode": "trunk"
+            "default_brkout_mode": "2x25G(2)+1x50G(2)"
         },
         "Ethernet116": {
             "default_brkout_mode": "1x50G(2)+2x25G(2)"
