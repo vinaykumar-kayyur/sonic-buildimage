@@ -11,7 +11,7 @@ import datetime
 import docker
 from swsscommon import swsscommon
 
-CTR_STATE_SCR_PATH = '/etc/sonic/remote_ctr.config.json'
+CTR_STATE_SCR_PATH = '/lib/systemd/system/ctrmgrd.service'
 
 state_db = None
 
