@@ -5,7 +5,7 @@ if [ "${RUNTIME_OWNER}" == "" ]; then
 fi
 
 CTR_SCRIPT="/usr/share/sonic/scripts/container_startup.py"
-if [ $RUNTIME_OWNER = "kube" ] && test -f ${CTR_SCRIPT}
+if test -f ${CTR_SCRIPT}
 then
     ${CTR_SCRIPT} -f telemetry -o ${RUNTIME_OWNER} -v ${IMAGE_VERSION}
 fi
