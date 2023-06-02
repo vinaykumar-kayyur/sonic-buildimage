@@ -359,7 +359,8 @@
                 "sub_role": "FrontEnd",
                 "dhcp_server": "disabled",
                 "bgp_adv_lo_prefix_as_128": "true",
-                "yang_config_validation": "disable"
+                "yang_config_validation": "disable",
+                "rack_mgmt_map": "dummy_value"
             }
         },
         "VLAN": {
@@ -2023,6 +2024,16 @@
                 "vlan": "Vlan100"
             }
         },
+        "VNET": {
+            "vnet1": {
+                "vxlan_tunnel": "vtep1",
+                "scope": "default",
+                "vni": "100",
+                "peer_list": "",
+                "advertise_prefix": "true",
+                "overlay_dmac": "22:33:44:55:66:77"
+            }
+        },
         "PORT_QOS_MAP": {
            "Ethernet0": {
               "dot1p_to_tc_map" : "Dot1p_to_tc_map1",
@@ -2285,7 +2296,7 @@
                 "SNMP_USER_AUTH_TYPE": "",
                 "SNMP_USER_AUTH_PASSWORD": "",
                 "SNMP_USER_ENCRYPTION_TYPE": "",
-                "SNMP_USER_ENCRYPTION_PASSWORD": "" 
+                "SNMP_USER_ENCRYPTION_PASSWORD": ""
             },
             "testuser_AuthNoPriv": {
                 "SNMP_USER_TYPE": "AuthNoPriv",
@@ -2293,7 +2304,7 @@
                 "SNMP_USER_AUTH_TYPE": "SHA",
                 "SNMP_USER_AUTH_PASSWORD": "auth_pass",
                 "SNMP_USER_ENCRYPTION_TYPE": "",
-                "SNMP_USER_ENCRYPTION_PASSWORD": ""         
+                "SNMP_USER_ENCRYPTION_PASSWORD": ""
             }
 
         },

@@ -4,85 +4,86 @@
 Table of Contents
 =================
 
-   * [Introduction](#introduction)  
-   * [Configuration](#configuration)  
-   * [<strong>Config Load and Save</strong>](#config-load-and-save)  
-         * [Incremental Configuration](#incremental-configuration)  
-   * [<strong>Redis and Json Schema</strong>](#redis-and-json-schema)  
-         * [ACL and Mirroring](#acl-and-mirroring)  
-         * [BGP Device Global](#bgp-device-global)  
-         * [BGP Sessions](#bgp-sessions)  
-         * [BUFFER_PG](#buffer_pg)  
-         * [Buffer pool](#buffer-pool)  
-         * [Buffer profile](#buffer-profile)  
-         * [Buffer queue](#buffer-queue)  
-         * [Buffer port ingress profile list](#buffer-port-ingress-profile-list)  
-         * [Buffer port egress profile list](#buffer-port-egress-profile-list)  
-         * [Cable length](#cable-length)  
-         * [Chassis module](#chassis-module)         
-         * [COPP_TABLE](#copp_table)  
-         * [Console](#console)  
-         * [CRM](#crm)  
-         * [CRM DASH](#crm-dash)  
-         * [Data Plane L3 Interfaces](#data-plane-l3-interfaces)  
-         * [DEFAULT_LOSSLESS_BUFFER_PARAMETER](#DEFAULT_LOSSLESS_BUFFER_PARAMETER)  
-         * [Device Metadata](#device-metadata)  
+   * [Introduction](#introduction)
+   * [Configuration](#configuration)
+   * [<strong>Config Load and Save</strong>](#config-load-and-save)
+         * [Incremental Configuration](#incremental-configuration)
+   * [<strong>Redis and Json Schema</strong>](#redis-and-json-schema)
+         * [ACL and Mirroring](#acl-and-mirroring)
+         * [BGP Device Global](#bgp-device-global)
+         * [BGP Sessions](#bgp-sessions)
+         * [BUFFER_PG](#buffer_pg)
+         * [Buffer pool](#buffer-pool)
+         * [Buffer profile](#buffer-profile)
+         * [Buffer queue](#buffer-queue)
+         * [Buffer port ingress profile list](#buffer-port-ingress-profile-list)
+         * [Buffer port egress profile list](#buffer-port-egress-profile-list)
+         * [Cable length](#cable-length)
+         * [Chassis module](#chassis-module)
+         * [COPP_TABLE](#copp_table)
+         * [Console](#console)
+         * [CRM](#crm)
+         * [CRM DASH](#crm-dash)
+         * [Data Plane L3 Interfaces](#data-plane-l3-interfaces)
+         * [DEFAULT_LOSSLESS_BUFFER_PARAMETER](#DEFAULT_LOSSLESS_BUFFER_PARAMETER)
+         * [Device Metadata](#device-metadata)
          * [Device neighbor metada](#device-neighbor-metada)
          * [DHCP_RELAY](#dhcp_relay)
-         * [DSCP_TO_TC_MAP](#dscp_to_tc_map)  
-         * [FG_NHG](#fg_nhg)  
-         * [FG_NHG_MEMBER](#fg_nhg_member)  
-         * [FG_NHG_PREFIX](#fg_nhg_prefix)  
+         * [DSCP_TO_TC_MAP](#dscp_to_tc_map)
+         * [FG_NHG](#fg_nhg)
+         * [FG_NHG_MEMBER](#fg_nhg_member)
+         * [FG_NHG_PREFIX](#fg_nhg_prefix)
          * [FABRIC_MONITOR](#fabric-monitor)
-         * [FLEX_COUNTER_TABLE](#flex_counter_table)  
-         * [Hash](#hash)  
+         * [FLEX_COUNTER_TABLE](#flex_counter_table)
+         * [Hash](#hash)
          * [IPv6 Link-local] (#ipv6-link-local)
-         * [KDUMP](#kdump)  
-         * [Kubernetes Master](#kubernetes-master)  
-         * [L2 Neighbors](#l2-neighbors)  
-         * [Loopback Interface](#loopback-interface)  
-         * [LOSSLESS_TRAFFIC_PATTERN](#LOSSLESS_TRAFFIC_PATTERN)  
-         * [Management Interface](#management-interface)  
-         * [Management port](#management-port)  
-         * [Management VRF](#management-vrf)  
-         * [MAP_PFC_PRIORITY_TO_QUEUE](#map_pfc_priority_to_queue)  
-         * [MUX_CABLE](#mux_cable)  
+         * [KDUMP](#kdump)
+         * [Kubernetes Master](#kubernetes-master)
+         * [L2 Neighbors](#l2-neighbors)
+         * [Loopback Interface](#loopback-interface)
+         * [LOSSLESS_TRAFFIC_PATTERN](#LOSSLESS_TRAFFIC_PATTERN)
+         * [Management Interface](#management-interface)
+         * [Management port](#management-port)
+         * [Management VRF](#management-vrf)
+         * [MAP_PFC_PRIORITY_TO_QUEUE](#map_pfc_priority_to_queue)
+         * [MUX_CABLE](#mux_cable)
          * [NEIGH](#neigh)
-         * [NTP Global Configuration](#ntp-global-configuration)  
-         * [NTP and SYSLOG servers](#ntp-and-syslog-servers)  
-         * [Peer Switch](#peer-switch)  
-         * [Policer](#policer)   
-         * [Port](#port)   
-         * [Port Channel](#port-channel)  
-         * [Portchannel member](#portchannel-member)  
-         * [Scheduler](#scheduler)  
-         * [Port QoS Map](#port-qos-map)  
-         * [Queue](#queue)  
-         * [Syslog Rate Limit](#syslog-rate-limit)  
-         * [Sflow](#sflow)  
-         * [Restapi](#restapi)  
-         * [System Port](#system-port)  
-         * [Tacplus Server](#tacplus-server)    
-         * [TC to Priority group map](#tc-to-priority-group-map)  
-         * [TC to Queue map](#tc-to-queue-map)    
-         * [Telemetry](#telemetry)  
+         * [NTP Global Configuration](#ntp-global-configuration)
+         * [NTP and SYSLOG servers](#ntp-and-syslog-servers)
+         * [Peer Switch](#peer-switch)
+         * [Policer](#policer)
+         * [Port](#port)
+         * [Port Channel](#port-channel)
+         * [Portchannel member](#portchannel-member)
+         * [Scheduler](#scheduler)
+         * [Port QoS Map](#port-qos-map)
+         * [Queue](#queue)
+         * [Syslog Rate Limit](#syslog-rate-limit)
+         * [Sflow](#sflow)
+         * [Restapi](#restapi)
+         * [System Port](#system-port)
+         * [Tacplus Server](#tacplus-server)
+         * [TC to Priority group map](#tc-to-priority-group-map)
+         * [TC to Queue map](#tc-to-queue-map)
+         * [Telemetry](#telemetry)
          * [Tunnel](#tunnel)
-         * [Versions](#versions)  
-         * [VLAN](#vlan)   
-         * [VLAN_MEMBER](#vlan_member)  
-         * [VOQ Inband Interface](#voq-inband-interface)  
-         * [VXLAN](#vxlan)  
-         * [Virtual router](#virtual-router)  
-         * [LOGGER](#logger)           
-         * [WRED_PROFILE](#wred_profile)  
-         * [PASSWORD_HARDENING](#password_hardening)  
-         * [SYSTEM_DEFAULTS table](#systemdefaults-table)  
-         * [RADIUS](#radius)  
-         * [Static DNS](#static-dns)  
-   * [For Developers](#for-developers)  
+         * [Versions](#versions)
+         * [VLAN](#vlan)
+         * [VLAN_MEMBER](#vlan_member)
+         * [VNET](#vnet)
+         * [VOQ Inband Interface](#voq-inband-interface)
+         * [VXLAN](#vxlan)
+         * [Virtual router](#virtual-router)
+         * [LOGGER](#logger)
+         * [WRED_PROFILE](#wred_profile)
+         * [PASSWORD_HARDENING](#password_hardening)
+         * [SYSTEM_DEFAULTS table](#systemdefaults-table)
+         * [RADIUS](#radius)
+         * [Static DNS](#static-dns)
+   * [For Developers](#for-developers)
       * [Generating Application Config by Jinja2 Template](#generating-application-config-by-jinja2-template)
       * [Incremental Configuration by Subscribing to ConfigDB](#incremental-configuration-by-subscribing-to-configdb)
- 
+
 
 
 # Introduction
@@ -925,7 +926,8 @@ instance is supported in SONiC.
         "type": "ToRRouter",
         "bgp_adv_lo_prefix_as_128" : "true",
         "buffer_model": "traditional",
-        "yang_config_validation": "disable"
+        "yang_config_validation": "disable",
+        "rack_mgmt_map": "dummy_value"
     }
   }
 }
@@ -1107,7 +1109,7 @@ The FG_NHG_PREFIX table provides the FG_NHG_PREFIX for which FG behavior is desi
 
 ### Hash
 
-Generic hash allows user to configure which hash fields are suppose to be used by a hashing algorithm.  
+Generic hash allows user to configure which hash fields are suppose to be used by a hashing algorithm.
 The configuration is applied globally for each ECMP and LAG on a switch.
 
 ***ECMP/LAG HASH***
@@ -1400,8 +1402,8 @@ Resolve case:
 ```
 {
     "NEIGH": {
-        "Vlan100|100.1.1.3": { 
-            "family": "IPv4" 
+        "Vlan100|100.1.1.3": {
+            "family": "IPv4"
         }
     }
 }
@@ -1410,9 +1412,9 @@ Static Nbr:
 ```
 {
     "NEIGH": {
-        "Vlan100|100.1.1.5": { 
+        "Vlan100|100.1.1.5": {
             "neigh": "00:02:02:03:04:05",
-            "family": "IPv4" 
+            "family": "IPv4"
         }
     }
 }
@@ -2066,6 +2068,33 @@ channel name as object key, and tagging mode as attributes.
 }
 ```
 
+### VNET
+
+VNET table has Vnet name as the object key, and vxlan_tunnel name, scope, vni, peer list, advertised prefix, src mac, and overlay dest mac as attributes.
+The vxlan_tunnel name (mandatory) is the tunnel name from the VXLAN table. scope (optional) must "default", vni (mandatory) is the vxlan tunnel vni, peer_list (optional) is for Vnet
+peering, advertise_prefix (optional) is used to allow advertisement of this vnet's routes, overlay_dmac (optional) is the mac address which is used for VNET ping
+monitoring sessions for the vnet routes and is optional.
+
+```
+{
+"VNET": {
+	"Vnet1-1": {
+	    "vxlan_tunnel": "vtep1",
+		"scope": "default",
+		"vni": "10011",
+		"peer_list": "",
+		"advertise_prefix": "true",
+		"overlay_dmac": "22:33:44:55:66:77"
+	},
+    "Vnetv4_v4-0": {
+	    "vxlan_tunnel": "vtep2",
+		"scope": "default",
+		"vni": "10011",
+	}
+  }
+}
+```
+
 ### VOQ INBAND INTERFACE
 
 VOQ_INBAND_INTERFACE holds the name of the inband system port dedicated for cpu communication. At this time, only inband_type of "port" is supported
@@ -2335,7 +2364,7 @@ The RADIUS and RADIUS_SERVER tables define RADIUS configuration parameters. RADI
               "timeout": "5"
         }
     }
-    
+
     "RADIUS_SERVER": {
         "192.168.1.2": {
                "priority": "4",
