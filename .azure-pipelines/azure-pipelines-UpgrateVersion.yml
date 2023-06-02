@@ -68,7 +68,7 @@ stages:
       value: $[ stageDependencies.Prepare.Prepare.outputs['SetVersions.DEBIAN_TIMESTAMP'] ]
     - name: DEBIAN_SECURITY_TIMESTAMP
       value: $[ stageDependencies.Prepare.Prepare.outputs['SetVersions.DEBIAN_SECURITY_TIMESTAMP'] ]
-    - template: .azure-pipelines/template-variables.yml@buildimage
+    - template: template-variables.yml
   jobs:
   - template: azure-pipelines-build.yml
     parameters:
