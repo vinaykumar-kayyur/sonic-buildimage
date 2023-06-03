@@ -269,15 +269,6 @@ class LldpManager(daemon_base.DaemonBase):
         elif key == "PortConfigDone":
             self.port_config_done = True
 
-    def appdb_contains_lldp_port(self):
-        if device_info.is_supervisor():
-            return False
-        if device_info.is_multi_npu():
-            namespace_id = os.getenv("NAMESPACE_ID")
-            if not namespace_id:
-               return False
-        return True
-
     def run(self):
         """
         Subscribes to notifications of changes in the PORT table
@@ -368,7 +359,7 @@ def run_cmd(self, cmd):
 
 def check_timeout(self, start_time):
     if time.time() - start_time > PORT_INIT_TIMEOUT:
-        if self.appdb_contains_lldp_port():
+        if device_info.is_frontend_port_present_in_host():
             self.log_error("Port init timeout reached ({} seconds), resuming lldpd...".format(PORT_INIT_TIMEOUT))
         return True
     return False
