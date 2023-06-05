@@ -42,6 +42,44 @@
                 algo = "sha1";
             };
         };
+        kernel_7020 {
+            description = "Linux Kernel";
+            data = /incbin/("/boot/vmlinuz-5.10.0-18-2-arm64");
+            type = "kernel";
+            arch = "arm64";
+            os = "linux";
+            compression = "none";
+            load = <0x2000000>;
+            entry = <0x2000000>;
+            hash@1 {
+                algo = "sha1";
+            };
+        };
+        fdt_7020 {
+            description = "Flattened Device Tree blob";
+            data = /incbin/("/usr/lib/linux-image-5.10.0-18-2-arm64/marvell/armada-7020-comexpress.dtb");
+            type = "flat_dt";
+            arch = "arm64";
+            compression = "none";
+            load = <0x1000000>;
+            entry = <0x1000000>;
+            hash@1 {
+                algo = "sha1";
+            };
+        };
+        ramdisk_7020 {
+            description = "ramdisk";
+            data = /incbin/("/boot/initrd.img-5.10.0-18-2-arm64");
+            type = "ramdisk";
+            arch = "arm64";
+            os = "linux";
+            compression = "gzip";
+            load = <0x6000000>;
+            entry = <0x6000000>;
+            hash@1 {
+                algo = "sha1";
+            };
+        };
     };
     configurations {
         default = "conf_ac5x";
@@ -54,5 +92,14 @@
                 algo = "sha1";
             };
         };
-    };
+        conf@1 {
+            description = "Boot Linux kernel with FDT blob + ramdisk for Armada7020";
+            kernel = "kernel_7020";
+            fdt = "fdt_7020";
+            ramdisk = "ramdisk_7020";
+            hash@1 {
+                algo = "sha1";
+            };
+        };
+   };
 };
