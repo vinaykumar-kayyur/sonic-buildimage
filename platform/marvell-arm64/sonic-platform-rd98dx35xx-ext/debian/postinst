@@ -1,0 +1,12 @@
+#!/bin/sh
+# postinst script for sonic-platform-rd98dx35xx-ext
+#
+# see: dh_installdeb(1)
+
+chmod a+x /usr/local/bin/rd98dx35xx-ext-init.sh
+depmod -a
+systemctl restart kmod
+systemctl enable rd98dx35xx-ext-init.service
+systemctl start rd98dx35xx-ext-init.service
+exit 0
+
