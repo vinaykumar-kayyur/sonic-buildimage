@@ -8,6 +8,7 @@ include $(PLATFORM_PATH)/one-image.mk
 include $(PLATFORM_PATH)/platform-nokia.mk
 include $(PLATFORM_PATH)/platform-rd98dx35xx.mk
 include $(PLATFORM_PATH)/platform-db98cx8540-16cd.mk
+include $(PLATFORM_PATH)/platform-db98cx8580-32cd.mk
 
 SONIC_ALL += $(SONIC_ONE_IMAGE) \
              $(DOCKER_FPM) 	\
