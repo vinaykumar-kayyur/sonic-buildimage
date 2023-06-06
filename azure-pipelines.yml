@@ -65,8 +65,13 @@ stages:
       jobGroups:
       - name: broadcom
         variables:
+          docker_syncd_rpc_image: yes
+          platform_rpc: brcm
           swi_image: yes
       - name: mellanox
+        variables:
+          docker_syncd_rpc_image: yes
+          platform_rpc: mlnx
       - name: marvell-armhf
         pool: sonicbld-armhf
         timeoutInMinutes: 1200
