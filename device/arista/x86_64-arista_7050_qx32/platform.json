@@ -2,9 +2,6 @@
     "chassis": {
         "name": "DCS-7050QX-32",
         "components": [
-	    {
-                "name": "Aboot()"
-            },
             {
                 "name": "Scd(addr=0000:04:00.0)"
             },
@@ -13,9 +10,6 @@
             },
             {
                 "name": "Ucd90160(addr=10-004e)"
-            },
-            {
-                "name": "CrowSysCpld(addr=2-0023)"
             }
 	],
         "fans": [
