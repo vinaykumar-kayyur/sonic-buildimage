@@ -11,7 +11,7 @@ ipv6_lpm_128b_enable=1
 l3_mem_entries=40960
 l2_mem_entries=40960
 
-l2xmsg_mode=1 
+l2xmsg_mode=1
 mmu_lossless=0
 
 #Parity

@@ -56,7 +56,7 @@ class Fan(FanBase):
             self.psu_i2c_addr = PSU_HWMON_I2C_MAPPING[self.psu_index]['addr']
             self.psu_hwmon_path = I2C_PATH.format(
                 self.psu_i2c_num, self.psu_i2c_addr)
-            
+
             self.psu_i2c_num = PSU_CPLD_I2C_MAPPING[self.psu_index]['num']
             self.psu_i2c_addr = PSU_CPLD_I2C_MAPPING[self.psu_index]['addr']
             self.psu_cpld_path = I2C_PATH.format(
@@ -83,7 +83,7 @@ class Fan(FanBase):
 
         else: #For PSU
             direction=self.FAN_DIRECTION_EXHAUST
-                
+
         return direction
 
     def get_speed(self):
@@ -103,7 +103,7 @@ class Fan(FanBase):
                     speed=100
             else:
                 return 0
-        elif self.get_presence():            
+        elif self.get_presence():
             speed_path = "{}{}".format(CPLD_FAN_I2C_PATH, '_duty_cycle_percentage')
             speed=self._api_helper.read_txt_file(speed_path)
             if speed is None:
@@ -141,8 +141,8 @@ class Fan(FanBase):
         Returns:
             A boolean, True if speed is set successfully, False if not
         """
-        
-        if not self.is_psu_fan and self.get_presence():            
+
+        if not self.is_psu_fan and self.get_presence():
             speed_path = "{}{}".format(CPLD_FAN_I2C_PATH, '_duty_cycle_percentage')
             return self._api_helper.write_txt_file(speed_path, int(speed))
 
@@ -158,7 +158,7 @@ class Fan(FanBase):
             bool: True if status LED state is set successfully, False if not
         """
         return False #Not supported
-   
+
     def get_status_led(self):
         """
         Gets the state of the fan status LED
@@ -171,7 +171,7 @@ class Fan(FanBase):
 
         return {
             1: self.STATUS_LED_COLOR_GREEN,
-            0: self.STATUS_LED_COLOR_RED            
+            0: self.STATUS_LED_COLOR_RED
         }.get(status, self.STATUS_LED_COLOR_OFF)
 
     def get_name(self):
@@ -215,7 +215,7 @@ class Fan(FanBase):
                 return int(val, 10)==0
             else:
                 return False
-        else:    
+        else:
             path = "{}{}{}".format(CPLD_FAN_I2C_PATH, self.fan_tray_index+1, '_fault')
             val=self._api_helper.read_txt_file(path)
             if val is not None:
@@ -223,16 +223,16 @@ class Fan(FanBase):
             else:
                 return False
 
-    
+
     def get_model(self):
         """
         Retrieves the model number (or part number) of the device
         Returns:
             string: Model/part number of device
         """
-               
+
         return "N/A"
-    
+
     def get_serial(self):
         """
         Retrieves the serial number of the device

@@ -17,7 +17,7 @@ class PsuUtil(PsuBase):
         self.psu_presence = ["i2cget", "-y", "", "0x50", "0x00"]
 
     def get_num_psus(self):
-        """ 
+        """
         Retrieves the number of PSUs available on the device
 
         :return: An integer, the number of PSUs available on the device

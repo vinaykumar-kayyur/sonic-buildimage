@@ -201,7 +201,7 @@ xgxs_rx_lane_map_5=0x0123
 xgxs_rx_lane_map_6=0x1032
 xgxs_rx_lane_map_7=0x0213
 xgxs_rx_lane_map_8=0x2031
- 
+
 # Tile-1  FC8~FC15
 #TX polarity
 phy_xaui_tx_polarity_flip_34=0x0

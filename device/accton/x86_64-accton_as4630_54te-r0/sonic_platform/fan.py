@@ -63,7 +63,7 @@ class Fan(FanBase):
             self.psu_cpld_path = I2C_PATH.format(
                 self.psu_i2c_num, self.psu_i2c_addr)
 
-        FanBase.__init__(self)  
+        FanBase.__init__(self)
 
 
     def get_direction(self):
@@ -105,7 +105,7 @@ class Fan(FanBase):
         Returns:
             An integer, the percentage of full fan speed, in the range 0 (off)
                  to 100 (full speed)
-                         
+
         """
         speed = 0
         if self.is_psu_fan:
@@ -117,7 +117,7 @@ class Fan(FanBase):
                     speed=100
             else:
                 return 0
-        elif self.get_presence():            
+        elif self.get_presence():
             speed_path = "{}{}".format(CPLD_FAN_I2C_PATH, 'duty_cycle_percentage')
             speed=self._api_helper.read_txt_file(speed_path)
             if speed is None:
@@ -156,7 +156,7 @@ class Fan(FanBase):
             A boolean, True if speed is set successfully, False if not
         """
 
-        if not self.is_psu_fan and self.get_presence():            
+        if not self.is_psu_fan and self.get_presence():
             speed_path = "{}{}".format(CPLD_FAN_I2C_PATH, 'duty_cycle_percentage')
             return self._api_helper.write_txt_file(speed_path, int(speed))
 

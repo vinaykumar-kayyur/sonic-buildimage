@@ -1,5 +1,5 @@
 {
-    
+
     "XCVR":
     {
         "xcvr_present":
@@ -14,7 +14,7 @@
     },
     "PSU":
     {
-        "psu_present": 
+        "psu_present":
         {
             "i2c":
             {
@@ -22,7 +22,7 @@
             }
         },
 
-        "psu_power_good": 
+        "psu_power_good":
         {
             "i2c":
             {

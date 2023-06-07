@@ -43,7 +43,7 @@ class Chassis(ChassisBase):
         ChassisBase.__init__(self)
         self._api_helper = APIHelper()
         self.is_host = self._api_helper.is_host()
-        
+
         self.config_data = {}
 
         self.__initialize_fan()
@@ -93,7 +93,7 @@ class Chassis(ChassisBase):
     def __initialize_watchdog(self):
         from sonic_platform.watchdog import Watchdog
         self._watchdog = Watchdog()
-    
+
 
     def __is_host(self):
         return subprocess.call(HOST_CHK_CMD) == 0
@@ -122,7 +122,7 @@ class Chassis(ChassisBase):
             bool: True if Chassis is present, False if not
         """
         return True
-    
+
     def get_status(self):
         """
         Retrieves the operational status of the device
@@ -130,7 +130,7 @@ class Chassis(ChassisBase):
             A boolean value, True if device is operating properly, False if not
         """
         return True
-    
+
     def get_base_mac(self):
         """
         Retrieves the base MAC address for the chassis
@@ -147,7 +147,7 @@ class Chassis(ChassisBase):
             string: Model/part number of device
         """
         return self._eeprom.get_pn()
-        
+
     def get_serial(self):
         """
         Retrieves the hardware serial number for the chassis
@@ -176,7 +176,7 @@ class Chassis(ChassisBase):
             is "REBOOT_CAUSE_HARDWARE_OTHER", the second string can be used
             to pass a description of the reboot cause.
         """
-      
+
         reboot_cause_path = (HOST_REBOOT_CAUSE_PATH + REBOOT_CAUSE_FILE)
         sw_reboot_cause = self._api_helper.read_txt_file(
             reboot_cause_path) or "Unknown"
@@ -230,7 +230,7 @@ class Chassis(ChassisBase):
         """
         return False
 
-        
+
     def initizalize_system_led(self):
         return True
 

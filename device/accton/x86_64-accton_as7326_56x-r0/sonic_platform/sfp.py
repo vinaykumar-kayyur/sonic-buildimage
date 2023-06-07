@@ -229,7 +229,7 @@ class Sfp(SfpOptoeBase):
     def get_tx_fault(self):
         """
         Retrieves the TX fault status of SFP
-        
+
         Returns:
             A list of boolean values, representing the TX fault status
             of each available channel, value is True if SFP channel
@@ -295,7 +295,7 @@ class Sfp(SfpOptoeBase):
                     return [False]
                 else:
                     return [True]
-                
+
             else:
                 return [False]
 

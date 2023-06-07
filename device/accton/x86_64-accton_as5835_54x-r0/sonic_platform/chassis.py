@@ -45,16 +45,16 @@ class Chassis(ChassisBase):
         ChassisBase.__init__(self)
         self._api_helper = APIHelper()
         self.is_host = self._api_helper.is_host()
-        
+
         self.config_data = {}
-        
+
         self.__initialize_fan()
         self.__initialize_psu()
         self.__initialize_thermals()
         self.__initialize_components()
         self.__initialize_sfp()
         self.__initialize_eeprom()
-    
+
     def __initialize_sfp(self):
         from sonic_platform.sfp import Sfp
         for index in range(0, PORT_END):
@@ -62,7 +62,7 @@ class Chassis(ChassisBase):
             self._sfp_list.append(sfp)
         self._sfpevent = SfpEvent(self._sfp_list)
         self.sfp_module_initialized = True
-        
+
     def __initialize_fan(self):
        from sonic_platform.fan_drawer import FanDrawer
        for fant_index in range(NUM_FAN_TRAY):
@@ -75,13 +75,13 @@ class Chassis(ChassisBase):
         for index in range(0, NUM_PSU):
             psu = Psu(index)
             self._psu_list.append(psu)
-    
+
     def __initialize_thermals(self):
         from sonic_platform.thermal import Thermal
         for index in range(0, NUM_THERMAL):
             thermal = Thermal(index)
             self._thermal_list.append(thermal)
-    
+
     def __initialize_eeprom(self):
         from sonic_platform.eeprom import Tlv
         self._eeprom = Tlv()
@@ -95,7 +95,7 @@ class Chassis(ChassisBase):
     def __initialize_watchdog(self):
         from sonic_platform.watchdog import Watchdog
         self._watchdog = Watchdog()
-    
+
 
     def __is_host(self):
         return subprocess.call(HOST_CHK_CMD) == 0
@@ -124,7 +124,7 @@ class Chassis(ChassisBase):
             bool: True if Chassis is present, False if not
         """
         return True
-    
+
     def get_status(self):
         """
         Retrieves the operational status of the device
@@ -132,7 +132,7 @@ class Chassis(ChassisBase):
             A boolean value, True if device is operating properly, False if not
         """
         return True
-    
+
     def get_base_mac(self):
         """
         Retrieves the base MAC address for the chassis
@@ -149,7 +149,7 @@ class Chassis(ChassisBase):
             string: Model/part number of device
         """
         return self._eeprom.get_pn()
-        
+
     def get_serial(self):
         """
         Retrieves the hardware serial number for the chassis
@@ -233,7 +233,7 @@ class Chassis(ChassisBase):
         """
         return False
 
-        
+
     def initizalize_system_led(self):
         return True
 
@@ -251,4 +251,4 @@ class Chassis(ChassisBase):
             return False
         else:
             return self._api_helper.write_txt_file(SYSLED_FNODE, mode)
-            
+

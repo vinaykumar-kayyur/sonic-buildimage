@@ -12,7 +12,7 @@ parity_enable=0
 core_clock_frequency=1325
 dpr_clock_frequency=1000
 
-# Merlin Core - 2 management ports 
+# Merlin Core - 2 management ports
 portmap_38=257:10
 portmap_118=258:10
 

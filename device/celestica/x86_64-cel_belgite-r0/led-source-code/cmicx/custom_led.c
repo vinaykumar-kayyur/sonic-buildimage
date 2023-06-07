@@ -82,7 +82,7 @@ This array would have port speed for each port, as per bit mapping defined in
 "soc_led_speed_t" in $SDK/include/shared/cmicfw/cmicx_led_public.h file.
 
 Here is an exception, please keep in mind:
-1. For TH3, port status/speed of  xe1 (physical port 258) is located in the 
+1. For TH3, port status/speed of  xe1 (physical port 258) is located in the
    accumulation entry/speed array  of physical port 259.
 
 ******************************************************************************/
@@ -97,16 +97,16 @@ Here is an exception, please keep in mind:
 #define LED_GREEN_BICOLOR 0x2 //bit : 10
 #define LED_AMBER_BICOLOR 0x1 //bit : 01
 #define LED_OFF_BICOLOR   0x3 //bit : 11
-                                          
+
 unsigned short portmap[] = {
      25,  26,  27,  28,  29,  30,  31,  32,
-     33,  34,  35,  36,  37,  38,  39,  40, 
+     33,  34,  35,  36,  37,  38,  39,  40,
      41,  42,  43,  44,  49,  50,  51,  52,
       1,   2,   3,   4,   5,   6,   7,   8,
       9,  10,  11,  12,  24,  23,  22,  21,
-     20,  19,  18,  17,  16,  15,  14,  13, 
+     20,  19,  18,  17,  16,  15,  14,  13,
      60,  58,  59,  57,  62,  64,  61,  63
-};                                          
+};
 
 
 /*
@@ -125,17 +125,17 @@ void custom_led_handler(soc_led_custom_handler_ctrl_t *ctrl,
 {
     unsigned short accu_val = 0, send_val = 0;
     unsigned short port, physical_port;
-    
+
     /* Physical port numbers to be used */
     for(port = 1; port <= PORT_NUM_TOTAL; port++) {
 
 	physical_port = portmap[port-1];
-        
+
         /* Read value from led_ram bank0 */
         accu_val = READ_LED_ACCU_DATA(ctrl->accu_ram_base, physical_port);
 
-        send_val = 0xff; 
-       
+        send_val = 0xff;
+
         if (((accu_val & LED_OUTPUT_RX) || (accu_val & LED_OUTPUT_TX)) && (activity_count & ACTIVITY_TICKS))
         {
             send_val = LED_OFF_BICOLOR;
@@ -148,7 +148,7 @@ void custom_led_handler(soc_led_custom_handler_ctrl_t *ctrl,
         {
             send_val = LED_OFF_BICOLOR;
          }
-        
+
 	/* Write value to led_ram bank1 */
         WRITE_LED_SEND_DATA(ctrl->pat_ram_base, port, send_val);
     } /* for */

@@ -958,7 +958,7 @@ num_queues_uc1=1
 flow_init_mode=1
 # Protobuf relateed properties
 ctr_evict_enable=0
-udp_port=22000   
+udp_port=22000
 # Exact match related properties
 multi_hash_recurse_depth_exact_match=2
 robust_hash_seed_exact_match=0x12345

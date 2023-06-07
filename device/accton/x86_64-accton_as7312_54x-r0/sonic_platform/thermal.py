@@ -32,12 +32,12 @@ class Thermal(ThermalBase):
 
         # Set hwmon path
         i2c_path = {
-            0: "3-0048/hwmon/hwmon*/", 
-            1: "3-0049/hwmon/hwmon*/", 
+            0: "3-0048/hwmon/hwmon*/",
+            1: "3-0049/hwmon/hwmon*/",
             2: "3-004a/hwmon/hwmon*/",
             3: "3-004b/hwmon/hwmon*/",
         }.get(self.index, None)
-          
+
         self.hwmon_path = "{}/{}".format(self.SYSFS_PATH, i2c_path)
         self.ss_key = self.THERMAL_NAME_LIST[self.index]
         self.ss_index = 1
@@ -52,15 +52,15 @@ class Thermal(ThermalBase):
                 pass
 
         return None
-        
+
     def __get_temp(self, temp_file):
         temp_file_path = os.path.join(self.hwmon_path, temp_file)
         raw_temp = self.__read_txt_file(temp_file_path)
         if raw_temp is not None:
             return float(raw_temp)/1000
         else:
-            return 0 
-        
+            return 0
+
 
     def __set_threshold(self, file_name, temperature):
         temp_file_path = os.path.join(self.hwmon_path, file_name)
@@ -105,7 +105,7 @@ class Thermal(ThermalBase):
         temp_file = "temp{}_max".format(self.ss_index)
         temperature = temperature *1000
         self.__set_threshold(temp_file, temperature)
-        
+
         return True
 
     def get_name(self):
@@ -142,5 +142,5 @@ class Thermal(ThermalBase):
         raw_txt = self.__read_txt_file(file_path)
         if raw_txt is None:
             return False
-        else:     
+        else:
             return int(raw_txt) != 0

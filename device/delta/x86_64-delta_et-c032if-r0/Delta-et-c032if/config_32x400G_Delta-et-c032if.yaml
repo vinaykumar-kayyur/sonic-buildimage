@@ -196,7 +196,7 @@ nodes:
     speed: "400G"
     sysport: "105"
     type: "eth"
-  - fec: "KPFEC"  
+  - fec: "KPFEC"
     id: "81"
     lanes: "0:8"
     serdes_group: "10"

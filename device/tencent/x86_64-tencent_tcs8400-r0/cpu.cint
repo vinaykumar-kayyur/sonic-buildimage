@@ -12,7 +12,7 @@ int cint_field_group_create(int unit, bcm_field_group_t grp)
     BCM_FIELD_QSET_ADD(qset, bcmFieldQualifyStageIngress);
 
     BCM_FIELD_ASET_INIT(aset);
-    BCM_FIELD_ASET_ADD(aset, bcmFieldActionCopyToCpu); 
+    BCM_FIELD_ASET_ADD(aset, bcmFieldActionCopyToCpu);
 
     rv = bcm_field_group_create_mode_id(unit, qset, 103, bcmFieldGroupModeAuto, grp);
     if (rv != BCM_E_NONE) {
@@ -21,7 +21,7 @@ int cint_field_group_create(int unit, bcm_field_group_t grp)
     }
     printf("cint_field_group_create success!!!, rv = %d\r\n", rv);
 
-    bcm_field_group_dump(unit,grp);   
+    bcm_field_group_dump(unit,grp);
     return 0;
 }
 
@@ -30,8 +30,8 @@ int cint_field_entry_create1(int unit, bcm_field_group_t grp,bcm_field_entry_t e
     int rv;
     bcm_mac_t dst_mac = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
     bcm_mac_t mac_mask = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
-	
-    rv = bcm_field_entry_create_id(unit, grp, entry);    
+
+    rv = bcm_field_entry_create_id(unit, grp, entry);
     if (rv != BCM_E_NONE) {
         printf("bcm_field_entry_create_id failed, rv = %d\r\n", rv);
         return -1;
@@ -58,13 +58,13 @@ int cint_field_entry_create1(int unit, bcm_field_group_t grp,bcm_field_entry_t e
         bcm_field_entry_destroy(unit, entry);
         return -1;
     }
-	
+
     rv = bcm_field_entry_install(unit, entry);
     if (rv != BCM_E_NONE) {
         printf("bcm_field_entry_install failed,ret = %d\r\n", rv);
         bcm_field_entry_destroy(unit, entry);
         return -1;
-    }  
+    }
 
     printf("********************* BEGIN ****************************\r\n");
     bcm_field_entry_dump(unit, entry);

@@ -1,4 +1,4 @@
-# LED microprocessor initialization for Dell z9432 
+# LED microprocessor initialization for Dell z9432
 #
 #
 led 0 stop

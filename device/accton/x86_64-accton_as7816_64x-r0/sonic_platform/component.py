@@ -27,7 +27,7 @@ COMPONENT_LIST= [
    ("CPLD3", "CPLD 3"),
    ("CPLD4", "CPLD 4"),
    ("BIOS", "Basic Input/Output System")
-   
+
 ]
 
 class Component(ComponentBase):
@@ -61,7 +61,7 @@ class Component(ComponentBase):
             except Exception as e:
                 print('Get exception when read cpld')
                 cpld_version[cpld_name] = 'None'
-        
+
         return cpld_version
 
     def get_name(self):

@@ -26,7 +26,7 @@
     "native-port-supported-speeds": {
         "Ethernet0-127": {
             "4": ["100000","40000"]
-        }        
+        }
     }
 }
 

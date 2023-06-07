@@ -3,7 +3,7 @@
 core_clock_frequency=1700
 dpp_clock_ratio=2:3
 load_firmware=1
-# EagleCore ports: xe0 & xe1  
+# EagleCore ports: xe0 & xe1
 portmap_66=257:10
 portmap_100=259:10
 

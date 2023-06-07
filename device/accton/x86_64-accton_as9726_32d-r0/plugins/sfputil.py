@@ -197,11 +197,11 @@ class SfpUtil(SfpUtilBase):
         ret = self.__write_txt_file(self.__port_to_mod_rst, 1)
         if ret is not True:
             return ret
-        
+
         time.sleep(0.2)
         ret = self.__write_txt_file(self.__port_to_mod_rst, 0)
         time.sleep(0.2)
-        
+
         return ret
 
     def get_cpld_interrupt(self):

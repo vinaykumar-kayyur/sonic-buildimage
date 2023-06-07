@@ -73,7 +73,7 @@
     "PORT_MEDIA_SETTINGS": {
 	"1": {
 	    "(.*-WTRD1)|(.*-RN84N)|(.*-DT87G)|(.*-HMTNW)|(.*-1F80G)|(.*-6K3Y6)|(.*-YJF03)|(.*-P9GND)|(.*-T1KCN)|(.*-1DXKP)|(.*-MT7R2)|(.*-C4DD6)|(.*-8JHPY)|(.*-PGYJT)|(.*-FCBG110SD1C)|(.*-FCCG125SD1C)|(SFP\\+-.*)": {
-		
+
                 "preemphasis": {
                     "lane0": "0x073702"
                 }
@@ -88,7 +88,7 @@
 
 	"2": {
 	    "(.*-WTRD1)|(.*-RN84N)|(.*-DT87G)|(.*-HMTNW)|(.*-1F80G)|(.*-6K3Y6)|(.*-YJF03)|(.*-P9GND)|(.*-T1KCN)|(.*-1DXKP)|(.*-MT7R2)|(.*-C4DD6)|(.*-8JHPY)|(.*-PGYJT)|(.*-FCBG110SD1C)|(.*-FCCG125SD1C)|(SFP\\+-.*)": {
-                
+
                 "preemphasis": {
                     "lane0": "0x073702"
                 }
@@ -103,7 +103,7 @@
 
 	"3": {
 	    "(.*-WTRD1)|(.*-RN84N)|(.*-DT87G)|(.*-HMTNW)|(.*-1F80G)|(.*-6K3Y6)|(.*-YJF03)|(.*-P9GND)|(.*-T1KCN)|(.*-1DXKP)|(.*-MT7R2)|(.*-C4DD6)|(.*-8JHPY)|(.*-PGYJT)|(.*-FCBG110SD1C)|(.*-FCCG125SD1C)|(SFP\\+-.*)": {
-                
+
                 "preemphasis": {
                     "lane0": "0x063602"
                 }
@@ -118,7 +118,7 @@
 
 	"4": {
 	    "(.*-WTRD1)|(.*-RN84N)|(.*-DT87G)|(.*-HMTNW)|(.*-1F80G)|(.*-6K3Y6)|(.*-YJF03)|(.*-P9GND)|(.*-T1KCN)|(.*-1DXKP)|(.*-MT7R2)|(.*-C4DD6)|(.*-8JHPY)|(.*-PGYJT)|(.*-FCBG110SD1C)|(.*-FCCG125SD1C)|(SFP\\+-.*)": {
-                
+
                 "preemphasis": {
                     "lane0": "0x073702"
                 }
@@ -133,7 +133,7 @@
 
 	"5": {
 	    "(.*-WTRD1)|(.*-RN84N)|(.*-DT87G)|(.*-HMTNW)|(.*-1F80G)|(.*-6K3Y6)|(.*-YJF03)|(.*-P9GND)|(.*-T1KCN)|(.*-1DXKP)|(.*-MT7R2)|(.*-C4DD6)|(.*-8JHPY)|(.*-PGYJT)|(.*-FCBG110SD1C)|(.*-FCCG125SD1C)|(SFP\\+-.*)": {
-                
+
                 "preemphasis": {
                     "lane0": "0x063602"
                 }
@@ -148,7 +148,7 @@
 
 	"6": {
 	    "(.*-WTRD1)|(.*-RN84N)|(.*-DT87G)|(.*-HMTNW)|(.*-1F80G)|(.*-6K3Y6)|(.*-YJF03)|(.*-P9GND)|(.*-T1KCN)|(.*-1DXKP)|(.*-MT7R2)|(.*-C4DD6)|(.*-8JHPY)|(.*-PGYJT)|(.*-FCBG110SD1C)|(.*-FCCG125SD1C)|(SFP\\+-.*)": {
-                
+
                 "preemphasis": {
                     "lane0": "0x073702"
                 }
@@ -160,10 +160,10 @@
                 }
 	    }
 	},
-	
+
 	"7": {
 	    "(.*-WTRD1)|(.*-RN84N)|(.*-DT87G)|(.*-HMTNW)|(.*-1F80G)|(.*-6K3Y6)|(.*-YJF03)|(.*-P9GND)|(.*-T1KCN)|(.*-1DXKP)|(.*-MT7R2)|(.*-C4DD6)|(.*-8JHPY)|(.*-PGYJT)|(.*-FCBG110SD1C)|(.*-FCCG125SD1C)|(SFP\\+-.*)": {
-                
+
                 "preemphasis": {
                     "lane0": "0x063602"
                 }
@@ -178,7 +178,7 @@
 
 	"8": {
 	    "(.*-WTRD1)|(.*-RN84N)|(.*-DT87G)|(.*-HMTNW)|(.*-1F80G)|(.*-6K3Y6)|(.*-YJF03)|(.*-P9GND)|(.*-T1KCN)|(.*-1DXKP)|(.*-MT7R2)|(.*-C4DD6)|(.*-8JHPY)|(.*-PGYJT)|(.*-FCBG110SD1C)|(.*-FCCG125SD1C)|(SFP\\+-.*)": {
-                
+
                 "preemphasis": {
                     "lane0": "0x073702"
                 }
@@ -193,7 +193,7 @@
 
 	"9": {
 	    "(.*-WTRD1)|(.*-RN84N)|(.*-DT87G)|(.*-HMTNW)|(.*-1F80G)|(.*-6K3Y6)|(.*-YJF03)|(.*-P9GND)|(.*-T1KCN)|(.*-1DXKP)|(.*-MT7R2)|(.*-C4DD6)|(.*-8JHPY)|(.*-PGYJT)|(.*-FCBG110SD1C)|(.*-FCCG125SD1C)|(SFP\\+-.*)": {
-                
+
                 "preemphasis": {
                     "lane0": "0x063602"
                 }
@@ -208,7 +208,7 @@
 
 	"10": {
 	    "(.*-WTRD1)|(.*-RN84N)|(.*-DT87G)|(.*-HMTNW)|(.*-1F80G)|(.*-6K3Y6)|(.*-YJF03)|(.*-P9GND)|(.*-T1KCN)|(.*-1DXKP)|(.*-MT7R2)|(.*-C4DD6)|(.*-8JHPY)|(.*-PGYJT)|(.*-FCBG110SD1C)|(.*-FCCG125SD1C)|(SFP\\+-.*)": {
-                
+
                 "preemphasis": {
                     "lane0": "0x073702"
                 }
@@ -237,7 +237,7 @@
 
 	"12": {
 	    "(.*-WTRD1)|(.*-RN84N)|(.*-DT87G)|(.*-HMTNW)|(.*-1F80G)|(.*-6K3Y6)|(.*-YJF03)|(.*-P9GND)|(.*-T1KCN)|(.*-1DXKP)|(.*-MT7R2)|(.*-C4DD6)|(.*-8JHPY)|(.*-PGYJT)|(.*-FCBG110SD1C)|(.*-FCCG125SD1C)|(SFP\\+-.*)": {
-                
+
                 "preemphasis": {
                     "lane0": "0x073702"
                 }
@@ -247,7 +247,7 @@
                 "preemphasis": {
                     "lane0": "0x16440a"
                 }
-	    }   
+	    }
 	},
 
 	"13": {

@@ -37,7 +37,7 @@ class FanUtil(FanBase):
                 return(ipmi_cmd_ret.splitlines()[5].strip(' ').strip('[]'))
         except Exception:
             logging.error('Failed to execute : %s'%(' '.join(self.IPMI_FAN_PRESENCE)))
-   
+
     def get_front_fan_speed(self,fan_id):
         try:
             self.IPMI_FAN_FRONT_SPEED[3] = 'Fan' + str(fan_id) + '_Front_rpm'
@@ -47,7 +47,7 @@ class FanUtil(FanBase):
                 return rdata
         except Exception:
             logging.error('Failed to execute : %s'%(' '.join(self.IPMI_FAN_FRONT_SPEED)))
-    
+
     def get_rear_fan_speed(self,fan_id):
         try:
             self.IPMI_FAN_REAR_SPEED[3] = 'Fan' + str(fan_id) + '_Rear_rpm'
@@ -91,7 +91,7 @@ class FanUtil(FanBase):
 
         tray_index = ((index-1)/self.NUM_FANS_PERTRAY) + 1
 
-        if (self.get_fan_status(tray_index) == 'Device Present'):  
+        if (self.get_fan_status(tray_index) == 'Device Present'):
             return True
         else:
             return False
@@ -148,7 +148,7 @@ class FanUtil(FanBase):
             fantray_speed=self.get_front_fan_speed(tray_index)
         else:
             fantray_speed=self.get_rear_fan_speed(tray_index)
-        
+
         if (self.get_presence(index) == True):
             return int(fantray_speed.strip())
         else:

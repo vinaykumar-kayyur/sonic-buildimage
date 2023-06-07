@@ -15,12 +15,12 @@ parity_enable=0
 ## 1. type "phy info" then get each hg ports' number
 ## 2. Set these number as 1 in pbmp_xport_xe and pbmp_oversubscribe
 ##    130 xe ports, 4 * 32 + 2
-##  no more pbmp_oversubscribe 
+##  no more pbmp_oversubscribe
 oversubscribe_mode=1
 pbmp_xport_xe=0x3fffffffdffffffff7fffffffdfffffffe
 
 
-# EagleCore ports: 36 & 49  
+# EagleCore ports: 36 & 49
 portmap_66=129:10
 portmap_100=131:10
 
@@ -69,7 +69,7 @@ portmap_41=39:25
 portmap_42=42:25
 portmap_43=41:25
 portmap_44=44:25
-portmap_45=43:25 
+portmap_45=43:25
 # FC-12 & FC-13
 portmap_46=50:25
 portmap_47=49:25
@@ -140,10 +140,10 @@ phy_xaui_tx_polarity_flip_ce2=0xf
 phy_xaui_rx_polarity_flip_ce2=0xf
 
 
-## Lane swapping 
-## The HEX value is connection of red line within Falconcore in "Fig 3-4 SFP28 port connection" 
-# TX - Config A. (FC 0/1/2/16) 
-# 0x3210 - port 0-11, 36-39 
+## Lane swapping
+## The HEX value is connection of red line within Falconcore in "Fig 3-4 SFP28 port connection"
+# TX - Config A. (FC 0/1/2/16)
+# 0x3210 - port 0-11, 36-39
 xgxs_tx_lane_map_xe0=0x3210
 xgxs_tx_lane_map_xe1=0x3210
 xgxs_tx_lane_map_xe2=0x3210
@@ -162,7 +162,7 @@ xgxs_tx_lane_map_xe39=0x3210
 xgxs_tx_lane_map_xe40=0x3210
 
 
-# TX - Config B. (FC 5/9/20) 
+# TX - Config B. (FC 5/9/20)
 # 0x0123 - port 12-13, 20-23, 44-47
 xgxs_tx_lane_map_xe12=0x0123
 xgxs_tx_lane_map_xe13=0x0123
@@ -178,7 +178,7 @@ xgxs_tx_lane_map_xe47=0x0123
 xgxs_tx_lane_map_xe48=0x0123
 
 
-# TX - Config C. (FC 8/10) 
+# TX - Config C. (FC 8/10)
 # 0x3210 - port 16-19, 24-27
 xgxs_tx_lane_map_xe16=0x3210
 xgxs_tx_lane_map_xe17=0x3210
@@ -190,7 +190,7 @@ xgxs_tx_lane_map_xe26=0x3210
 xgxs_tx_lane_map_xe27=0x3210
 
 
-# TX - Config D. (FC 12/13/17) 
+# TX - Config D. (FC 12/13/17)
 # 0x0123 - port 28-35, 40-43
 xgxs_tx_lane_map_xe28=0x0123
 xgxs_tx_lane_map_xe29=0x0123
@@ -208,8 +208,8 @@ xgxs_tx_lane_map_xe44=0x0123
 
 
 
-# RX - Config A. (FC 0/1/2/16) 
-# 0x1032 - port 0-11, 36-39 
+# RX - Config A. (FC 0/1/2/16)
+# 0x1032 - port 0-11, 36-39
 xgxs_rx_lane_map_xe0=0x1032
 xgxs_rx_lane_map_xe1=0x1032
 xgxs_rx_lane_map_xe2=0x1032
@@ -229,7 +229,7 @@ xgxs_rx_lane_map_xe40=0x1032
 
 
 
-# RX - Config B. (FC 5/9/20) 
+# RX - Config B. (FC 5/9/20)
 # 0x1032 - port 12-13, 20-23, 44-47
 xgxs_rx_lane_map_xe12=0x1032
 xgxs_rx_lane_map_xe13=0x1032
@@ -245,7 +245,7 @@ xgxs_rx_lane_map_xe47=0x1032
 xgxs_rx_lane_map_xe48=0x1032
 
 
-# RX - Config C. (FC 8/10) 
+# RX - Config C. (FC 8/10)
 # 0x3210 - port 16-19, 24-27
 xgxs_rx_lane_map_xe16=0x3210
 xgxs_rx_lane_map_xe17=0x3210
@@ -257,7 +257,7 @@ xgxs_rx_lane_map_xe26=0x3210
 xgxs_rx_lane_map_xe27=0x3210
 
 
-# RX - Config D. (FC 12/13/17) 
+# RX - Config D. (FC 12/13/17)
 # 0x3210 - port 28-35, 40-43
 xgxs_rx_lane_map_xe28=0x3210
 xgxs_rx_lane_map_xe29=0x3210
@@ -273,56 +273,56 @@ xgxs_rx_lane_map_xe43=0x3210
 xgxs_rx_lane_map_xe44=0x3210
 
 
-## Lane swapping for QSFP28 (100G)                                                                    
-## The HEX value is connection of red line within Falconcore in "Fig 3-4 SFP28 port connection" 
+## Lane swapping for QSFP28 (100G)
+## The HEX value is connection of red line within Falconcore in "Fig 3-4 SFP28 port connection"
 # TX - Config A. (FC 21/25)
 # 0x3210 - port ce0, ce3
 xgxs_tx_lane_map_ce0=0x3210
 xgxs_tx_lane_map_ce3=0x3210
-                            
-                            
-# TX - Config B. (FC 24)    
-# 0x3210 - port ce1       
+
+
+# TX - Config B. (FC 24)
+# 0x3210 - port ce1
 xgxs_tx_lane_map_ce1=0x3210
-                            
-                            
-# TX - Config C. (FC 26)    
+
+
+# TX - Config C. (FC 26)
 # 0x3210 - port ce2
 xgxs_tx_lane_map_ce2=0x3210
-                            
-                            
-# TX - Config D. (FC 27)    
+
+
+# TX - Config D. (FC 27)
 # 0x3210 - ce5
 xgxs_tx_lane_map_ce5=0x3210
-                            
-                            
-# TX - Config E. (FC 29)    
+
+
+# TX - Config E. (FC 29)
 # 0x3210 - ce4
 xgxs_tx_lane_map_ce4=0x3210
-                            
-                            
+
+
 # RX - Config A. (FC 21/25)
 # 0x1032 - port ce0, ce3
 xgxs_rx_lane_map_ce0=0x1032
 xgxs_rx_lane_map_ce3=0x1032
-                            
-                            
-# RX - Config B. (FC 24)    
-# 0x1032 - port ce1       
+
+
+# RX - Config B. (FC 24)
+# 0x1032 - port ce1
 xgxs_rx_lane_map_ce1=0x1032
-                            
-                            
-# RX - Config C. (FC 26)    
+
+
+# RX - Config C. (FC 26)
 # 0x2301 - port ce2
 xgxs_rx_lane_map_ce2=0x2301
-                            
-                            
-# RX - Config D. (FC 27)    
+
+
+# RX - Config D. (FC 27)
 # 0x2301 - ce5
 xgxs_rx_lane_map_ce5=0x2301
-                            
-                            
-# TX - Config E. (FC 29)    
+
+
+# TX - Config E. (FC 29)
 # 0x3210 - ce4
 xgxs_rx_lane_map_ce4=0x3210
 

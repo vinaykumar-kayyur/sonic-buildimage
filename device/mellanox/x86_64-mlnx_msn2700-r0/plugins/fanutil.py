@@ -124,7 +124,7 @@ class FanUtil(FanBase):
 
         :param index: An integer, 1-based index of the PSU of which to query status
         :return: Boolean,
-            - True if FAN is running with some speed 
+            - True if FAN is running with some speed
             - False if FAN has stopped running
         """
         if not self.get_presence(index):
@@ -160,7 +160,7 @@ class FanUtil(FanBase):
         :param index: An integer, 1-based index of the FAN of which to query status
         :return: string, denoting FAN airflow direction
         Note:
-            What Mellanox calls forward: 
+            What Mellanox calls forward:
             Air flows from fans side to QSFP side, for example: MSN2700-CS2F
             which means intake in community
             What Mellanox calls reverse:
@@ -202,7 +202,7 @@ class FanUtil(FanBase):
         """
         Sets the speed of all the FANs to a value denoted by the duty-cycle percentage val
 
-        :param val: An integer, <0-100> denoting FAN duty cycle percentage 
+        :param val: An integer, <0-100> denoting FAN duty cycle percentage
         :return: Boolean, True if operation is successful, False if not
         """
         status = True

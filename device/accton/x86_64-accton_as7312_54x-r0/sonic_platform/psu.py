@@ -48,11 +48,11 @@ class Psu(PsuBase):
         PsuBase.__init__(self)
         self.index = psu_index
         self._api_helper = APIHelper()
-        
+
         self.i2c_num = PSU_HWMON_I2C_MAPPING[self.index]["num"]
         self.i2c_addr = PSU_HWMON_I2C_MAPPING[self.index]["addr"]
         self.hwmon_path = I2C_PATH.format(self.i2c_num, self.i2c_addr)
-        
+
         self.i2c_num = PSU_CPLD_I2C_MAPPING[self.index]["num"]
         self.i2c_addr = PSU_CPLD_I2C_MAPPING[self.index]["addr"]
         self.cpld_path = I2C_PATH.format(self.i2c_num, self.i2c_addr)
@@ -71,7 +71,7 @@ class Psu(PsuBase):
             A float number, the output voltage in volts,
             e.g. 12.1
         """
-        vout_path = "{}{}".format(self.hwmon_path, 'psu_v_out')        
+        vout_path = "{}{}".format(self.hwmon_path, 'psu_v_out')
         vout_val=self._api_helper.read_txt_file(vout_path)
         return float(vout_val)/ 1000
 
@@ -81,7 +81,7 @@ class Psu(PsuBase):
         Returns:
             A float number, the electric current in amperes, e.g 15.4
         """
-        iout_path = "{}{}".format(self.hwmon_path, 'psu_i_out')        
+        iout_path = "{}{}".format(self.hwmon_path, 'psu_i_out')
         val=self._api_helper.read_txt_file(iout_path)
         if val is not None:
             return float(val)/1000
@@ -94,7 +94,7 @@ class Psu(PsuBase):
         Returns:
             A float number, the power in watts, e.g. 302.6
         """
-        pout_path = "{}{}".format(self.hwmon_path, 'psu_p_out')        
+        pout_path = "{}{}".format(self.hwmon_path, 'psu_p_out')
         val=self._api_helper.read_txt_file(pout_path)
         if val is not None:
             return float(val)/1000
@@ -119,7 +119,7 @@ class Psu(PsuBase):
         Returns:
             bool: True if status LED state is set successfully, False if not
         """
-        
+
         return False  #Controlled by HW
 
     def get_status_led(self):
@@ -128,8 +128,8 @@ class Psu(PsuBase):
         Returns:
             A string, one of the predefined STATUS_LED_COLOR_* strings above
         """
-        
-        if self.get_status():            
+
+        if self.get_status():
             return True
         else:
             return False
@@ -139,15 +139,15 @@ class Psu(PsuBase):
         Retrieves current temperature reading from PSU
         Returns:
             A float number of current temperature in Celsius up to nearest thousandth
-            of one degree Celsius, e.g. 30.125 
+            of one degree Celsius, e.g. 30.125
         """
-        temp_path = "{}{}".format(self.hwmon_path, 'psu_temp1_input')        
+        temp_path = "{}{}".format(self.hwmon_path, 'psu_temp1_input')
         val=self._api_helper.read_txt_file(temp_path)
         if val is not None:
             return float(val)/1000
         else:
             return 0
-    
+
     def get_temperature_high_threshold(self):
         """
         Retrieves the high threshold temperature of PSU
@@ -161,10 +161,10 @@ class Psu(PsuBase):
         """
         Retrieves the high threshold PSU voltage output
         Returns:
-            A float number, the high threshold output voltage in volts, 
-            e.g. 12.1 
+            A float number, the high threshold output voltage in volts,
+            e.g. 12.1
         """
-        vout_path = "{}{}".format(self.hwmon_path, 'psu_mfr_vout_max')        
+        vout_path = "{}{}".format(self.hwmon_path, 'psu_mfr_vout_max')
         vout_val=self._api_helper.read_txt_file(vout_path)
         if vout_val is not None:
             return float(vout_val)/ 1000
@@ -175,10 +175,10 @@ class Psu(PsuBase):
         """
         Retrieves the low threshold PSU voltage output
         Returns:
-            A float number, the low threshold output voltage in volts, 
-            e.g. 12.1 
+            A float number, the low threshold output voltage in volts,
+            e.g. 12.1
         """
-        vout_path = "{}{}".format(self.hwmon_path, 'psu_mfr_vout_min')        
+        vout_path = "{}{}".format(self.hwmon_path, 'psu_mfr_vout_min')
         vout_val=self._api_helper.read_txt_file(vout_path)
         if vout_val is not None:
             return float(vout_val)/ 1000
@@ -198,7 +198,7 @@ class Psu(PsuBase):
         Retrieves the presence of the PSU
         Returns:
             bool: True if PSU is present, False if not
-        """        
+        """
         presence_path="{}{}".format(self.cpld_path, 'psu_present')
         val=self._api_helper.read_txt_file(presence_path)
         if val is not None:

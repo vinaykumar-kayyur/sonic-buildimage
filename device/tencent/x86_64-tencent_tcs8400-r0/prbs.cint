@@ -1,6 +1,6 @@
 void set_port_prbs(int unit_port, int enable){
     int status;
-    bcm_port_control_set(0, unit_port, bcmPortControlPrbsPolynomial, 6);   
+    bcm_port_control_set(0, unit_port, bcmPortControlPrbsPolynomial, 6);
     bcm_port_control_set(0, unit_port, bcmPortControlPrbsRxEnable, 0);
     bcm_port_control_set(0, unit_port, bcmPortControlPrbsTxEnable, 0);
     if(enable == 1){
