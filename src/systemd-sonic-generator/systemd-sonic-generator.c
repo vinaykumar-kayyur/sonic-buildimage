@@ -569,13 +569,11 @@ int get_num_of_asic() {
                     str_num_asic = strtok_r(NULL, "=", &saveptr);
                     strip_trailing_newline(str_num_asic);
                     if (str_num_asic != NULL){
-                        char *endptr;
-                        num_asic = strtol(str_num_asic, &endptr, 10);
-                        if (*endptr != '\0') {
-                            fprintf(stderr, "Failed to get num asics.\n");
+                        num_asic = strtol(str_num_asic, NULL, 10);
+                        if (num_asic > 0) {
+                            break;
                         }
                     }
-                    break;
                 }
             }
             fclose(fp);
