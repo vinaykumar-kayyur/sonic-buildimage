@@ -83,124 +83,124 @@ class Thermal(ThermalBase):
         # Default thresholds
         self.default_threshold = {
             THERMAL_NAME_LIST[0] : {
-                self.conf.HIGH_THRESHOLD_FIELD : '71.0',
-                self.conf.LOW_THRESHOLD_FIELD : '33.0',
-                self.conf.HIGH_CRIT_THRESHOLD_FIELD : '76.0',
-                self.conf.LOW_CRIT_THRESHOLD_FIELD : '22.0'
+                self.conf.HIGH_THRESHOLD_FIELD : '65.0',
+                self.conf.LOW_THRESHOLD_FIELD : '7.0',
+                self.conf.HIGH_CRIT_THRESHOLD_FIELD : '69.0',
+                self.conf.LOW_CRIT_THRESHOLD_FIELD : '-7.0'
             },
             THERMAL_NAME_LIST[1] : {
-                self.conf.HIGH_THRESHOLD_FIELD : '55.0',
-                self.conf.LOW_THRESHOLD_FIELD : '23.0',
-                self.conf.HIGH_CRIT_THRESHOLD_FIELD : '60.0',
-                self.conf.LOW_CRIT_THRESHOLD_FIELD : '12.0'
+                self.conf.HIGH_THRESHOLD_FIELD : '53.0',
+                self.conf.LOW_THRESHOLD_FIELD : '3.0',
+                self.conf.HIGH_CRIT_THRESHOLD_FIELD : '57.0',
+                self.conf.LOW_CRIT_THRESHOLD_FIELD : '-10.0'
             },
             THERMAL_NAME_LIST[2] : {
-                self.conf.HIGH_THRESHOLD_FIELD : '58.0',
-                self.conf.LOW_THRESHOLD_FIELD : '22.0',
-                self.conf.HIGH_CRIT_THRESHOLD_FIELD : '63.0',
-                self.conf.LOW_CRIT_THRESHOLD_FIELD : '13.0'
+                self.conf.HIGH_THRESHOLD_FIELD : '55.0',
+                self.conf.LOW_THRESHOLD_FIELD : '3.0',
+                self.conf.HIGH_CRIT_THRESHOLD_FIELD : '59.0',
+                self.conf.LOW_CRIT_THRESHOLD_FIELD : '-11.0'
             },
             THERMAL_NAME_LIST[3] : {
-                self.conf.HIGH_THRESHOLD_FIELD : '49.0',
-                self.conf.LOW_THRESHOLD_FIELD : '18.0',
+                self.conf.HIGH_THRESHOLD_FIELD : '51.0',
+                self.conf.LOW_THRESHOLD_FIELD : '2.0',
                 self.conf.HIGH_CRIT_THRESHOLD_FIELD : '54.0',
-                self.conf.LOW_CRIT_THRESHOLD_FIELD : '8.0'
+                self.conf.LOW_CRIT_THRESHOLD_FIELD : '-16.0'
             },
             THERMAL_NAME_LIST[4] : {
-                self.conf.HIGH_THRESHOLD_FIELD : '50.0',
-                self.conf.LOW_THRESHOLD_FIELD : '21.0',
+                self.conf.HIGH_THRESHOLD_FIELD : '51.0',
+                self.conf.LOW_THRESHOLD_FIELD : '3.0',
                 self.conf.HIGH_CRIT_THRESHOLD_FIELD : '55.0',
-                self.conf.LOW_CRIT_THRESHOLD_FIELD : '10.0'
+                self.conf.LOW_CRIT_THRESHOLD_FIELD : '-14.0'
             },
             THERMAL_NAME_LIST[5] : {
-                self.conf.HIGH_THRESHOLD_FIELD : '45.0',
-                self.conf.LOW_THRESHOLD_FIELD : '9.0',
-                self.conf.HIGH_CRIT_THRESHOLD_FIELD : '50.0',
-                self.conf.LOW_CRIT_THRESHOLD_FIELD : '-2.0'
+                self.conf.HIGH_THRESHOLD_FIELD : '47.0',
+                self.conf.LOW_THRESHOLD_FIELD : '1.0',
+                self.conf.HIGH_CRIT_THRESHOLD_FIELD : '51.0',
+                self.conf.LOW_CRIT_THRESHOLD_FIELD : '-17.0'
             },
             THERMAL_NAME_LIST[6] : {
-                self.conf.HIGH_THRESHOLD_FIELD : '41.0',
-                self.conf.LOW_THRESHOLD_FIELD : '12.0',
-                self.conf.HIGH_CRIT_THRESHOLD_FIELD : '46.0',
-                self.conf.LOW_CRIT_THRESHOLD_FIELD : '1.0'
+                self.conf.HIGH_THRESHOLD_FIELD : '44.0',
+                self.conf.LOW_THRESHOLD_FIELD : '3.0',
+                self.conf.HIGH_CRIT_THRESHOLD_FIELD : '47.0',
+                self.conf.LOW_CRIT_THRESHOLD_FIELD : '-14.0'
             },
             THERMAL_NAME_LIST[7] : {
-                self.conf.HIGH_THRESHOLD_FIELD : '65.0',
-                self.conf.LOW_THRESHOLD_FIELD : '36.0',
-                self.conf.HIGH_CRIT_THRESHOLD_FIELD : '70.0',
-                self.conf.LOW_CRIT_THRESHOLD_FIELD : '24.0'
+                self.conf.HIGH_THRESHOLD_FIELD : '62.0',
+                self.conf.LOW_THRESHOLD_FIELD : '3.0',
+                self.conf.HIGH_CRIT_THRESHOLD_FIELD : '66.0',
+                self.conf.LOW_CRIT_THRESHOLD_FIELD : '-13.0'
             },
             THERMAL_NAME_LIST[8] : {
-                self.conf.HIGH_THRESHOLD_FIELD : '56.0',
-                self.conf.LOW_THRESHOLD_FIELD : '27.0',
-                self.conf.HIGH_CRIT_THRESHOLD_FIELD : '61.0',
-                self.conf.LOW_CRIT_THRESHOLD_FIELD : '16.0'
+                self.conf.HIGH_THRESHOLD_FIELD : '54.0',
+                self.conf.LOW_THRESHOLD_FIELD : '0.0',
+                self.conf.HIGH_CRIT_THRESHOLD_FIELD : '58.0',
+                self.conf.LOW_CRIT_THRESHOLD_FIELD : '-17.0'
             },
             THERMAL_NAME_LIST[9] : {
-                self.conf.HIGH_THRESHOLD_FIELD : '52.0',
-                self.conf.LOW_THRESHOLD_FIELD : '26.0',
-                self.conf.HIGH_CRIT_THRESHOLD_FIELD : '57.0',
-                self.conf.LOW_CRIT_THRESHOLD_FIELD : '15.0'
+                self.conf.HIGH_THRESHOLD_FIELD : '51.0',
+                self.conf.LOW_THRESHOLD_FIELD : '1.0',
+                self.conf.HIGH_CRIT_THRESHOLD_FIELD : '54.0',
+                self.conf.LOW_CRIT_THRESHOLD_FIELD : '-17.0'
             },
             THERMAL_NAME_LIST[10] : {
-                self.conf.HIGH_THRESHOLD_FIELD : '62.0',
-                self.conf.LOW_THRESHOLD_FIELD : '31.0',
-                self.conf.HIGH_CRIT_THRESHOLD_FIELD : '67.0',
-                self.conf.LOW_CRIT_THRESHOLD_FIELD : '20.0'
+                self.conf.HIGH_THRESHOLD_FIELD : '59.0',
+                self.conf.LOW_THRESHOLD_FIELD : '3.0',
+                self.conf.HIGH_CRIT_THRESHOLD_FIELD : '61.0',
+                self.conf.LOW_CRIT_THRESHOLD_FIELD : '-13.0'
             },
             THERMAL_NAME_LIST[11] : {
-                self.conf.HIGH_THRESHOLD_FIELD : '99.0',
-                self.conf.LOW_THRESHOLD_FIELD : '84.0',
-                self.conf.HIGH_CRIT_THRESHOLD_FIELD : '107.0',
-                self.conf.LOW_CRIT_THRESHOLD_FIELD : '72.0'
+                self.conf.HIGH_THRESHOLD_FIELD : '92.0',
+                self.conf.LOW_THRESHOLD_FIELD : '14.0',
+                self.conf.HIGH_CRIT_THRESHOLD_FIELD : '93.0',
+                self.conf.LOW_CRIT_THRESHOLD_FIELD : '1.0'
             },
             THERMAL_NAME_LIST[12] : {
-                self.conf.HIGH_THRESHOLD_FIELD : '99.0',
-                self.conf.LOW_THRESHOLD_FIELD : '84.0',
-                self.conf.HIGH_CRIT_THRESHOLD_FIELD : '107.0',
-                self.conf.LOW_CRIT_THRESHOLD_FIELD : '72.0'
+                self.conf.HIGH_THRESHOLD_FIELD : '92.0',
+                self.conf.LOW_THRESHOLD_FIELD : '14.0',
+                self.conf.HIGH_CRIT_THRESHOLD_FIELD : '93.0',
+                self.conf.LOW_CRIT_THRESHOLD_FIELD : '1.0'
             },
             THERMAL_NAME_LIST[13] : {
-                self.conf.HIGH_THRESHOLD_FIELD : '99.0',
-                self.conf.LOW_THRESHOLD_FIELD : '84.0',
-                self.conf.HIGH_CRIT_THRESHOLD_FIELD : '107.0',
-                self.conf.LOW_CRIT_THRESHOLD_FIELD : '72.0'
+                self.conf.HIGH_THRESHOLD_FIELD : '92.0',
+                self.conf.LOW_THRESHOLD_FIELD : '14.0',
+                self.conf.HIGH_CRIT_THRESHOLD_FIELD : '93.0',
+                self.conf.LOW_CRIT_THRESHOLD_FIELD : '1.0'
             },
             THERMAL_NAME_LIST[14] : {
-                self.conf.HIGH_THRESHOLD_FIELD : '99.0',
-                self.conf.LOW_THRESHOLD_FIELD : '84.0',
-                self.conf.HIGH_CRIT_THRESHOLD_FIELD : '107.0',
-                self.conf.LOW_CRIT_THRESHOLD_FIELD : '72.0'
+                self.conf.HIGH_THRESHOLD_FIELD : '92.0',
+                self.conf.LOW_THRESHOLD_FIELD : '14.0',
+                self.conf.HIGH_CRIT_THRESHOLD_FIELD : '93.0',
+                self.conf.LOW_CRIT_THRESHOLD_FIELD : '1.0'
             },
             THERMAL_NAME_LIST[15] : {
-                self.conf.HIGH_THRESHOLD_FIELD : '99.0',
-                self.conf.LOW_THRESHOLD_FIELD : '84.0',
-                self.conf.HIGH_CRIT_THRESHOLD_FIELD : '107.0',
-                self.conf.LOW_CRIT_THRESHOLD_FIELD : '72.0'
+                self.conf.HIGH_THRESHOLD_FIELD : '92.0',
+                self.conf.LOW_THRESHOLD_FIELD : '14.0',
+                self.conf.HIGH_CRIT_THRESHOLD_FIELD : '93.0',
+                self.conf.LOW_CRIT_THRESHOLD_FIELD : '1.0'
             },
             THERMAL_NAME_LIST[16] : {
-                self.conf.HIGH_THRESHOLD_FIELD : '99.0',
-                self.conf.LOW_THRESHOLD_FIELD : '84.0',
-                self.conf.HIGH_CRIT_THRESHOLD_FIELD : '107.0',
-                self.conf.LOW_CRIT_THRESHOLD_FIELD : '72.0'
+                self.conf.HIGH_THRESHOLD_FIELD : '92.0',
+                self.conf.LOW_THRESHOLD_FIELD : '14.0',
+                self.conf.HIGH_CRIT_THRESHOLD_FIELD : '93.0',
+                self.conf.LOW_CRIT_THRESHOLD_FIELD : '1.0'
             },
             THERMAL_NAME_LIST[17] : {
-                self.conf.HIGH_THRESHOLD_FIELD : '99.0',
-                self.conf.LOW_THRESHOLD_FIELD : '84.0',
-                self.conf.HIGH_CRIT_THRESHOLD_FIELD : '107.0',
-                self.conf.LOW_CRIT_THRESHOLD_FIELD : '72.0'
+                self.conf.HIGH_THRESHOLD_FIELD : '92.0',
+                self.conf.LOW_THRESHOLD_FIELD : '14.0',
+                self.conf.HIGH_CRIT_THRESHOLD_FIELD : '93.0',
+                self.conf.LOW_CRIT_THRESHOLD_FIELD : '1.0'
             },
             THERMAL_NAME_LIST[18] : {
-                self.conf.HIGH_THRESHOLD_FIELD : '99.0',
-                self.conf.LOW_THRESHOLD_FIELD : '84.0',
-                self.conf.HIGH_CRIT_THRESHOLD_FIELD : '107.0',
-                self.conf.LOW_CRIT_THRESHOLD_FIELD : '72.0'
+                self.conf.HIGH_THRESHOLD_FIELD : '92.0',
+                self.conf.LOW_THRESHOLD_FIELD : '14.0',
+                self.conf.HIGH_CRIT_THRESHOLD_FIELD : '93.0',
+                self.conf.LOW_CRIT_THRESHOLD_FIELD : '1.0'
             },
             THERMAL_NAME_LIST[19] : {
-                self.conf.HIGH_THRESHOLD_FIELD : '99.0',
-                self.conf.LOW_THRESHOLD_FIELD : '84.0',
-                self.conf.HIGH_CRIT_THRESHOLD_FIELD : '107.0',
-                self.conf.LOW_CRIT_THRESHOLD_FIELD : '72.0'
+                self.conf.HIGH_THRESHOLD_FIELD : '92.0',
+                self.conf.LOW_THRESHOLD_FIELD : '14.0',
+                self.conf.HIGH_CRIT_THRESHOLD_FIELD : '93.0',
+                self.conf.LOW_CRIT_THRESHOLD_FIELD : '1.0'
             },
             PSU_THERMAL_NAME_LIST[0] : {
                 self.conf.HIGH_THRESHOLD_FIELD : str(float(psu_temp_max)),
