@@ -1,6 +1,6 @@
 #!/bin/bash
 # This script is invoked at the closure of syslog socket during reboot
-# This will stop journal services, unmount /var/log and delete loop device 
+# This will stop journal services, unmount /var/log and delete loop device
 # associated to /host to ensure proper unmount of /host
 
 journal_stop() {

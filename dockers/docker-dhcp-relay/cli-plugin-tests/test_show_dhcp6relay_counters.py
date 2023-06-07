@@ -40,7 +40,7 @@ Information-Request
 
 class TestDhcp6RelayCounters(object):
 
-    def test_show_counts(self):           
+    def test_show_counts(self):
         runner = CliRunner()
         result = runner.invoke(show.dhcp6relay_counters.commands["counts"], ["-i Vlan1000"])
         assert result.output == expected_counts

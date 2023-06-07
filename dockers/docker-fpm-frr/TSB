@@ -11,7 +11,7 @@ installed=$?
 if [[ $routemap_count -eq 0 ]];
 then
   echo "System Mode: No external neighbors"
-elif [[ $installed -ne 0 ]]; 
+elif [[ $installed -ne 0 ]];
 then
   TSB_FILE=$(mktemp)
   for route_map_name in $(echo "$config" | sed -ne 's/  neighbor \S* route-map \(\S*\) out/\1/p' | uniq);

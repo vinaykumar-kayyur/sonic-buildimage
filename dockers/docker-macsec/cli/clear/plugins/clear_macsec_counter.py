@@ -13,7 +13,7 @@ def macsec():
 @macsec.command('macsec')
 @click.option('--clean-cache', type=bool, required=False, default=False, help="If the option of clean cache is true, next show commands will show the raw counters which based on the service booted instead of the last clear command.")
 def macsec_clear_counters(clean_cache):
-    """ 
+    """
         Clear MACsec counts.
         This clear command will generated a cache for next show commands which will base on this cache as the zero baseline to show the increment of counters.
     """

@@ -9,12 +9,12 @@ if [[ $1 == "TSA" ]]; then
     TSA_STATE_UPDATE='{"BGP_DEVICE_GLOBAL":{"STATE":{"tsa_enabled": "true"}}}'
     log_msg='System Mode: Normal -> Maintenance'
     err_msg='System is already in Maintenance'
-    desired_tsa_state=true 
+    desired_tsa_state=true
 elif [[ $1 == "TSB" ]]; then
     TSA_STATE_UPDATE='{"BGP_DEVICE_GLOBAL":{"STATE":{"tsa_enabled": "false"}}}'
     log_msg='System Mode: Maintenance -> Normal'
     err_msg='System is already in Normal mode'
-    desired_tsa_state=false    
+    desired_tsa_state=false
 fi
 
 # Parse the device specific asic conf file, if it exists
@@ -37,7 +37,7 @@ if [[ ($NUM_ASIC -gt 1) ]]; then
                 if [[ $current_tsa_state  == $desired_tsa_state ]]; then
                     echo "$err_msg"
                     logger -t $1 -p user.info "$err_msg"
-                else 
+                else
                     sonic-cfggen -a "$TSA_STATE_UPDATE" -w -n $NAMESPACE_PREFIX$asic
                     logger -t $1 -p user.info "$log_msg"
                     echo "$log_msg"
@@ -55,7 +55,7 @@ else
             if [[ $current_tsa_state  == $desired_tsa_state ]]; then
                 echo "$err_msg"
                 logger -t $1 -p user.info "$err_msg"
-            else              
+            else
                 sonic-cfggen -a "$TSA_STATE_UPDATE" -w
                 logger -t $1 -p user.info "$log_msg"
                 echo "$log_msg"

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import os
-import sys 
+import sys
 
 import yaml
 from sonic_py_common.logger import Logger

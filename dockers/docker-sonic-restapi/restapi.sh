@@ -35,7 +35,7 @@ if [ ! -z $LOG_LEVEL ]; then
     RESTAPI_ARGS+=" -loglevel=$LOG_LEVEL"
 else
     RESTAPI_ARGS+=" -loglevel=trace"
-fi 
+fi
 
 logger "RESTAPI_ARGS: $RESTAPI_ARGS"
 exec /usr/sbin/go-server-server ${RESTAPI_ARGS}

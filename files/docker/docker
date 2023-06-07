@@ -93,7 +93,7 @@ cgroupfs_mount() {
 case "$1" in
 	start)
 		check_init
-		
+
 		fail_unless_root
 
 		cgroupfs_mount

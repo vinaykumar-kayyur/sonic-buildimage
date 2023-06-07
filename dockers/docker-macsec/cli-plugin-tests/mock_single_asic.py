@@ -23,7 +23,7 @@ mock_intf_table = {
                 ]
         },
         'PortChannel0001': {
-            17: [{'addr': '82:fd:d1:5b:45:2f', 'broadcast': 'ff:ff:ff:ff:ff:ff'}], 
+            17: [{'addr': '82:fd:d1:5b:45:2f', 'broadcast': 'ff:ff:ff:ff:ff:ff'}],
             2: [{'addr': '30.1.1.1', 'netmask': '255.255.255.0', 'broadcast': '30.1.1.1'}],
             10: [
                     {'addr': 'ab00::1', 'netmask': 'ffff:ffff:ffff:ffff::/64'},
@@ -31,7 +31,7 @@ mock_intf_table = {
                 ]
         },
         'Vlan100': {
-            17: [{'addr': '82:fd:d1:5b:45:2f', 'broadcast': 'ff:ff:ff:ff:ff:ff'}], 
+            17: [{'addr': '82:fd:d1:5b:45:2f', 'broadcast': 'ff:ff:ff:ff:ff:ff'}],
             2: [{'addr': '40.1.1.1', 'netmask': '255.255.255.0', 'broadcast': '30.1.1.1'}],
             10: [
                     {'addr': 'cc00::1', 'netmask': 'ffff:ffff:ffff:ffff::/64'},

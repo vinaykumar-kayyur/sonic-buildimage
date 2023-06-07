@@ -43,7 +43,7 @@ def generate_checksum(checksum_files):
     Generates a checksum for a given list of files. Returns None if an error
     occurs while reading the files.
 
-    NOTE: The checksum is performed in the order provided. This function does 
+    NOTE: The checksum is performed in the order provided. This function does
     NOT do any re-ordering of the files before creating the checksum.
     '''
     checksum = hashlib.sha1()
