@@ -1,8 +1,8 @@
 {
-    "services_to_ignore": [],
+    "services_to_ignore": ["telemetry"],
     "devices_to_ignore": [
-        "PSU 1",
-        "PSU 2",
+        "asic",
+        "psu",
         "PSU1_FAN1",
         "PSU2_FAN1"
     ],
@@ -11,6 +11,6 @@
     "led_color": {
         "fault": "amber",
         "normal": "green",
-        "booting": "amber_blink"
+        "booting": "alternate_blink_4hz"
     }
 }
