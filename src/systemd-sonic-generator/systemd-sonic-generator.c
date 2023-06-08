@@ -570,10 +570,8 @@ int get_num_of_asic() {
                     strip_trailing_newline(str_num_asic);
                     if (str_num_asic != NULL){
                         num_asic = strtol(str_num_asic, NULL, 10);
-                        if (num_asic > 0) {
-                            break;
-                        }
                     }
+                    break;
                 }
             }
             fclose(fp);
