@@ -1,6 +1,6 @@
 # docker image for device-health agent
 
-DOCKER_DEVICE_HEALTH_STEM = docker-sonic-device-health
+DOCKER_DEVICE_HEALTH_STEM = docker-device-health
 DOCKER_DEVICE_HEALTH = $(DOCKER_DEVICE_HEALTH_STEM).gz
 DOCKER_DEVICE_HEALTH_DBG = $(DOCKER_DEVICE_HEALTH_STEM)-$(DBG_IMAGE_MARK).gz
 
