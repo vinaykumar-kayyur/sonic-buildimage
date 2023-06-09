@@ -504,12 +504,30 @@ def parse_dpg(dpg, hname):
         ipintfs = child.find(str(QName(ns, "IPInterfaces")))
         intfs = {}
         ip_intfs_map = {}
-        for ipintf in ipintfs.findall(str(QName(ns, "IPInterface"))):
-            intfalias = ipintf.find(str(QName(ns, "AttachTo"))).text
-            intfname = port_alias_map.get(intfalias, intfalias)
-            ipprefix = ipintf.find(str(QName(ns, "Prefix"))).text
-            intfs[(intfname, ipprefix)] = {}
-            ip_intfs_map[ipprefix] = intfalias
+        if ipintfs is not None:
+            for ipintf in ipintfs.findall(str(QName(ns, "IPInterface"))):
+                ipprefix = ipintf.find(str(QName(ns, "Prefix"))).text
+                ipintf_name  = ipintf.find(str(QName(ns, "Name"))).text
+                intfalias = ipintf.find(str(QName(ns, "AttachTo"))).text
+                """
+                    VoqInband interfaces are special ip interfaces needed on inter linecard
+                    control plane communications on Voq Chassis
+                """
+                if ipintf_name in ["v6VoqInband", "VoqInband"]:
+                    if intfalias.startswith("Ethernet"):
+                        voq_intf_type = "port"
+                    # Vlan interface is not used, adding to be future proof
+                    elif intfalias.startswith("Vlan"):
+                        voq_intf_type = "vlan"
+                    if intfalias not in voq_inband_intfs:
+                        voq_inband_intfs[intfalias] = {'inband_type': voq_intf_type}
+
+                    voq_inband_intfs["%s|%s" % (intfalias, ipprefix)] = {}
+
+                    continue
+                intfname = port_alias_map.get(intfalias, intfalias)
+                intfs[(intfname, ipprefix)] = {}
+                ip_intfs_map[ipprefix] = intfalias
         lo_intfs = parse_loopback_intf(child)
 
         subintfs = child.find(str(QName(ns, "SubInterfaces")))
@@ -537,17 +555,6 @@ def parse_dpg(dpg, hname):
             mgmtipn = ipaddress.ip_network(UNICODE_TYPE(ipprefix), False)
             gwaddr = ipaddress.ip_address(next(mgmtipn.hosts()))
             mgmt_intf[(intfname, ipprefix)] = {'gwaddr': gwaddr}
-
-        voqinbandintfs = child.find(str(QName(ns, "VoqInbandInterfaces")))
-        voq_inband_intfs = {}
-        if voqinbandintfs:
-            for voqintf in voqinbandintfs.findall(str(QName(ns1, "VoqInbandInterface"))):
-                intfname = voqintf.find(str(QName(ns, "Name"))).text
-                intftype = voqintf.find(str(QName(ns, "Type"))).text
-                ipprefix = voqintf.find(str(QName(ns1, "PrefixStr"))).text
-                if intfname not in voq_inband_intfs:
-                   voq_inband_intfs[intfname] = {'inband_type': intftype}
-                voq_inband_intfs["%s|%s" % (intfname, ipprefix)] = {}
 
         pcintfs = child.find(str(QName(ns, "PortChannelInterfaces")))
         pc_intfs = []
@@ -1632,8 +1639,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     if voq_inband_intfs is not None:
         results['VOQ_INBAND_INTERFACE'] = {}
         for key in voq_inband_intfs:
-           results['VOQ_INBAND_INTERFACE'][key] = voq_inband_intfs[key]
-
+            results['VOQ_INBAND_INTERFACE'][key] = voq_inband_intfs[key]
 
     if resource_type is not None:
         results['DEVICE_METADATA']['localhost']['resource_type'] = resource_type
