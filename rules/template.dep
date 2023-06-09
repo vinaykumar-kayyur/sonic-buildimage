@@ -14,7 +14,7 @@ SPATH       := $($(__NEW_MODULE__)_SRC_PATH)
 
 # Add all the dependendency files in the DEP_FILES variable
 # SONIC_COMMON_FILES_LIST => It includes common files like .platform, slave.mk, rules/functions etc
-DEP_FILES   := $(SONIC_COMMON_FILES_LIST) rules/__NEW_RULES__.mk rules/__NEW_RULES__.dep   
+DEP_FILES   := $(SONIC_COMMON_FILES_LIST) rules/__NEW_RULES__.mk rules/__NEW_RULES__.dep
 
 # SONIC_COMMON_BASE_FILES_LIST => It includes base docker files like Dockerfile, Dockerfile.user etc
 DEP_FILES   += $(SONIC_COMMON_BASE_FILES_LIST)
@@ -31,8 +31,8 @@ DEP_FILES   += $(SONIC_COMMON_BASE_FILES_LIST)
 # Define the DPKG cache rule for a module
 # Set the Cache mode,
 # GIT_CONTENT_SHA => Cache SHA is derived from contents of the module dependency files
-# GIT_COMMIT_SHA => Cache SHA is derived from the last commit id of a module 
-$(__NEW_MODULE__)_CACHE_MODE  := GIT_CONTENT_SHA 
+# GIT_COMMIT_SHA => Cache SHA is derived from the last commit id of a module
+$(__NEW_MODULE__)_CACHE_MODE  := GIT_CONTENT_SHA
 
 # List all the environment flags that module depends on
 # SONIC_COMMON_FLAGS_LIST => It includes the defaults flags like SONIC_DEBUGGING_ON, SONIC_PROFILE_ON etc
@@ -41,7 +41,7 @@ $(__NEW_MODULE__)_DEP_FLAGS   := $(SONIC_COMMON_FLAGS_LIST)
 # List all the dependency files
 $(__NEW_MODULE__)_DEP_FILES   := $(DEP_FILES)
 
-# List all the sub module dependendency files	
+# List all the sub module dependendency files
 #$(__NEW_MODULE__)_SMDEP_FILES := $(SMDEP_FILES)
 
 # List all the sub module paths
