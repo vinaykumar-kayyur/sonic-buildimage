@@ -151,7 +151,7 @@ def is_systemd_active(feat):
 def restart_systemd_service(server, feat, owner):
     log_debug("Restart service {} to owner:{}".format(feat, owner))
     if not UNIT_TESTING:
-        status = subprocess.call(["systemctl", "restart", str(feat)])
+        status = subprocess.call(["systemctl", "reset-failed", str(feat), "&&", "systemctl", "restart", str(feat)])
     else:
         server.mod_db_entry(STATE_DB_NAME,
                 FEATURE_TABLE, feat, {"restart": "true"})
@@ -563,6 +563,12 @@ class FeatureTransitionHandler:
 
             log_debug("try to tag latest label after {} seconds @{}".format(
                     remote_ctr_config[TAG_IMAGE_LATEST], start_time))
+        
+        # This is for going back to local without waiting 
+        # when can't wait for the k8s schuduler to start the container
+        if (remote_state == REMOTE_NONE) and (old_remote_state == REMOTE_STOPPED):
+            restart_systemd_service(self.server, key, OWNER_LOCAL)
+            return
 
         if (not init):
             if (old_remote_state == remote_state):
