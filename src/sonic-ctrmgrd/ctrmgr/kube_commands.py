@@ -478,7 +478,7 @@ def tag_latest(feat, docker_id, image_ver):
         else:
             log_error(err)
     elif ret == -1:
-        ret = 0
+        pass
     else:
         log_error(err)
     return ret
@@ -534,7 +534,7 @@ def _do_clean(feat, current_version, last_version):
             err = "Failed to clean {} old version images. Err: {}".format(feat, err)
             ret = 1
     else:
-        err = "Failed to docker images |grep {} |awk '{{print $3}}'".format(feat)
+        err = "Failed to docker images |grep {} |awk '{{print $3}}'. Error: {}".format(feat, err)
         ret = 1
 
     return ret, out, err

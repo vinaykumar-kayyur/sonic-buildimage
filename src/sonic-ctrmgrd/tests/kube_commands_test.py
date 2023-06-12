@@ -266,7 +266,7 @@ tag_latest_test_data = {
     },
     2: {
         common_test.DESCR: "Tag a unstable container",
-        common_test.RETVAL: 0,
+        common_test.RETVAL: -1,
         common_test.ARGS: ["snmp", "123456", "v1"],
         common_test.PROC_CMD: [
             "docker ps |grep 123456"

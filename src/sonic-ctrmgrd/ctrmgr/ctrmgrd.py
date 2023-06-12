@@ -588,7 +588,7 @@ class FeatureTransitionHandler:
 
     def do_tag_latest(self, feat, docker_id, image_ver):
         ret = kube_commands.tag_latest(feat, docker_id, image_ver)
-        if ret != 0:
+        if ret == 1:
             # Tag latest failed. Retry after an interval
             self.start_time = datetime.datetime.now()
             self.start_time += datetime.timedelta(
@@ -597,7 +597,7 @@ class FeatureTransitionHandler:
 
             log_debug("Tag latest as local failed retry after {} seconds @{}".
                     format(remote_ctr_config[TAG_RETRY], self.start_time))
-        else:
+        elif ret == 0:
             last_version = self.st_data[feat][ST_FEAT_CTR_STABLE_VER]
             if last_version == image_ver:
                 last_version = self.st_data[feat][ST_FEAT_CTR_LAST_VER]
