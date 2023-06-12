@@ -1,7 +1,7 @@
 {
     "interfaces": {
         "Ethernet0": {
-            "default_brkout_mode": "4x10G[1G]",
+            "default_brkout_mode": "3x10G(3)+1x1G(1)",
             "port_type": "RJ45"
         },
         "Ethernet4": {
