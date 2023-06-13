@@ -1,7 +1,8 @@
 {
     "interfaces": {
         "Ethernet0": {
-            "default_brkout_mode": "1x100G[40G]"
+            "default_brkout_mode": "1x100G[40G]",
+            "mode" : "trunk"
         },
         "Ethernet4": {
             "default_brkout_mode": "2x50G",
