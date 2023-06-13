@@ -26,6 +26,7 @@ jobs:
         for ((i=0;i<$count;i++))
         do
           url=$(cat prs.log | jq -r ".[$i].url")
+          body=$(cat prs.log | jq -r ".[$i].body")
           created_at=$(cat prs.log | jq -r ".[$i].createdAt")
           echo PR: $(($i+1))/$count, URL: $url, createdAt: $created_at, now: $(date -u +"%FT%TZ")
           [[ "$url" == "" ]] && continue
@@ -68,6 +69,6 @@ jobs:
           done
           # merge the PR
           echo ========Merging  PR========
-          gh pr merge --rebase --admin -R sonic-net/sonic-buildimage $url || true
+          gh pr merge --squash --admin -R sonic-net/sonic-buildimage $url -b "$body" || true
           echo ========Finished PR========
         done
