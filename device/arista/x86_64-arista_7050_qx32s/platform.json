@@ -17,7 +17,6 @@
             {
                 "name": "CrowSysCpld(addr=2-0023)"
             }
-
 	],
         "fans": [],
         "fan_drawers": [
