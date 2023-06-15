@@ -13,12 +13,38 @@
 #  AGENT BEHAVIOUR
 #
 
-#  Listen for connections on all ip addresses, including eth0, ipv4 lo
+#  Listen for connections on ip addresses based on configuration
 #
+# if SNMP_AGENT_ADDRESS_CONFIG is present
+# use SNMP_AGENT_ADDRESS_CONFIG
+# elif either MGMT_INTERFACE or LOOPBACK_INTERFACE
+# use management and loopback ip addresses
+# use docker0 ipv4 and ipv6 address
+# else if none of the above config is present
+# listen on any IP
+
 {% if SNMP_AGENT_ADDRESS_CONFIG %}
 {% for (agentip, port, vrf) in SNMP_AGENT_ADDRESS_CONFIG %}
 agentAddress {{ agentip }}{% if port %}:{{ port }}{% endif %}{% if vrf %}%{{ vrf }}{% endif %}{{ "" }}
 {% endfor %}
+{% elif MGMT_INTERFACE is defined or LOOPBACK_INTERFACE is defined%}
+{% if MGMT_INTERFACE is defined %}
+{% for if, ip in MGMT_INTERFACE %}
+agentAddress {{ ip.split('/')[0] }}
+{% endfor %}
+{% endif %}
+{% if LOOPBACK_INTERFACE is defined %}
+{% for lo in LOOPBACK_INTERFACE %}
+{% if lo | length == 2 %}
+agentAddress {{ lo[1].split('/')[0] }}
+{% endif %}
+{% endfor %}
+{% endif %}
+# Listen on docker0 IP address to support multi-asic platform
+{% if docker0_v4 and docker0_v6 %}
+agentAddress {{ docker0_v4 }}
+agentAddress {{ docker0_v6 }}
+{% endif %}
 {% else %}
 agentAddress udp:161
 agentAddress udp6:161
