@@ -33,7 +33,7 @@ agentAddress {{ agentip }}{% if port %}:{{ port }}{% endif %}{% if vrf %}%{{ vrf
 agentAddress {{ ip.split('/')[0] }}
 {% endfor %}
 {% endif %}
-{% if LOOPBACK_INTERFACE is defined %}
+{% if LOOPBACK_INTERFACE is defined and loopback0_exists %}
 {% for lo in LOOPBACK_INTERFACE %}
 {% if lo | length == 2 %}
 agentAddress {{ lo[1].split('/')[0] }}
