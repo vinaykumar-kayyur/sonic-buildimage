@@ -565,8 +565,8 @@ class FeatureTransitionHandler:
             log_debug("try to tag latest label after {} seconds @{}".format(
                     remote_ctr_config[TAG_IMAGE_LATEST], start_time))
         
-        # This is for going back to local without waiting 
-        # when can't wait for the k8s schuduler to start the container
+        # This is for going back to local without waiting the sytemd restart time
+        # when k8s is down, can't deploy containers to worker and need to go back to local
         if (remote_state == REMOTE_NONE) and (old_remote_state == REMOTE_STOPPED):
             restart_systemd_service(self.server, key, OWNER_LOCAL)
             return
@@ -607,6 +607,10 @@ class FeatureTransitionHandler:
             self.st_data[ST_FEAT_CTR_LAST_VER] = last_version
             self.st_data[ST_FEAT_CTR_STABLE_VER] = image_ver
             self.do_clean_image(feat, image_ver, last_version)
+        elif ret == -1:
+            # This means the container we want to tag latest is not running
+            # so we don't need to do clean up
+            pass
 
     def do_clean_image(self, feat, current_version, last_version):
         ret = kube_commands.clean_image(feat, current_version, last_version)

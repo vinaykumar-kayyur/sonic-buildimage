@@ -478,7 +478,7 @@ def tag_latest(feat, docker_id, image_ver):
         else:
             log_error(err)
     elif ret == -1:
-        pass
+        log_debug(out)
     else:
         log_error(err)
     return ret
