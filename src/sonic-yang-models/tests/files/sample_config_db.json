@@ -138,7 +138,7 @@
         "VLAN_INTERFACE": {
             "Vlan111": {
                 "nat_zone": "0",
-                "static_anycast_gateway": "true"
+                "static_anycast_gateway": "true",
                 "loopback_action": "forward"
             },
             "Vlan777": {},
