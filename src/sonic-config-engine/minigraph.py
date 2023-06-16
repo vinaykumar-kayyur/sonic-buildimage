@@ -1785,7 +1785,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         # Note: FECDisabled only be effective on 100G port right now
         if linkmetas.get(alias, {}).get('FECDisabled', '').lower() == 'true':
             port['fec'] = 'none'
-        elif not port.get('fec') and port.get('speed') == '100000':
+        elif not port.get('fec') and port.get('speed') in ['100000', '200000', '400000', '800000']:
             port['fec'] = 'rs'
 
         # If AutoNegotiation is available in the minigraph, we override any value we may have received from port_config.ini
