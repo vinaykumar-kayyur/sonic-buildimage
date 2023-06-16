@@ -1,12 +1,12 @@
 name: AutoMergeScan
 on:
   schedule:
-    - cron: '21 * * * *'
+    - cron: '31 */2 * * *'
   workflow_dispatch:
 
 jobs:
   automerge_scan:
-#    if: github.repository_owner == 'sonic-net'
+    if: github.repository_owner == 'sonic-net'
     runs-on: ubuntu-latest
     steps:
     - name: Debug
