@@ -32,7 +32,7 @@ for instname, v in instlists.items():
             if instsocket is not None:
                 # connect with Unix socket
                 connector =  swsscommon.DBConnector(dbid, instsocket, 0)
-            else
+            else:
                 # connect with TCP socket
                 port = swsscommon.SonicDBConfig.getDbPort(dbname);
                 connector =  swsscommon.DBConnector(dbid, insthost, port, 0)
