@@ -11,6 +11,10 @@ module sonic-feature{
 
     description "Feature Table yang Module for SONiC";
 
+    revision 2023-05-10 {
+        description "Add system-ready feature configuration";
+    }
+
     typedef feature-state {
         description "configuration to set the feature running state";
         type string;
@@ -111,6 +115,12 @@ module sonic-feature{
                                  syslog rate limit";
                     type stypes:boolean_type;
                     default "false";
+                }
+
+                leaf irrel_for_sysready {
+                    description "Readiness of this feature is irrelevant for system-ready state";
+                    type boolean;
+                    default false;
                 }
             }
         }
