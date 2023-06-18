@@ -4,7 +4,7 @@
 mkdir -p /etc/supervisor/conf.d/
 
 # Generate supervisord configuration template.
-TEMPLATE_FILE="/usr/share/sonic/templates/LoMSupervisord.conf.j2"
+TEMPLATE_FILE="/usr/share/sonic/templates/lom.supervisord.conf.j2"
 PROCS_JSON_FILE="/usr/share/lom/procs.conf.json"
 SUPERVISORD_FILE="/etc/supervisor/conf.d/LoMSupervisord.conf"
 
