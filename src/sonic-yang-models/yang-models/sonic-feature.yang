@@ -119,8 +119,8 @@ module sonic-feature{
 
                 leaf irrel_for_sysready {
                     description "Readiness of this feature is irrelevant for system-ready state";
-                    type boolean;
-                    default false;
+                    type stypes:boolean_type;
+                    default "false";
                 }
             }
         }
