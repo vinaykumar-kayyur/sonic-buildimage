@@ -1,0 +1,29 @@
+{
+    "chassis": {
+        "N8560W-48BC": {
+            "component": {
+                "CPU_CPLD": {
+                    "firmware": "/usr/share/sonic/device/x86_64-fs_n8560w_48bc-r0/latest_firmware/cpu_cpld_upgrade_header.bin",
+                    "version": "50220529"
+                },
+                "CONNECT_CPLDA": {
+                    "firmware": "/usr/share/sonic/device/x86_64-fs_n8560w_48bc-r0/latest_firmware/other_cpld_upgrade_header.vme",
+                    "version": "15201209"
+                },
+                "MAC_CPLDA": {
+                    "firmware" : "/usr/share/sonic/device/x86_64-fs_n8560w_48bc-r0/latest_firmware/other_cpld_upgrade_header.vme",
+                    "version" : "15201126"
+                },
+                "MAC_CPLDB": {
+                    "firmware" : "/usr/share/sonic/device/x86_64-fs_n8560w_48bc-r0/latest_firmware/other_cpld_upgrade_header.vme",
+                    "version" : "15201126"
+                },
+                "BIOS": {
+                    "firmware" : "/usr/share/sonic/device/x86_64-fs_n8560w_48bc-r0/latest_firmware/bios_upgrade_header.bin",
+                    "version" : "5.11(3BARB017)"
+                }
+            }
+        }
+    }
+}
+
