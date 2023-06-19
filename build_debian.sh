@@ -447,8 +447,13 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     systemd-sysv \
     ntp
 
-# Workaround to fix issue https://github.com/systemd/systemd/issues/24668.
-sudo cp files/image_config/systemd/systemd-udevd/systemd-udevd.service $FILESYSTEM_ROOT/lib/systemd/system/systemd-udevd.service
+# Workaround for issue: The udev rule may fail to be executed because the
+#                       daemon-reload command is executed in parallel
+# Github issue: https://github.com/systemd/systemd/issues/24668
+# Github PR: https://github.com/systemd/systemd/pull/24673
+# This workaround should be removed after a upstream already contains the fixes
+sudo patch $FILESYSTEM_ROOT/lib/systemd/system/systemd-udevd.service \
+    files/image_config/systemd/systemd-udevd/fix-udev-rule-may-fail-if-daemon-reload-command-runs.patch
 
 if [[ $TARGET_BOOTLOADER == grub ]]; then
     if [[ $CONFIGURED_ARCH == amd64 ]]; then
