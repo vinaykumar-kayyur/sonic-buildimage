@@ -1,8 +1,8 @@
 module sonic-vlan {
 
-  yang-version 1.1;
+	yang-version 1.1;
 	
-  namespace "http://github.com/sonic-net/sonic-vlan";
+	namespace "http://github.com/sonic-net/sonic-vlan";
 	prefix vlan;
 
 	import ietf-inet-types {
@@ -36,9 +36,9 @@ module sonic-vlan {
 
 	description "VLAN yang Module for SONiC OS";
 
-  revision 2023-02-13 {
-    description "Add SAG support";
-  }
+	revision 2023-02-13 {
+		description "Add SAG support";
+	}
 
 	revision 2021-04-22 {
 		description "Modify Vlan Member to include PortChannel along with Port";
@@ -106,16 +106,16 @@ module sonic-vlan {
 					}
 				}
 
-        leaf loopback_action {
-          description "Packet action when a packet ingress and gets routed on the same IP interface";
-          type stypes:loopback_action;
-        }
-        
-        leaf static_anycast_gateway {
-          description "Enable/disable static anycast gateway for the vlan interface";
-          type boolean;
-          default false;
-        }
+				leaf loopback_action {
+					description "Packet action when a packet ingress and gets routed on the same IP interface";
+					type stypes:loopback_action;
+				}
+
+				leaf static_anycast_gateway {
+					description "Enable/disable static anycast gateway for the vlan interface";
+					type boolean;
+					default false;
+				}
 
 				leaf ipv6_use_link_local_only {
 					description "Enable/Disable IPv6 link local address on vlan interface";
@@ -261,10 +261,10 @@ module sonic-vlan {
 					type stypes:vlan_tagging_mode;
 				}
 			}
-      /* end of list VLAN_MEMBER_LIST */
-    }
-    /* end of container VLAN_MEMBER */
-  }
-  /* end of container sonic-vlan */
+			/* end of list VLAN_MEMBER_LIST */
+		}
+		/* end of container VLAN_MEMBER */
+	}
+	/* end of container sonic-vlan */
 }
 /* end of module sonic-vlan */
