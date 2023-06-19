@@ -4,7 +4,8 @@
             "buffer_model": {% if default_buffer_model == "dynamic" %}"dynamic"{% else %}"traditional"{% endif %},
             {%- if include_p4rt == "y" %}"synchronous_mode":"enable",{% endif %}
             "default_bgp_status": {% if shutdown_bgp_on_start == "y" %}"down"{% else %}"up"{% endif %},
-            "default_pfcwd_status": {% if enable_pfcwd_on_start == "y" %}"enable"{% else %}"disable"{% endif %}
+            "default_pfcwd_status": {% if enable_pfcwd_on_start == "y" %}"enable"{% else %}"disable"{% endif %},
+            "timezone": "UTC"
         }
     },
     "CRM": {
@@ -51,15 +52,15 @@
 {%- if include_nat == "y" %}{% do features.append(("nat", "disabled", false, "enabled")) %}{% endif %}
 {%- if include_p4rt == "y" %}{% do features.append(("p4rt", "disabled", false, "enabled")) %}{% endif %}
 {%- if include_restapi == "y" %}{% do features.append(("restapi", "enabled", false, "enabled")) %}{% endif %}
-{%- if include_sflow == "y" %}{% do features.append(("sflow", "disabled", false, "enabled")) %}{% endif %}
+{%- if include_sflow == "y" %}{% do features.append(("sflow", "disabled", true, "enabled")) %}{% endif %}
 {%- if include_macsec == "y" %}{% do features.append(("macsec", "{% if 'type' in DEVICE_METADATA['localhost'] and DEVICE_METADATA['localhost']['type'] == 'SpineRouter' and DEVICE_RUNTIME_METADATA['MACSEC_SUPPORTED'] %}enabled{% else %}disabled{% endif %}", false, "enabled")) %}{% endif %}
 {%- if include_system_telemetry == "y" %}{% do features.append(("telemetry", "enabled", true, "enabled")) %}{% endif %}
     "FEATURE": {
-{# has_timer field if set, will start the feature systemd .timer unit instead of .service unit #}
-{%- for feature, state, has_timer, autorestart in features %}
+{# delayed field if set, will start the feature systemd .timer unit instead of .service unit #}
+{%- for feature, state, delayed, autorestart in features %}
         "{{feature}}": {
             "state": "{{state}}",
-            "has_timer" : {{has_timer | lower()}},
+            "delayed" : {{delayed | lower()}},
             "has_global_scope": {% if feature + '.service' in installer_services.split(' ') %}true{% else %}false{% endif %},
 {%- if feature in ["lldp"] %}
             "has_per_asic_scope": {% raw %}"{% if not DEVICE_RUNTIME_METADATA['ETHERNET_PORTS_PRESENT'] or ('CHASSIS_METADATA' in DEVICE_RUNTIME_METADATA and DEVICE_RUNTIME_METADATA['CHASSIS_METADATA']['module_type'] in ['supervisor']) %}False{% else %}True{% endif %}"{% endraw %},
