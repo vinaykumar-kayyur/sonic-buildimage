@@ -6,24 +6,18 @@ MAIN_TARGET = $(LLDPD)
 DERIVED_TARGETS = $(LIBLLDPCTL) $(LLDPD_DBG)
 
 LLDP_URL = https://sonicstorage.blob.core.windows.net/debian/pool/main/l/lldpd
+#LLDP_URL = https://deb.debian.org/debian/pool/main/l/lldpd
 
 DSC_FILE = lldpd_$(LLDPD_VERSION_FULL).dsc
-ORIG_FILE = lldpd_$(LLDPD_VERSION).orig.tar.gz
-DEBIAN_FILE = lldpd_$(LLDPD_VERSION_FULL).debian.tar.xz
 
 DSC_FILE_URL = $(LLDP_URL)/$(DSC_FILE)
-ORIG_FILE_URL = $(LLDP_URL)/$(ORIG_FILE)
-DEBIAN_FILE_URL = $(LLDP_URL)/$(DEBIAN_FILE)
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	# Remove any stale files
 	rm -rf lldpd-$(LLDPD_VERSION)
 
 	# download debian LLDPDD
-	wget -NO "$(DSC_FILE)" $(DSC_FILE_URL)
-	wget -NO "$(ORIG_FILE)" $(ORIG_FILE_URL)
-	wget -NO "$(DEBIAN_FILE)" $(DEBIAN_FILE_URL)
-	dpkg-source -x lldpd_$(LLDPD_VERSION_FULL).dsc
+	dget $(DSC_FILE_URL)
 
 	pushd lldpd-$(LLDPD_VERSION)
 	git init
