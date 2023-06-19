@@ -41,7 +41,9 @@ def
             'internal'               : '5m',
             'torrouter_server'       : '5m',
             'leafrouter_torrouter'   : '40m',
-            'spinerouter_leafrouter' : '300m'
+            'spinerouter_leafrouter' : '300m',
+            'regionalhub_spinerouter': '80000m',
+            'aznghub_spinerouter'    : '80000m'
             }
     -%}
 {%- endif %}
@@ -53,6 +55,9 @@ def
             {%- if DEVICE_NEIGHBOR_METADATA is defined and DEVICE_NEIGHBOR_METADATA[DEVICE_NEIGHBOR[local_port].name] %}
                 {%- set neighbor = DEVICE_NEIGHBOR_METADATA[DEVICE_NEIGHBOR[local_port].name] %}
                 {%- set neighbor_role = neighbor.type %}
+                {%- if 'edgezoneaggregator' == neighbor_role | lower %}
+                         {%- set neighbor_role = 'LeafRouter' %}
+                {%- endif %}
                 {%- if 'asic' == neighbor_role | lower %}
                          {%- set roles1 = 'internal' %}
                          {%- if 'internal' not in ports2cable %}
@@ -107,6 +112,7 @@ def
 {%- endmacro %}
 
 {%- set PORT_ALL  = [] %}
+{%- set PORT_BP  = [] %}
 {%- set SYSTEM_PORT_ALL = [] %}
 
 {%- if voq_chassis %}
@@ -131,6 +137,9 @@ def
             {%- if PORT_ALL.append(port) %}{%- endif %}
         {%- endif %}
     {%- endfor %}
+    {%- if defs.generate_bp_port_list is defined %}
+        {%- if defs.generate_bp_port_list(PORT,PORT_BP) %} {% endif %}
+    {%- endif %}
 {%- endif %}
 
 {%- set PORT_ACTIVE  = [] %}
@@ -139,6 +148,9 @@ def
     {%- set PORT_ACTIVE = PORT_ALL %}
 {%- else %}
     {%- for port in DEVICE_NEIGHBOR.keys() %}
+        {%- if PORT_ACTIVE.append(port) %}{%- endif %}
+    {%- endfor %}
+    {%- for port in PORT_BP %}
         {%- if PORT_ACTIVE.append(port) %}{%- endif %}
     {%- endfor %}
     {%- for port in PORT_ALL %}

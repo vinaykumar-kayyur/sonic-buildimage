@@ -167,7 +167,8 @@ if [[ $CONFIGURED_ARCH == amd64 ]]; then
 fi
 
 ## Sign the Linux kernel
-if [ "$SONIC_ENABLE_SECUREBOOT_SIGNATURE" = "y" ]; then
+# note: when flag SONIC_ENABLE_SECUREBOOT_SIGNATURE is enabled the Secure Upgrade flags should be disabled (no_sign) to avoid conflict between the features.
+if [ "$SONIC_ENABLE_SECUREBOOT_SIGNATURE" = "y" ] && [ "$SECURE_UPGRADE_MODE" != 'dev' ] && [ "$SECURE_UPGRADE_MODE" != "prod" ]; then
     if [ ! -f $SIGNING_KEY ]; then
        echo "Error: SONiC linux kernel signing key missing"
        exit 1
@@ -273,6 +274,7 @@ install_kubernetes () {
     ## Check out the sources list update matches current Debian version
     sudo cp files/image_config/kubernetes/kubernetes.list $FILESYSTEM_ROOT/etc/apt/sources.list.d/
     sudo LANG=C chroot $FILESYSTEM_ROOT apt-get update
+    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install kubernetes-cni=${KUBERNETES_CNI_VERSION}
     sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install kubelet=${ver}
     sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install kubectl=${ver}
     sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install kubeadm=${ver}
@@ -398,7 +400,6 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     jq                      \
     auditd                  \
     linux-perf              \
-    resolvconf              \
 	lsof                    \
 	sysstat
 
@@ -531,7 +532,7 @@ sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install 'setup
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install 'wheel==0.35.1'
 
 # docker Python API package is needed by Ansible docker module as well as some SONiC applications
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install 'docker==5.0.3'
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install 'docker==6.1.1'
 
 # Install scapy
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install 'scapy==2.4.4'
@@ -583,6 +584,7 @@ export release="$(if [ -f $FILESYSTEM_ROOT/etc/sonic/sonic_release ]; then cat $
 export build_date="$(date -u)"
 export build_number="${BUILD_NUMBER:-0}"
 export built_by="$USER@$BUILD_HOSTNAME"
+export sonic_os_version="${SONIC_OS_VERSION}"
 j2 files/build_templates/sonic_version.yml.j2 | sudo tee $FILESYSTEM_ROOT/etc/sonic/sonic_version.yml
 
 ## Copy over clean-up script
@@ -629,6 +631,66 @@ then
     sudo cp $DEBUG_SRC_ARCHIVE_FILE $FILESYSTEM_ROOT/src/
     sudo mkdir -p $FILESYSTEM_ROOT/debug
 
+fi
+
+# #################
+#   secure boot 
+# #################
+if [[ $SECURE_UPGRADE_MODE == 'dev' || $SECURE_UPGRADE_MODE == "prod" && $SONIC_ENABLE_SECUREBOOT_SIGNATURE != 'y' ]]; then
+    # note: SONIC_ENABLE_SECUREBOOT_SIGNATURE is a feature that signing just kernel, 
+    # SECURE_UPGRADE_MODE is signing all the boot component including kernel.
+    # its required to do not enable both features together to avoid conflicts.
+    echo "Secure Boot support build stage: Starting .."
+
+    # debian secure boot dependecies
+    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install      \
+        shim-unsigned \
+        grub-efi
+    
+    if [ ! -f $SECURE_UPGRADE_SIGNING_CERT ]; then
+        echo "Error: SONiC SECURE_UPGRADE_SIGNING_CERT=$SECURE_UPGRADE_SIGNING_CERT key missing"
+        exit 1
+    fi
+
+    if [[ $SECURE_UPGRADE_MODE == 'dev' ]]; then
+        # development signing & verification 
+
+        if [ ! -f $SECURE_UPGRADE_DEV_SIGNING_KEY ]; then
+            echo "Error: SONiC SECURE_UPGRADE_DEV_SIGNING_KEY=$SECURE_UPGRADE_DEV_SIGNING_KEY key missing"
+            exit 1
+        fi
+
+        sudo ./scripts/signing_secure_boot_dev.sh -a $CONFIGURED_ARCH \
+                                                  -r $FILESYSTEM_ROOT \
+                                                  -l $LINUX_KERNEL_VERSION \
+                                                  -c $SECURE_UPGRADE_SIGNING_CERT \
+                                                  -p $SECURE_UPGRADE_DEV_SIGNING_KEY
+    elif [[ $SECURE_UPGRADE_MODE == "prod" ]]; then
+        #  Here Vendor signing should be implemented
+        OUTPUT_SEC_BOOT_DIR=$FILESYSTEM_ROOT/boot
+
+        if [ ! -f $sonic_su_prod_signing_tool ]; then
+            echo "Error: SONiC sonic_su_prod_signing_tool=$sonic_su_prod_signing_tool script missing"
+            exit 1
+        fi
+
+        sudo $sonic_su_prod_signing_tool -a $CONFIGURED_ARCH \
+                                         -r $FILESYSTEM_ROOT \
+                                         -l $LINUX_KERNEL_VERSION \
+                                         -o $OUTPUT_SEC_BOOT_DIR \
+                                         $SECURE_UPGRADE_PROD_TOOL_ARGS
+
+        # verifying all EFI files and kernel modules in $OUTPUT_SEC_BOOT_DIR
+        sudo ./scripts/secure_boot_signature_verification.sh -e $OUTPUT_SEC_BOOT_DIR \
+                                                             -c $SECURE_UPGRADE_SIGNING_CERT \
+                                                             -k $FILESYSTEM_ROOT
+
+        # verifying vmlinuz file.
+        sudo ./scripts/secure_boot_signature_verification.sh -e $FILESYSTEM_ROOT/boot/vmlinuz-${LINUX_KERNEL_VERSION}-${CONFIGURED_ARCH} \
+                                                             -c $SECURE_UPGRADE_SIGNING_CERT \
+                                                             -k $FILESYSTEM_ROOT
+    fi
+    echo "Secure Boot support build stage: END."
 fi
 
 ## Update initramfs
@@ -684,17 +746,23 @@ sudo LANG=C chroot $FILESYSTEM_ROOT umount /proc || true
 ## Prepare empty directory to trigger mount move in initramfs-tools/mount_loop_root, implemented by patching
 sudo mkdir $FILESYSTEM_ROOT/host
 
+
+if [[ "$CHANGE_DEFAULT_PASSWORD" == "y" ]]; then
+    ## Expire default password for exitsing users that can do login
+    default_users=$(cat $FILESYSTEM_ROOT/etc/passwd | grep "/home"|  grep ":/bin/bash\|:/bin/sh" | awk -F ":" '{print $1}' 2> /dev/null)
+    for user in $default_users
+    do
+        sudo LANG=C chroot $FILESYSTEM_ROOT passwd -e ${user}
+    done
+fi
+
 ## Compress most file system into squashfs file
 sudo rm -f $ONIE_INSTALLER_PAYLOAD $FILESYSTEM_SQUASHFS
 ## Output the file system total size for diag purpose
 ## Note: -x to skip directories on different file systems, such as /proc
 sudo du -hsx $FILESYSTEM_ROOT
 sudo mkdir -p $FILESYSTEM_ROOT/var/lib/docker
-
-## Clear DNS configuration inherited from the build server
-sudo rm -f $FILESYSTEM_ROOT/etc/resolvconf/resolv.conf.d/original
-sudo cp files/image_config/resolv-config/resolv.conf.head $FILESYSTEM_ROOT/etc/resolvconf/resolv.conf.d/head
-
+sudo cp files/image_config/resolv-config/resolv.conf $FILESYSTEM_ROOT/etc/resolv.conf
 sudo mksquashfs $FILESYSTEM_ROOT $FILESYSTEM_SQUASHFS -comp zstd -b 1M -e boot -e var/lib/docker -e $PLATFORM_DIR
 
 # Ensure admin gid is 1000
