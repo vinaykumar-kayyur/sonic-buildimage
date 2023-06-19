@@ -475,7 +475,8 @@ static ssize_t set_1bit(struct device *dev, struct device_attribute *devattr,
     cpld_bit = sensor->mask;
     mutex_lock(&data->update_lock);
     value = cpld_read_internal(client, reg);
-    if (unlikely(status < 0)) {
+    if (unlikely(value < 0)) {
+        status = value;
         goto exit;
     }
 
