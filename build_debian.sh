@@ -248,7 +248,7 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     python-pip              \
     ipmitool                \
     lsof                    \
-    sysstats                \
+    sysstat                 \
     smartmontools           \
 
 ## Set /etc/shadow permissions to -rw-------.
