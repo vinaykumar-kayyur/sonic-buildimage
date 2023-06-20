@@ -50,9 +50,6 @@ stderr_logfile=syslog
 dependent_startup=true
 dependent_startup_wait_for=start:exited
 
-[group:LoMPluginMgr]
-programs={% for key in procs %}{{ key }}{% if not loop.last %},{% endif %}{% endfor %}
-
 {% for proc in procs %}
 [program:LoMPluginMgr-{{ proc }}]
 command=/usr/bin/LoMPluginMgr {{ proc }}
@@ -62,7 +59,7 @@ autorestart=false
 stdout_logfile=syslog
 stderr_logfile=syslog
 dependent_startup=true
-dependent_startup_wait_for=start:exited
+dependent_startup_wait_for=LoMEngine:running
 {% endfor %}
 
 
