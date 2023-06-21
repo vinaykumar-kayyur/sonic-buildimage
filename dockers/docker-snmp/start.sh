@@ -18,13 +18,7 @@ mkdir -p /etc/ssw /etc/snmp
 
 DOCKER0_V4=$(ip -4 addr show docker0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}')
 DOCKER0_V6=$(ip -6 addr show docker0 scope global | grep -oP '(?<=inet6\s)[0-9a-fA-F:]+')
-# Loopback0 interface will not exist on multi-asic device
-if ip link show Loopback0 >/dev/null 2>&1; then
-   LOOPBACK0_EXITS=true
-fi
-
-ADD_PARAM=$(printf '%s {"docker0_v4":"%s","docker0_v6":"%s","loopback0_exists":"%s"}' \
-           "-a" "$DOCKER0_V4" "$DOCKER0_V6" "$LOOPBACK0_EXITS")
+ADD_PARAM=$(printf '%s {"docker0_v4":"%s","docker0_v6":"%s","NAMESPACE_COUNT":"%s"}' "-a" "$DOCKER0_V4" "$DOCKER0_V6" "$NAMESPACE_COUNT")
 
 SONIC_CFGGEN_ARGS=" \
     -d \
