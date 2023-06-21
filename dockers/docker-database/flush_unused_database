@@ -31,11 +31,11 @@ for instname, v in instlists.items():
             #    https://github.com/redis/redis-py/blob/d95d8a24ed2af3eae80b7b0f14cbccc9dbe86e96/redis/client.py#L1006
             if instsocket is not None:
                 # connect with Unix socket
-                connector =  swsscommon.DBConnector(dbid, instsocket, 0)
+                connector = swsscommon.DBConnector(dbid, instsocket, 0)
             else:
                 # connect with TCP socket
                 port = swsscommon.SonicDBConfig.getDbPort(dbname);
-                connector =  swsscommon.DBConnector(dbid, insthost, port, 0)
+                connector = swsscommon.DBConnector(dbid, insthost, port, 0)
 
             connector.flushdb()
         except RuntimeError:
