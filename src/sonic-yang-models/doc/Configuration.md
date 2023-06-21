@@ -927,7 +927,8 @@ instance is supported in SONiC.
         "bgp_adv_lo_prefix_as_128" : "true",
         "buffer_model": "traditional",
         "yang_config_validation": "disable",
-        "rack_mgmt_map": "dummy_value"
+        "rack_mgmt_map": "dummy_value",
+        "timezome": "Europe/Kiev"
     }
   }
 }
@@ -1101,6 +1102,14 @@ The FG_NHG_PREFIX table provides the FG_NHG_PREFIX for which FG behavior is desi
 		"TUNNEL": {
 			"FLEX_COUNTER_STATUS": "enable",
 			"POLL_INTERVAL": "10000"
+		},
+		"WRED_ECN_QUEUE": {
+			"FLEX_COUNTER_STATUS": "enable",
+			"POLL_INTERVAL": "10000"
+		},
+		"WRED_ECN_PORT": {
+			"FLEX_COUNTER_STATUS": "enable",
+			"POLL_INTERVAL": "1000"
 		}
 	}
 }
