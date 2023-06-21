@@ -1,0 +1,42 @@
+From 33a231ac26a46bfb728975d1695b7a71a7bc95ab Mon Sep 17 00:00:00 2001
+From: stormliang <stormliang@microsoft.com>
+Date: Wed, 21 Jun 2023 08:10:10 +0000
+Subject: [PATCH] error handling improve
+
+---
+ vtysh/vtysh.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/vtysh/vtysh.c b/vtysh/vtysh.c
+index 8e95aaa47..9df2011ce 100644
+--- a/vtysh/vtysh.c
++++ b/vtysh/vtysh.c
+@@ -25,6 +25,8 @@
+ #include <sys/wait.h>
+ #include <sys/resource.h>
+ #include <sys/stat.h>
++#include <string.h>
++#include <errno.h>
+ 
+ /* readline carries some ancient definitions around */
+ #pragma GCC diagnostic push
+@@ -895,6 +897,16 @@ int vtysh_config_from_file(struct vty *vty, FILE *fp)
+ 		}
+ 		}
+ 	}
++	if (feof(fp)) {
++		// Handle end-of-file (EOF) error
++		vty_out(vty, "fgets error: End of file reached.\n");
++	} else if (ferror(file)) {
++		// Handle general I/O error
++		vty_out(vty, "fgets error: Error occurred while reading input: %s\n", strerror(errno));
++	} else {
++		// Handle other errors
++		vty_out(vty, "fgets error: Unknown error occurred.\n");
++	}
+ 
+ 	return (retcode);
+ }
+-- 
+2.25.1
+
