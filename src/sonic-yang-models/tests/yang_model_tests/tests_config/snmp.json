@@ -516,6 +516,19 @@
             }
          }
     },
+    "SNMP_AGENT_ADDRESS_CONFIG_IPV6": {
+        "sonic-snmp:sonic-snmp": {
+            "sonic-snmp:SNMP_AGENT_ADDRESS_CONFIG": {
+                "SNMP_AGENT_ADDRESS_LIST": [
+                    {
+                       "agent_ip": "fd00::1",
+                       "port": "161",
+                       "vrf_name": ""
+                    }
+                ]
+            }
+         }
+    },
     "SNMP_AGENT_ADDRESS_CONFIG_MGMT_VRF": {
         "sonic-snmp:sonic-snmp": {
             "sonic-snmp:SNMP_AGENT_ADDRESS_CONFIG": {

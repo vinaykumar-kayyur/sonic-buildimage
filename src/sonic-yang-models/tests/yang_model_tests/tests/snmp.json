@@ -117,6 +117,9 @@
     "SNMP_AGENT_ADDRESS_CONFIG": {
         "desc": "Load SNMP agent address config"
     },
+    "SNMP_AGENT_ADDRESS_CONFIG_IPV6": {
+        "desc": "Load SNMP agent address config"
+    },
     "SNMP_AGENT_ADDRESS_CONFIG_MGMT_VRF": {
         "desc": "Load SNMP agent address config with mgmt vrf"
     },
