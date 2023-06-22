@@ -4,7 +4,7 @@
 
 #### exit code contract, k8s only cares zero or not none-zero, but we want to use none-zero code to indicate different error
 # 0: readiness
-# 1: python script crach exit code
+# 1: python script crash exit code
 # 2: supervisor start service doesn't exit normally
 # other exit code: returned by post_check_script, define in the post_check_script, should not include 1,2
 
