@@ -13,6 +13,12 @@ ENV IMAGE_VERSION=$image_version
 # Pass the Config location to procs in container
 ENV LOM_CONF_LOCATION=/usr/share/lom/
 
+# Set the binaries to run in Prod mode
+ENV LOM_RUN_MODE=PROD
+
+# Enable core dump
+ENV GOTRACEBACK=crash
+
 # Update apt's cache of available packages
 RUN apt-get update
 
