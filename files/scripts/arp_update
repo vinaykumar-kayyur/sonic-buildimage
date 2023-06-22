@@ -101,22 +101,17 @@ while /bin/true; do
         # 1. for every FAILED or INCOMPLETE neighbor in the kernel, check if there is a corresponding zero MAC neighbor in APPL_DB
         # 2. if no zero MAC neighbor entry exists, flush the kernel neighbor entry
         #     - generates the command 'ip neigh flush <neighbor IPv6>' for all such neighbors
-        #ip_neigh_flush_cmd="echo \"$unresolved_kernel_neighbors\" | cut -d ' ' -f 1 | xargs -I{} bash -c \"if [[ -z \\\"\\\$(sonic-db-cli APPL_DB hget NEIGH_TABLE:$vlan:{} neigh)\\\" ]]; then echo 'ip neigh flush {};'; fi\""
         unsync_neighbors=$(echo "$unresolved_kernel_neighbors" | cut -d ' ' -f 1 | xargs -I{} bash -c "if [[ -z \"\$(sonic-db-cli APPL_DB hget NEIGH_TABLE:$vlan:{} neigh)\" ]]; then echo '{}'; fi")
-
         if [[ ! -z "$unsync_neighbors" ]]; then
             ip_neigh_flush_cmd="echo \"$unsync_neighbors\" | sed -e 's/^/ip neigh flush /' -e 's/$/;/'"
-            echo `eval "$ip_neigh_flush_cmd"`
             eval `eval "$ip_neigh_flush_cmd"`
         fi
 
         # generates the following command for each FAILED or INCOMPLETE IPv6 neighbor
         # timeout 0.2 ping <neighbor IPv6> -n -q -i 0 -c 1 -W 1 -I <VLAN name> >/dev/null
-
         if [[ ! -z "$unresolved_kernel_neighbors" ]]; then
             ping6_template="sed -e 's/^/timeout 0.2 ping /' -e 's/,/ -n -q -i 0 -c 1 -W 1 -I /' -e 's/$/ >\/dev\/null;/'"
             failed_ip6_neigh_cmd="echo \"$unresolved_kernel_neighbors\" | cut -d ' ' -f 1,3 --output-delimiter=',' | $ping6_template"
-            echo `eval "$failed_ip6_neigh_cmd"`
             eval `eval "$failed_ip6_neigh_cmd"`
         fi
 
@@ -127,20 +122,11 @@ while /bin/true; do
         # 1. unsyncronized neighbors that were flushed, then pinged
         # 2. existing FAILED neighbors which will be set to transient INCOMPLETE by the above ping
         wait_neighbors="$unsync_neighbors"$'\n'"$failed_kernel_neighbors"
-        echo "wait neighbors: $wait_neighbors"
         if [[ ! -z "$wait_neighbors" ]]; then
             trans_incomplete_check=$(echo "$wait_neighbors" | sed  -e 's/^/ip neigh show /' -e 's/$/ | grep -q 'INCOMPLETE' \&\&/')
             trans_incomplete_check=$(echo $trans_incomplete_check | sed -e 's/\&\&$//')
-            echo "$trans_incomplete_check"
             timeout 10 bash -c "while eval \"$trans_incomplete_check\"; do echo 'waiting'; sleep 1; done"
         fi
-
-        # some pings may create transient INCOMPLETE neighbor entries in the kernel
-        # wait for these to transition to FAILED befor setting them to permanently INCOMPLETE
-        # mcast_solicit=$(cat /proc/sys/net/ipv6/neigh/$vlan/mcast_solicit)
-        # retrans_time_ms=$(cat /proc/sys/net/ipv6/neigh/$vlan/retrans_time_ms)
-        # (( transition_delay=(((mcast_solicit * retrans_time_ms) + 999) / 1000) + 1 )) # equivalent to ceiling(mcast_solicit * retrans_time_ms / 1000) + 1
-        # sleep $transition_delay
 
         # manually set any remaining FAILED entries to permanently INCOMPLETE
         # once these entries are INCOMPLETE, any subsequent neighbor advertisement messages are able to resolve the entry
@@ -149,11 +135,9 @@ while /bin/true; do
         # generates the following command for each FAILED IPv6 neighbor
         # ip neigh replace <neighbor IPv6> dev <VLAN name> nud incomplete
         failed_kernel_neighbors=$(ip -6 neigh show | grep -v fe80 | grep $vlan | grep -E 'FAILED')
-
         if [[ ! -z "$failed_kernel_neighbors" ]]; then
             neigh_replace_template="sed -e 's/^/ip neigh replace /' -e 's/,/ dev /' -e 's/$/ nud incomplete;/'" 
             ip_neigh_replace_cmd="echo \"$failed_kernel_neighbors\" | cut -d ' ' -f 1,3 --output-delimiter=',' | $neigh_replace_template"
-            echo `eval "$ip_neigh_replace_cmd"`
             eval `eval "$ip_neigh_replace_cmd"`
         fi
       fi
