@@ -1,6 +1,7 @@
 import glob
 import os
 import subprocess
+import netifaces
 
 from natsort import natsorted
 from swsscommon import swsscommon
@@ -484,3 +485,26 @@ def get_asic_presence_list():
                     # asic is asid id: asic0, asic1.... asicN. Get the numeric value.
                     asics_list.append(int(get_asic_id_from_name(asic)))
     return asics_list
+
+def get_docker0_ip():
+    """
+    @summary: This function will return docker0 ipv4 and ipv6 addresses
+              for multi_asic platform.
+              This function will return None for single asic platform.
+    @return: tuple containing docker0 ipv4 and ipv6 address
+    """
+    docker0_v4 = None
+    docker0_v6 = None
+
+    # return (None, None) for single asic platform
+    if not is_multi_asic():
+        return (docker0_v4, docker0_v6)
+
+    interfaces = netifaces.interfaces()
+    if "docker0" in interfaces:
+       addresses = netifaces.ifaddresses("docker0")
+       if netifaces.AF_INET in addresses:
+           docker0_v4 = addresses[netifaces.AF_INET][0]['addr']
+       if netifaces.AF_INET6 in addresses:
+           docker0_v6 = addresses[netifaces.AF_INET6][0]['addr']
+    return (docker0_v4, docker0_v6)
