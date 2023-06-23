@@ -1150,8 +1150,6 @@ The **MUX_CABLE** table is used for dualtor interface configuration. The `cable_
 }
 ```
 
-<<<<<<< HEAD
-=======
 ### MUX_LINKMGR
 The **MUX_LINKMGR** table is used for dualtor device configuration.
 ```
@@ -1171,33 +1169,6 @@ The **MUX_LINKMGR** table is used for dualtor device configuration.
 }
 ```
 
-### NEIGH
-
-The **NEIGH** table is used to keep track of resolved and static neighbors.
-
-Resolve case:
-```
-{
-    "NEIGH": {
-        "Vlan100|100.1.1.3": {
-            "family": "IPv4"
-        }
-    }
-}
-```
-Static Nbr:
-```
-{
-    "NEIGH": {
-        "Vlan100|100.1.1.5": {
-            "neigh": "00:02:02:03:04:05",
-            "family": "IPv4"
-        }
-    }
-}
-```
-
->>>>>>> 6ba5b84d9... [yang] add Yang model for `MUX_LINKMGR|LINK_PROBER` (#15384)
 ### NTP Global Configuration
 
 These configuration options are used to modify the way that
