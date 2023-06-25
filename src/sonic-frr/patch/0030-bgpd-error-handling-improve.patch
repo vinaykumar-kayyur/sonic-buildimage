@@ -1,14 +1,61 @@
-From 33a231ac26a46bfb728975d1695b7a71a7bc95ab Mon Sep 17 00:00:00 2001
+From 4f50e545db4593121a2da0cab710cac4ad018d04 Mon Sep 17 00:00:00 2001
 From: stormliang <stormliang@microsoft.com>
-Date: Wed, 21 Jun 2023 08:10:10 +0000
+Date: Sun, 25 Jun 2023 03:15:39 +0000
 Subject: [PATCH] error handling improve
 
 ---
- vtysh/vtysh.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+ lib/command.c | 15 +++++++++++++++
+ lib/command.h |  1 +
+ vtysh/vtysh.c | 14 ++++++++++++++
+ 3 files changed, 30 insertions(+)
 
+diff --git a/lib/command.c b/lib/command.c
+index 3718c1459..5f15f5469 100644
+--- a/lib/command.c
++++ b/lib/command.c
+@@ -51,6 +51,9 @@
+ 
+ #include "frrscript.h"
+ 
++#include <string.h>
++#include <errno.h>
++
+ DEFINE_MTYPE_STATIC(LIB, HOST, "Host config");
+ DEFINE_MTYPE(LIB, COMPLETION, "Completion item");
+ 
+@@ -1290,6 +1293,18 @@ int config_from_file(struct vty *vty, FILE *fp, unsigned int *line_num)
+                    && ret != CMD_ERR_NOTHING_TODO)
+                        error_ret = ret;
+        }
++       if (feof(fp)) {
++               // Handle end-of-file (EOF) error
++               vty_out(vty, "End of file reached.\n");
++       } else if (ferror(fp)) {
++               error_ret = CMD_ERR_READ_CONF_FILE;
++               // Handle general I/O error
++               vty_out(vty, "fgets error: Error occurred while reading input: %s\n", strerror(errno));
++       } else {
++               error_ret = CMD_ERR_READ_CONF_FILE;
++               // Handle other errors
++               vty_out(vty, "fgets error: Unknown error occurred.\n");
++       }
+ 
+        if (error_ret) {
+                return error_ret;
+diff --git a/lib/command.h b/lib/command.h
+index c888356d6..e38617737 100644
+--- a/lib/command.h
++++ b/lib/command.h
+@@ -236,6 +236,7 @@ struct cmd_node {
+ #define CMD_NOT_MY_INSTANCE    14
+ #define CMD_NO_LEVEL_UP 15
+ #define CMD_ERR_NO_DAEMON 16
++#define CMD_ERR_READ_CONF_FILE 17
+ 
+ /* Argc max counts. */
+ #define CMD_ARGC_MAX   256
 diff --git a/vtysh/vtysh.c b/vtysh/vtysh.c
-index 8e95aaa47..9df2011ce 100644
+index 8e95aaa47..bbcdb90dc 100644
 --- a/vtysh/vtysh.c
 +++ b/vtysh/vtysh.c
 @@ -25,6 +25,8 @@
@@ -20,23 +67,24 @@ index 8e95aaa47..9df2011ce 100644
  
  /* readline carries some ancient definitions around */
  #pragma GCC diagnostic push
-@@ -895,6 +897,16 @@ int vtysh_config_from_file(struct vty *vty, FILE *fp)
- 		}
- 		}
- 	}
-+	if (feof(fp)) {
-+		// Handle end-of-file (EOF) error
-+		vty_out(vty, "fgets error: End of file reached.\n");
-+	} else if (ferror(file)) {
-+		// Handle general I/O error
-+		vty_out(vty, "fgets error: Error occurred while reading input: %s\n", strerror(errno));
-+	} else {
-+		// Handle other errors
-+		vty_out(vty, "fgets error: Unknown error occurred.\n");
-+	}
+@@ -895,6 +897,18 @@ int vtysh_config_from_file(struct vty *vty, FILE *fp)
+                }
+                }
+        }
++       if (feof(fp)) {
++               // Handle end-of-file (EOF) error
++               vty_out(vty, "End of file reached.\n");
++       } else if (ferror(fp)) {
++               retcode = CMD_ERR_READ_CONF_FILE;
++               // Handle general I/O error
++               vty_out(vty, "fgets error: Error occurred while reading input: %s\n", strerror(errno));
++       } else {
++               retcode = CMD_ERR_READ_CONF_FILE;
++               // Handle other errors
++               vty_out(vty, "fgets error: Unknown error occurred.\n");
++       }
  
- 	return (retcode);
+        return (retcode);
  }
 -- 
 2.25.1
-
