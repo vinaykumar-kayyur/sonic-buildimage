@@ -243,6 +243,15 @@ fi
 echo "ONIE_IMAGE_PART_SIZE=$demo_part_size"
 
 extra_cmdline_linux=%%EXTRA_CMDLINE_LINUX%%
+# Inherit the FIPS option, so not necessary to do another reboot after upgraded
+if grep -qE '\ssonic_fips=1' /proc/cmdline && echo " $extra_cmdline_linux" | grep -qEv '\ssonic_fips='; then
+    extra_cmdline_linux="$extra_cmdline_linux sonic_fips=1"
+fi
+
+if grep -qE '\sfips=1' /proc/cmdline && echo " $extra_cmdline_linux" | grep -qEv '\sfips='; then
+    extra_cmdline_linux="$extra_cmdline_linux fips=1"
+fi
+
 echo "EXTRA_CMDLINE_LINUX=$extra_cmdline_linux"
 
 # Update Bootloader Menu with installed image
