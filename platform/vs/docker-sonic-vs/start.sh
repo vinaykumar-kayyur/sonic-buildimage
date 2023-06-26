@@ -9,8 +9,8 @@ ln -sf /usr/share/sonic/device/$PLATFORM /usr/share/sonic/platform
 ln -sf /usr/share/sonic/device/$PLATFORM/$HWSKU /usr/share/sonic/hwsku
 
 PLATFORM_CONF=platform.json
-if [[ $HWSKU == "NPU" ]]; then
-    PLATFORM_CONF=platform-npu.json
+if [[ $HWSKU == "NPU-2P" ]]; then
+    PLATFORM_CONF=platform-npu-2p.json
 fi
 
 pushd /usr/share/sonic/hwsku
