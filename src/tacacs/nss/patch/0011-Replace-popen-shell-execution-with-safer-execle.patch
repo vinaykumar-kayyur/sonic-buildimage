@@ -1,27 +1,26 @@
-From 9e46c167abeb461456b0c432d6a75559013a79ce Mon Sep 17 00:00:00 2001
+From 99ff134e88ee698623ac5c09cbcd0e88e0fdfa40 Mon Sep 17 00:00:00 2001
 From: Eric Seifert <seiferteric@gmail.com>
-Date: Wed, 31 May 2023 09:08:07 -0700
+Date: Mon, 26 Jun 2023 09:18:44 -0700
 Subject: [PATCH] Replace popen shell execution with safer execle
 
 ---
- nss_tacplus.c | 65 +++++++++++++++++++++++++++++++++++++++++----------
- 1 file changed, 53 insertions(+), 12 deletions(-)
+ nss_tacplus.c | 63 ++++++++++++++++++++++++++++++++++++++++++---------
+ 1 file changed, 52 insertions(+), 11 deletions(-)
 
 diff --git a/nss_tacplus.c b/nss_tacplus.c
-index cd73870..8db8f58 100644
+index cd73870..7574374 100644
 --- a/nss_tacplus.c
 +++ b/nss_tacplus.c
-@@ -34,6 +34,9 @@
+@@ -34,6 +34,8 @@
  #include <netdb.h>
  #include <nss.h>
  #include <limits.h>
 +#include <unistd.h>
 +#include <sys/wait.h>
-+
  
  #include <libtac/libtac.h>
  
-@@ -439,6 +442,39 @@ static int delete_conf_line(const char *name)
+@@ -439,6 +441,39 @@ static int delete_conf_line(const char *name)
      return 0;
  }
  
@@ -49,7 +48,7 @@ index cd73870..8db8f58 100644
 +    // Child
 +    } else if(pid == 0) {
 +        execl(cmd, cmd, "-G", sec_grp, name, "-g", gid, "-c", gecos, "-d", home, "-m", "-s", shell, NULL);
-+        syslog(LOG_ERR, "%s: exec of %s failed!", nssname, cmd);
++        syslog(LOG_ERR, "%s: exec of %s failed with errno=%d", nssname, cmd, errno);
 +        exit(EXIT_FAILURE);
 +    // Error
 +    } else {
@@ -61,7 +60,7 @@ index cd73870..8db8f58 100644
  /*
   * If not found in local, look up in tacacs user conf. If user name is not in
   * conf, it will be written in conf and created by command 'useradd'. When
-@@ -454,6 +490,11 @@ static int create_or_modify_local_user(const char *name, int level, bool existin
+@@ -454,6 +489,11 @@ static int create_or_modify_local_user(const char *name, int level, bool existin
      bool found = false;
      const char* command = existing_user ? "/usr/sbin/usermod": "/usr/sbin/useradd";
  
@@ -73,7 +72,7 @@ index cd73870..8db8f58 100644
      fp = fopen(user_conf, "ab+");
      if(!fp) {
          syslog(LOG_ERR, "%s: %s fopen failed", nssname, user_conf);
-@@ -495,18 +536,18 @@ static int create_or_modify_local_user(const char *name, int level, bool existin
+@@ -495,18 +535,19 @@ static int create_or_modify_local_user(const char *name, int level, bool existin
      while(lvl >= MIN_TACACS_USER_PRIV) {
          user = &useradd_grp_list[lvl];
          if(user->info && user->secondary_grp && user->shell) {
@@ -88,7 +87,6 @@ index cd73870..8db8f58 100644
 -                return -1;
 -            }
 -            if(debug)
--                syslog(LOG_DEBUG, "%s: %s %s success", nssname, command, name);
 +            char sgid[10] = {0};
 +            char home[64] = {0};
 +            snprintf(sgid, 10, "%d", user->gid);
@@ -99,7 +97,8 @@ index cd73870..8db8f58 100644
 +                 delete_conf_line(name);
 +                 return -1;
 +             }
-+
++             if(debug)
+                 syslog(LOG_DEBUG, "%s: %s %s success", nssname, command, name);
 +
              delete_conf_line(name);
              return 0;
