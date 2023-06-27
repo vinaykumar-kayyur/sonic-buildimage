@@ -394,6 +394,25 @@ clean_image_test_data = {
             0
         ]
     },
+    5: {
+        common_test.DESCR: "Clean image successfuly(local to dry-kube to kube)",
+        common_test.RETVAL: 0,
+        common_test.ARGS: ["snmp", "20201231.84", "20201231.74"],
+        common_test.PROC_CMD: [
+            "docker images |grep snmp |grep -v latest |awk '{print $1,$2,$3}'",
+            "docker rmi docker-sonic-telemetry:20201231.74"
+        ],
+        common_test.PROC_OUT: [
+            "docker-sonic-telemetry 20201231.74 507f8d28bf6e\n\
+             sonick8scue.azurecr.io/docker-sonic-telemetry 20201231.74 507f8d28bf6f\n\
+             sonick8scue.azurecr.io/docker-sonic-telemetry 20201231.84 507f8d28bf6g",
+            ""
+        ],
+        common_test.PROC_CODE: [
+            0,
+            0
+        ]
+    },
 }
 
 class TestKubeCommands(object):
