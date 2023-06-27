@@ -324,6 +324,55 @@ feature_test_data = {
                 }
             }
         }
+    },
+    4: {
+        common_test.DESCR: "Do not do clean up when reboot after tagging image latest",
+        common_test.ARGS: "ctrmgrd",
+        common_test.PRE: {
+            common_test.CONFIG_DB_NO: {
+                common_test.FEATURE_TABLE: {
+                    "snmp": {
+                        "set_owner": "kube"
+                    }
+                }
+            },
+            common_test.STATE_DB_NO: {
+                common_test.FEATURE_TABLE: {
+                    "snmp": {
+                        "remote_state": "ready"
+                    }
+                }
+            }
+        },
+        common_test.UPD: {
+            common_test.CONFIG_DB_NO: {
+                common_test.FEATURE_TABLE: {
+                    "snmp": {
+                        "set_owner": "kube"
+                    }
+                }
+            },
+            common_test.STATE_DB_NO: {
+                common_test.FEATURE_TABLE: {
+                    "snmp": {
+                        "remote_state": "running",
+                        "container_version": "20201231.74",
+                        "container_stable_version": "20201231.74",
+                        "container_last_version": ""
+                    }
+                }
+            }
+        },
+        common_test.POST: {
+            common_test.STATE_DB_NO: {
+                common_test.FEATURE_TABLE: {
+                    "snmp": {
+                        "container_last_version": "",
+                        "container_stable_version": "20201231.74"
+                    }
+                }
+            }
+        }
     }
 }
 

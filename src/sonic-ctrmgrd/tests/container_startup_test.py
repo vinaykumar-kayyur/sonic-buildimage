@@ -323,7 +323,7 @@ startup_test_data = {
         }
     },
     7: {
-        common_test.DESCR: "kube container starting with this version blocked",
+        common_test.DESCR: "kube container starting with this version should be not blocked",
         common_test.ARGS: "container_startup -f snmp -o kube -v 20201230.11",
         common_test.PRE: {
             common_test.CONFIG_DB_NO: {
@@ -355,7 +355,7 @@ startup_test_data = {
                 common_test.FEATURE_TABLE: {
                     "snmp": {
                         "container_id": "no change",
-                        "container_version": "no change",
+                        "container_version": "20201230.11",
                         "current_owner": "no change",
                         "remote_state": "no change",
                         "system_state": "up"

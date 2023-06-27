@@ -232,10 +232,6 @@ def container_up(feature, owner, version):
             do_freeze(feature, "bail out as system state not active")
             return
 
-        if check_version_blocked(state_db, feature, version):
-            do_freeze(feature, "This version is marked disabled. Exiting ...")
-            return
-
         update_data(state_db, feature, { VERSION: version })
 
         mode = state_data[REMOTE_STATE]
