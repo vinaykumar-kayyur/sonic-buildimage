@@ -1087,6 +1087,15 @@ class TestCfgGen(TestCase):
             )
         )
 
+    def testsnmp_agent_address_config(self):
+        argument = ['-m', self.sample_graph, '-p', self.port_config, '-v', 'SNMP_AGENT_ADDRESS_CONFIG.keys()|list']
+        output = self.run_script(argument)
+        import pdb; pdb.set_trace()
+        self.assertEqual(
+            utils.liststr_to_dict(output.strip()),
+            utils.liststr_to_dict("['192.168.200.15|161|', '100.0.0.6|161|']")
+        )
+
     def test_minigraph_cisco_400g_to_100G_speed(self):
         argument = ["-m", self.sample_cisco_100_graph, "-p", self.sample_cisco_port_config_400g, "-v", "PORT"]
         self.assertTrue(self.yang.validate(argument))
