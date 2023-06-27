@@ -140,7 +140,7 @@ class SwssSyncClient(mockredis.MockRedis):
         # Find every key that matches the pattern
         return [key for key in self.redis if regex.match(key)]
 
-def get_docker0_ip():
+def get_docker0_ips():
     if multi_asic.is_multi_asic():
         return '240.127.1.1', 'fd00::1'
     else:
@@ -153,4 +153,4 @@ ConfigDBConnector.connect = connect_ConfigDBConnector
 swsscommon.SonicV2Connector = SonicV2Connector
 swsscommon.ConfigDBConnector = ConfigDBConnector
 swsscommon.ConfigDBPipeConnector = ConfigDBPipeConnector
-multi_asic.get_docker0_ip = get_docker0_ip
+multi_asic.get_docker0_ips = get_docker0_ips

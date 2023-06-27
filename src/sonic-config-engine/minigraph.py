@@ -15,6 +15,7 @@ from natsort import natsorted, ns as natsortns
 
 from portconfig import get_port_config
 from sonic_py_common.interface import backplane_prefix
+from sonic_py_common.multi_asic import get_docker0_ips
 
 # TODO: Remove this once we no longer support Python 2
 if sys.version_info.major == 3:
@@ -1711,7 +1712,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         for mgmt_if in results['MGMT_INTERFACE'].keys():
             snmp_key = mgmt_if[1].split('/')[0] + '|161|'
             results['SNMP_AGENT_ADDRESS_CONFIG'][snmp_key] = {}
-        docker0_v4, docker0_v6 = get_docker0_ip()
+        docker0_v4, docker0_v6 = get_docker0_ips()
         if docker0_v4 is None and docker0_v6 is None:
             # Add Loopback0 IP as agent address for single asic
             for loip in results['LOOPBACK_INTERFACE']:
