@@ -214,15 +214,6 @@ class TestMultiNpuCfgGen(TestCase):
             utils.liststr_to_dict("['PortChannel4013', 'PortChannel4013|10.1.0.2/31', 'PortChannel4014', 'PortChannel4014|10.1.0.6/31']")
         )
 
-    def testsnmp_agent_address_config(self):
-        argument = ['-m', self.sample_graph, '-p', self.sample_port_config, '-v', 'SNMP_AGENT_ADDRESS_CONFIG.keys()|list']
-        output = self.run_script(argument)
-        import pdb; pdb.set_trace()
-        self.assertEqual(
-            utils.liststr_to_dict(output.strip()),
-            utils.liststr_to_dict("['10.1.0.32|161|', '3.10.147.150|161|', 'FC00:2::32|161|', 'FC00:1::32|161|']")
-        )
-
     def test_frontend_asic_ports(self):
         argument = ["-m", self.sample_graph, "-p", self.port_config[0], "-n", "asic0", "--var-json", "PORT"]
         output = json.loads(self.run_script(argument))
@@ -557,6 +548,15 @@ class TestMultiNpuCfgGen(TestCase):
         argument = ["-m", self.sample_graph, "-p", self.sample_no_asic_port_config, "-n", "asic4", "--var-json", "PORTCHANNEL"]
         output = json.loads(self.run_script(argument, check_stderr=False, validateYang=False))
         self.assertDictEqual(output, {})
+
+    def testsnmp_agent_address_config(self):
+        argument = ['-m', self.sample_graph, '-p', self.sample_port_config, '-v', 'SNMP_AGENT_ADDRESS_CONFIG.keys()|list']
+        output = self.run_script(argument)
+        import pdb; pdb.set_trace()
+        self.assertEqual(
+            utils.liststr_to_dict(output.strip()),
+            utils.liststr_to_dict("['10.1.0.32|161|', '3.10.147.150|161|', 'FC00:2::32|161|', 'FC00:1::32|161|']")
+        )
 
     def tearDown(self):
         os.environ["CFGGEN_UNIT_TESTING"] = ""

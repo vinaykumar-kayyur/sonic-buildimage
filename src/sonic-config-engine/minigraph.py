@@ -1701,15 +1701,31 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
 
     results['MGMT_VRF_CONFIG'] = mvrf
     
-    # Set SNMP_AGENT_ADDRESS_CONFIG to Management IP and Loopback0 IP 
+    # Update SNMP_AGENT_ADDRESS_CONFIG with Management IP and Loopback0 IP
+    # for single-asic platform.
+    # Update SNMP_AGENT_ADDRESS_CONFIG with Management IP and docker0 IP
+    # for multi-asic platform.
+    results['SNMP_AGENT_ADDRESS_CONFIG'] = {}
     if asic_name is None:
         results['SNMP_AGENT_ADDRESS_CONFIG'] = {}
         for mgmt_if in results['MGMT_INTERFACE'].keys():
             snmp_key = mgmt_if[1].split('/')[0] + '|161|'
             results['SNMP_AGENT_ADDRESS_CONFIG'][snmp_key] = {}
-        for loip in results['LOOPBACK_INTERFACE']:
-            if len(loip) == 2 and loip[0] == 'Loopback0':
-                snmp_key = loip[1].split('/')[0] + '|161|'
+        docker0_v4, docker0_v6 = get_docker0_ip()
+        if docker0_v4 is None and docker0_v6 is None:
+            # Add Loopback0 IP as agent address for single asic
+            for loip in results['LOOPBACK_INTERFACE']:
+                if len(loip) == 2 and loip[0] == 'Loopback0':
+                    snmp_key = loip[1].split('/')[0] + '|161|'
+                    results['SNMP_AGENT_ADDRESS_CONFIG'][snmp_key] = {}
+        else:
+            # docker0 ip address is available for multi-asic
+            # Add docker0 IP address as agent address
+            if docker0_v4:
+                snmp_key = docker0_v4 + '|161|'
+                results['SNMP_AGENT_ADDRESS_CONFIG'][snmp_key] = {}
+            if docker0_v6:
+                snmp_key = docker0_v6 + '|161|'
                 results['SNMP_AGENT_ADDRESS_CONFIG'][snmp_key] = {}
 
     phyport_intfs = {}
