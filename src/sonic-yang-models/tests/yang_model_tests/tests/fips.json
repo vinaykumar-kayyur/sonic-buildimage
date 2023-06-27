@@ -1,0 +1,9 @@
+{
+    "FIPS_WITH_CORRECT_VALUES_MODE": {
+        "desc": "CONFIG FIPS TABLE WITH ALL THE CORRECT VALUES"
+    },
+    "FIPS_WITH_INVALID_VALUES_MODE" : {
+        "desc": "Configure invalid mode in fips.",
+        "eStrKey": "Pattern"
+    }
+}

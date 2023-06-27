@@ -1,0 +1,20 @@
+{
+    "FIPS_WITH_CORRECT_VALUES_MODE": {
+        "sonic-fips:sonic-fips": {
+            "sonic-fips:FIPS": {
+                "sonic-fips:global": {
+                    "mode": "NoneEnforce"
+                }
+            }
+        }
+    },
+    "FIPS_WITH_INVALID_VALUES_MODE": {
+        "sonic-fips:sonic-fips": {
+            "sonic-fips:FIPS": {
+                "sonic-fips:global": {
+                    "mode": "Invalid Value"
+                }
+            }
+        }
+    }
+}

@@ -2402,6 +2402,11 @@
                 "FG_NHG": "nhg2"
             }
         },
+        "FIPS":{
+            "global": {
+                "mode": "Enforce"
+            }
+        },
         "FG_NHG_MEMBER": {
             "192.168.1.1": {
                 "FG_NHG": "nhg1",
