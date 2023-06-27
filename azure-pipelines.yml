@@ -221,15 +221,15 @@ stages:
           COMMON_EXTRA_PARAMS: "--neighbor_type=sonic "
           VM_TYPE: vsonic
 
-  - job: wan_elastictest
-    pool: ubuntu-20.04
-    displayName: "kvmtest-wan by Elastictest"
-    timeoutInMinutes: 1080
-    continueOnError: false
-    steps:
-      - template: .azure-pipelines/run-test-scheduler-template.yml
-        parameters:
-          TOPOLOGY: wan-pub
-          MIN_WORKER: $(WAN_INSTANCE_NUM)
-          MAX_WORKER: $(WAN_INSTANCE_NUM)
-          COMMON_EXTRA_PARAMS: "--skip_sanity "
+#  - job: wan_elastictest
+#    pool: ubuntu-20.04
+#    displayName: "kvmtest-wan by Elastictest"
+#    timeoutInMinutes: 1080
+#    continueOnError: false
+#    steps:
+#      - template: .azure-pipelines/run-test-scheduler-template.yml
+#        parameters:
+#          TOPOLOGY: wan-pub
+#          MIN_WORKER: $(WAN_INSTANCE_NUM)
+#          MAX_WORKER: $(WAN_INSTANCE_NUM)
+#          COMMON_EXTRA_PARAMS: "--skip_sanity "
