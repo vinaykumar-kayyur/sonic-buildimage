@@ -15,33 +15,20 @@
 
 #  Listen for connections on all ip addresses, including eth0, ipv4 lo
 #
-{% set loip = [] %}
-{% if LOOPBACK_INTERFACE is defined and (NAMESPACE_COUNT is defined and NAMESPACE_COUNT|int > 1) %}
-{% for lo in LOOPBACK_INTERFACE %}
-{% if lo | length == 2 and 'Loopback0' in lo[0] %}
-{% if loip.append(lo[1].split('/')[0]) %}{% endif %}
-{% endif %}
-{% endfor %}
-{% endif %}
-
 {% if SNMP_AGENT_ADDRESS_CONFIG %}
-{% set protocol = 'udp' %}
 {% for (agentip, port, vrf) in SNMP_AGENT_ADDRESS_CONFIG %}
 {% if ':' in agentip %}
 {% set protocol = 'udp6' %}
+{% else %}
+{% set protocol = 'udp' %}
 {% endif %}
-{% if not agentip in loip %}
 agentAddress {{ protocol }}:[{{ agentip }}]{% if port %}:{{ port }}{% endif %}{% if vrf %}%{{ vrf }}{% endif %}{{ "" }}
-{% endif %}
 {% endfor %}
-{% if NAMESPACE_COUNT is defined and NAMESPACE_COUNT|int > 1 %}
-agentAddress udp:[{{ docker0_v4 }}]:161
-agentAddress udp6:[{{ docker0_v6 }}]:161
-{% endif %}
 {% else %}
 agentAddress udp:161
 agentAddress udp6:161
 {% endif %}
+
 ###############################################################################
 #
 #  ACCESS CONTROL
