@@ -123,7 +123,8 @@ stages:
         cd src/sonic-swss-common
         ./autogen.sh
         dpkg-buildpackage -rfakeroot -us -uc -b -j$(nproc)
-        sudo dpkg -i ../libswsscommon_*.deb ../python3-swsscommon_*.deb
+        sudo dpkg -i --force-confask,confnew ../libswsscommon_*.deb
+        sudo dpkg -i ../python3-swsscommon_*.deb
       displayName: "Compile sonic swss common"
 
     - script: |
