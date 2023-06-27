@@ -486,7 +486,7 @@ def get_asic_presence_list():
                     asics_list.append(int(get_asic_id_from_name(asic)))
     return asics_list
 
-def get_docker0_ip():
+def get_docker0_ips():
     """
     @summary: This function will return docker0 ipv4 and ipv6 addresses
               for multi_asic platform.
