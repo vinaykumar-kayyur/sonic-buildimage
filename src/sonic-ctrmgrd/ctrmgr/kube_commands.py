@@ -519,7 +519,7 @@ def _do_clean(feat, current_version, last_version):
                 ret = 1
                 err = "Failed to tag {} local version images. Err: {}".format(feat, err)
             return ret, out, err
-        
+
         if last_version in version_dict:
             del version_dict[last_version]
 
