@@ -10,6 +10,7 @@ sonic_dependencies = ['redis-dump-load']
 dependencies = [
     'natsort==6.2.1', # 6.2.1 is the last version which supports Python 2
     'pyyaml',
+    'netifaces>=0.10.7',
 ]
 
 dependencies += sonic_dependencies
