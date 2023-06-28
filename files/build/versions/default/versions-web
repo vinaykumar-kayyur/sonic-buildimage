@@ -10,8 +10,8 @@ http://deb.debian.org/debian/pool/main/i/iproute2/iproute2_5.10.0.orig.tar.xz==f
 http://deb.debian.org/debian/pool/main/i/iptables/iptables_1.8.2-4.debian.tar.xz==c27e499611c48ba307792518d29cdcc7
 http://deb.debian.org/debian/pool/main/i/iptables/iptables_1.8.2-4.dsc==d9572a9f48c88293341681601a7b18c5
 http://deb.debian.org/debian/pool/main/i/iptables/iptables_1.8.2.orig.tar.bz2==944558e88ddcc3b9b0d9550070fa3599
-http://deb.debian.org/debian/pool/main/i/isc-dhcp/isc-dhcp_4.4.1-2.3+deb11u1.debian.tar.xz==8c3640097a1b4cc59e927badbd45b3f0
-http://deb.debian.org/debian/pool/main/i/isc-dhcp/isc-dhcp_4.4.1-2.3+deb11u1.dsc==1af0a028a9655235ec3372332f94a19c
+http://deb.debian.org/debian/pool/main/i/isc-dhcp/isc-dhcp_4.4.1-2.3+deb11u2.debian.tar.xz==126081bf0da3c1e5ca722edeb5a3aed1
+http://deb.debian.org/debian/pool/main/i/isc-dhcp/isc-dhcp_4.4.1-2.3+deb11u2.dsc==c35e75da314bce54f53b2e0847c6bc9b
 http://deb.debian.org/debian/pool/main/i/isc-dhcp/isc-dhcp_4.4.1.orig.tar.gz==dbcba5108f659278200218ac0847ce3f
 http://deb.debian.org/debian/pool/main/l/lm-sensors/lm-sensors_3.6.0-7.debian.tar.xz==8eab143a53c71c03695ebc78e4b5ed36
 http://deb.debian.org/debian/pool/main/l/lm-sensors/lm-sensors_3.6.0-7.dsc==983d68fb43001bb2fc94862bc4bc2e2b
@@ -32,7 +32,7 @@ https://deb.debian.org/debian/pool/main/k/kdump-tools/kdump-tools_1.6.8.4.tar.xz
 https://deb.nodesource.com/gpgkey/nodesource.gpg.key==003b51a89a133b5db4cca98b2dea3117
 https://deb.nodesource.com/node_14.x/dists/bullseye/Release==6b7d50c433d129d4c6fd95bdf56070fa
 https://deb.nodesource.com/node_14.x/dists/buster/Release==42875141604382f0abb4d047f645dfe1
-https://deb.nodesource.com/setup_14.x==7e3b27b12367cbc79d788cd43bbc917c
+https://deb.nodesource.com/setup_14.x==1c9de9348c0acd5f2ee422a6d0c333b3
 https://download.docker.com/linux/debian/gpg==1afae06b34a13c1b3d9cb61a26285a15
 https://github.com/aristanetworks/sonic-firmware/raw/e89a1696954fd381e1e95edf208cffc97caf15d4/phy/phy-credo_1.0_amd64.deb==fc197598098d030526c08d55cdd3910f
 https://github.com/barefootnetworks/sonic-release-pkgs/raw/dev/bfnplatform_20220408_sai_1.9.1_deb10.deb==890a53ca1374dfcf8c12091d74fd2ef8
@@ -44,7 +44,7 @@ https://github.com/CentecNetworks/sonic-binaries/raw/master/amd64/third_party/ad
 https://github.com/CentecNetworks/sonic-binaries/raw/master/amd64/third_party/advantech/libSUSI-4.00.so.1==393a94b0abba146777e276e1febe0cb0
 https://github.com/CentecNetworks/sonic-binaries/raw/master/arm64/sai/libsai_1.9.1-0_arm64.deb==c354c766cc763a5af621a88637b9e126
 https://github.com/CumulusNetworks/ifupdown2/archive/3.0.0-1.tar.gz==755459b3a58fbc11625336846cea7420
-https://github.com/Marvell-switching/sonic-marvell-binaries/raw/master/armhf/sai-plugin/mrvllibsai_1.10.2-2_armhf.deb==4a8b1c9542f47164556ae83c917f438e
+https://github.com/Marvell-switching/sonic-marvell-binaries/raw/master/armhf/sai-plugin/mrvllibsai_1.10.2-4_armhf.deb==e11d749b36531486044e47292a809662
 https://github.com/Mellanox/Spectrum-SDK-Drivers-SONiC-Bins/releases/download/fw-2010.4204/fw-SPC-rel-13_2010_4204-EVB.mfa==c511454113db7cbf01a5bc898250cf8d
 https://github.com/Mellanox/Spectrum-SDK-Drivers-SONiC-Bins/releases/download/fw-2010.4204/fw-SPC2-rel-29_2010_4204-EVB.mfa==eb004feb6008dc7f109e42d36f372fc6
 https://github.com/Mellanox/Spectrum-SDK-Drivers-SONiC-Bins/releases/download/fw-2010.4204/fw-SPC3-rel-30_2010_4204-EVB.mfa==9099a37a1efb22b6dce535ad2e1528d4
@@ -72,7 +72,7 @@ https://github.com/nanomsg/nanomsg/archive/1.0.0.tar.gz==6f56ef28c93cee644e8c4aa
 https://launchpad.net/debian/+archive/primary/+sourcefiles/bash/5.1-2/bash_5.1-2.debian.tar.xz==9d0cbd5f463f461c840c95f62a64d61b
 https://launchpad.net/debian/+archive/primary/+sourcefiles/bash/5.1-2/bash_5.1-2.dsc==be44c5a9fc12fb567a486f54b842dd9e
 https://launchpad.net/debian/+archive/primary/+sourcefiles/bash/5.1-2/bash_5.1.orig.tar.xz==6ddb13b6111f601db08fc7c72afa0263
-https://raw.githubusercontent.com/p4lang/ptf/master/ptf_nn/ptf_nn_agent.py==628956b660575965429cec84b1778816
+https://raw.githubusercontent.com/p4lang/ptf/master/ptf_nn/ptf_nn_agent.py==963c345c75fe5c5bdedc05ed98a5fd1f
 https://repo1.maven.org/maven2/io/swagger/swagger-codegen-cli/2.4.5/swagger-codegen-cli-2.4.5.jar==219f1453ff22482d9e080effbfa7fa81
 https://sonicstorage.blob.core.windows.net/debian-security/pool/updates/main/l/linux/linux_5.10.140-1.debian.tar.xz==9813a002af43da3a5be05f3d31e85328
 https://sonicstorage.blob.core.windows.net/debian-security/pool/updates/main/l/linux/linux_5.10.140-1.dsc==84ab224b073f97978802d9f998248fcc
@@ -147,9 +147,9 @@ https://sonicstorage.blob.core.windows.net/public/fips/bullseye/0.7/arm64/python
 https://sonicstorage.blob.core.windows.net/public/fips/bullseye/0.7/arm64/python3.9_3.9.2-1+fips_arm64.deb==4d6307dabcd3060235d6188cfa0346b8
 https://sonicstorage.blob.core.windows.net/public/fips/bullseye/0.7/arm64/symcrypt-openssl_0.7_arm64.deb==f25f73823a0f22805b8e0be43bef190f
 https://sonicstorage.blob.core.windows.net/public/sai/bcmpai/REL_3.8/3.8/libsaibroncos_3.8_amd64.deb==f7c3f0ed8c97c2572e3c2e59faaae4a8
-https://sonicstorage.blob.core.windows.net/public/sai/bcmsai/REL_7.0_202205/7.1.36.4-2/libsaibcm_dnx_7.1.36.4-2_amd64.deb==d2b24475e7f357b533878a6b06e02140
 https://sonicstorage.blob.core.windows.net/public/sai/bcmsai/REL_7.0_202205/7.1.36.4/libsaibcm-dev_7.1.36.4_amd64.deb==9bc69f9e35c2ff72e681af4d0b7d2606
 https://sonicstorage.blob.core.windows.net/public/sai/bcmsai/REL_7.0_202205/7.1.36.4/libsaibcm_7.1.36.4_amd64.deb==cb86b76aa2fa44fcfc37a64c1b93f2ad
+https://sonicstorage.blob.core.windows.net/public/sai/bcmsai/REL_7.0_202205/7.1.42.4/libsaibcm_dnx_7.1.42.4_amd64.deb==bd8126337938bfd96befbb72838f8d8f
 https://storage.googleapis.com/golang/go1.14.2.linux-amd64.tar.gz==856d248e3ea8a287d13e5f6afd086282
 https://storage.googleapis.com/golang/go1.14.2.linux-arm64.tar.gz==e5f79b403701e00f20d13f0ea561b064
 https://storage.googleapis.com/golang/go1.14.2.linux-armv6l.tar.gz==04467414e783b18de4278e9f24baf4be

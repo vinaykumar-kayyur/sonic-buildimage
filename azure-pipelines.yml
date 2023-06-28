@@ -63,4 +63,3 @@ stages:
         pool: sonicbld-arm64
         timeoutInMinutes: 1200
         variables:
-          PLATFORM_ARCH: arm64

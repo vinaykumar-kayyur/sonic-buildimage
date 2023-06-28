@@ -27,8 +27,9 @@ Table of Contents
          * [Device neighbor metada](#device-neighbor-metada)
          * [DHCP_RELAY](#dhcp_relay)
          * [DSCP_TO_TC_MAP](#dscp_to_tc_map)  
-         * [FLEX_COUNTER_TABLE](#flex_counter_table)  
-         * [KDUMP](#kdump)
+         * [FLEX_COUNTER_TABLE](#flex_counter_table) 
+         * [IPv6 Link-local] (#ipv6-link-local)  
+         * [KDUMP](#kdump)  
          * [L2 Neighbors](#l2-neighbors)  
          * [Loopback Interface](#loopback-interface)  
          * [LOSSLESS_TRAFFIC_PATTERN](#LOSSLESS_TRAFFIC_PATTERN)  
@@ -36,8 +37,11 @@ Table of Contents
          * [Management port](#management-port)  
          * [Management VRF](#management-vrf)  
          * [MAP_PFC_PRIORITY_TO_QUEUE](#map_pfc_priority_to_queue)  
+         * [MUX_CABLE](#muxcable)  
+         * [MUX_LINKMGR](#mux_linkmgr)
          * [NTP Global Configuration](#ntp-global-configuration)  
          * [NTP and SYSLOG servers](#ntp-and-syslog-servers)  
+         * [Peer Switch](#peer-switch)
          * [Policer](#policer)   
          * [Port](#port)   
          * [Port Channel](#port-channel)  
@@ -58,6 +62,7 @@ Table of Contents
          * [WRED_PROFILE](#wred_profile)  
          * [PASSWORD_HARDENING](#password_hardening)
          * [RADIUS](#radius)
+         * [SYSTEM_DEFAULTS table](#systemdefaults-table)
    * [For Developers](#for-developers)  
       * [Generating Application Config by Jinja2 Template](#generating-application-config-by-jinja2-template)
       * [Incremental Configuration by Subscribing to ConfigDB](#incremental-configuration-by-subscribing-to-configdb)
@@ -822,7 +827,8 @@ instance is supported in SONiC.
         "bgp_asn": "65100",
         "deployment_id": "1",
         "type": "ToRRouter",
-        "buffer_model": "traditional"
+        "buffer_model": "traditional",
+        "rack_mgmt_map": "dummy_value"
     }
   }
 }
@@ -934,6 +940,27 @@ instance is supported in SONiC.
 	}
 }
 
+```
+
+### IPv6 Link-local
+```
+{
+    "INTERFACE": {
+        "Ethernet8": {
+            "ipv6_use_link_local_only": "disable"
+        }
+    },
+    "PORTCHANNEL_INTERFACE": {
+        "PortChannel01": {
+            "ipv6_use_link_local_only": "enable"
+        }
+    },
+    "VLAN_INTERFACE": {
+        "Vlan1000": {
+            "ipv6_use_link_local_only": "enable"
+        }
+    }
+}
 ```
 
 ### KDUMP
@@ -1105,6 +1132,43 @@ instead of data network.
   }
 }
 ```
+### MUX_CABLE
+
+The **MUX_CABLE** table is used for dualtor interface configuration. The `cable_type` and `soc_ipv4` objects are optional. 
+
+```
+{
+    "MUX_CABLE": {
+        "Ethernet4": {
+            "cable_type": "active-active",
+            "server_ipv4": "192.168.0.2/32",
+            "server_ipv6": "fc02:1000::30/128",
+            "soc_ipv4": "192.168.0.3/32",
+            "state": "auto"
+        }
+    }
+}
+```
+
+### MUX_LINKMGR
+The **MUX_LINKMGR** table is used for dualtor device configuration.
+```
+{
+    "MUX_LINKMGR": {
+        "LINK_PROBER": {
+            "interval_v4": "100",
+            "interval_v6": "1000",
+            "positive_signal_count": "1",
+            "negative_signal_count": "3",
+            "suspend_timer": "500",
+            "use_well_known_mac": "enabled",
+            "src_mac": "ToRMac",
+            "interval_pck_loss_count_update": "3"
+        }
+    }
+}
+```
+
 ### NTP Global Configuration
 
 These configuration options are used to modify the way that
@@ -1282,7 +1346,7 @@ optional attributes.
             "mtu": "9100",
             "alias": "etp1a",
             "speed": "100000",
-            "channel": 1
+            "subport": 1
         },
         "Ethernet4": {
             "admin_status": "up",
@@ -1292,7 +1356,7 @@ optional attributes.
             "mtu": "9100",
             "alias": "etp1b",
             "speed": "100000",
-            "channel": 2
+            "subport": 2
         },
     }
 }
@@ -1800,6 +1864,31 @@ The RADIUS and RADIUS_SERVER tables define RADIUS config paramerters. RADIUS tab
 
 ```
 
+### SYSTEM_DEFAULTS table
+To have a better management of the features in SONiC, a new table `SYSTEM_DEFAULTS` is introduced.
+
+```
+"SYSTEM_DEFAULTS": {
+        "tunnel_qos_remap": {
+            "status": "enabled"
+        }
+        "default_bgp_status": {
+            "status": "down"
+        }
+        "synchronous_mode": {
+            "status": "enable"
+        }
+        "dhcp_server": {
+            "status": "enable"
+        }
+    }
+```
+The default value of flags in `SYSTEM_DEFAULTS` table can be set in `init_cfg.json` and loaded into db at system startup. These flags are usually set at image being build, and are unlikely to change at runtime.
+
+If the values in `config_db.json` is changed by user, it will not be rewritten back by `init_cfg.json` as `config_db.json` is loaded after `init_cfg.json` in [docker_image_ctl.j2](https://github.com/Azure/sonic-buildimage/blob/master/files/build_templates/docker_image_ctl.j2)
+
+For the flags that can be changed by reconfiguration, we can update entries in `minigraph.xml`, and parse the new values in to config_db with minigraph parser at reloading minigraph. If there are duplicated entries in `init_cfg.json` and `minigraph.xml`, the values in `minigraph.xml` will overwritten the values defined in `init_cfg.json`.
+#### 5.2.3 Update value directly in db memory
 
 For Developers
 ==============

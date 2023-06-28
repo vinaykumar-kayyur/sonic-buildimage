@@ -173,7 +173,7 @@ $(shell \
 # Generate the slave Dockerfile, and prepare build info for it
 $(shell CONFIGURED_ARCH=$(CONFIGURED_ARCH) MULTIARCH_QEMU_ENVIRON=$(MULTIARCH_QEMU_ENVIRON) ENABLE_FIPS_FEATURE=$(ENABLE_FIPS_FEATURE) DOCKER_EXTRA_OPTS=$(DOCKER_EXTRA_OPTS) DEFAULT_CONTAINER_REGISTRY=$(DEFAULT_CONTAINER_REGISTRY) j2 $(SLAVE_DIR)/Dockerfile.j2 > $(SLAVE_DIR)/Dockerfile)
 $(shell CONFIGURED_ARCH=$(CONFIGURED_ARCH) MULTIARCH_QEMU_ENVIRON=$(MULTIARCH_QEMU_ENVIRON) j2 $(SLAVE_DIR)/Dockerfile.user.j2 > $(SLAVE_DIR)/Dockerfile.user)
-$(shell BUILD_SLAVE=y DEFAULT_CONTAINER_REGISTRY=$(DEFAULT_CONTAINER_REGISTRY) scripts/prepare_docker_buildinfo.sh $(SLAVE_BASE_IMAGE) $(SLAVE_DIR)/Dockerfile $(CONFIGURED_ARCH) "" $(BLDENV))
+$(shell BUILD_SLAVE=y DEFAULT_CONTAINER_REGISTRY=$(DEFAULT_CONTAINER_REGISTRY) MIRROR_SNAPSHOT=$(MIRROR_SNAPSHOT) scripts/prepare_docker_buildinfo.sh $(SLAVE_BASE_IMAGE) $(SLAVE_DIR)/Dockerfile $(CONFIGURED_ARCH) "" $(BLDENV))
 
 # Add the versions in the tag, if the version change, need to rebuild the slave
 SLAVE_BASE_TAG = $(shell cat $(SLAVE_DIR)/Dockerfile $(SLAVE_DIR)/buildinfo/versions/versions-* src/sonic-build-hooks/hooks/* | sha1sum | awk '{print substr($$1,0,11);}')
@@ -196,7 +196,7 @@ endif
 DOCKER_LOCKFILE_SAVE := $(DOCKER_LOCKDIR)/docker_save.lock
 $(shell mkdir -m 0777 -p $(DOCKER_LOCKDIR))
 $(shell [ -f $(DOCKER_LOCKFILE_SAVE) ] || (touch $(DOCKER_LOCKFILE_SAVE) && chmod 0777 $(DOCKER_LOCKFILE_SAVE)))
-$(docker run --rm -v $(DOCKER_ROOT)\:/mount alpine sh -c 'rm -rf /mount/')
+$(shell [ -d $(DOCKER_ROOT) ] && docker run --rm -v $(DOCKER_ROOT)\:/mount debian sh -c 'rm -rf /mount/*')
 $(mkdir -p $(DOCKER_ROOT))
 
 ifeq ($(DOCKER_BUILDER_MOUNT),)
@@ -330,7 +330,7 @@ DOCKER_BASE_BUILD = docker build --no-cache \
 		    $(SLAVE_DIR) $(SPLIT_LOG) $(DOCKER_BASE_LOG)
 
 DOCKER_BASE_PULL = docker pull \
-			$(REGISTRY_SERVER):$(REGISTRY_PORT)/$(SLAVE_BASE_IMAGE):$(SLAVE_BASE_TAG)
+			$(REGISTRY_SERVER):$(REGISTRY_PORT)$(REGISTRY_SERVER_PATH)/$(SLAVE_BASE_IMAGE):$(SLAVE_BASE_TAG)
 
 DOCKER_BASE_PUSH = docker push \
 			$(REGISTRY_SERVER):$(REGISTRY_PORT)/$(SLAVE_BASE_IMAGE):$(SLAVE_BASE_TAG)
@@ -406,6 +406,7 @@ SONIC_BUILD_INSTRUCTION :=  make \
                            MIRROR_URLS=$(MIRROR_URLS) \
                            MIRROR_SECURITY_URLS=$(MIRROR_SECURITY_URLS) \
                            MIRROR_SNAPSHOT=$(MIRROR_SNAPSHOT) \
+                           SONIC_OS_VERSION=$(SONIC_OS_VERSION) \
                            $(SONIC_OVERRIDE_BUILD_VARS)
 
 .PHONY: sonic-slave-build sonic-slave-bash init reset
@@ -433,7 +434,7 @@ endif
 	@docker inspect --type image $(SLAVE_BASE_IMAGE):$(SLAVE_BASE_TAG) &> /dev/null || \
 	    { [ $(ENABLE_DOCKER_BASE_PULL) == y ] && { echo Image $(SLAVE_BASE_IMAGE):$(SLAVE_BASE_TAG) not found. Pulling...; } && \
 	      $(DOCKER_BASE_PULL) && \
-		    { docker tag $(REGISTRY_SERVER):$(REGISTRY_PORT)/$(SLAVE_BASE_IMAGE):$(SLAVE_BASE_TAG) $(SLAVE_BASE_IMAGE):$(SLAVE_BASE_TAG) && \
+		    { docker tag $(REGISTRY_SERVER):$(REGISTRY_PORT)$(REGISTRY_SERVER_PATH)/$(SLAVE_BASE_IMAGE):$(SLAVE_BASE_TAG) $(SLAVE_BASE_IMAGE):$(SLAVE_BASE_TAG) && \
 	          scripts/collect_docker_version_files.sh $(SLAVE_BASE_IMAGE):$(SLAVE_BASE_TAG) target ; } } || \
 	    { echo Image $(SLAVE_BASE_IMAGE):$(SLAVE_BASE_TAG) not found. Building... ; \
 	      $(DOCKER_BASE_BUILD) ; \
@@ -470,7 +471,7 @@ endif
 	@docker inspect --type image $(SLAVE_BASE_IMAGE):$(SLAVE_BASE_TAG) &> /dev/null || \
 	    { [ $(ENABLE_DOCKER_BASE_PULL) == y ] && { echo Image $(SLAVE_BASE_IMAGE):$(SLAVE_BASE_TAG) not found. Pulling...; } && \
 	      $(DOCKER_BASE_PULL) && \
-		    { docker tag $(REGISTRY_SERVER):$(REGISTRY_PORT)/$(SLAVE_BASE_IMAGE):$(SLAVE_BASE_TAG) $(SLAVE_BASE_IMAGE):$(SLAVE_BASE_TAG) && \
+		    { docker tag $(REGISTRY_SERVER):$(REGISTRY_PORT)$(REGISTRY_SERVER_PATH)/$(SLAVE_BASE_IMAGE):$(SLAVE_BASE_TAG) $(SLAVE_BASE_IMAGE):$(SLAVE_BASE_TAG) && \
 	          scripts/collect_docker_version_files.sh $(SLAVE_BASE_IMAGE):$(SLAVE_BASE_TAG) target ; } } || \
 	    { echo Image $(SLAVE_BASE_IMAGE):$(SLAVE_BASE_TAG) not found. Building... ; \
 	      $(DOCKER_BASE_BUILD) ; \

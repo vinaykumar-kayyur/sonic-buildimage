@@ -58,6 +58,7 @@ PROC_FAIL = "proc_fail"
 PROC_THROW = "proc_throw"
 PROC_OUT = "subproc_output"
 PROC_ERR = "subproc_error"
+PROC_CODE = "subproc_code"
 PROC_KILLED = "procs_killed"
 
 # container_start test cases
@@ -184,6 +185,7 @@ class mock_container:
         self.actions = []
         self.name = name
         self.image = mock_image(self.actions)
+        self.attrs = {"Config": {"Env": ["IMAGE_VERSION=20201231.11"]}}
 
 
     def start(self):
@@ -546,6 +548,19 @@ def set_mock_kube(kube_labels, kube_join, kube_reset):
     kube_reset.side_effect = kube_reset_side_effect
 
 
+def clean_image_side_effect(feat, current_version, last_version):
+    return 0
+
+
+def tag_latest_side_effect(feat, docker_id, image_ver):
+    return 0
+
+
+def set_mock_image_op(clean_image, tag_latest):
+    clean_image.side_effect = clean_image_side_effect
+    tag_latest.side_effect = tag_latest_side_effect
+
+
 def str_comp(needle, hay):
     nlen = len(needle)
     hlen = len(hay)
@@ -605,6 +620,7 @@ class mock_proc:
 
         out_lst = current_test_data.get(PROC_OUT, None)
         err_lst = current_test_data.get(PROC_ERR, None)
+        code_lst = current_test_data.get(PROC_CODE, None)
         if out_lst:
             assert (len(out_lst) > self.index)
             out = out_lst[self.index]
@@ -615,7 +631,11 @@ class mock_proc:
             err = err_lst[self.index]
         else:
             err = ""
-        self.returncode = 0 if not err else -1
+        if code_lst:
+            assert (len(code_lst) > self.index)
+            self.returncode = code_lst[self.index]
+        else:
+            self.returncode = 0 if not err else -1
         return (out, err)
 
     def kill(self):
@@ -673,7 +693,8 @@ def create_remote_ctr_config_json():
     "join_latency_on_boot_seconds": 2,\n\
     "retry_join_interval_seconds": 0,\n\
     "retry_labels_update_seconds": 0,\n\
-    "revert_to_local_on_wait_seconds": 5\n\
+    "revert_to_local_on_wait_seconds": 5,\n\
+    "tag_latest_image_on_wait_seconds": 0\n\
 }\n'
 
     fname = "/tmp/remote_ctr.config.json"

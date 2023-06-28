@@ -31,7 +31,7 @@ class MonitorStateDbTask(ProcessTaskBase):
         self.task_queue = myQ
 
     def subscribe_statedb(self):
-        state_db = swsscommon.DBConnector("STATE_DB", REDIS_TIMEOUT_MS, True)
+        state_db = swsscommon.DBConnector("STATE_DB", REDIS_TIMEOUT_MS, False)
         sel = swsscommon.Select()
         cst = swsscommon.SubscriberStateTable(state_db, "FEATURE")
         sel.addSelectable(cst)
@@ -122,7 +122,7 @@ class Sysmonitor(ProcessTaskBase):
     def post_system_status(self, state):
         try:
             if not self.state_db:
-                self.state_db = swsscommon.SonicV2Connector(host='127.0.0.1')
+                self.state_db = swsscommon.SonicV2Connector(use_unix_socket_path=True)
                 self.state_db.connect(self.state_db.STATE_DB)
             
             self.state_db.set(self.state_db.STATE_DB, "SYSTEM_READY|SYSTEM_STATE", "Status", state)
@@ -135,7 +135,7 @@ class Sysmonitor(ProcessTaskBase):
     def get_all_service_list(self):
         
         if not self.config_db:
-            self.config_db = swsscommon.ConfigDBConnector()
+            self.config_db = swsscommon.ConfigDBConnector(use_unix_socket_path=True)
             self.config_db.connect()
 
         dir_list = []
@@ -197,10 +197,10 @@ class Sysmonitor(ProcessTaskBase):
     #else, just return Up
     def get_app_ready_status(self, service):
         if not self.state_db:
-            self.state_db = swsscommon.SonicV2Connector(host='127.0.0.1')
+            self.state_db = swsscommon.SonicV2Connector(use_unix_socket_path=True)
             self.state_db.connect(self.state_db.STATE_DB)
         if not self.config_db:
-            self.config_db = swsscommon.ConfigDBConnector()
+            self.config_db = swsscommon.ConfigDBConnector(use_unix_socket_path=True)
             self.config_db.connect()
 
         fail_reason = ""
@@ -248,7 +248,7 @@ class Sysmonitor(ProcessTaskBase):
     #Sets the service status to state db
     def post_unit_status(self, srv_name, srv_status, app_status, fail_reason, update_time):
         if not self.state_db:
-            self.state_db = swsscommon.SonicV2Connector(host='127.0.0.1')
+            self.state_db = swsscommon.SonicV2Connector(use_unix_socket_path=True)
             self.state_db.connect(self.state_db.STATE_DB)
 
         key = 'ALL_SERVICE_STATUS|{}'.format(srv_name)
@@ -378,7 +378,7 @@ class Sysmonitor(ProcessTaskBase):
     def check_unit_status(self, event):
         #global dnsrvs_name
         if not self.state_db:
-            self.state_db = swsscommon.SonicV2Connector(host='127.0.0.1')
+            self.state_db = swsscommon.SonicV2Connector(use_unix_socket_path=True)
             self.state_db.connect(self.state_db.STATE_DB)
         astate = "DOWN"
 
@@ -407,16 +407,19 @@ class Sysmonitor(ProcessTaskBase):
                 self.dnsrvs_name.remove(event)
             
             srv_name,last = event.split('.')
-            key = 'ALL_SERVICE_STATUS|{}'.format(srv_name)
-            key_exists = self.state_db.exists(self.state_db.STATE_DB, key)
-            if key_exists == 1:
-                self.state_db.delete(self.state_db.STATE_DB, key)
+            # stop on service maybe propagated to timers and in that case,
+            # the state_db entry for the service should not be deleted
+            if last == "service":
+                key = 'ALL_SERVICE_STATUS|{}'.format(srv_name)
+                key_exists = self.state_db.exists(self.state_db.STATE_DB, key)
+                if key_exists == 1:
+                    self.state_db.delete(self.state_db.STATE_DB, key)
         
         return 0
 
     def system_service(self):
         if not self.state_db:
-            self.state_db = swsscommon.SonicV2Connector(host='127.0.0.1')
+            self.state_db = swsscommon.SonicV2Connector(use_unix_socket_path=True)
             self.state_db.connect(self.state_db.STATE_DB)
         
         mpmgr = multiprocessing.Manager()
