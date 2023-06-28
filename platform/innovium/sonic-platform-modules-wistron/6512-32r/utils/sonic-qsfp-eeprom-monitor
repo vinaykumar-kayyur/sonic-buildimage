@@ -13,6 +13,16 @@ port_pre_grid=(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
 port_pre_freq=(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
 port_pre_outp=(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
 
+# eeprom read queue
+port_present_status=(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
+port_plugin_list=(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
+port_plugin_time=(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
+port_head=1
+port_tail=1
+list_size=0
+port_plugged=0
+port_time=0
+
 board_ver=$(ipmitool raw 0x30 0x25 0x1 0xe0 0x1 0x0 1>/dev/null 2>/dev/null; echo $?) #error will get 1 means EVT, otherwise DVT
 
 
@@ -250,7 +260,7 @@ bmc_update_dynamic()
 			ipmitool raw 0x30 0x25 0x1 0xa0 0x0 93 $pwr_mode
 			port_pre_mode[$port]=$pwr_mode
 		else
-			pwr=$(ipmitool raw 0x30 0x25 0x1 0xa0 0x1 26)
+			pwr=$(ipmitool raw 0x30 0x25 0x1 0xa0 0x1 93)
 			pwr=$(echo $pwr | awk '{printf $1}')
 			if [ "$pwr" != "" ];then
 				pwr=$( printf "%d" 0x$pwr )
@@ -671,7 +681,7 @@ bmc_qsfp_eeprom_read()
 		fi
 
 		if [ $board_ver == 0 ]; then
-			port_init[$port]=1
+        		port_init[$port]=1
 			if [ $port -lt 16 ];then
 				cpld_path="/sys/bus/i2c/devices/0-0006/"
 			else
@@ -684,10 +694,66 @@ bmc_qsfp_eeprom_read()
 	return 0
 }
 
+push_port()
+{
+        if [ $list_size -ge 32 ]; then
+                # array full
+                # echo "\n\n list full \n\n"
+                return 0
+        fi
+
+        if [ $list_size > 0 ]; then
+                (( list_tail++ ))
+                list_tail=$(($list_tail % 32))
+        fi
+
+        port_plugin_list[$list_tail]=$1
+        port_plugin_time[$list_tail]=$(date +%s)
+        (( list_size++ ))
+
+        return 1
+}
+
+pop_port()
+{
+        if [ $list_size == 0 ]; then
+                # array is empty
+                return 0
+        fi
+
+        (( list_head++ ))
+        list_head=$(($list_head % 32))
+
+        port_plugged=$((port_plugin_list[$((list_head))]))
+        port_time=$((port_plugin_time[$((list_head))]))
+        (( list_size -- ))
+
+        return $port_plugged
+}
+
+get_port()
+{
+        if [ $list_size == 0 ]; then
+                # array is empty
+                return 0
+        fi
+
+        list_index=$list_head
+        (( list_index++ ))
+        list_index=$(($list_index % 32))
+
+        port_plugged=$((port_plugin_list[$((list_index))]))
+        port_time=$((port_plugin_time[$((list_index))]))
+
+        return $port_plugged
+}
+
 TRANSCEIVER_DATA_READ()
 {
 	first_detect=0
 	loop_after_plugin=0
+        cpld1_path="/sys/bus/i2c/devices/0-0006/"
+        cpld2_path="/sys/bus/i2c/devices/0-0007/"
 
 	while true
 	do
@@ -698,53 +764,84 @@ TRANSCEIVER_DATA_READ()
 				ipmitool raw 0x30 0x25 0x1 0xe4 0x0 0x0  1>>/dev/null 2>>/dev/null
 				ipmitool raw 0x30 0x25 0x1 0xe6 0x0 0x0  1>>/dev/null 2>>/dev/null
 			fi
-			for i in $(seq 1 32);
-			do
-				if [ $i -le 16 ];then
-					cpld_path="/sys/bus/i2c/devices/0-0006/"
-				else
-					cpld_path="/sys/bus/i2c/devices/0-0007/"
-				fi
 
-				pre=$(cat $cpld_path"port"$i"_present")
-				if [ $pre == 1 ]; then
-					bmc_qsfp_eeprom_read $i
-					if [ $first_detect == 0 ]; then
-						first_detect=1
-					fi
-				else
-					port_init[$((i - 1))]=0
-					port_sfp_type[$((i - 1))]=0
-					port_pre_mode[$((i - 1))]=0
-					port_pre_grid[$((i - 1))]=0
-					port_pre_freq[$((i - 1))]=0
-					port_pre_outp[$((i - 1))]=0
-				fi
-			done
+                        # detect port plug-in
+                        for i in $(seq 1 32);
+                        do
+                                if [ $i -le 16 ];then
+                                        pre=$(cat $cpld1_path"port"$i"_present")
+                                else
+                                        pre=$(cat $cpld2_path"port"$i"_present")
+                                fi
 
-			if [ $first_detect == 1 ]; then
-				touch /tmp/eeprom_init_done
-			fi
+                                cur_pre=$((port_present_status[$((i-1))]))
+                                if [ $pre == 1 ]; then
+                                        if [ $cur_pre == 0 ]; then
+                                                port_present_status[$((i-1))]=$pre
+                                                push_port $i
+                                        fi
+                                else
+                                        port_present_status[$((i-1))]=0
+                                        port_init[$((i - 1))]=0
+                                        port_sfp_type[$((i - 1))]=0
+                                        port_pre_mode[$((i - 1))]=0
+                                        port_pre_grid[$((i - 1))]=0
+                                        port_pre_freq[$((i - 1))]=0
+                                        port_pre_outp[$((i - 1))]=0
+                                fi
+                        done
 
-			if [ -e /tmp/plugin_module_event ]; then
-				loop_after_plugin=$((loop_after_plugin + 1))
+                        # process qsfp eeprom
+                        if [ $list_size -ne 0 ]; then
+                                get_port
 
-				if [ $loop_after_plugin -gt 2 ]; then
-					rm /tmp/plugin_module_event
-					loop_after_plugin=0
-				fi
-			fi
+                                cur_time=$(date +%s)
+                                duration=$(($cur_time-$port_time))
+                                if [ $duration -ge 2 ]; then
+                                        pop_port
+
+                                        port=$port_plugged
+                                        if [ $port -le 16 ];then
+                                                pre=$(cat $cpld1_path"port"$port"_present")
+                                        else
+                                                pre=$(cat $cpld2_path"port"$port"_present")
+                                        fi
+
+                                        cur_pre=$((port_present_status[$((port-1))]))
+                                        if [ $pre == 1 ]; then
+                                                if [ $cur_pre == 1 ]; then
+                                                        bmc_qsfp_eeprom_read $port
+                                                fi
+                                                if [ $first_detect == 0 ]; then
+                                                        first_detect=1
+                                                fi
+                                        fi
+                                fi
+                        fi
+
+                        if [ $first_detect == 1 ]; then
+                                touch /tmp/eeprom_init_done
+                        fi
+
+                        if [ -e /tmp/plugin_module_event ]; then
+                                loop_after_plugin=$((loop_after_plugin + 1))
+
+                                if [ $loop_after_plugin -gt 2 ]; then
+                                        rm /tmp/plugin_module_event
+                                        loop_after_plugin=0
+                                fi
+                        fi
 
 			pmon_status_check
 			if [ $? -eq 1 ]; then
 				if [ $first_detect == 1 ]; then
-					docker exec pmon bash -c 'echo "" > /tmp/eeprom_init_done'
+	                        	docker exec pmon bash -c 'echo "" > /tmp/eeprom_init_done'
 				fi
 			else
 				first_detect=0
 			fi
 
-			sleep 1;
+			sleep 0.5;
 		fi
 	done
 }
