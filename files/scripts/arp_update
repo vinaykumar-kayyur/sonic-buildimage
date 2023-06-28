@@ -105,6 +105,7 @@ while /bin/true; do
         if [[ ! -z "$unsync_neighbors" ]]; then
             ip_neigh_flush_cmd="echo \"$unsync_neighbors\" | sed -e 's/^/ip neigh flush /' -e 's/$/;/'"
             eval `eval "$ip_neigh_flush_cmd"`
+            sleep 2
         fi
 
         # generates the following command for each FAILED or INCOMPLETE IPv6 neighbor
@@ -113,19 +114,8 @@ while /bin/true; do
             ping6_template="sed -e 's/^/timeout 0.2 ping /' -e 's/,/ -n -q -i 0 -c 1 -W 1 -I /' -e 's/$/ >\/dev\/null;/'"
             failed_ip6_neigh_cmd="echo \"$unresolved_kernel_neighbors\" | cut -d ' ' -f 1,3 --output-delimiter=',' | $ping6_template"
             eval `eval "$failed_ip6_neigh_cmd"`
-        fi
-
-        # wait for any transient INCOMPLETE neighbors to transition to FAILED
-        # once these transition to FAILED, we can guarantee that the kernel has generated a netlink message for the neighbor
-        # and proceed setting it to permanent INCOMPLETE
-        # this is necessary for:
-        # 1. unsyncronized neighbors that were flushed, then pinged
-        # 2. existing FAILED neighbors which will be set to transient INCOMPLETE by the above ping
-        wait_neighbors="$unsync_neighbors"$'\n'"$failed_kernel_neighbors"
-        if [[ ! -z "$wait_neighbors" ]]; then
-            trans_incomplete_check=$(echo "$wait_neighbors" | sed  -e 's/^/ip neigh show /' -e 's/$/ | grep -q 'INCOMPLETE' \&\&/')
-            trans_incomplete_check=$(echo $trans_incomplete_check | sed -e 's/\&\&$//')
-            timeout 10 bash -c "while eval \"$trans_incomplete_check\"; do echo 'waiting'; sleep 1; done"
+            # allow some time for any transient INCOMPLETE neighbors to transition to FAILED
+            sleep 5
         fi
 
         # manually set any remaining FAILED entries to permanently INCOMPLETE
