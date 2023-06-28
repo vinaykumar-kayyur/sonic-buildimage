@@ -15,13 +15,13 @@ port_pre_outp=(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
 
 # eeprom read queue
 port_present_status=(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
-port_plugin_list=(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
-port_plugin_time=(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
 port_head=1
 port_tail=1
 list_size=0
 port_plugged=0
 port_time=0
+port_pre_fine_tune_freq=(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
+port_vdm_control=(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
 
 board_ver=$(ipmitool raw 0x30 0x25 0x1 0xe0 0x1 0x0 1>/dev/null 2>/dev/null; echo $?) #error will get 1 means EVT, otherwise DVT
 
@@ -361,23 +361,6 @@ bmc_update_dynamic()
 			err=1
 		fi
 
-		grid_path="/sys/bus/i2c/devices/0-00"${port_map[$((port + 1))]}"/grid"
-		grid_val=$(cat $grid_path | awk '{printf $1}')
-		if [[ $grid_val -ne ${port_pre_grid[$port]} ]]; then
-			if [ ${port_sfp_type[$port]} -eq 24 ];then
-				ipmitool raw 0x30 0x25 0x1 0xa0 0x0 0x7f 0x12  1>>/dev/null 2>>/dev/null
-				ipmitool raw 0x30 0x25 0x1 0xa0 0 0x80 $grid_val 1>>/dev/null 2>>/dev/null
-				port_pre_grid[$port]=$grid_val
-			fi
-		else
-			ipmitool raw 0x30 0x25 0x1 0xa0 0x0 0x7f 0x12  1>>/dev/null 2>>/dev/null
-			grid=$(ipmitool raw 0x30 0x25 0x1 0xa0 1 0x80)
-			grid=$(echo $grid | awk '{printf $1}')
-			if [ "$grid" != "" ];then
-				grid=$( printf "%d" 0x$grid )
-				echo $grid > $grid_path
-			fi
-		fi
 		outp_path="/sys/bus/i2c/devices/0-00"${port_map[$((port + 1))]}"/output_power"
 		outp_val=$(cat $outp_path | awk '{printf $1}')
 		if [[ $outp_val -ne ${port_pre_outp[$port]} ]]; then
@@ -400,35 +383,192 @@ bmc_update_dynamic()
 				echo $outp > $outp_path
 			fi
 		fi
+
+		grid_path="/sys/bus/i2c/devices/0-00"${port_map[$((port + 1))]}"/grid"
+		grid_val=$(cat $grid_path | awk '{printf $1}')
+
 		freq_path="/sys/bus/i2c/devices/0-00"${port_map[$((port + 1))]}"/freq"
 		freq_val=$(cat $freq_path | awk '{printf $1}')
+
+		fine_tune_freq_path="/sys/bus/i2c/devices/0-00"${port_map[$((port + 1))]}"/fine_tune_freq"
+		fine_tune_freq_val=$(cat $fine_tune_freq_path | awk '{printf $1}')
+
+		set_lpmode=0
+
+		if [[ $grid_val -ne ${port_pre_grid[$port]} ]] || [[ $freq_val -ne ${port_pre_freq[$port]} ]] || [[ $fine_tune_freq_val -ne ${port_pre_fine_tune_freq[$port]} ]]; then
+			if [ ${port_sfp_type[$port]} -eq 24 ];then
+				set_lpmode=1
+			fi
+		fi
+
+		if [ $set_lpmode -eq 1 ];then
+			# Disable High Power Mode
+			ipmitool raw 0x30 0x25 0x1 0xa0 0x0 0x1A 0x50  1>>/dev/null 2>>/dev/null
+			sleep 0.1
+		fi
+
+		if [[ $grid_val -ne ${port_pre_grid[$port]} ]]; then
+			if [ ${port_sfp_type[$port]} -eq 24 ];then
+				# Read the value at the offset 128 and only modify the signifest 7 bits.
+				ipmitool raw 0x30 0x25 0x1 0xa0 0x0 0x7f 0x12  1>>/dev/null 2>>/dev/null
+				sleep 0.1
+				orig_val=$(ipmitool raw 0x30 0x25 0x1 0xa0 1 0x80 2>>/dev/null)
+				sleep 0.1
+				orig_val=$(echo $orig_val | awk '{printf $1}')
+				orig_val=$( printf "%d" 0x$orig_val )
+				grid_val=$(((orig_val & 0x0e) | grid_val))
+				ipmitool raw 0x30 0x25 0x1 0xa0 0 0x80 $grid_val 1>>/dev/null 2>>/dev/null
+				sleep 0.1
+				port_pre_grid[$port]=$grid_val
+			fi
+		else
+			ipmitool raw 0x30 0x25 0x1 0xa0 0x0 0x7f 0x12  1>>/dev/null 2>>/dev/null
+			sleep 0.1
+			grid=$(ipmitool raw 0x30 0x25 0x1 0xa0 1 0x80)
+			grid=$(echo $grid | awk '{printf $1}')
+			if [ "$grid" != "" ];then
+				grid=$( printf "%d" 0x$grid )
+				echo $grid > $grid_path
+			fi
+		fi
+
 		if [[ $freq_val -ne ${port_pre_freq[$port]} ]]; then
 			if [ ${port_sfp_type[$port]} -eq 24 ];then
-				#workaround for turn on/off lpmode in setting laser freq
-				ipmitool raw 0x30 0x25 0x1 0xa0 0x0 0x7f 0x0  1>>/dev/null 2>>/dev/null
-				sleep 0.1
-				ipmitool raw 0x30 0x25 0x1 0xa0 0x0 0x26 0x50  1>>/dev/null 2>>/dev/null
+				# Set the frequency
 				freq_b1=$(echo $(((freq_val & 0xff00) >> 8)))
 				freq_b2=$(echo $((freq_val & 0xff)))
-				bmc_write 0x50 0x7f 0x12
+				ipmitool raw 0x30 0x25 0x1 0xa0 0x0 0x7f 0x12  1>>/dev/null 2>>/dev/null
 				sleep 0.1
 				ipmitool raw 0x30 0x25 0x1 0xa0 0 0x88 $freq_b1 $freq_b2 1>>/dev/null 2>>/dev/null
 				sleep 0.1
-				ipmitool raw 0x30 0x25 0x1 0xa0 0x0 0x7f 0x0  1>>/dev/null 2>>/dev/null
-				sleep 0.1
-				ipmitool raw 0x30 0x25 0x1 0xa0 0x0 0x26 0x40  1>>/dev/null 2>>/dev/null
 				port_pre_freq[$port]=$freq_val
 			fi
 		else
 			ipmitool raw 0x30 0x25 0x1 0xa0 0x0 0x7f 0x12  1>>/dev/null 2>>/dev/null
+			sleep 0.1
 			freq=$(ipmitool raw 0x30 0x25 0x1 0xa0 2 0x88)
+			sleep 0.1
 			freq_h=$(echo $freq | awk '{printf $1}')
 			freq_l=$(echo $freq | awk '{printf $2}')
 			if [ "$freq" != "" ];then
 				freq_h=$( printf "%d" 0x$freq_h )
 				freq_l=$( printf "%d" 0x$freq_l )
-				freq=$((freq_h << 8 | out_p_l))
+				freq=$((freq_h << 8 | freq_l))
 				echo $freq > $freq_path
+			fi
+		fi
+
+		if [[ $fine_tune_freq_val -ne ${port_pre_fine_tune_freq[$port]} ]]; then
+			if [ ${port_sfp_type[$port]} -eq 24 ];then
+				# Set the frequency
+				fine_tune_freq_b1=$(echo $(((fine_tune_freq_val & 0xff00) >> 8)))
+				fine_tune_freq_b2=$(echo $((fine_tune_freq_val & 0xff)))
+				ipmitool raw 0x30 0x25 0x1 0xa0 0x0 0x7f 0x12  1>>/dev/null 2>>/dev/null
+				sleep 0.1
+				ipmitool raw 0x30 0x25 0x1 0xa0 0 0x98 $fine_tune_freq_b1 $fine_tune_freq_b2 1>>/dev/null 2>>/dev/null
+				sleep 0.1
+				port_pre_fine_tune_freq[$port]=$fine_tune_freq_val
+			fi
+		else
+			ipmitool raw 0x30 0x25 0x1 0xa0 0x0 0x7f 0x12  1>>/dev/null 2>>/dev/null
+			sleep 0.1
+			fine_tune_freq=$(ipmitool raw 0x30 0x25 0x1 0xa0 2 0x98)
+			sleep 0.1
+			fine_tune_freq_h=$(echo $fine_tune_freq | awk '{printf $1}')
+			fine_tune_freq_l=$(echo $fine_tune_freq | awk '{printf $2}')
+			if [ "$fine_tune_freq" != "" ];then
+				fine_tune_freq_h=$( printf "%d" 0x$fine_tune_freq_h )
+				fine_tune_freq_l=$( printf "%d" 0x$fine_tune_freq_l )
+				fine_tune_freq=$((fine_tune_freq_h << 8 | fine_tune_freq_l))
+				echo $fine_tune_freq > $fine_tune_freq_path
+			fi
+		fi
+
+		if [ $set_lpmode -eq 1 ];then
+			# Enable High Power Mode
+			ipmitool raw 0x30 0x25 0x1 0xa0 0x0 0x1A 0x40  1>>/dev/null 2>>/dev/null
+			sleep 0.1
+		fi
+
+		ipmitool raw 0x30 0x25 0x1 0xa0 0x0 0x7f 0x12  1>>/dev/null 2>>/dev/null
+		sleep 0.1
+		current_freq=$(ipmitool raw 0x30 0x25 0x1 0xa0 4 0xA8 2>>/dev/null)
+		sleep 0.1
+		if [ $? -eq 0 ];then
+			if [ "$current_freq" != "" ];then
+				result=$(echo $current_freq | sed 's/[[:space:]]//g')
+				result=$(echo $result | sed 's/^0*//')
+				if [ "$result" == "" ] || [ "$result" == "ffffffff" ]; then
+					result=0
+				fi
+				curr_freq_path="/sys/bus/i2c/devices/0-00"${port_map[$((port + 1))]}"/current_freq"
+				echo $((16#$result)) > $curr_freq_path
+			fi
+		else
+			err=1
+		fi
+
+		# VDM Control
+		vdm_control_path="/sys/bus/i2c/devices/0-00"${port_map[$((port + 1))]}"/vdm_control"
+		vdm_control_val=$(cat $vdm_control_path | awk '{printf $1}')
+		if [[ $vdm_control_val -ne ${port_vdm_control[$port]} ]]; then
+			if [ ${port_sfp_type[$port]} -eq 24 ];then
+				ipmitool raw 0x30 0x25 0x1 0xa0 0x0 0x7f 0x2f  1>>/dev/null 2>>/dev/null
+				sleep 0.1
+				ipmitool raw 0x30 0x25 0x1 0xa0 0 0x90 $vdm_control_val 1>>/dev/null 2>>/dev/null
+				sleep 0.1
+				port_vdm_control[$port]=$vdm_control_val
+			fi
+		else
+			ipmitool raw 0x30 0x25 0x1 0xa0 0x0 0x7f 0x2f  1>>/dev/null 2>>/dev/null
+			sleep 1
+			vdm_control_val=$(ipmitool raw 0x30 0x25 0x1 0xa0 1 0x90)
+			sleep 0.1
+			vdm_control_val=$(echo $vdm_control_val | awk '{printf $1}')
+			if [ "$vdm_control_val" != "" ];then
+				vdm_control_val=$( printf "%d" 0x$vdm_control_val )
+				echo $vdm_control_val > $vdm_control_path
+			fi
+		fi
+
+		# Page 0x2F
+		ipmitool raw 0x30 0x25 0x1 0xa0 0x0 0x7f 0x2f 1>>/dev/null 2>>/dev/null
+		sleep 0.1
+		val=$(ipmitool raw 0x30 0x25 0x1 0xa0 0x80 0x80 2>>/dev/null)
+		sleep 0.1
+		if [ $? -eq 0 ];then
+			eeprom_pg2f=$val
+			eeprom_pg2f=$(echo $eeprom_pg2f | sed 's/[[:space:]]//g')
+			eeprom2f_path="/sys/bus/i2c/devices/0-00"${port_map[$((port + 1))]}"/eeprom_pg2f"
+			eeprom_pg2f=$(echo $eeprom_pg2f | sed -e 's/ //g')
+			echo $eeprom_pg2f > $eeprom2f_path
+		fi
+
+		if [[ $vdm_control_val -eq 128 ]]; then
+			# Page 0x34
+			ipmitool raw 0x30 0x25 0x1 0xa0 0x0 0x7f 0x34 1>>/dev/null 2>>/dev/null
+			sleep 0.1
+			val=$(ipmitool raw 0x30 0x25 0x1 0xa0 0x80 0x80 2>>/dev/null)
+			sleep 0.1
+			if [ $? -eq 0 ];then
+				eeprom_pg34=$val
+				eeprom_pg34=$(echo $eeprom_pg34 | sed 's/[[:space:]]//g')
+				eeprom34_path="/sys/bus/i2c/devices/0-00"${port_map[$((port + 1))]}"/eeprom_pg34"
+				eeprom_pg34=$(echo $eeprom_pg34 | sed -e 's/ //g')
+				echo $eeprom_pg34 > $eeprom34_path
+			fi
+
+			# Page 0x35
+			ipmitool raw 0x30 0x25 0x1 0xa0 0x0 0x7f 0x35 1>>/dev/null 2>>/dev/null
+			sleep 0.1
+			val=$(ipmitool raw 0x30 0x25 0x1 0xa0 0x80 0x80 2>>/dev/null)
+			sleep 0.1
+			if [ $? -eq 0 ];then
+				eeprom_pg35=$val
+				eeprom_pg35=$(echo $eeprom_pg35 | sed 's/[[:space:]]//g')
+				eeprom35_path="/sys/bus/i2c/devices/0-00"${port_map[$((port + 1))]}"/eeprom_pg35"
+				eeprom_pg35=$(echo $eeprom_pg35 | sed -e 's/ //g')
+				echo $eeprom_pg35 > $eeprom35_path
 			fi
 		fi
 
@@ -694,66 +834,10 @@ bmc_qsfp_eeprom_read()
 	return 0
 }
 
-push_port()
-{
-        if [ $list_size -ge 32 ]; then
-                # array full
-                # echo "\n\n list full \n\n"
-                return 0
-        fi
-
-        if [ $list_size > 0 ]; then
-                (( list_tail++ ))
-                list_tail=$(($list_tail % 32))
-        fi
-
-        port_plugin_list[$list_tail]=$1
-        port_plugin_time[$list_tail]=$(date +%s)
-        (( list_size++ ))
-
-        return 1
-}
-
-pop_port()
-{
-        if [ $list_size == 0 ]; then
-                # array is empty
-                return 0
-        fi
-
-        (( list_head++ ))
-        list_head=$(($list_head % 32))
-
-        port_plugged=$((port_plugin_list[$((list_head))]))
-        port_time=$((port_plugin_time[$((list_head))]))
-        (( list_size -- ))
-
-        return $port_plugged
-}
-
-get_port()
-{
-        if [ $list_size == 0 ]; then
-                # array is empty
-                return 0
-        fi
-
-        list_index=$list_head
-        (( list_index++ ))
-        list_index=$(($list_index % 32))
-
-        port_plugged=$((port_plugin_list[$((list_index))]))
-        port_time=$((port_plugin_time[$((list_index))]))
-
-        return $port_plugged
-}
-
 TRANSCEIVER_DATA_READ()
 {
 	first_detect=0
 	loop_after_plugin=0
-        cpld1_path="/sys/bus/i2c/devices/0-0006/"
-        cpld2_path="/sys/bus/i2c/devices/0-0007/"
 
 	while true
 	do
@@ -765,83 +849,67 @@ TRANSCEIVER_DATA_READ()
 				ipmitool raw 0x30 0x25 0x1 0xe6 0x0 0x0  1>>/dev/null 2>>/dev/null
 			fi
 
-                        # detect port plug-in
-                        for i in $(seq 1 32);
-                        do
-                                if [ $i -le 16 ];then
-                                        pre=$(cat $cpld1_path"port"$i"_present")
-                                else
-                                        pre=$(cat $cpld2_path"port"$i"_present")
-                                fi
+			for i in $(seq 1 32);
+			do
+				if [ $i -le 16 ];then
+					cpld_path="/sys/bus/i2c/devices/0-0006/"
+				else
+					cpld_path="/sys/bus/i2c/devices/0-0007/"
+				fi
 
-                                cur_pre=$((port_present_status[$((i-1))]))
-                                if [ $pre == 1 ]; then
-                                        if [ $cur_pre == 0 ]; then
-                                                port_present_status[$((i-1))]=$pre
-                                                push_port $i
-                                        fi
-                                else
-                                        port_present_status[$((i-1))]=0
-                                        port_init[$((i - 1))]=0
-                                        port_sfp_type[$((i - 1))]=0
-                                        port_pre_mode[$((i - 1))]=0
-                                        port_pre_grid[$((i - 1))]=0
-                                        port_pre_freq[$((i - 1))]=0
-                                        port_pre_outp[$((i - 1))]=0
-                                fi
-                        done
+				pre=$(cat $cpld_path"port"$i"_present")
+				if [ $pre == 1 ];then
+					if [[ ${port_present_status[$((i - 1))]} -eq 0 ]];then
+						port_present_status[$((i - 1))]=1
+						port_plugin_time[$((i - 1))]=$(date +%s)
+					fi
+				else
+					port_init[$((i - 1))]=0
+					port_sfp_type[$((i - 1))]=0
+					port_pre_mode[$((i - 1))]=0
+					port_pre_grid[$((i - 1))]=0
+					port_pre_freq[$((i - 1))]=0
+					port_pre_outp[$((i - 1))]=0
+					port_pre_fine_tune_freq[$((i - 1))]=0
+					port_vdm_control[$((i - 1))]=0
+				fi
 
-                        # process qsfp eeprom
-                        if [ $list_size -ne 0 ]; then
-                                get_port
+				if [[ ${port_present_status[$((i - 1))]} -eq 1 ]];then
+					cur_time=$(date +%s)
+					port_time=${port_plugin_time[$((i - 1))]}
+					duration=$(($cur_time-$port_time))
+					if [ $duration -ge 2 ]; then
+						bmc_qsfp_eeprom_read $i
+						if [ $first_detect == 0 ]; then
+							first_detect=1
+						fi
+					fi
+				fi
+			done
 
-                                cur_time=$(date +%s)
-                                duration=$(($cur_time-$port_time))
-                                if [ $duration -ge 2 ]; then
-                                        pop_port
+			if [ $first_detect == 1 ]; then
+				touch /tmp/eeprom_init_done
+			fi
 
-                                        port=$port_plugged
-                                        if [ $port -le 16 ];then
-                                                pre=$(cat $cpld1_path"port"$port"_present")
-                                        else
-                                                pre=$(cat $cpld2_path"port"$port"_present")
-                                        fi
+			if [ -e /tmp/plugin_module_event ]; then
+				loop_after_plugin=$((loop_after_plugin + 1))
 
-                                        cur_pre=$((port_present_status[$((port-1))]))
-                                        if [ $pre == 1 ]; then
-                                                if [ $cur_pre == 1 ]; then
-                                                        bmc_qsfp_eeprom_read $port
-                                                fi
-                                                if [ $first_detect == 0 ]; then
-                                                        first_detect=1
-                                                fi
-                                        fi
-                                fi
-                        fi
-
-                        if [ $first_detect == 1 ]; then
-                                touch /tmp/eeprom_init_done
-                        fi
-
-                        if [ -e /tmp/plugin_module_event ]; then
-                                loop_after_plugin=$((loop_after_plugin + 1))
-
-                                if [ $loop_after_plugin -gt 2 ]; then
-                                        rm /tmp/plugin_module_event
-                                        loop_after_plugin=0
-                                fi
-                        fi
+				if [ $loop_after_plugin -gt 2 ]; then
+					rm /tmp/plugin_module_event
+					loop_after_plugin=0
+				fi
+			fi
 
 			pmon_status_check
 			if [ $? -eq 1 ]; then
 				if [ $first_detect == 1 ]; then
-	                        	docker exec pmon bash -c 'echo "" > /tmp/eeprom_init_done'
+					docker exec pmon bash -c 'echo "" > /tmp/eeprom_init_done'
 				fi
 			else
 				first_detect=0
 			fi
 
-			sleep 0.5;
+			sleep 0.5
 		fi
 	done
 }

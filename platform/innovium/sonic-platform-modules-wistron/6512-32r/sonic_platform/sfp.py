@@ -207,6 +207,11 @@ PAUSE_EEPROM_SERVICE_STAMP='/tmp/pause_eeprom_polling'
 
 # Global logger class instance
 logger = Logger()
+
+VDM_FREEZE = 128
+VDM_UNFREEZE = 0
+
+
 class ext_qsfp_dd(sffbase):
     version = '1.0'
 
@@ -317,6 +322,12 @@ class Sfp(SfpBase):
         self.port_to_grid_mapping = {}
         self.port_to_freq_mapping = {}
         self.port_to_outp_mapping = {}
+        self.port_to_curr_freq_mapping = {}
+        self.port_to_fine_tune_freq = {}
+        self.port_to_eeprom2f_mapping = {}
+        self.port_to_eeprom34_mapping = {}
+        self.port_to_eeprom35_mapping = {}
+        self.port_to_vdm_freeze_mapping = {}
         for x in range(self.PORT_START, self.PORT_END + 1):
             self.port_to_eeprom1_mapping[x] = eeprom_path_prefix + self.port_to_i2c_mapping[x] + '/eeprom1'
             self.port_to_eeprom2_mapping[x] = eeprom_path_prefix + self.port_to_i2c_mapping[x] + '/eeprom2'
@@ -327,6 +338,12 @@ class Sfp(SfpBase):
             self.port_to_grid_mapping[x] = eeprom_path_prefix + self.port_to_i2c_mapping[x] + '/grid'
             self.port_to_freq_mapping[x] = eeprom_path_prefix + self.port_to_i2c_mapping[x] + '/freq'
             self.port_to_outp_mapping[x] = eeprom_path_prefix + self.port_to_i2c_mapping[x] + '/output_power'
+            self.port_to_curr_freq_mapping[x] = eeprom_path_prefix + self.port_to_i2c_mapping[x] + '/current_freq'
+            self.port_to_fine_tune_freq[x] = eeprom_path_prefix + self.port_to_i2c_mapping[x] + '/fine_tune_freq'
+            self.port_to_eeprom2f_mapping[x] = eeprom_path_prefix + self.port_to_i2c_mapping[x] + '/eeprom_pg2f'
+            self.port_to_eeprom34_mapping[x] = eeprom_path_prefix + self.port_to_i2c_mapping[x] + '/eeprom_pg34'
+            self.port_to_eeprom35_mapping[x] = eeprom_path_prefix + self.port_to_i2c_mapping[x] + '/eeprom_pg35'
+            self.port_to_vdm_freeze_mapping[x] = eeprom_path_prefix + self.port_to_i2c_mapping[x] + '/vdm_control'
 
         self._detect_sfp_type(sfp_type)
         self._dom_capability_detect()
@@ -533,7 +550,26 @@ class Sfp(SfpBase):
         except IOError:
             fd.close()
 
+        try:
+            with open(self.port_to_eeprom2f_mapping[self.index], 'w') as fd:
+                fd.write(" ")
+                fd.close()
+        except IOError:
+            fd.close()
 
+        try:
+            with open(self.port_to_eeprom34_mapping[self.index], 'w') as fd:
+                fd.write(" ")
+                fd.close()
+        except IOError:
+            fd.close()
+
+        try:
+            with open(self.port_to_eeprom35_mapping[self.index], 'w') as fd:
+                fd.write(" ")
+                fd.close()
+        except IOError:
+            fd.close()
 
     def _read_eeprom_specific_bytes(self, offset, num_bytes, page = 0):
         sysfsfile_eeprom = None
@@ -543,6 +579,15 @@ class Sfp(SfpBase):
 
         if page == 4:
             sysfs_sfp_i2c_client_eeprom_path = self.port_to_eeprom4_mapping[self.index]
+            offset = offset - 128
+        elif page == 0x2f:
+            sysfs_sfp_i2c_client_eeprom_path = self.port_to_eeprom2f_mapping[self.index]
+            offset = offset - 128
+        elif page == 0x34:
+            sysfs_sfp_i2c_client_eeprom_path = self.port_to_eeprom34_mapping[self.index]
+            offset = offset - 128
+        elif page == 0x35:
+            sysfs_sfp_i2c_client_eeprom_path = self.port_to_eeprom35_mapping[self.index]
             offset = offset - 128
         elif offset < 256:
             sysfs_sfp_i2c_client_eeprom_path = self.port_to_eeprom1_mapping[self.index]
@@ -948,6 +993,11 @@ class Sfp(SfpBase):
             transceiver_info_dict['cable_length'] = str(sfp_cable_len_data['data']['Length Cable Assembly(m)']['value'])
             transceiver_info_dict['nominal_bit_rate'] = "Not supported for CMIS cables"
             transceiver_info_dict['application_advertisement'] = host_media_list
+
+        if self._is_coherent_module():
+            _, _, _, low_freq_supported, high_freq_supported = self.get_supported_freq_config()
+            transceiver_info_dict['supported_max_laser_freq'] = high_freq_supported
+            transceiver_info_dict['supported_min_laser_freq'] = low_freq_supported
 
         return transceiver_info_dict
 
@@ -1774,6 +1824,7 @@ class Sfp(SfpBase):
             return False
         if self.sfp_type == QSFP_TYPE:
             try:
+                pwr_mode = self._read_eeprom_specific_bytes(QSFP_POWEROVERRIDE_OFFSET, QSFP_POWEROVERRIDE_WIDTH)
                 power_override_bit = (1 << 0) if power_override else 0
                 power_set_bit      = (1 << 1) if power_set else (1 << 3)
 
@@ -1940,3 +1991,604 @@ class Sfp(SfpBase):
             return self.SFP_STATUS_OK
         else:
             return self.SFP_STATUS_UNPLUGGED
+
+    def _convert_str_to_int(self, data, data_len, unit=1):
+        val = 0
+        for i in range(data_len):
+            val = val + (int(data[i], 16) << (data_len - 1 - i) * 8)
+        mask = 1 << (data_len * 8 - 1)
+        val = int((-(val & mask) | (val & (mask - 1))) / unit)
+        return val
+
+    def _convert_str_to_float(self, data, data_len, unit=1.0):
+        val = 0
+        for i in range(data_len):
+            val = val + (int(data[i], 16) << (data_len - 1 - i) * 8)
+        mask = 1 << (data_len * 8 - 1)
+        val = (-(val & mask) | (val & (mask - 1))) / unit
+        return val
+
+    def _is_coherent_module(self):
+        """
+        Check if module type is ZR
+
+        Args:
+           None
+
+        Returns:
+            True if module type is ZR. False if module type is not ZR.
+        """
+        # Media type is in page 0, offset 85
+        # media interface is in page 0 ,offset 87, 91, 95, 99, 103, 107, 111 and 115
+        # The type of ZR is 0x6, 0x3E, 0x3F, 0x46, 0x47, 0x48 and 0x49
+        media_type = int(self._read_eeprom_specific_bytes(85, 1)[0], 16)
+        if media_type == 0x2:
+            for i in range(0, 8):
+                media_intf = int(self._read_eeprom_specific_bytes(87 + 4 * i, 1)[0], 16)
+                if media_intf == 0x6 or media_intf == 0x3E or media_intf == 0x3F or media_intf == 0x46 or \
+                        media_intf == 0x47 or media_intf == 0x48 or media_intf == 0x49:
+                    return True
+        return False
+
+    def get_supported_freq_config(self):
+        '''
+        This function returns the supported freq grid, low and high supported channel in 75GHz grid,
+        and low and high frequency supported in GHz.
+        allowed channel number bound in 75 GHz grid
+        allowed frequency bound in 75 GHz grid
+        '''
+        # Get GRID
+        grid_supported = self._read_eeprom_specific_bytes(128, 1, 0x4)
+        grid_supported = self._convert_str_to_int(grid_supported, 1)
+
+        # Get Low Frequency
+        low_ch_num = self._read_eeprom_specific_bytes(158, 2, 0x4)
+        low_ch_num = self._convert_str_to_int(low_ch_num, 2)
+
+        # Get high Frequency
+        hi_ch_num = self._read_eeprom_specific_bytes(160, 2, 0x4)
+        hi_ch_num = self._convert_str_to_int(hi_ch_num, 2)
+
+        # Get support frequency
+        low_freq_supported = 193100 + low_ch_num * 25
+        high_freq_supported = 193100 + hi_ch_num * 25
+        return grid_supported, low_ch_num, hi_ch_num, low_freq_supported, high_freq_supported
+
+    def set_laser_freq(self, freq, grid=75):
+        '''
+        This function sets the laser frequency. Unit in GHz
+        ZR application will not support fine tuning of the laser
+        SONiC will only support 75 GHz frequency grid
+        Return True if the provision succeeds, False if it fails
+        '''
+        if not self._is_coherent_module():
+            return False
+
+        # Get frequency config
+        grid_supported, low_ch_num, hi_ch_num, _, _ = self.get_supported_freq_config()
+        grid_supported_75GHz = (grid_supported >> 7) & 0x1
+        grid_supported_100GHz = (grid_supported >> 5) & 0x1
+
+        support_fine_tune = self._read_eeprom_specific_bytes(129, 1, 0x4)
+        support_fine_tune = True if int(support_fine_tune[0], 16) == 0x80 else False
+
+        # Check frequency 
+        if grid == 75:
+            if not grid_supported_75GHz:
+                return False
+            freq_grid = 0x70
+            if support_fine_tune:
+                freq_grid = 0x71
+            channel_number = int(round((freq - 193100) / 25))
+            if not channel_number % 3 == 0:
+                return False
+        elif grid == 100:
+            if not grid_supported_100GHz:
+                return False
+            freq_grid = 0x50
+            if support_fine_tune:
+                freq_grid = 0x51
+            channel_number = int(round((freq - 193100) / 100))
+        else:
+            return False
+
+        # Read Grid Space
+        try:
+            with open(self.port_to_grid_mapping[self.index], "r") as fd:
+                read_grid = int(fd.read(), 16)
+        except IOError:
+            return False
+        new_grid = (read_grid & 0x0E) | (freq_grid & 0xF1)
+        # Write Grid Space
+        try:
+            with open(self.port_to_grid_mapping[self.index], "w") as fd:
+                fd.write(str(new_grid))
+        except IOError:
+            return False
+
+        # Check if frequency is valid
+        if channel_number > hi_ch_num or channel_number < low_ch_num:
+            raise False
+
+        # Write Frequency
+        try:
+            with open(self.port_to_freq_mapping[self.index], "w") as fd:
+                fd.write(str(channel_number))
+        except IOError:
+            return False
+
+        if support_fine_tune:
+            if grid == 75:
+                new_freq = channel_number * 25 + 193100
+            elif grid == 100:
+                new_freq = channel_number * 75 + 193100
+            else:
+                return False
+            fine_tune_freq = int((freq - new_freq) * 1000)
+            try:
+                with open(self.port_to_fine_tune_freq[self.index], "w") as f:
+                    f.write(str(fine_tune_freq))
+            except IOError:
+                return False
+        return True
+
+    def get_current_laser_freq(self):
+        '''
+        This function returns the monitored laser frequency. Unit in GHz
+        '''
+        with open(self.port_to_curr_freq_mapping[self.index], "r") as fd:
+            freq = int(fd.read())
+        return freq / 1000
+
+    def get_tuning_in_progress(self):
+        '''
+        This function returns tuning in progress status on media lane
+        False means tuning not in progress
+        True means tuning in progress
+        '''
+        return bool(int(self._read_eeprom_specific_bytes(222, 1, 0x12)[0], 16))
+
+    def get_support_fine_tuning(self):
+        support_fine_tune = self._read_eeprom_specific_bytes(129, 1, 0x4)
+        return True if int(support_fine_tune[0], 16) == 0x80 else False
+
+    def get_supported_power_config(self):
+        '''
+        This function returns the supported TX power range
+        '''
+        # Get Low Power
+        lo_pwr = self._read_eeprom_specific_bytes(198, 2, 0x4)
+        lo_pwr = self._convert_str_to_float(lo_pwr, 2, 100)
+
+        # Get Low Power
+        hi_pwr = self._read_eeprom_specific_bytes(200, 2, 0x4)
+        hi_pwr = self._convert_str_to_float(hi_pwr, 2, 100)
+        return lo_pwr, hi_pwr
+
+    def set_tx_power(self, tx_power):
+        '''
+        This function sets the TX output power. Unit in dBm
+        Return True if the provision succeeds, False if it fails
+        '''
+        if not self._is_coherent_module():
+            return False
+        min_prog_tx_output_power, max_prog_tx_output_power = self.get_supported_power_config()
+        if tx_power > max_prog_tx_output_power or tx_power < min_prog_tx_output_power:
+            return False
+        tx_power = int(tx_power * 100)
+        try:
+            with open(self.port_to_outp_mapping[self.index], "w") as f:
+                f.write(str(tx_power))
+        except IOError:
+            return False
+        return True
+
+    def get_pm_all(self):
+        '''
+        This function returns the PMs reported in Page 34h and 35h in OIF C-CMIS document
+        CD:     unit in ps/nm
+        DGD:    unit in ps
+        SOPMD:  unit in ps^2
+        PDL:    unit in dB
+        OSNR:   unit in dB
+        ESNR:   unit in dB
+        CFO:    unit in MHz
+        TXpower:unit in dBm
+        RXpower:unit in dBm
+        RX sig power:   unit in dBm
+        SOPROC: unit in krad/s
+        MER:    unit in dB
+        '''
+        # When raised by the host, causes the module to freeze and hold all
+        # reported statistics reporting registers (minimum, maximum and
+        # average values)in Pages 24h-27h.
+        # When ceased by the host, releases the freeze request, allowing the
+        # reported minimum, maximum and average values to update again.
+        try:
+            with open(self.port_to_vdm_freeze_mapping[self.index], "w") as f:
+                f.write(str(VDM_FREEZE))
+            while True:
+                val = self._read_eeprom_specific_bytes(144, 1, 0x2f)
+                val = int(self._convert_str_to_float(val, 1)) & 0x80
+                if val == VDM_FREEZE:
+                    break
+                time.sleep(1)
+
+            time.sleep(1)
+
+            with open(self.port_to_vdm_freeze_mapping[self.index], "w") as f:
+                f.write(str(VDM_UNFREEZE))
+            while True:
+                val = self._read_eeprom_specific_bytes(144, 1, 0x2f)
+                val = int(self._convert_str_to_float(val, 1)) & 0x80
+                if val == VDM_UNFREEZE:
+                    break
+                time.sleep(1)
+        except IOError as except_info:
+            return None
+        PM_dict = dict()
+
+        # 128 RX_BITS_PM
+        data_len = 8
+        data = self._read_eeprom_specific_bytes(128, data_len, 0x34)
+        rx_bits_pm = self._convert_str_to_float(data, data_len)
+
+        # 136 RX_BITS_SUB_INTERVAL_PM
+        data_len = 8
+        data = self._read_eeprom_specific_bytes(136, data_len, 0x34)
+        rx_bits_subint_pm = self._convert_str_to_float(data, data_len)
+
+        # 144 RX_CORR_BITS_PM
+        data_len = 8
+        data = self._read_eeprom_specific_bytes(144, data_len, 0x34)
+        rx_corr_bits_pm = self._convert_str_to_float(data, data_len)
+
+        # 152 RX_MIN_CORR_BITS_SUB_INTERVAL_PM
+        data_len = 8
+        data = self._read_eeprom_specific_bytes(152, data_len, 0x34)
+        rx_min_corr_bits_subint_pm = self._convert_str_to_float(data, data_len)
+
+        # 160 RX_MAX_CORR_BITS_SUB_INTERVAL_PM
+        data_len = 8
+        data = self._read_eeprom_specific_bytes(160, data_len, 0x34)
+        rx_max_corr_bits_subint_pm = self._convert_str_to_float(data, data_len)
+
+        if (rx_bits_subint_pm != 0) and (rx_bits_pm != 0):
+            PM_dict['preFEC_BER_avg'] = rx_corr_bits_pm * 1.0 / rx_bits_pm
+            PM_dict['preFEC_BER_min'] = rx_min_corr_bits_subint_pm * 1.0 / rx_bits_subint_pm
+            PM_dict['preFEC_BER_max'] = rx_max_corr_bits_subint_pm * 1.0 / rx_bits_subint_pm
+        # when module is low power, still need these values to show 1.0
+        else:
+            PM_dict['preFEC_BER_avg'] = 1.0
+            PM_dict['preFEC_BER_min'] = 1.0
+            PM_dict['preFEC_BER_max'] = 1.0
+
+        # 168 RX_FRAMES_PM
+        data_len = 4
+        data = self._read_eeprom_specific_bytes(168, data_len, 0x34)
+        rx_frames_pm = self._convert_str_to_float(data, data_len)
+
+        # 172 RX_FRAMES_SUB_INTERVAL_PM
+        data_len = 4
+        data = self._read_eeprom_specific_bytes(172, data_len, 0x34)
+        rx_frames_subint_pm = self._convert_str_to_float(data, data_len)
+
+        # 176  RX_FRAMES_UNCORR_ERR_PM
+        data_len = 4
+        data = self._read_eeprom_specific_bytes(176, data_len, 0x34)
+        rx_frames_uncorr_err_pm = self._convert_str_to_float(data, data_len)
+
+        # 180 RX_MIN_FRAMES_UNCORR_ERR_SUB_INTERVAL_PM
+        data_len = 4
+        data = self._read_eeprom_specific_bytes(180, data_len, 0x34)
+        rx_min_frames_uncorr_err_subint_pm = self._convert_str_to_float(data, data_len)
+
+        # 184 RX_MAX_FRAMES_UNCORR_ERR_SUB_INTERVAL_PM
+        data_len = 4
+        data = self._read_eeprom_specific_bytes(184, data_len, 0x34)
+        rx_max_frames_uncorr_err_subint_pm = self._convert_str_to_float(data, data_len)
+
+        if (rx_frames_subint_pm != 0) and (rx_frames_pm != 0):
+            PM_dict['preFEC_uncorr_frame_ratio_avg'] = rx_frames_uncorr_err_pm * 1.0 / rx_frames_subint_pm
+            PM_dict['preFEC_uncorr_frame_ratio_min'] = rx_min_frames_uncorr_err_subint_pm * 1.0 / rx_frames_subint_pm
+            PM_dict['preFEC_uncorr_frame_ratio_max'] = rx_max_frames_uncorr_err_subint_pm * 1.0 / rx_frames_subint_pm
+        # when module is low power, still need these values
+        else:
+            PM_dict['preFEC_uncorr_frame_ratio_avg'] = 0
+            PM_dict['preFEC_uncorr_frame_ratio_min'] = 0
+            PM_dict['preFEC_uncorr_frame_ratio_max'] = 0
+
+        # 128 RX_AVG_CD_PM
+        data_len = 4
+        data = self._read_eeprom_specific_bytes(128, data_len, 0x35)
+        PM_dict['rx_cd_avg'] = self._convert_str_to_float(data, data_len)
+
+        # 132 RX_MIN_CD_PM
+        data_len = 4
+        data = self._read_eeprom_specific_bytes(132, data_len, 0x35)
+        PM_dict['rx_cd_min'] = self._convert_str_to_float(data, data_len)
+
+        # 136 RX_MAX_CD_PM
+        data_len = 4
+        data = self._read_eeprom_specific_bytes(136, data_len, 0x35)
+        PM_dict['rx_cd_max'] = self._convert_str_to_float(data, data_len)
+
+        # 140 RX_AVG_DGD_PM
+        data_len = 2
+        data = self._read_eeprom_specific_bytes(140, data_len, 0x35)
+        PM_dict['rx_dgd_avg'] = self._convert_str_to_float(data, data_len, 100.0)
+
+        # 142 RX_MIN_DGD_PM
+        data_len = 2
+        data = self._read_eeprom_specific_bytes(142, data_len, 0x35)
+        PM_dict['rx_dgd_min'] = self._convert_str_to_float(data, data_len, 100.0)
+
+        # 144 RX_MAX_DGD_PM
+        data_len = 2
+        data = self._read_eeprom_specific_bytes(144, data_len, 0x35)
+        PM_dict['rx_dgd_max'] = self._convert_str_to_float(data, data_len, 100.0)
+
+        # 146 RX_AVG_SOPMD_PM
+        data_len = 2
+        data = self._read_eeprom_specific_bytes(146, data_len, 0x35)
+        PM_dict['rx_sopmd_avg'] = self._convert_str_to_float(data, data_len, 100.0)
+
+        # 148 RX_AVG_SOPMD_PM
+        data_len = 2
+        data = self._read_eeprom_specific_bytes(148, data_len, 0x35)
+        PM_dict['rx_sopmd_min'] = self._convert_str_to_float(data, data_len, 100.0)
+
+        # 150 RX_AVG_SOPMD_PM
+        data_len = 2
+        data = self._read_eeprom_specific_bytes(150, data_len, 0x35)
+        PM_dict['rx_sopmd_max'] = self._convert_str_to_float(data, data_len, 100.0)
+
+        # 152 RX_AVG_PDL_PM
+        data_len = 2
+        data = self._read_eeprom_specific_bytes(152, data_len, 0x35)
+        PM_dict['rx_pdl_avg'] = self._convert_str_to_float(data, data_len, 10.0)
+
+        # 154 RX_MIN_PDL_PM
+        data_len = 2
+        data = self._read_eeprom_specific_bytes(154, data_len, 0x35)
+        PM_dict['rx_pdl_min'] = self._convert_str_to_float(data, data_len, 10.0)
+
+        # 156 RX_MAX_PDL_PM
+        data_len = 2
+        data = self._read_eeprom_specific_bytes(156, data_len, 0x35)
+        PM_dict['rx_pdl_max'] = self._convert_str_to_float(data, data_len, 10.0)
+
+        # 158 RX_AVG_OSNR_PM
+        data_len = 2
+        data = self._read_eeprom_specific_bytes(158, data_len, 0x35)
+        PM_dict['rx_osnr_avg'] = self._convert_str_to_float(data, data_len, 10.0)
+
+        # 160 RX_MIN_OSNR_PM
+        data_len = 2
+        data = self._read_eeprom_specific_bytes(160, data_len, 0x35)
+        PM_dict['rx_osnr_min'] = self._convert_str_to_float(data, data_len, 10.0)
+
+        # 162 RX_MAX_OSNR_PM
+        data_len = 2
+        data = self._read_eeprom_specific_bytes(162, data_len, 0x35)
+        PM_dict['rx_osnr_max'] = self._convert_str_to_float(data, data_len, 10.0)
+
+        # 164 RX_MAX_OSNR_PM
+        data_len = 2
+        data = self._read_eeprom_specific_bytes(162, data_len, 0x35)
+        PM_dict['rx_esnr_avg'] = self._convert_str_to_float(data, data_len, 10.0)
+
+        # 166 RX_MAX_OSNR_PM
+        data_len = 2
+        data = self._read_eeprom_specific_bytes(162, data_len, 0x35)
+        PM_dict['rx_esnr_min'] = self._convert_str_to_float(data, data_len, 10.0)
+
+        # 168 RX_MAX_OSNR_PM
+        data_len = 2
+        data = self._read_eeprom_specific_bytes(168, data_len, 0x35)
+        PM_dict['rx_esnr_max'] = self._convert_str_to_float(data, data_len, 10.0)
+
+        # 170 RX_AVG_CFO_PM
+        data_len = 2
+        data = self._read_eeprom_specific_bytes(170, data_len, 0x35)
+        PM_dict['rx_cfo_avg'] = self._convert_str_to_float(data, data_len)
+
+        # 172 RX_MIN_CFO_PM
+        data_len = 2
+        data = self._read_eeprom_specific_bytes(172, data_len, 0x35)
+        PM_dict['rx_cfo_min'] = self._convert_str_to_float(data, data_len)
+
+        # 174 RX_MAX_CFO_PM
+        data_len = 2
+        data = self._read_eeprom_specific_bytes(174, data_len, 0x35)
+        PM_dict['rx_cfo_max'] = self._convert_str_to_float(data, data_len)
+
+        # 176 RX_AVG_EVM_PM
+        data_len = 2
+        data = self._read_eeprom_specific_bytes(176, data_len, 0x35)
+        PM_dict['rx_evm_avg'] = self._convert_str_to_float(data, data_len, 655.35)
+
+        # 178 RX_MIN_EVM_PM
+        data_len = 2
+        data = self._read_eeprom_specific_bytes(178, data_len, 0x35)
+        PM_dict['rx_evm_min'] = self._convert_str_to_float(data, data_len, 655.35)
+
+        # 180 RX_MAX_EVM_PM
+        data_len = 2
+        data = self._read_eeprom_specific_bytes(180, data_len, 0x35)
+        PM_dict['rx_evm_max'] = self._convert_str_to_float(data, data_len, 655.35)
+
+        # 182 TX_AVG_POWER_PM
+        data_len = 2
+        data = self._read_eeprom_specific_bytes(182, data_len, 0x35)
+        PM_dict['tx_power_avg'] = self._convert_str_to_float(data, data_len, 100.0)
+
+        # 184 TX_MIN_POWER_PM
+        data_len = 2
+        data = self._read_eeprom_specific_bytes(184, data_len, 0x35)
+        PM_dict['tx_power_min'] = self._convert_str_to_float(data, data_len, 100.0)
+
+        # 186 TX_MAX_POWER_PM
+        data_len = 2
+        data = self._read_eeprom_specific_bytes(186, data_len, 0x35)
+        PM_dict['tx_power_max'] = self._convert_str_to_float(data, data_len, 100.0)
+
+        # 188 RX_AVG_POWER_PM
+        data_len = 2
+        data = self._read_eeprom_specific_bytes(188, data_len, 0x35)
+        PM_dict['rx_power_avg'] = self._convert_str_to_float(data, data_len, 100.0)
+
+        # 190 RX_MIN_POWER_PM
+        data_len = 2
+        data = self._read_eeprom_specific_bytes(190, data_len, 0x35)
+        PM_dict['rx_power_min'] = self._convert_str_to_float(data, data_len, 100.0)
+
+        # 174 RX_MAX_POWER_PM
+        data_len = 2
+        data = self._read_eeprom_specific_bytes(192, data_len, 0x35)
+        PM_dict['rx_power_max'] = self._convert_str_to_float(data, data_len, 100.0)
+
+        # 194 RX_AVG_SIG_POWER_PM
+        data_len = 2
+        data = self._read_eeprom_specific_bytes(194, data_len, 0x35)
+        PM_dict['rx_sigpwr_avg'] = self._convert_str_to_float(data, data_len, 100.0)
+
+        # 196 RX_MIN_SIG_POWER_PM
+        data_len = 2
+        data = self._read_eeprom_specific_bytes(196, data_len, 0x35)
+        PM_dict['rx_sigpwr_min'] = self._convert_str_to_float(data, data_len, 100.0)
+
+        # 198 RX_MAX_SIG_POWER_PM
+        data_len = 2
+        data = self._read_eeprom_specific_bytes(198, data_len, 0x35)
+        PM_dict['rx_sigpwr_max'] = self._convert_str_to_float(data, data_len, 100.0)
+
+        # 200 RX_AVG_SOPROC_PM
+        data_len = 2
+        data = self._read_eeprom_specific_bytes(200, data_len, 0x35)
+        PM_dict['rx_soproc_avg'] = self._convert_str_to_float(data, data_len, 10.0)
+
+        # 202 RX_MIN_SOPROC_PM
+        data_len = 2
+        data = self._read_eeprom_specific_bytes(202, data_len, 0x35)
+        PM_dict['rx_soproc_min'] = self._convert_str_to_float(data, data_len, 10.0)
+
+        # 204 RX_MAX_SOPROC_PM
+        data_len = 2
+        data = self._read_eeprom_specific_bytes(204, data_len, 0x35)
+        PM_dict['rx_soproc_max'] = self._convert_str_to_float(data, data_len, 10.0)
+
+        # 206 RX_AVG_MER_PM
+        data_len = 2
+        data = self._read_eeprom_specific_bytes(206, data_len, 0x35)
+        PM_dict['rx_mer_avg'] = self._convert_str_to_float(data, data_len, 10.0)
+
+        # 208 RX_MIN_MER_PM
+        data_len = 2
+        data = self._read_eeprom_specific_bytes(208, data_len, 0x35)
+        PM_dict['rx_mer_min'] = self._convert_str_to_float(data, data_len, 10.0)
+
+        # 210 RX_MAX_MER_PM
+        data_len = 2
+        data = self._read_eeprom_specific_bytes(210, data_len, 0x35)
+        PM_dict['rx_mer_max'] = self._convert_str_to_float(data, data_len, 10.0)
+
+        return PM_dict
+
+    def get_transceiver_pm(self):
+        """
+        Retrieves PM for this xcvr
+        Returns:
+            A dict containing the following keys/values :
+        ========================================================================
+        key                          = TRANSCEIVER_PM|ifname            ; information of PM on port
+        ; field                      = value
+        prefec_ber_avg               = FLOAT                            ; prefec ber avg
+        prefec_ber_min               = FLOAT                            ; prefec ber min
+        prefec_ber_max               = FLOAT                            ; prefec ber max
+        uncorr_frames_avg            = FLOAT                            ; uncorrected frames ratio avg
+        uncorr_frames_min            = FLOAT                            ; uncorrected frames ratio min
+        uncorr_frames_max            = FLOAT                            ; uncorrected frames ratio max
+        cd_avg                       = FLOAT                            ; chromatic dispersion avg
+        cd_min                       = FLOAT                            ; chromatic dispersion min
+        cd_max                       = FLOAT                            ; chromatic dispersion max
+        dgd_avg                      = FLOAT                            ; differential group delay avg
+        dgd_min                      = FLOAT                            ; differential group delay min
+        dgd_max                      = FLOAT                            ; differential group delay max
+        sopmd_avg                    = FLOAT                            ; second order polarization mode dispersion avg
+        sopmd_min                    = FLOAT                            ; second order polarization mode dispersion min
+        sopmd_max                    = FLOAT                            ; second order polarization mode dispersion max
+        pdl_avg                      = FLOAT                            ; polarization dependent loss avg
+        pdl_min                      = FLOAT                            ; polarization dependent loss min
+        pdl_max                      = FLOAT                            ; polarization dependent loss max
+        osnr_avg                     = FLOAT                            ; optical signal to noise ratio avg
+        osnr_min                     = FLOAT                            ; optical signal to noise ratio min
+        osnr_max                     = FLOAT                            ; optical signal to noise ratio max
+        esnr_avg                     = FLOAT                            ; electrical signal to noise ratio avg
+        esnr_min                     = FLOAT                            ; electrical signal to noise ratio min
+        esnr_max                     = FLOAT                            ; electrical signal to noise ratio max
+        cfo_avg                      = FLOAT                            ; carrier frequency offset avg
+        cfo_min                      = FLOAT                            ; carrier frequency offset min
+        cfo_max                      = FLOAT                            ; carrier frequency offset max
+        soproc_avg                   = FLOAT                            ; state of polarization rate of change avg
+        soproc_min                   = FLOAT                            ; state of polarization rate of change min
+        soproc_max                   = FLOAT                            ; state of polarization rate of change max
+        tx_power_avg                 = FLOAT                            ; tx output power avg
+        tx_power_min                 = FLOAT                            ; tx output power min
+        tx_power_max                 = FLOAT                            ; tx output power max
+        rx_tot_power_avg             = FLOAT                            ; rx total power avg
+        rx_tot_power_min             = FLOAT                            ; rx total power min
+        rx_tot_power_max             = FLOAT                            ; rx total power max
+        rx_sig_power_avg             = FLOAT                            ; rx signal power avg
+        rx_sig_power_min             = FLOAT                            ; rx signal power min
+        rx_sig_power_max             = FLOAT                            ; rx signal power max
+        ========================================================================
+        """
+        if not self._is_coherent_module():
+            return False
+        trans_pm = dict()
+        PM_dict = self.get_pm_all()
+        trans_pm['prefec_ber_avg'] = PM_dict['preFEC_BER_avg']
+        trans_pm['prefec_ber_min'] = PM_dict['preFEC_BER_min']
+        trans_pm['prefec_ber_max'] = PM_dict['preFEC_BER_max']
+        trans_pm['uncorr_frames_avg'] = PM_dict['preFEC_uncorr_frame_ratio_avg']
+        trans_pm['uncorr_frames_min'] = PM_dict['preFEC_uncorr_frame_ratio_min']
+        trans_pm['uncorr_frames_max'] = PM_dict['preFEC_uncorr_frame_ratio_max']
+        trans_pm['cd_avg'] = PM_dict['rx_cd_avg']
+        trans_pm['cd_min'] = PM_dict['rx_cd_min']
+        trans_pm['cd_max'] = PM_dict['rx_cd_max']
+        trans_pm['dgd_avg'] = PM_dict['rx_dgd_avg']
+        trans_pm['dgd_min'] = PM_dict['rx_dgd_min']
+        trans_pm['dgd_max'] = PM_dict['rx_dgd_max']
+        trans_pm['sopmd_avg'] = PM_dict['rx_sopmd_avg']
+        trans_pm['sopmd_min'] = PM_dict['rx_sopmd_min']
+        trans_pm['sopmd_max'] = PM_dict['rx_sopmd_max']
+        trans_pm['pdl_avg'] = PM_dict['rx_pdl_avg']
+        trans_pm['pdl_min'] = PM_dict['rx_pdl_min']
+        trans_pm['pdl_max'] = PM_dict['rx_pdl_max']
+        trans_pm['osnr_avg'] = PM_dict['rx_osnr_avg']
+        trans_pm['osnr_min'] = PM_dict['rx_osnr_min']
+        trans_pm['osnr_max'] = PM_dict['rx_osnr_max']
+        trans_pm['esnr_avg'] = PM_dict['rx_esnr_avg']
+        trans_pm['esnr_min'] = PM_dict['rx_esnr_min']
+        trans_pm['esnr_max'] = PM_dict['rx_esnr_max']
+        trans_pm['cfo_avg'] = PM_dict['rx_cfo_avg']
+        trans_pm['cfo_min'] = PM_dict['rx_cfo_min']
+        trans_pm['cfo_max'] = PM_dict['rx_cfo_max']
+        trans_pm['evm_avg'] = PM_dict['rx_evm_avg']
+        trans_pm['evm_min'] = PM_dict['rx_evm_min']
+        trans_pm['evm_max'] = PM_dict['rx_evm_max']
+        trans_pm['soproc_avg'] = PM_dict['rx_soproc_avg']
+        trans_pm['soproc_min'] = PM_dict['rx_soproc_min']
+        trans_pm['soproc_max'] = PM_dict['rx_soproc_max']
+        trans_pm['tx_power_avg'] = PM_dict['tx_power_avg']
+        trans_pm['tx_power_min'] = PM_dict['tx_power_min']
+        trans_pm['tx_power_max'] = PM_dict['tx_power_max']
+        trans_pm['rx_tot_power_avg'] = PM_dict['rx_power_avg']
+        trans_pm['rx_tot_power_min'] = PM_dict['rx_power_min']
+        trans_pm['rx_tot_power_max'] = PM_dict['rx_power_max']
+        trans_pm['rx_sig_power_avg'] = PM_dict['rx_sigpwr_avg']
+        trans_pm['rx_sig_power_min'] = PM_dict['rx_sigpwr_min']
+        trans_pm['rx_sig_power_max'] = PM_dict['rx_sigpwr_max']
+
+        return trans_pm
