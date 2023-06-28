@@ -34,7 +34,7 @@ class TestCaclmgrdScale(TestCase):
 
         MockConfigDb.set_config_db(test_data["config_db"])
 
-        with mock.patch("caclmgrd.ControlPlaneAclManager.run_commands_pipe", return_value='sonic'):
+        with mock.patch("caclmgrd.ControlPlaneAclManager.run_commands", return_value='sonic'):
             with mock.patch("caclmgrd.subprocess") as mocked_subprocess:
                 popen_mock = mock.Mock()
                 popen_attrs = test_data["popen_attributes"]
