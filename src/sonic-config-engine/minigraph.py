@@ -1828,10 +1828,12 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
                 # for the ports w/o neighbor info, set it to port alias
                 port['description'] = port.get('alias', port_name)
 
-    # set default port MTU as 9100 and default TPID 0x8100
+    # set default port MTU as 9100 and default TPID 0x8100 and default value for mode is trunk for vlan membership
     for port in ports.values():
         port['mtu'] = '9100'
         port['tpid'] = '0x8100'
+        port['mode'] = 'trunk'
+
 
     # asymmetric PFC is disabled by default
     for port in ports.values():
@@ -1898,11 +1900,12 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
                 for pc_mbr_del_key in pc_mbr_del_keys:
                     del pc_members[pc_mbr_del_key]
 
-    # set default port channel MTU as 9100 and admin status up and default TPID 0x8100
+    # set default port channel MTU as 9100 and admin status up and default TPID 0x8100 and default value for mode is trunk when port has vlan membership
     for pc in pcs.values():
         pc['mtu'] = '9100'
         pc['tpid'] = '0x8100'
         pc['admin_status'] = 'up'
+        pc['mode'] = 'trunk'
 
     results['PORTCHANNEL'] = pcs
     results['PORTCHANNEL_MEMBER'] = pc_members
