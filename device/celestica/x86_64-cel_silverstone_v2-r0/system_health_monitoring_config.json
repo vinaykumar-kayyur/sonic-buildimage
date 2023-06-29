@@ -11,6 +11,6 @@
     "led_color": {
         "fault": "amber",
         "normal": "green",
-        "booting": "alternate_blink_4hz"
+        "booting": "green_blink"
     }
 }
