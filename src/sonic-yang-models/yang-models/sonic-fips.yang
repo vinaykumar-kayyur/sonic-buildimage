@@ -22,7 +22,7 @@ module sonic-fips {
 
                 leaf mode {
                     type string {
-                        pattern '[Nn]one|[Ee]nforce|[Nn]one[Ee]force';
+                        pattern '[Nn]one|[Ee]nforce|[Nn]one[Ee]nforce';
                     }
                     default "none";
                 }
