@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 # @Company ：Celestica
-# @Time    : 2023/3/2 10:19
+# @Time    : 2023/5/26 15:37
 # @Mail    : yajiang@celestica.com
 # @Author  : jiang tao
 
 try:
-    import os
     import sys
     import time
     import syslog
+    import subprocess
     from . import helper
     from . import component
     from .watchdog import Watchdog
@@ -19,21 +19,67 @@ except ImportError as e:
 HOST_REBOOT_CAUSE_PATH = "/host/reboot-cause/"
 REBOOT_CAUSE_FILE = "reboot-cause.txt"
 WATCHDOG_TIMELEFT_PATH = "/sys/class/watchdog/watchdog0/timeleft"
-GET_REBOOT_CAUSE = "0x3a 0x64 0x00 0x01 0x06"
-
+GET_REBOOT_CAUSE = "i2cget -y -f 100 0x0d 0x06 | tr a-z A-Z | cut -d 'X' -f 2"
+SET_SYS_STATUS_LED = "i2cget -y -f 100 0x0d 0x62 | tr a-z A-Z | cut -d 'X' -f 2"
+SET_LED_MODE_Manual = "i2cget -y -f 100 0x0d 0x06 | tr a-z A-Z | cut -d 'X' -f 2"
 
 class Chassis(PddfChassis):
     """
     PDDF Platform-specific Chassis class
     """
+    sfp_status_dict = {}
 
     def __init__(self, pddf_data=None, pddf_plugin_data=None):
         self.helper = helper.APIHelper()
         PddfChassis.__init__(self, pddf_data, pddf_plugin_data)
 
+        for port_idx in range(1, self.platform_inventory['num_ports'] + 1):
+            present = self.get_sfp(port_idx).get_presence()
+            self.sfp_status_dict[port_idx] = '1' if present else '0'
+
         for index in range(self.platform_inventory['num_component']):
             component_obj = component.Component(index)
             self._component_list.append(component_obj)
+
+    @staticmethod
+    def _getstatusoutput(cmd):
+        try:
+            data = subprocess.check_output(cmd, shell=True,
+                                           universal_newlines=True, stderr=subprocess.STDOUT)
+            status = 0
+        except subprocess.CalledProcessError as ex:
+            data = ex.output
+            status = ex.returncode
+        if data[-1:] == '\n':
+            data = data[:-1]
+        return status, data
+
+    @staticmethod
+    def initizalize_system_led():
+        return True
+
+    def get_status_led(self):
+        return self.get_system_led("SYS_LED")
+
+    def set_status_led(self, color):
+        # ALARM_LED
+        print("rancho test {}".format(color))
+        if color == self.get_status_led():
+            return False
+        result, output = self.set_system_led("SYS_LED", color)
+        print("result=%s  output=%s" % (result, output))
+        # status, res = self.helper.ipmi_raw(SET_LED_MODE_Manual)
+        # if status != 0:
+        #     return False
+        #
+        # color_val = "0x1"
+        # if color == "green":
+        #     color_val = "0x1"
+        # elif color == "amber":
+        #     color_val = "0x2"
+        # status, res = self.helper.ipmi_raw(SET_SYS_STATUS_LED.format(color_val))
+        #
+        # return True if status else False
 
     def get_sfp(self, index):
         """
@@ -79,7 +125,7 @@ class Chassis(PddfChassis):
         reboot_cause_path = (HOST_REBOOT_CAUSE_PATH + REBOOT_CAUSE_FILE)
         sw_reboot_cause = self.helper.read_txt_file(reboot_cause_path) or "Unknown"
         status_wat, val = self.helper.run_command("cat %s" % WATCHDOG_TIMELEFT_PATH)
-        status, hw_reboot_cause = self.helper.ipmi_raw(GET_REBOOT_CAUSE)
+        status, hw_reboot_cause = self.helper.run_command(GET_REBOOT_CAUSE)
         if float(val) <= 1 and float(hw_reboot_cause) == 44:
             hw_reboot_cause = "66"
 
@@ -105,7 +151,6 @@ class Chassis(PddfChassis):
             An object derived from WatchdogBase representing the hardware
             watchdog device
         """
-
         try:
 
             if self._watchdog is None:
@@ -114,3 +159,33 @@ class Chassis(PddfChassis):
         except Exception as E:
             syslog.syslog(syslog.LOG_ERR, "Fail to load watchdog due to {}".format(E))
         return self._watchdog
+
+    def get_change_event(self, timeout=0):
+        sfp_dict = {}
+
+        sfp_removed = '0'
+        sfp_inserted = '1'
+
+        sfp_present = True
+        sfp_absent = False
+
+        start_time = time.time()
+        time_period = timeout / float(1000)  # Convert msecs to secss
+
+        while time.time() < (start_time + time_period) or timeout == 0:
+            for port_idx in range(1, self.platform_inventory['num_ports'] + 1):
+                if self.sfp_status_dict[port_idx] == sfp_removed and \
+                        self.get_sfp(port_idx).get_presence() == sfp_present:
+                    sfp_dict[port_idx] = sfp_inserted
+                    self.sfp_status_dict[port_idx] = sfp_inserted
+                elif self.sfp_status_dict[port_idx] == sfp_inserted and \
+                        self.get_sfp(port_idx).get_presence() == sfp_absent:
+                    sfp_dict[port_idx] = sfp_removed
+                    self.sfp_status_dict[port_idx] = sfp_removed
+
+            if sfp_dict:
+                return True, {'sfp': sfp_dict}
+
+            time.sleep(0.5)
+
+        return True, {'sfp': {}}  # Timeout
