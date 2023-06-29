@@ -54,12 +54,3 @@ class Psu(PddfPsu):
         psu_present_index = 0 if self.psu_index == 1 else 1
         psu_present = self.plugin_data['PSU']['psu_present']["i2c"]['valmap'][psu_status[psu_present_index]]
         return psu_present
-
-    @staticmethod
-    def get_revision():
-        """
-        Get PSU HW Revision by read psu eeprom data.
-        data address(hex) 46-49.The response is the ascii value of hex
-        return: HW Revision or 'N/A'
-        """
-        return "N/A"
