@@ -29,7 +29,7 @@
 #include <linux/mutex.h>
 #include <linux/slab.h>
 
-#define DEBUG 0
+#define DEBUG 1
 #define MAX_PSU_NUM 2
 #define MAX_FANTRAY_NUM 7
 LED_OPS_DATA sys_led_ops_data[1]={0};
@@ -53,6 +53,8 @@ LED_OPS_DATA* dev_list[LED_TYPE_MAX] = {
 int num_psus = 0;
 int num_fantrays = 0;
 
+extern int board_i2c_cpld_read_new(unsigned short cpld_addr, char *name, u8 reg);
+extern int board_i2c_cpld_write_new(unsigned short cpld_addr, char *name, u8 reg, u8 value);
 extern int board_i2c_cpld_read(unsigned short cpld_addr, u8 reg);
 extern int board_i2c_cpld_write(unsigned short cpld_addr, u8 reg, u8 value);
 extern int board_i2c_fpga_read(unsigned short cpld_addr, u8 reg);
@@ -184,7 +186,7 @@ ssize_t get_status_led(struct device_attribute *da)
 
     if (strcmp(ops_ptr->attr_devtype, "cpld") == 0) {
         cpld_type = 1;
-        sys_val = board_i2c_cpld_read(ops_ptr->swpld_addr, ops_ptr->swpld_addr_offset);
+        sys_val = board_i2c_cpld_read_new(ops_ptr->swpld_addr, ops_ptr->attr_devname, ops_ptr->swpld_addr_offset);
     } else if (strcmp(ops_ptr->attr_devtype, "fpgai2c") == 0) {
         sys_val = board_i2c_fpga_read(ops_ptr->swpld_addr, ops_ptr->swpld_addr_offset);
     } else {
@@ -252,7 +254,8 @@ ssize_t set_status_led(struct device_attribute *da)
     if (ops_ptr->data[cur_state].swpld_addr != 0x0) {
         if (strcmp(ops_ptr->data[cur_state].attr_devtype, "cpld") == 0) {
             cpld_type = 1;
-            sys_val = board_i2c_cpld_read(ops_ptr->swpld_addr, ops_ptr->swpld_addr_offset);
+            sys_val = board_i2c_cpld_read_new(ops_ptr->swpld_addr, ops_ptr->attr_devname, ops_ptr->swpld_addr_offset);
+            printk("yagami-sys_val=%d\n", sys_val);
         } else if (strcmp(ops_ptr->data[cur_state].attr_devtype, "fpgai2c") == 0) {
             sys_val = board_i2c_fpga_read(ops_ptr->swpld_addr, ops_ptr->swpld_addr_offset);
         } else {
@@ -261,12 +264,17 @@ ssize_t set_status_led(struct device_attribute *da)
             return (-1);
         }
 
-        if (sys_val < 0)
+        if (sys_val < 0){
+            printk("yagami-sys_val < 0\n");
             return sys_val;
-
+        }
+        if (strcmp(ops_ptr->attr_devname, "FAN_CPLD") == 0) {
+            printk("yagami-sys_val 1111111111111111\n");
+        }
+        
         new_val = (sys_val & ops_ptr->data[cur_state].bits.mask_bits) |
                     (ops_ptr->data[cur_state].reg_values[0] << ops_ptr->data[cur_state].bits.pos);
-
+        printk("sys_val=%d, ops_ptr->data[cur_state].bits.mask_bits=%d, ops_ptr->data[cur_state].reg_values[0]=%d, ops_ptr->data[cur_state].bits.pos=%d\n", sys_val, ops_ptr->data[cur_state].bits.mask_bits, ops_ptr->data[cur_state].reg_values[0], ops_ptr->data[cur_state].bits.pos);
     } else {
         pddf_dbg(LED, KERN_ERR "ERROR %s: %s %d devtype:%s state %d; %s not configured\n",__func__,
             ops_ptr->device_name, ops_ptr->index, ops_ptr->attr_devtype, cur_state, _buf);
@@ -274,8 +282,9 @@ ssize_t set_status_led(struct device_attribute *da)
     }
 
     if (strcmp(ops_ptr->data[cur_state].attr_devtype, "cpld") == 0) {
-        ret = board_i2c_cpld_write(ops_ptr->swpld_addr, ops_ptr->swpld_addr_offset, new_val);
-        read_val = board_i2c_cpld_read(ops_ptr->swpld_addr, ops_ptr->swpld_addr_offset);
+        ret = board_i2c_cpld_write_new(ops_ptr->swpld_addr, ops_ptr->attr_devname, ops_ptr->swpld_addr_offset, new_val);
+        read_val = board_i2c_cpld_read_new(ops_ptr->swpld_addr, ops_ptr->attr_devname, ops_ptr->swpld_addr_offset);
+	printk("ret=%d  write_new_val=%d read_val=%d, swpld_addr=%d, swpld_addr_offset=%d", ret, new_val, read_val, ops_ptr->swpld_addr, ops_ptr->swpld_addr_offset);
     } else if (strcmp(ops_ptr->data[cur_state].attr_devtype, "fpgai2c") == 0) {
         ret = board_i2c_fpga_write(ops_ptr->swpld_addr, ops_ptr->swpld_addr_offset, (uint8_t)new_val);
         read_val = board_i2c_fpga_read(ops_ptr->swpld_addr, ops_ptr->swpld_addr_offset);
@@ -286,7 +295,7 @@ ssize_t set_status_led(struct device_attribute *da)
     }
 
 #if DEBUG
-    pddf_dbg(LED, KERN_INFO "Set color:%s; 0x%x:0x%x sys_val:0x%x new_val:0x%x devtype:%s w_ret:0x%x read:0x%x devtype:%s\n",
+    pddf_dbg(LED, KERN_ERR "Set color:%s; 0x%x:0x%x sys_val:0x%x new_val:0x%x devtype:%s w_ret:0x%x read:0x%x devtype:%s\n",
         LED_STATUS_STR[cur_state], ops_ptr->swpld_addr, ops_ptr->swpld_addr_offset, sys_val, new_val,
         cpld_type? "cpld":"fpgai2c", ret, read_val, ops_ptr->data[cur_state].attr_devtype);
 #endif
