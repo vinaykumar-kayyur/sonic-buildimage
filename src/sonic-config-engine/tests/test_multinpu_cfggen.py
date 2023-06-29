@@ -150,6 +150,17 @@ class TestMultiNpuCfgGen(TestCase):
             print("Log:asic{} sku {}".format(asic,output))
             self.assertDictEqual(output, {})
 
+    def test_metadata_dns_nameserver(self):
+        argument = ['-m', self.sample_graph, '-p', self.sample_port_config, '--var-json', "DNS_NAMESERVER"]
+        output = json.loads(self.run_script(argument))
+        self.assertDictEqual(output, {'1.1.1.1': {}, '8.8.8.8': {}})
+        #DNS_NAMESERVER data is present only in the host config
+        argument = ['-m', self.sample_graph, '--var-json', "DNS_NAMESERVER"]
+        for asic in range(NUM_ASIC):
+            output = json.loads(self.run_script_for_asic(argument, asic, self.port_config[asic]))
+            print("Log:asic{} sku {}".format(asic,output))
+            self.assertDictEqual(output, {})
+
     def test_mgmt_port(self):
         argument = ['-m', self.sample_graph, '-p', self.sample_port_config, '--var-json', "MGMT_PORT"]
         output = json.loads(self.run_script(argument))
@@ -548,15 +559,6 @@ class TestMultiNpuCfgGen(TestCase):
         argument = ["-m", self.sample_graph, "-p", self.sample_no_asic_port_config, "-n", "asic4", "--var-json", "PORTCHANNEL"]
         output = json.loads(self.run_script(argument, check_stderr=False, validateYang=False))
         self.assertDictEqual(output, {})
-
-    def testsnmp_agent_address_config(self):
-        argument = ['-m', self.sample_graph, '-p', self.sample_port_config, '-v', 'SNMP_AGENT_ADDRESS_CONFIG.keys()|list']
-        output = self.run_script(argument)
-        import pdb; pdb.set_trace()
-        self.assertEqual(
-            utils.liststr_to_dict(output.strip()),
-            utils.liststr_to_dict("['10.1.0.32|161|', '3.10.147.150|161|', 'FC00:2::32|161|', 'FC00:1::32|161|']")
-        )
 
     def tearDown(self):
         os.environ["CFGGEN_UNIT_TESTING"] = ""

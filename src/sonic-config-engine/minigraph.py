@@ -13,9 +13,8 @@ from lxml.etree import QName
 
 from natsort import natsorted, ns as natsortns
 
-from portconfig import get_port_config
+from portconfig import get_port_config, get_fabric_port_config, get_fabric_monitor_config
 from sonic_py_common.interface import backplane_prefix
-from sonic_py_common.multi_asic import get_docker0_ips
 
 # TODO: Remove this once we no longer support Python 2
 if sys.version_info.major == 3:
@@ -57,12 +56,12 @@ acl_table_type_defination = {
     'BMCDATA': {
         "ACTIONS": "PACKET_ACTION,COUNTER",
         "BIND_POINTS": "PORT",
-        "MATCHES": "SRC_IP,DST_IP,ETHER_TYPE,IP_TYPE,IP_PROTOCOL,IN_PORTS,TCP_FLAGS",
+        "MATCHES": "SRC_IP,DST_IP,ETHER_TYPE,IP_TYPE,IP_PROTOCOL,IN_PORTS,L4_SRC_PORT,L4_DST_PORT,L4_SRC_PORT_RANGE,L4_DST_PORT_RANGE",
     },
     'BMCDATAV6': {
         "ACTIONS": "PACKET_ACTION,COUNTER",
         "BIND_POINTS": "PORT",
-        "MATCHES": "SRC_IPV6,DST_IPV6,ETHER_TYPE,IP_TYPE,IP_PROTOCOL,IN_PORTS,TCP_FLAGS",
+        "MATCHES": "SRC_IPV6,DST_IPV6,ETHER_TYPE,IP_TYPE,IP_PROTOCOL,IN_PORTS,L4_SRC_PORT,L4_DST_PORT,L4_SRC_PORT_RANGE,L4_DST_PORT_RANGE",
     }
 }
 
@@ -994,6 +993,7 @@ def parse_meta(meta, hname):
     dhcp_servers = []
     dhcpv6_servers = []
     ntp_servers = []
+    dns_nameservers = []
     tacacs_servers = []
     mgmt_routes = []
     erspan_dst = []
@@ -1024,6 +1024,8 @@ def parse_meta(meta, hname):
                     dhcp_servers = value_group
                 elif name == "NtpResources":
                     ntp_servers = value_group
+                elif name == "DnsNameserverResources":
+                    dns_nameservers = value_group
                 elif name == "SyslogResources":
                     syslog_servers = value_group
                 elif name == "TacacsServer":
@@ -1062,7 +1064,7 @@ def parse_meta(meta, hname):
                     qos_profile = value
                 elif name == "RackMgmtMap":
                     rack_mgmt_map = value
-    return syslog_servers, dhcp_servers, dhcpv6_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, region, cloudtype, resource_type, downstream_subrole, switch_id, switch_type, max_cores, kube_data, macsec_profile, downstream_redundancy_types, redundancy_type, qos_profile, rack_mgmt_map
+    return syslog_servers, dhcp_servers, dhcpv6_servers, ntp_servers, dns_nameservers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, region, cloudtype, resource_type, downstream_subrole, switch_id, switch_type, max_cores, kube_data, macsec_profile, downstream_redundancy_types, redundancy_type, qos_profile, rack_mgmt_map
 
 
 def parse_linkmeta(meta, hname):
@@ -1437,7 +1439,7 @@ def select_mmu_profiles(profile, platform, hwsku):
 # Main functions
 #
 ###############################################################################
-def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hwsku_config_file=None):
+def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hwsku_config_file=None, fabric_port_config_file=None ):
     """ Parse minigraph xml file.
 
     Keyword arguments:
@@ -1446,6 +1448,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     port_config_file -- port config file name
     asic_name -- asic name; to parse multi-asic device minigraph to
     generate asic specific configuration.
+    fabric_port_config_file -- fabric port config file name
      """
 
     root = ET.parse(filename).getroot()
@@ -1488,6 +1491,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     dhcp_servers = []
     dhcpv6_servers = []
     ntp_servers = []
+    dns_nameservers = []
     tacacs_servers = []
     mgmt_routes = []
     erspan_dst = []
@@ -1543,7 +1547,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
             elif child.tag == str(QName(ns, "UngDec")):
                 (u_neighbors, u_devices, _, _, _, _, _, _) = parse_png(child, hostname, None)
             elif child.tag == str(QName(ns, "MetadataDeclaration")):
-                (syslog_servers, dhcp_servers, dhcpv6_servers, ntp_servers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, region, cloudtype, resource_type, downstream_subrole, switch_id, switch_type, max_cores, kube_data, macsec_profile, downstream_redundancy_types, redundancy_type, qos_profile, rack_mgmt_map) = parse_meta(child, hostname)
+                (syslog_servers, dhcp_servers, dhcpv6_servers, ntp_servers, dns_nameservers, tacacs_servers, mgmt_routes, erspan_dst, deployment_id, region, cloudtype, resource_type, downstream_subrole, switch_id, switch_type, max_cores, kube_data, macsec_profile, downstream_redundancy_types, redundancy_type, qos_profile, rack_mgmt_map) = parse_meta(child, hostname)
             elif child.tag == str(QName(ns, "LinkMetadataDeclaration")):
                 linkmetas = parse_linkmeta(child, hostname)
             elif child.tag == str(QName(ns, "DeviceInfos")):
@@ -1701,33 +1705,6 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
             results['LOOPBACK_INTERFACE'][host_lo_intf[0]] = {}
 
     results['MGMT_VRF_CONFIG'] = mvrf
-    
-    # Update SNMP_AGENT_ADDRESS_CONFIG with Management IP and Loopback0 IP
-    # for single-asic platform.
-    # Update SNMP_AGENT_ADDRESS_CONFIG with Management IP and docker0 IP
-    # for multi-asic platform.
-    results['SNMP_AGENT_ADDRESS_CONFIG'] = {}
-    if asic_name is None:
-        results['SNMP_AGENT_ADDRESS_CONFIG'] = {}
-        for mgmt_if in results['MGMT_INTERFACE'].keys():
-            snmp_key = mgmt_if[1].split('/')[0] + '|161|'
-            results['SNMP_AGENT_ADDRESS_CONFIG'][snmp_key] = {}
-        docker0_v4, docker0_v6 = get_docker0_ips()
-        if docker0_v4 is None and docker0_v6 is None:
-            # Add Loopback0 IP as agent address for single asic
-            for loip in results['LOOPBACK_INTERFACE']:
-                if len(loip) == 2 and loip[0] == 'Loopback0':
-                    snmp_key = loip[1].split('/')[0] + '|161|'
-                    results['SNMP_AGENT_ADDRESS_CONFIG'][snmp_key] = {}
-        else:
-            # docker0 ip address is available for multi-asic
-            # Add docker0 IP address as agent address
-            if docker0_v4:
-                snmp_key = docker0_v4 + '|161|'
-                results['SNMP_AGENT_ADDRESS_CONFIG'][snmp_key] = {}
-            if docker0_v6:
-                snmp_key = docker0_v6 + '|161|'
-                results['SNMP_AGENT_ADDRESS_CONFIG'][snmp_key] = {}
 
     phyport_intfs = {}
     vlan_intfs = {}
@@ -1899,6 +1876,16 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     results['PORT'] = ports
     results['CONSOLE_PORT'] = console_ports
 
+    # Get the global fabric monitoring data
+    fabric_monitor = get_fabric_monitor_config(hwsku=hwsku, asic_name=asic_name)
+    if bool( fabric_monitor ):
+        results[ 'FABRIC_MONITOR' ] = fabric_monitor
+
+    # parse fabric
+    fabric_ports = get_fabric_port_config(hwsku=hwsku, platform=platform, fabric_port_config_file=fabric_port_config_file, asic_name=asic_name, hwsku_config_file=hwsku_config_file)
+    if bool( fabric_ports ):
+        results['FABRIC_PORT'] = fabric_ports
+
     if port_config_file:
         port_set = set(ports.keys())
         for (pc_name, pc_member) in list(pc_members.keys()):
@@ -2012,6 +1999,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     results['DHCP_SERVER'] = dict((item, {}) for item in dhcp_servers)
     results['DHCP_RELAY'] = dhcp_relay_table
     results['NTP_SERVER'] = dict((item, {}) for item in ntp_servers)
+    results['DNS_NAMESERVER'] = dict((item, {}) for item in dns_nameservers)
     results['TACPLUS_SERVER'] = dict((item, {'priority': '1', 'tcp_port': '49'}) for item in tacacs_servers)
     if len(acl_table_types) > 0:
         results['ACL_TABLE_TYPE'] = acl_table_types
