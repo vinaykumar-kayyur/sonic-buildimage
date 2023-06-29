@@ -6,7 +6,7 @@
     "num_fans_pertray": 2,
     "num_ports": 34,
     "num_temps": 6,
-    "num_component": 10,
+    "num_component": 8,
     "pddf_dev_types":
     {
         "description":" - Below is the list of supported PDDF device types (chip names) for various components. If any component uses some other driver, we will create the client using 'echo <dev-address> <dev-type> > <path>/new_device' method",
@@ -1953,43 +1953,15 @@
     "SYS_LED":
     {
         "dev_info": {"device_type":"LED", "device_name":"SYS_LED"},
-        "dev_attr": {"index":"0", "flag": "ro"},
-        "bmc": {
-            "ipmitool" : {
-                "attr_list":
-                [
-                    {"attr_name":"off", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x01 0x00", "raw": "1", "type":"raw", "value": "0"},
-                    {"attr_name":"green", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x01 0x00", "raw": "1", "type":"raw", "value": "1"},
-                    {"attr_name":"amber", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x01 0x00", "raw": "1", "type":"raw", "value": "2"},
-                    {"attr_name":"amber_blink_1hz", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x01 0x00", "raw": "1", "type":"raw", "value": "3"},
-                    {"attr_name":"green_blink_4hz", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x01 0x00", "raw": "1", "type":"raw", "value": "4"},
-                    {"attr_name":"green_blink_1hz", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x01 0x00", "raw": "1", "type":"raw", "value": "5"},
-                    {"attr_name":"amber_blink_4hz", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x01 0x00", "raw": "1", "type":"raw", "value": "6"},
-                    {"attr_name":"alternate_blink_1hz", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x01 0x00", "raw": "1", "type":"raw", "value": "7"},
-                    {"attr_name":"alternate_blink_4hz", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x01 0x00", "raw": "1", "type":"raw", "value": "8"}
-                    ]
-               }
-        }
-    },
-    "ALARM_LED":
-    {
-        "dev_info": {"device_type":"LED", "device_name":"ALARM_LED"},
-        "dev_attr": {"index":"0", "flag": "ro"},
-        "bmc": {
-            "ipmitool" : {
-                "attr_list":
-                [
-                    {"attr_name":"off", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x01 0x01", "raw": "1", "type":"raw", "value": "0"},
-                    {"attr_name":"green", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x01 0x01", "raw": "1", "type":"raw", "value": "1"},
-                    {"attr_name":"amber", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x01 0x01", "raw": "1", "type":"raw", "value": "2"},
-                    {"attr_name":"amber_blink_1hz", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x01 0x01", "raw": "1", "type":"raw", "value": "3"},
-                    {"attr_name":"green_blink_4hz", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x01 0x01", "raw": "1", "type":"raw", "value": "4"},
-                    {"attr_name":"green_blink_1hz", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x01 0x01", "raw": "1", "type":"raw", "value": "5"},
-                    {"attr_name":"amber_blink_4hz", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x01 0x01", "raw": "1", "type":"raw", "value": "6"},
-                    {"attr_name":"alternate_blink_1hz", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x01 0x01", "raw": "1", "type":"raw", "value": "7"},
-                    {"attr_name":"alternate_blink_4hz", "bmc_cmd":"ipmitool raw 0x3A 0x39 0x01 0x01", "raw": "1", "type":"raw", "value": "8"}
-                ]
-           }
+        "dev_attr": {"index":"0"},
+        "i2c": {
+            "attr_list":
+            [
+                {"attr_name":"green", "attr_devtype":"cpld", "attr_devname":"CPLD_B", "bits":"5:0","descr":"green", "value":"0x10", "swpld_addr":"0x0d", "swpld_addr_offset":"0x62"},
+                {"attr_name":"amber", "attr_devtype":"cpld", "attr_devname":"CPLD_B", "bits":"5:0","descr":"amber", "value":"0x20", "swpld_addr":"0x0d", "swpld_addr_offset":"0x62"},
+                {"attr_name":"green_blink", "attr_devtype":"cpld", "attr_devname":"CPLD_B", "bits":"5:0","descr":"green_blink", "value":"0x02", "swpld_addr":"0x0d", "swpld_addr_offset":"0x62"},
+                {"attr_name":"off", "attr_devtype":"cpld", "attr_devname":"CPLD_B", "bits":"5:0","descr":"off", "value":"0x33", "swpld_addr":"0x0d", "swpld_addr_offset":"0x62"}
+            ]
         }
     },
     "FANTRAY1_LED":
@@ -2011,8 +1983,8 @@
         "i2c" : {
             "attr_list":
             [
-                {"attr_name":"green","swpld_addr":"0x0d", "attr_devtype":"cpld","attr_devname":"Fan_CPLD","swpld_addr_offset":"0x34","bits":"1:0","descr":"Green","value":"0x1"},
-                {"attr_name":"amber","swpld_addr":"0x0d", "attr_devtype":"cpld","attr_devname":"Fan_CPLD", "swpld_addr_offset":"0x34","bits":"1:0","descr":"Amber","value":"0x2"}
+                {"attr_name":"green","swpld_addr":"0x0d", "attr_devtype":"cpld","attr_devname":"Fan_CPLD","swpld_addr_offset":"0x34","bits":"7:0","descr":"Green","value":"0x1"},
+                {"attr_name":"amber","swpld_addr":"0x0d", "attr_devtype":"cpld","attr_devname":"Fan_CPLD", "swpld_addr_offset":"0x34","bits":"7:0","descr":"Amber","value":"0x2"}
             ]
         }
     },
