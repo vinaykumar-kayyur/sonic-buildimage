@@ -1,11 +1,11 @@
 [Unit]
-Description=Silverstone-V2 Platform Monitoring service
-After=networking.service
-Before=pddf-platform-init.service
+Description=Silverstone-V2 Platform Fans Control service
+Before=pmon.service
+After=pddf-platform-init.service
 DefaultDependencies=no
 
 [Service]
-ExecStart=/usr/local/bin/pddf_sensor_list_refresh.py
+ExecStart=/usr/local/bin/FanControl/FanControl.py
 KillSignal=SIGKILL
 SuccessExitStatus=SIGKILL
 
