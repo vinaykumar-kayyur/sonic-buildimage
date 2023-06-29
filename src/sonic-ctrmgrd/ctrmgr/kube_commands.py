@@ -103,7 +103,7 @@ def kube_read_labels():
 
     return (ret, labels)
 
- 
+
 def kube_write_labels(set_labels):
     """ Set given set_labels.
     """
@@ -147,7 +147,7 @@ def kube_write_labels(set_labels):
 
     return ret
 
- 
+
 def func_get_labels(args):
     """ args parser default function for get labels"""
     ret, node_labels = kube_read_labels()
@@ -157,7 +157,7 @@ def func_get_labels(args):
 
     log_debug(json.dumps(node_labels, indent=4))
     return 0
-    
+
 
 def is_connected(server=""):
     """ Check if we are currently connected """
@@ -218,7 +218,7 @@ def _download_file(server, port, insecure):
 
 
 def _gen_cli_kubeconf(server, port, insecure):
-    """generate identity which can help authenticate and 
+    """generate identity which can help authenticate and
        authorization to k8s cluster
     """
     client_kubeconfig_template = """
@@ -387,7 +387,7 @@ def kube_join_master(server, port, insecure, force=False):
 
     log_debug("join: ret={} out:{} err:{}".format(ret, out, err))
     return (ret, out, err)
-    
+
 
 def kube_reset_master(force):
     err = ""
@@ -440,7 +440,7 @@ def _do_tag(docker_id, image_ver):
     else:
         out = "New version {} is not running.".format(image_ver)
         ret = -1
-    
+
     return (ret, out, err)
 
 def _remove_container(feat):
@@ -465,7 +465,7 @@ def _remove_container(feat):
     else:
         err = "Failed to docker inspect {} |jq -r .[].State.Running. Err: {}".format(feat, err)
         ret = 1
-    
+
     return (ret, out, err)
 
 def tag_latest(feat, docker_id, image_ver):
@@ -479,6 +479,70 @@ def tag_latest(feat, docker_id, image_ver):
             log_error(err)
     elif ret == -1:
         ret = 0
+    else:
+        log_error(err)
+    return ret
+
+def _do_clean(feat, current_version, last_version):
+    err = ""
+    out = ""
+    ret = 0
+    DOCKER_ID = "docker_id"
+    REPO = "repo"
+    _, image_info, err = _run_command("docker images |grep {} |grep -v latest |awk '{{print $1,$2,$3}}'".format(feat))
+    if image_info:
+        version_dict = {}
+        version_dict_default = {}
+        for info in image_info.split("\n"):
+            rep, version, docker_id = info.split()
+            if len(rep.split("/")) == 1:
+                version_dict_default[version] = {DOCKER_ID: docker_id, REPO: rep}
+            else:
+                version_dict[version] = {DOCKER_ID: docker_id, REPO: rep}
+
+        if current_version in version_dict:
+            image_prefix = version_dict[current_version][REPO]
+            del version_dict[current_version]
+        else:
+            out = "Current version {} doesn't exist.".format(current_version)
+            ret = 0
+            return ret, out, err
+        # should be only one item in version_dict_default
+        for k, v in version_dict_default.items():
+            local_version, local_repo, local_docker_id = k, v[REPO], v[DOCKER_ID]
+            tag_res, _, err = _run_command("docker tag {} {}:{} && docker rmi {}:{}".format(
+                local_docker_id, image_prefix, local_version, local_repo, local_version))
+            if tag_res == 0:
+                msg = "Tag {} local version images successfully".format(feat)
+                log_debug(msg)
+            else:
+                ret = 1
+                err = "Failed to tag {} local version images. Err: {}".format(feat, err)
+            return ret, out, err
+
+        if last_version in version_dict:
+            del version_dict[last_version]
+
+        versions = [item[DOCKER_ID] for item in version_dict.values()]
+        if versions:
+            clean_res, _, err = _run_command("docker rmi {} --force".format(" ".join(versions)))
+        else:
+            clean_res = 0
+        if clean_res == 0:
+            out = "Clean {} old version images successfully".format(feat)
+        else:
+            err = "Failed to clean {} old version images. Err: {}".format(feat, err)
+            ret = 1
+    else:
+        err = "Failed to docker images |grep {} |awk '{{print $3}}'".format(feat)
+        ret = 1
+
+    return ret, out, err
+
+def clean_image(feat, current_version, last_version):
+    ret, out, err = _do_clean(feat, current_version, last_version)
+    if ret == 0:
+        log_debug(out)
     else:
         log_error(err)
     return ret

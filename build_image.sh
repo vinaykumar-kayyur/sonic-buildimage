@@ -86,7 +86,7 @@ generate_onie_installer_image()
     ## Note: Don't leave blank between lines. It is single line command.
     ./onie-mk-demo.sh $CONFIGURED_ARCH $TARGET_MACHINE $TARGET_PLATFORM-$TARGET_MACHINE-$ONIEIMAGE_VERSION \
           installer platform/$TARGET_MACHINE/platform.conf $output_file OS $IMAGE_VERSION $ONIE_IMAGE_PART_SIZE \
-          $ONIE_INSTALLER_PAYLOAD
+          $ONIE_INSTALLER_PAYLOAD $SECURE_UPGRADE_SIGNING_CERT $SECURE_UPGRADE_DEV_SIGNING_KEY
 }
 
 # Generate asic-specific device list
@@ -202,12 +202,12 @@ elif [ "$IMAGE_TYPE" = "aboot" ]; then
     zip -g $OUTPUT_ABOOT_IMAGE .platforms_asic
 
     if [ "$ENABLE_FIPS" = "y" ]; then
-        echo "sonic_fips=1" > kernel-cmdline
+        echo "sonic_fips=1" >> kernel-cmdline-append
     else
-        echo "sonic_fips=0" > kernel-cmdline
+        echo "sonic_fips=0" >> kernel-cmdline-append
     fi
-    zip -g $OUTPUT_ABOOT_IMAGE kernel-cmdline
-    rm kernel-cmdline
+    zip -g $OUTPUT_ABOOT_IMAGE kernel-cmdline-append
+    rm kernel-cmdline-append
 
     zip -g $OUTPUT_ABOOT_IMAGE $ABOOT_BOOT_IMAGE
     rm $ABOOT_BOOT_IMAGE

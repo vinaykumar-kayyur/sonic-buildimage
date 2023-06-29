@@ -359,7 +359,9 @@
                 "sub_role": "FrontEnd",
                 "dhcp_server": "disabled",
                 "bgp_adv_lo_prefix_as_128": "true",
-                "yang_config_validation": "disable"
+                "yang_config_validation": "disable",
+                "rack_mgmt_map": "dummy_value",
+                "timezone": "Europe/Kiev"
             }
         },
         "VLAN": {
@@ -1263,6 +1265,14 @@
                 "allow_insecure": "false"
             }
          },
+        "FABRIC_MONITOR": {
+            "FABRIC_MONITOR_DATA": {
+                "monErrThreshCrcCells": "1",
+                "monErrThreshRxCells": "61035156",
+                "monPollThreshIsolation": "1",
+                "monPollThreshRecovery": "8"
+            }
+        },
         "FLEX_COUNTER_TABLE": {
             "PFCWD": {
                 "FLEX_COUNTER_STATUS": "enable"
@@ -1588,7 +1598,7 @@
         "BGP_MONITORS": {
             "5.6.7.8": {
                 "admin_status": "up",
-                "asn": "65000",
+                "asn": "0",
                 "holdtime": "180",
                 "keepalive": "60",
                 "local_addr": "10.0.0.11",
@@ -2015,6 +2025,16 @@
                 "vlan": "Vlan100"
             }
         },
+        "VNET": {
+            "vnet1": {
+                "vxlan_tunnel": "vtep1",
+                "scope": "default",
+                "vni": "100",
+                "peer_list": "",
+                "advertise_prefix": "true",
+                "overlay_dmac": "22:33:44:55:66:77"
+            }
+        },
         "PORT_QOS_MAP": {
            "Ethernet0": {
               "dot1p_to_tc_map" : "Dot1p_to_tc_map1",
@@ -2097,6 +2117,19 @@
                 "server_ipv4": "192.168.0.2/32",
                 "server_ipv6": "fc02:1000::30/128",
                 "state": "auto"
+            }
+        },
+
+        "MUX_LINKMGR": {
+            "LINK_PROBER": {
+                "interval_v4": "100",
+                "interval_v6": "1000",
+                "positive_signal_count": "1",
+                "negative_signal_count": "3",
+                "suspend_timer": "500",
+                "use_well_known_mac": "enabled",
+                "src_mac": "ToRMac",
+                "interval_pck_loss_count_update": "3"
             }
         },
 
@@ -2277,7 +2310,7 @@
                 "SNMP_USER_AUTH_TYPE": "",
                 "SNMP_USER_AUTH_PASSWORD": "",
                 "SNMP_USER_ENCRYPTION_TYPE": "",
-                "SNMP_USER_ENCRYPTION_PASSWORD": "" 
+                "SNMP_USER_ENCRYPTION_PASSWORD": ""
             },
             "testuser_AuthNoPriv": {
                 "SNMP_USER_TYPE": "AuthNoPriv",
@@ -2285,7 +2318,7 @@
                 "SNMP_USER_AUTH_TYPE": "SHA",
                 "SNMP_USER_AUTH_PASSWORD": "auth_pass",
                 "SNMP_USER_ENCRYPTION_TYPE": "",
-                "SNMP_USER_ENCRYPTION_PASSWORD": ""         
+                "SNMP_USER_ENCRYPTION_PASSWORD": ""
             }
 
         },

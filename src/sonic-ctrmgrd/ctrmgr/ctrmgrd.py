@@ -48,6 +48,8 @@ ST_FEAT_OWNER = "current_owner"
 ST_FEAT_UPDATE_TS = "update_time"
 ST_FEAT_CTR_ID = "container_id"
 ST_FEAT_CTR_VER = "container_version"
+ST_FEAT_CTR_STABLE_VER = "container_stable_version"
+ST_FEAT_CTR_LAST_VER = "container_last_version"
 ST_FEAT_REMOTE_STATE = "remote_state"
 ST_FEAT_SYS_STATE = "system_state"
 
@@ -59,6 +61,7 @@ MODE_LOCAL = "local"
 OWNER_KUBE = "kube"
 OWNER_LOCAL = "local"
 OWNER_NONE = "none"
+REMOTE_RUNNING = "running"
 REMOTE_READY = "ready"
 REMOTE_PENDING = "pending"
 REMOTE_STOPPED = "stopped"
@@ -91,6 +94,8 @@ dflt_st_feat= {
         ST_FEAT_UPDATE_TS: "",
         ST_FEAT_CTR_ID: "",
         ST_FEAT_CTR_VER: "",
+        ST_FEAT_CTR_STABLE_VER: "",
+        ST_FEAT_CTR_LAST_VER: "",
         ST_FEAT_REMOTE_STATE: "none",
         ST_FEAT_SYS_STATE: ""
         }
@@ -100,18 +105,20 @@ JOIN_RETRY = "retry_join_interval_seconds"
 LABEL_RETRY = "retry_labels_update_seconds"
 TAG_IMAGE_LATEST = "tag_latest_image_on_wait_seconds"
 TAG_RETRY = "retry_tag_latest_seconds"
+CLEAN_IMAGE_RETRY = "retry_clean_image_seconds"
 USE_K8S_PROXY = "use_k8s_as_http_proxy"
 
 remote_ctr_config = {
     JOIN_LATENCY: 10,
     JOIN_RETRY: 10,
     LABEL_RETRY: 2,
-    TAG_IMAGE_LATEST: 30,
+    TAG_IMAGE_LATEST: 5,
     TAG_RETRY: 5,
+    CLEAN_IMAGE_RETRY: 5,
     USE_K8S_PROXY: ""
     }
 
-ENABLED_FEATURE_SET = {"telemetry", "snmp"}
+DISABLED_FEATURE_SET = {"database"}
 
 def log_debug(m):
     msg = "{}: {}".format(inspect.stack()[1][3], m)
@@ -187,7 +194,7 @@ class MainServer:
 
 
     def register_timer(self, ts, handler, args=None):
-        """ Register timer based handler. 
+        """ Register timer based handler.
             The handler will be called on/after give timestamp, ts
         """
         self.timer_handlers[ts].append((handler, args))
@@ -225,7 +232,7 @@ class MainServer:
 
 
     def set_db_entry(self, db_name, table_name, key, data):
-        """ Set given data as complete data, which includes 
+        """ Set given data as complete data, which includes
             removing any fields that are in DB but not in data
         """
         conn = self.db_connectors[db_name]
@@ -271,7 +278,7 @@ class MainServer:
                 key, op, fvs = subscriber.pop()
                 if not key:
                     continue
-                if subscriber.getTableName() == FEATURE_TABLE and key not in ENABLED_FEATURE_SET:
+                if subscriber.getTableName() == FEATURE_TABLE and key in DISABLED_FEATURE_SET:
                     continue
                 log_debug("Received message : '%s'" % str((key, op, fvs)))
                 for callback in (self.callbacks
@@ -452,7 +459,7 @@ class RemoteServerHandler:
 #   Handle Set_owner change:
 #       restart service and/or label add/drop
 #
-#   Handle remote_state change: 
+#   Handle remote_state change:
 #       When pending, trigger restart
 #
 class FeatureTransitionHandler:
@@ -519,10 +526,10 @@ class FeatureTransitionHandler:
             log_debug("No change in feat={} set_owner={}. Bail out.".format(
                 key, set_owner))
             return
-        
+
         if key in self.st_data:
             log_debug("{} init={} old_set_owner={} owner={}".format(key, init, old_set_owner, set_owner))
-            self.handle_update(key, set_owner, 
+            self.handle_update(key, set_owner,
                     self.st_data[key][ST_FEAT_OWNER],
                     self.st_data[key][ST_FEAT_REMOTE_STATE])
 
@@ -545,12 +552,12 @@ class FeatureTransitionHandler:
         self.st_data[key] = _update_entry(dflt_st_feat, data)
         remote_state = self.st_data[key][ST_FEAT_REMOTE_STATE]
 
-        if (old_remote_state != remote_state) and (remote_state == "running"):
+        if (remote_state == REMOTE_RUNNING) and (old_remote_state != remote_state):
             # Tag latest
             start_time = datetime.datetime.now() + datetime.timedelta(
                     seconds=remote_ctr_config[TAG_IMAGE_LATEST])
             self.server.register_timer(start_time, self.do_tag_latest, (
-                    key, 
+                    key,
                     self.st_data[key][ST_FEAT_CTR_ID],
                     self.st_data[key][ST_FEAT_CTR_VER]))
 
@@ -571,7 +578,7 @@ class FeatureTransitionHandler:
                     self.st_data[key][ST_FEAT_OWNER],
                     remote_state)
         return
-    
+
     def do_tag_latest(self, feat, docker_id, image_ver):
         ret = kube_commands.tag_latest(feat, docker_id, image_ver)
         if ret != 0:
@@ -583,6 +590,29 @@ class FeatureTransitionHandler:
 
             log_debug("Tag latest as local failed retry after {} seconds @{}".
                     format(remote_ctr_config[TAG_RETRY], self.start_time))
+        else:
+            last_version = self.st_data[feat][ST_FEAT_CTR_STABLE_VER]
+            if last_version == image_ver:
+                last_version = self.st_data[feat][ST_FEAT_CTR_LAST_VER]
+            self.server.mod_db_entry(STATE_DB_NAME, FEATURE_TABLE, feat,
+                {ST_FEAT_CTR_STABLE_VER: image_ver,
+                ST_FEAT_CTR_LAST_VER: last_version})
+            self.st_data[ST_FEAT_CTR_LAST_VER] = last_version
+            self.st_data[ST_FEAT_CTR_STABLE_VER] = image_ver
+            self.do_clean_image(feat, image_ver, last_version)
+
+    def do_clean_image(self, feat, current_version, last_version):
+        ret = kube_commands.clean_image(feat, current_version, last_version)
+        if ret != 0:
+            # Clean up old version images failed. Retry after an interval
+            self.start_time = datetime.datetime.now()
+            self.start_time += datetime.timedelta(
+                    seconds=remote_ctr_config[CLEAN_IMAGE_RETRY])
+            self.server.register_timer(self.start_time, self.do_clean_image, (feat, current_version, last_version))
+
+            log_debug("Clean up old version images failed retry after {} seconds @{}".
+                    format(remote_ctr_config[CLEAN_IMAGE_RETRY], self.start_time))
+
 
 #
 # Label re-sync
