@@ -304,7 +304,7 @@ class TestCfgGen(TestCase):
         argument = ['-m', self.ecmp_graph, '-p', self.mlnx_port_config, '-v', 'FG_NHG']
         output = self.run_script(argument)
         print(output.strip())
-        self.assertEqual(utils.to_dict(output.strip()), 
+        self.assertEqual(utils.to_dict(output.strip()),
                          utils.to_dict(
                             "{'fgnhg_v4': {'match_mode': 'nexthop-based', 'bucket_size': 120}, "
                             "'fgnhg_v6': {'match_mode': 'nexthop-based', 'bucket_size': 120}}"
@@ -378,7 +378,7 @@ class TestCfgGen(TestCase):
             utils.to_dict(
                 "{'Ethernet124': {'name': 'ARISTA04T1', 'port': 'Ethernet1/1'}, "
                 "'Ethernet120': {'name': 'ARISTA03T1', 'port': 'Ethernet1/1'}, "
-                "'Ethernet4': {'name': 'Servers0', 'port': 'eth0'}, " 
+                "'Ethernet4': {'name': 'Servers0', 'port': 'eth0'}, "
                 "'Ethernet116': {'name': 'ARISTA02T1', 'port': 'Ethernet1/1'}, "
                 "'Ethernet100': {'name': 'Servers100', 'port': 'eth0'}, "
                 "'Ethernet112': {'name': 'ARISTA01T1', 'port': 'Ethernet1/1'}}")
@@ -490,6 +490,22 @@ class TestCfgGen(TestCase):
         self.assertEqual(
             utils.to_dict(output.strip()),
             utils.to_dict("{'lanes': '101,102,103,104', 'fec': 'rs', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100', 'alias': 'fortyGigE0/124', 'admin_status': 'up', 'speed': '100000', 'description': 'ARISTA04T1:Ethernet1/1'}")
+        )
+
+    def test_minigraph_default_vxlan(self):
+        argument = ['-m', self.sample_graph_deployment_id, '-p', self.port_config, '-v', "VXLAN_TUNNEL"]
+        output = self.run_script(argument, False, False)
+        self.assertEqual(
+            utils.to_dict(output.strip()),
+            utils.to_dict("{'tunnel_v4': {'src_ip': '10.1.0.32'}}")
+        )
+
+    def test_minigraph_default_vnet(self):
+        argument = ['-m', self.sample_graph_deployment_id, '-p', self.port_config, '-v', "VNET"]
+        output = self.run_script(argument, False, False)
+        self.assertEqual(
+            utils.to_dict(output.strip()),
+            utils.to_dict("{'Vnet-default': {'vxlan_tunnel': 'tunnel_v4', 'scope': 'default', 'vni': 8000}}")
         )
 
     def test_minigraph_bgp(self):
@@ -619,7 +635,7 @@ class TestCfgGen(TestCase):
         )
 
     def test_minigraph_extra_ethernet_interfaces(self, **kwargs):
-        graph_file = kwargs.get('graph_file', self.sample_graph_simple) 
+        graph_file = kwargs.get('graph_file', self.sample_graph_simple)
         argument = ['-m', graph_file, '-p', self.port_config, '-v', "PORT"]
         output = self.run_script(argument)
 
@@ -679,6 +695,11 @@ class TestCfgGen(TestCase):
         argument = ['-m', self.sample_graph_metadata, '-p', self.port_config, '-v', "NTP_SERVER"]
         output = self.run_script(argument)
         self.assertEqual(utils.to_dict(output.strip()), utils.to_dict("{'10.0.10.1': {}, '10.0.10.2': {}}"))
+
+    def test_metadata_dns_nameserver(self):
+        argument = ['-m', self.sample_graph_metadata, '-p', self.port_config, '-v', "DNS_NAMESERVER"]
+        output = self.run_script(argument)
+        self.assertEqual(utils.to_dict(output.strip()), utils.to_dict("{'20.2.2.2': {}, '30.3.3.3': {}}"))
 
     def test_minigraph_vnet(self, **kwargs):
         graph_file = kwargs.get('graph_file', self.sample_graph_simple)
@@ -982,7 +1003,22 @@ class TestCfgGen(TestCase):
                 "'Vlan2000': {'dhcpv6_servers': ['fc02:2000::3', 'fc02:2000::4']}}"
             )
         )
-       
+        
+    def test_minigraph_packet_chassis_acl(self):
+        argument = ['-m', self.packet_chassis_graph, '-p', self.packet_chassis_port_ini, '-v', "ACL_TABLE"]
+        output = self.run_script(argument)
+        self.assertEqual(
+            utils.to_dict(output.strip()),
+            utils.to_dict("{'SNMP_ACL': {'policy_desc': 'SNMP_ACL', 'type': 'CTRLPLANE', 'stage': 'ingress', 'services': ['SNMP']}, 'SSH_ONLY': {'policy_desc': 'SSH_ONLY', 'type': 'CTRLPLANE', 'stage': 'ingress', 'services': ['SSH']}}")
+        )
+
+        argument = ['-m', self.packet_chassis_graph, '-p', self.packet_chassis_port_ini, '-n', "asic1", '-v', "ACL_TABLE"]
+        output = self.run_script(argument)
+        self.assertEqual(
+            utils.to_dict(output.strip()),
+            utils.to_dict("{'SNMP_ACL': {'policy_desc': 'SNMP_ACL', 'type': 'CTRLPLANE', 'stage': 'ingress', 'services': ['SNMP']}, 'SSH_ONLY': {'policy_desc': 'SSH_ONLY', 'type': 'CTRLPLANE', 'stage': 'ingress', 'services': ['SSH']}}")
+        )
+
     def test_minigraph_bgp_packet_chassis_peer(self):
         argument = ['-m', self.packet_chassis_graph, '-p', self.packet_chassis_port_ini, '-n', "asic1", '-v', "BGP_INTERNAL_NEIGHBOR[\'8.0.0.1\']"]
         output = self.run_script(argument)
@@ -1052,7 +1088,7 @@ class TestCfgGen(TestCase):
                 "'Ethernet120': {'lanes': '16,17,18,19', 'alias': 'Ethernet16/1', 'index': '16', 'role': 'Ext', 'speed': '100000', 'asic_port_name': 'Eth120-ASIC0', 'fec': 'rs', 'description': 'ARISTA17T3:Ethernet1', 'mtu': '9100', 'tpid': '0x8100', 'pfc_asym': 'off', 'admin_status': 'up'}, "
                 "'Ethernet128': {'lanes': '8,9,10,11', 'alias': 'Ethernet17/1', 'index': '17', 'role': 'Ext', 'speed': '100000', 'asic_port_name': 'Eth128-ASIC0', 'fec': 'rs', 'description': 'ARISTA18T3:Ethernet1', 'mtu': '9100', 'tpid': '0x8100', 'pfc_asym': 'off', 'admin_status': 'up'}, "
                 "'Ethernet136': {'lanes': '0,1,2,3', 'alias': 'Ethernet18/1', 'index': '18', 'role': 'Ext', 'speed': '100000', 'asic_port_name': 'Eth136-ASIC0', 'fec': 'rs', 'description': 'ARISTA18T3:Ethernet2', 'mtu': '9100', 'tpid': '0x8100', 'pfc_asym': 'off', 'admin_status': 'up'}, "
-                "'Ethernet-Rec0': {'lanes': '221', 'alias': 'Recirc0/0', 'index': '37', 'role': 'Rec', 'speed': '400000', 'asic_port_name': 'Rcy0-ASIC0', 'description': 'Recirc0/0', 'mtu': '9100', 'tpid': '0x8100', 'pfc_asym': 'off', 'admin_status': 'up'}," 
+                "'Ethernet-Rec0': {'lanes': '221', 'alias': 'Recirc0/0', 'index': '37', 'role': 'Rec', 'speed': '400000', 'asic_port_name': 'Rcy0-ASIC0', 'description': 'Recirc0/0', 'mtu': '9100', 'tpid': '0x8100', 'pfc_asym': 'off', 'admin_status': 'up'},"
                 "'Ethernet-IB0': {'lanes': '222', 'alias': 'Recirc0/1', 'index': '38', 'role': 'Inb', 'speed': '400000', 'asic_port_name': 'Rcy1-ASIC0', 'description': 'Recirc0/1', 'mtu': '9100', 'tpid': '0x8100', 'pfc_asym': 'off', 'admin_status': 'up'}}"
             )
         )

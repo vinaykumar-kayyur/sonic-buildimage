@@ -43,7 +43,7 @@ startup_test_data = {
                 },
                 common_test.KUBE_LABEL_TABLE: {
                     "SET": {
-                        "snmp_20201230.11_enabled": "false"
+                        "snmp_local": "20201230.11"
                     }
                 }
             }
@@ -352,7 +352,7 @@ startup_test_data = {
                 },
                 common_test.KUBE_LABEL_TABLE: {
                     "SET": {
-                        "snmp_20201230.11_enabled": "false"
+                        "snmp_local": "20201230.11"
                     }
                 }
             }
@@ -370,7 +370,7 @@ startup_test_data = {
                 },
                 common_test.KUBE_LABEL_TABLE: {
                     "SET": {
-                        "snmp_20201230.11_enabled": "false"
+                        "snmp_local": "20201230.11"
                     }
                 }
             }
