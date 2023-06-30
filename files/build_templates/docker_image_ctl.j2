@@ -238,6 +238,9 @@ function postStartAction()
         if [[ ("$BOOT_TYPE" == "warm" || "$BOOT_TYPE" == "fastfast" || "$BOOT_TYPE" == "fast") && -f $WARM_DIR/dump.rdb ]]; then
             # retain the dump file from last boot for debugging purposes
             mv $WARM_DIR/dump.rdb $WARM_DIR/dump.rdb.old
+            # CONFIG_DB init flag will be set to 1 at the time when device warm-reboots and old config is loaded on DB
+            # Reset CONFIG_DB init value to 0 to indicate start of new system. This will be set to "1" after DB migration is completed
+            $SONIC_DB_CLI CONFIG_DB SET "CONFIG_DB_INITIALIZED" "0"
         else
             # If there is a config_db.json dump file, load it.
             if [ -r /etc/sonic/config_db$DEV.json ]; then

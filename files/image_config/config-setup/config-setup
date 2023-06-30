@@ -327,6 +327,7 @@ do_config_migration()
         echo "Warm reboot detected..."
         disable_updategraph
         rm -f /tmp/pending_config_migration
+        sonic-db-cli CONFIG_DB SET "CONFIG_DB_INITIALIZED" "1"
         exit 0
     elif check_all_config_db_present; then
         echo "Use config_db.json from old system..."
