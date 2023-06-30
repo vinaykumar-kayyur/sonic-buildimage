@@ -115,3 +115,6 @@
 [submodule "src/dhcpmon"]
 	path = src/dhcpmon
 	url = https://github.com/sonic-net/sonic-dhcpmon.git
+[submodule "src/sonic-device-health"]
+	path = src/sonic-device-health
+	url = https://github.com/renukamanavalan/sonic-device-health.git
