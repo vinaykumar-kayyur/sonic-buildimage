@@ -1,14 +1,10 @@
 /*
  * plat_switch.c
- * Original Author: support 2020-02-17
  *
  * This module create a kset in sysfs called /sys/wb_plat
  * Then other switch kobjects are created and assigned to this kset,
  * such as "board", "cpld", "fan", "psu", "sff", ...
  *
- * History
- *  [Version]        [Author]          [Date]             [Description]
- *   *  v1.0          support         2020-02-17          Initial version
  */
 #include "./include/plat_switch.h"
 

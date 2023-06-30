@@ -1009,6 +1009,7 @@ devices = {
             "VersionFile": {"loc": "/dev/fpga0", "offset": 0, "len": 4, "way": "devfile_ascii"},
             "desc": "Used for base functions",
             "slot": 0,
+            "format": "little_endian",
             "warm": 1,
         },
         {
@@ -1017,6 +1018,7 @@ devices = {
             "VersionFile": {"loc": "/dev/fpga1", "offset": 0, "len": 4, "way": "devfile_ascii"},
             "desc": "Used for base functions",
             "slot": 0,
+            "format": "little_endian",
             "warm": 1,
         },
         {

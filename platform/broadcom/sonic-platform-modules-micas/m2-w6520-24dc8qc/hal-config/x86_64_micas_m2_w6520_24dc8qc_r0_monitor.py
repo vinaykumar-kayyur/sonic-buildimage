@@ -122,7 +122,7 @@ monitor = {
         "psu_absent_fullspeed_num": 0xFF,
         "fan_absent_fullspeed_num": 1,
         "rotor_error_fullspeed_num": 1,
-        "psu_fan_control": 0,
+        "psu_fan_control": 1,
         "fan_plug_in_default_countdown": 0,  # no use
         "fan_plug_in_pwm": 0x80,  # fan plug in pwd
         "deal_fan_error": 1,

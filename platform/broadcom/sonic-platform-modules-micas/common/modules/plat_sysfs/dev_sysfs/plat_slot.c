@@ -1,12 +1,8 @@
 /*
  * plat_slot.c
- * Original Author: support 2020-02-17
  *
  * This module create sff kobjects and attributes in /sys/wb_plat/slot
  *
- * History
- *  [Version]        [Author]                   [Date]            [Description]
- *   *  v1.0         support                  2020-02-17         Initial version
  */
 
 #include <linux/slab.h>

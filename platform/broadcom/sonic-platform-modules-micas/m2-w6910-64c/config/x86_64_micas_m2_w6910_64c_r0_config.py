@@ -721,7 +721,6 @@ DEVICE = [
     {"name": "wb_24c02", "bus": 3, "loc": 0x53},
     {"name": "wb_24c02", "bus": 4, "loc": 0x53},
     {"name": "wb_24c02", "bus": 5, "loc": 0x53},
-    {"name": "wb_24c02", "bus": 6, "loc": 0x53},
     {"name": "wb_24c02", "bus": 7, "loc": 0x50},
     {"name": "wb_dps550", "bus": 7, "loc": 0x58},
     {"name": "wb_24c02", "bus": 8, "loc": 0x53},
