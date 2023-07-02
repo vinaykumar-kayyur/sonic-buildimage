@@ -166,7 +166,7 @@ if [ "$FACTORY_TYPE" != "only-config" ]; then
         find /home/ /root -type f ! -iname ".*" -delete
     fi
 
-    echo "Remove all docker containers"
+    echo "Remove all docker containers except the database"
     database_array=($(docker ps -a -q -f "name=database"))
     docker rm -f $(docker ps -a -q | egrep -v $(IFS='|'; echo "${database_array[*]}")) > /dev/null
 
