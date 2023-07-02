@@ -167,8 +167,8 @@ if [ "$FACTORY_TYPE" != "only-config" ]; then
     fi
 
     echo "Remove all docker containers except the database"
-    database_array=($(docker ps -a -q -f "name=database"))
-    docker rm -f $(docker ps -a -q | egrep -v $(IFS='|'; echo "${database_array[*]}")) > /dev/null
+    database_pattern=($(docker ps -a -q -f "name=database" | paste -sd '|' -))
+    docker rm -f $(docker ps -a -q | egrep -v ${database_pattern}) > /dev/null
 
     echo "Clear sonic directory"
     clear_sonic_dir
