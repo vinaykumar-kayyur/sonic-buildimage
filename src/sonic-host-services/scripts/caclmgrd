@@ -803,7 +803,7 @@ class ControlPlaneAclManager(daemon_base.DaemonBase):
         # Loop through all asic namespaces (if present) and host namespace (DEFAULT_NAMESPACE)
         for namespace in list(self.config_db_map.keys()):
             # Unconditionally update control plane ACLs once at start on given namespace
-            self.update_control_plane_acls(namespace)
+            self.update_control_plane_acls(namespace, self.config_db_map[namespace])
             # Connect to Config DB of given namespace
             acl_db_connector = swsscommon.DBConnector("CONFIG_DB", 0, False, namespace)
             # Subscribe to notifications when ACL tables changes
