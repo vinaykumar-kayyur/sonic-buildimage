@@ -61,7 +61,7 @@
 #define ASLPC_DEV_LDB_CPLD2_PCIE_START_OFFST 0x500
 #define ASLPC_DEV_SMB_CPLD_PCIE_START_OFFST  0x200
 
-#define   REG_SET_ALL_32_BITS         32
+#define   REG_SET_ALL_32_BITS         0xFF
 #define   REG_SET_32_BITS_TO_0        0x00000000
 #define   REG_SET_32_BITS_TO_1        0xFFFFFFFF
 #define   BIT(x)                      x
@@ -1407,13 +1407,13 @@ static ssize_t port_status_write(struct device *dev, struct device_attribute *da
             fpga_write_port_value(PCIE_FPGA_UDB, PCIE_FPGA_SET_LPMODE, (attr->index - MODULE_LPMODE_1), !!value);
             break;
         case MODULE_LPMODE_33 ... MODULE_LPMODE_64:
-            fpga_write_port_value(PCIE_FPGA_LDB, PCIE_FPGA_SET_LPMODE, (attr->index - MODULE_LPMODE_1), !!value);
+            fpga_write_port_value(PCIE_FPGA_LDB, PCIE_FPGA_SET_LPMODE, (attr->index - MODULE_LPMODE_33), !!value);
             break;
         case MODULE_RESET_1 ... MODULE_RESET_32:
             fpga_write_port_value(PCIE_FPGA_UDB, PCIE_FPGA_SET_RESET, (attr->index - MODULE_RESET_1), !value);
             break;
         case MODULE_RESET_33 ... MODULE_RESET_64:
-            fpga_write_port_value(PCIE_FPGA_LDB, PCIE_FPGA_SET_RESET, (attr->index - MODULE_RESET_1), !value);
+            fpga_write_port_value(PCIE_FPGA_LDB, PCIE_FPGA_SET_RESET, (attr->index - MODULE_RESET_33), !value);
             break;
         case MODULE_RESET_ALL:
             fpga_write_port_value(PCIE_FPGA_UDB, PCIE_FPGA_SET_RESET, REG_SET_ALL_32_BITS, !value); /*port 1~32*/
@@ -1899,7 +1899,7 @@ exit_err:
         (get_filter_unpresent_case(attr)) ) { /*Filter xcvr unplug error case*/
         return -ENXIO;
     }
-    pcie_err("%s ERROR(%d): Port%d pcie get done status failed!!", show_date_time(), state, pdata->port_num);
+    pcie_err("%s ERROR(%d): Port%d pcie get(offset=0x%x) done status failed!!", show_date_time(), state, pdata->port_num, off);
 
     return -EBUSY;
 }
@@ -1978,7 +1978,7 @@ exit_err:
         (get_filter_unpresent_case(attr)) ) { /*Filter xcvr unplug error case*/
         return -ENXIO;
     }
-    pcie_err("%s ERROR(%d): Port%d pcie get done status failed!!", show_date_time(), state, pdata->port_num);
+    pcie_err("%s ERROR(%d): Port%d pcie get(offset=0x%x) done status failed!!", show_date_time(), state, pdata->port_num, off);
 
     return -EBUSY;
 }
@@ -2028,7 +2028,7 @@ exit_err:
         (get_filter_unpresent_case(attr)) ) { /*Filter xcvr unplug error case*/
         return -ENXIO;
     }
-    pcie_err("%s ERROR(%d): Port%d pcie set failed!!", show_date_time(), state, pdata->port_num);
+    pcie_err("%s ERROR(%d): Port%d pcie set (offset=0x%x, value=0x%x) failed!!", show_date_time(), state, pdata->port_num, off, (unsigned char)buf[0]);
 
     return -EBUSY;
 }

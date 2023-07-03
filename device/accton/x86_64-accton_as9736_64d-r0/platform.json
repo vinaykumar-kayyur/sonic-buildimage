@@ -158,7 +158,7 @@
         ],
         "thermals": [
             {
-                "name": "Temp sensor 1",
+                "name": "SMB_RearMiddle_temp(0x48)",
                 "controllable": true,
                 "low-threshold": false,
                 "high-threshold": true,
@@ -166,7 +166,7 @@
                 "high-crit-threshold": true
             },
             {
-                "name": "Temp sensor 2",
+                "name": "SMB_FrontMiddle_temp(0x49)",
                 "controllable": true,
                 "low-threshold": false,
                 "high-threshold": true,
@@ -174,7 +174,7 @@
                 "high-crit-threshold": true
             },
             {
-                "name": "Temp sensor 3",
+                "name": "SMB_LeftMiddle_temp(0x4C)",
                 "controllable": true,
                 "low-threshold": false,
                 "high-threshold": true,
@@ -182,7 +182,7 @@
                 "high-crit-threshold": true
             },
             {
-                "name": "Temp sensor 4",
+                "name": "FCM_Center_temp(0x48)",
                 "controllable": true,
                 "low-threshold": false,
                 "high-threshold": true,
@@ -190,7 +190,7 @@
                 "high-crit-threshold": true
             },
             {
-                "name": "Temp sensor 5",
+                "name": "FCM_Left_temp(0x49)",
                 "controllable": true,
                 "low-threshold": false,
                 "high-threshold": true,
@@ -198,7 +198,7 @@
                 "high-crit-threshold": true
             },
             {
-                "name": "Temp sensor 6",
+                "name": "PDB-L_temp(0x48)",
                 "controllable": true,
                 "low-threshold": false,
                 "high-threshold": true,
@@ -206,7 +206,7 @@
                 "high-crit-threshold": true
             },
             {
-                "name": "Temp sensor 7",
+                "name": "PDB-R_temp(0x49)",
                 "controllable": true,
                 "low-threshold": false,
                 "high-threshold": true,
@@ -214,7 +214,7 @@
                 "high-crit-threshold": true
             },
             {
-                "name": "Temp sensor 8",
+                "name": "UDB_RearLeft_temp(0x48)",
                 "controllable": true,
                 "low-threshold": false,
                 "high-threshold": true,
@@ -222,7 +222,7 @@
                 "high-crit-threshold": true
             },
             {
-                "name": "Temp sensor 9",
+                "name": "UDB_RearMiddle_temp(0x4C)",
                 "controllable": true,
                 "low-threshold": false,
                 "high-threshold": true,
@@ -230,7 +230,7 @@
                 "high-crit-threshold": true
             },
             {
-                "name": "Temp sensor 10",
+                "name": "LDB_FrontRight_temp(0x4C)",
                 "controllable": true,
                 "low-threshold": false,
                 "high-threshold": true,
@@ -238,7 +238,7 @@
                 "high-crit-threshold": true
             },
             {
-                "name": "Temp sensor 11",
+                "name": "LDB_RearRight_temp(0x4D)",
                 "controllable": true,
                 "low-threshold": false,
                 "high-threshold": true,
@@ -246,7 +246,7 @@
                 "high-crit-threshold": true
             },
             {
-                "name": "CPU Package Temp",
+                "name": "CPU_Package_temp",
                 "controllable": true,
                 "low-threshold": false,
                 "high-threshold": true,
@@ -254,7 +254,7 @@
                 "high-crit-threshold": true
             },
             {
-                "name": "CPU Core 0 Temp",
+                "name": "CPU_Core_0_temp",
                 "controllable": true,
                 "low-threshold": false,
                 "high-threshold": true,
@@ -262,7 +262,7 @@
                 "high-crit-threshold": true
             },
             {
-                "name": "CPU Core 1 Temp",
+                "name": "CPU_Core_1_temp",
                 "controllable": true,
                 "low-threshold": false,
                 "high-threshold": true,
@@ -270,7 +270,7 @@
                 "high-crit-threshold": true
             },
             {
-                "name": "CPU Core 2 Temp",
+                "name": "CPU_Core_2_temp",
                 "controllable": true,
                 "low-threshold": false,
                 "high-threshold": true,
@@ -278,7 +278,7 @@
                 "high-crit-threshold": true
             },
             {
-                "name": "CPU Core 3 Temp",
+                "name": "CPU_Core_3_temp",
                 "controllable": true,
                 "low-threshold": false,
                 "high-threshold": true,
@@ -286,7 +286,7 @@
                 "high-crit-threshold": true
             },
             {
-                "name": "CPU Core 4 Temp",
+                "name": "CPU_Core_4_temp",
                 "controllable": true,
                 "low-threshold": false,
                 "high-threshold": true,
@@ -294,7 +294,7 @@
                 "high-crit-threshold": true
             },
             {
-                "name": "CPU Core 5 Temp",
+                "name": "CPU_Core_5_temp",
                 "controllable": true,
                 "low-threshold": false,
                 "high-threshold": true,
@@ -302,7 +302,7 @@
                 "high-crit-threshold": true
             },
             {
-                "name": "CPU Core 6 Temp",
+                "name": "CPU_Core_6_temp",
                 "controllable": true,
                 "low-threshold": false,
                 "high-threshold": true,
@@ -310,7 +310,7 @@
                 "high-crit-threshold": true
             },
             {
-                "name": "CPU Core 7 Temp",
+                "name": "CPU_Core_7_temp",
                 "controllable": true,
                 "low-threshold": false,
                 "high-threshold": true,
