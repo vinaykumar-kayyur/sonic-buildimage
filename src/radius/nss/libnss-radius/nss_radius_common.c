@@ -562,7 +562,7 @@ int radius_update_user(RADIUS_NSS_CONF_B * conf, const char * user, int mpl) {
 int radius_create_user(RADIUS_NSS_CONF_B * conf, const char * user, int mpl,
     int unconfirmed) {
 
-    char buf[BUFLEN];
+    char buf[BUFLEN] = {0};
     RADIUS_NSS_MPL * rnm = &((conf->rnm)[mpl-1]);
 
     if (conf->trace)
@@ -580,7 +580,6 @@ int radius_create_user(RADIUS_NSS_CONF_B * conf, const char * user, int mpl,
     snprintf(sgid, 10, "%d", rnm->gid);
     snprintf(home, 63, "/home/%s", user);
 
-    memset_s(buf, 0, sizeof(buf));
     snprintf(buf, sizeof(buf), "Unconfirmed-%ld", time(NULL));
 
     if(0 != user_add(USERADD, user, sgid, rnm->groups, rnm->gecos, home, rnm->shell, unconfirmed ? buf : user, conf->many_to_one)) {
