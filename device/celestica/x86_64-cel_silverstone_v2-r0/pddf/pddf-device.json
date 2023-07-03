@@ -1971,8 +1971,8 @@
         "i2c" : {
             "attr_list":
             [
-                {"attr_name":"green","attr_devtype":"cpld","attr_devname":"Fan_CPLD","bits":"1:0","descr":"Green","value":"0x1","swpld_addr":"0x0d","swpld_addr_offset":"0x24"},
-                {"attr_name":"amber","attr_devtype":"cpld","attr_devname":"Fan_CPLD","bits":"1:0","descr":"Amber","value":"0x2","swpld_addr":"0x0d","swpld_addr_offset":"0x24"}
+                {"attr_name":"green","attr_devtype":"cpld","attr_devname":"FAN_CPLD","bits":"1:0","descr":"Green","value":"0x01","swpld_addr":"0x0d","swpld_addr_offset":"0x24"},
+                {"attr_name":"amber","attr_devtype":"cpld","attr_devname":"FAN_CPLD","bits":"1:0","descr":"Amber","value":"0x02","swpld_addr":"0x0d","swpld_addr_offset":"0x24"}
             ]
         }
     },
@@ -1983,8 +1983,8 @@
         "i2c" : {
             "attr_list":
             [
-                {"attr_name":"green","swpld_addr":"0x0d", "attr_devtype":"cpld","attr_devname":"Fan_CPLD","swpld_addr_offset":"0x34","bits":"7:0","descr":"Green","value":"0x1"},
-                {"attr_name":"amber","swpld_addr":"0x0d", "attr_devtype":"cpld","attr_devname":"Fan_CPLD", "swpld_addr_offset":"0x34","bits":"7:0","descr":"Amber","value":"0x2"}
+                {"attr_name":"green","attr_devtype":"cpld","attr_devname":"FAN_CPLD","bits":"1:0","descr":"Green","value":"0x01","swpld_addr":"0x0d","swpld_addr_offset":"0x34"},
+                {"attr_name":"amber","attr_devtype":"cpld","attr_devname":"FAN_CPLD","bits":"1:0","descr":"Amber","value":"0x02","swpld_addr":"0x0d","swpld_addr_offset":"0x34"}
             ]
         }
     },
@@ -1995,8 +1995,8 @@
         "i2c" : {
             "attr_list":
             [
-                {"attr_name":"green","swpld_addr":"0x0d", "attr_devtype":"cpld","attr_devname":"Fan_CPLD","swpld_addr_offset":"0x44","bits":"1:0","descr":"Green","value":"0x1"},
-                {"attr_name":"amber","swpld_addr":"0x0d", "attr_devtype":"cpld","attr_devname":"Fan_CPLD", "swpld_addr_offset":"0x44","bits":"1:0","descr":"Amber","value":"0x2"}
+                {"attr_name":"green","attr_devtype":"cpld","attr_devname":"FAN_CPLD","bits":"1:0","descr":"Green","value":"0x01","swpld_addr":"0x0d","swpld_addr_offset":"0x44"},
+                {"attr_name":"amber","attr_devtype":"cpld","attr_devname":"FAN_CPLD","bits":"1:0","descr":"Amber","value":"0x02","swpld_addr":"0x0d","swpld_addr_offset":"0x44"}
             ]
         }
     },
@@ -2007,8 +2007,8 @@
         "i2c" : {
             "attr_list":
             [
-                {"attr_name":"green","swpld_addr":"0x0d", "attr_devtype":"cpld","attr_devname":"Fan_CPLD","swpld_addr_offset":"0x54","bits":"1:0","descr":"Green","value":"0x1"},
-                {"attr_name":"amber","swpld_addr":"0x0d", "attr_devtype":"cpld","attr_devname":"Fan_CPLD", "swpld_addr_offset":"0x54","bits":"1:0","descr":"Amber","value":"0x2"}
+                {"attr_name":"green","attr_devtype":"cpld","attr_devname":"FAN_CPLD","bits":"1:0","descr":"Green","value":"0x01","swpld_addr":"0x0d","swpld_addr_offset":"0x54"},
+                {"attr_name":"amber","attr_devtype":"cpld","attr_devname":"FAN_CPLD","bits":"1:0","descr":"Amber","value":"0x02","swpld_addr":"0x0d","swpld_addr_offset":"0x54"}
             ]
         }
     },
@@ -2019,8 +2019,8 @@
         "i2c" : {
             "attr_list":
             [
-                {"attr_name":"green","swpld_addr":"0x0d", "attr_devtype":"cpld","attr_devname":"Fan_CPLD","swpld_addr_offset":"0x64","bits":"1:0","descr":"Green","value":"0x1"},
-                {"attr_name":"amber","swpld_addr":"0x0d", "attr_devtype":"cpld","attr_devname":"Fan_CPLD", "swpld_addr_offset":"0x64","bits":"1:0","descr":"Amber","value":"0x2"}
+                {"attr_name":"green","attr_devtype":"cpld","attr_devname":"FAN_CPLD","bits":"1:0","descr":"Green","value":"0x01","swpld_addr":"0x0d","swpld_addr_offset":"0x64"},
+                {"attr_name":"amber","attr_devtype":"cpld","attr_devname":"FAN_CPLD","bits":"1:0","descr":"Amber","value":"0x02","swpld_addr":"0x0d","swpld_addr_offset":"0x64"}
             ]
         }
     },
@@ -2031,8 +2031,8 @@
         "i2c" : {
             "attr_list":
             [
-                {"attr_name":"green","swpld_addr":"0x0d", "attr_devtype":"cpld","attr_devname":"Fan_CPLD","swpld_addr_offset":"0x74","bits":"1:0","descr":"Green","value":"0x1"},
-                {"attr_name":"amber","swpld_addr":"0x0d", "attr_devtype":"cpld","attr_devname":"Fan_CPLD", "swpld_addr_offset":"0x74","bits":"1:0","descr":"Amber","value":"0x2"}
+                {"attr_name":"green","attr_devtype":"cpld","attr_devname":"FAN_CPLD","bits":"1:0","descr":"Green","value":"0x01","swpld_addr":"0x0d","swpld_addr_offset":"0x74"},
+                {"attr_name":"amber","attr_devtype":"cpld","attr_devname":"FAN_CPLD","bits":"1:0","descr":"Amber","value":"0x02","swpld_addr":"0x0d","swpld_addr_offset":"0x74"}
             ]
         }
     },
@@ -2043,8 +2043,8 @@
         "i2c" : {
             "attr_list":
             [
-                {"attr_name":"green","swpld_addr":"0x0d", "attr_devtype":"cpld","attr_devname":"Fan_CPLD","swpld_addr_offset":"0x84","bits":"1:0","descr":"Green","value":"0x1"},
-                {"attr_name":"amber","swpld_addr":"0x0d", "attr_devtype":"cpld","attr_devname":"Fan_CPLD", "swpld_addr_offset":"0x84","bits":"1:0","descr":"Amber","value":"0x2"}
+                {"attr_name":"green","attr_devtype":"cpld","attr_devname":"FAN_CPLD","bits":"1:0","descr":"Green","value":"0x01","swpld_addr":"0x0d","swpld_addr_offset":"0x84"},
+                {"attr_name":"amber","attr_devtype":"cpld","attr_devname":"FAN_CPLD","bits":"1:0","descr":"Amber","value":"0x02","swpld_addr":"0x0d","swpld_addr_offset":"0x84"}
             ]
         }
     }
