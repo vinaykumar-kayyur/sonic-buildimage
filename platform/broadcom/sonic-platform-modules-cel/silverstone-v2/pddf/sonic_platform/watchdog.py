@@ -169,6 +169,7 @@ class Watchdog(WatchdogBase):
             return ret
 
         try:
+            self._set_timeout(DEFAULT_TIMEOUT)
             if self.timeout != seconds:
                 self.timeout = self._set_timeout(seconds)
 
