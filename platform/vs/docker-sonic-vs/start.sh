@@ -10,9 +10,9 @@ ln -sf /usr/share/sonic/device/$PLATFORM/$HWSKU /usr/share/sonic/hwsku
 
 SWITCH_TYPE=switch
 PLATFORM_CONF=platform.json
-if [[ $HWSKU == "NPU-2P" ]]; then
+if [[ $HWSKU == "DPU-2P" ]]; then
     SWITCH_TYPE=dpu
-    PLATFORM_CONF=platform-npu-2p.json
+    PLATFORM_CONF=platform-dpu-2p.json
 fi
 
 pushd /usr/share/sonic/hwsku
@@ -67,14 +67,12 @@ else
     sonic-cfggen -j /etc/sonic/init_cfg.json $buffers_cmd $qos_cmd -j /tmp/ports.json --print-data > /etc/sonic/config_db.json
 fi
 
-if [ "$HWSKU" != "NPU-2P" ]; then
-    sonic-cfggen -t /usr/share/sonic/templates/copp_cfg.j2 > /etc/sonic/copp_cfg.json
-fi
+sonic-cfggen -t /usr/share/sonic/templates/copp_cfg.j2 > /etc/sonic/copp_cfg.json
 
 if [ "$HWSKU" == "Mellanox-SN2700" ]; then
     cp /usr/share/sonic/hwsku/sai_mlnx.profile /usr/share/sonic/hwsku/sai.profile
-elif [ "$HWSKU" == "NPU-2P" ]; then
-    cp /usr/share/sonic/hwsku/sai_npu.profile /usr/share/sonic/hwsku/sai.profile
+elif [ "$HWSKU" == "DPU-2P" ]; then
+    cp /usr/share/sonic/hwsku/sai_dpu_2p.profile /usr/share/sonic/hwsku/sai.profile
 fi
 
 mkdir -p /etc/swss/config.d/
