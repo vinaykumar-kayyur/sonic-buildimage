@@ -57,6 +57,7 @@ class TestCfgGen(TestCase):
 
     def run_script(self, argument, check_stderr=False, verbose=False):
         print('\n    Running sonic-cfggen ' + ' '.join(argument))
+        self.assertTrue(self.yang.validate(argument))
         if check_stderr:
             output = subprocess.check_output(self.script_file + argument, stderr=subprocess.STDOUT)
         else:
@@ -694,6 +695,11 @@ class TestCfgGen(TestCase):
         argument = ['-m', self.sample_graph_metadata, '-p', self.port_config, '-v', "NTP_SERVER"]
         output = self.run_script(argument)
         self.assertEqual(utils.to_dict(output.strip()), utils.to_dict("{'10.0.10.1': {}, '10.0.10.2': {}}"))
+
+    def test_metadata_dns_nameserver(self):
+        argument = ['-m', self.sample_graph_metadata, '-p', self.port_config, '-v', "DNS_NAMESERVER"]
+        output = self.run_script(argument)
+        self.assertEqual(utils.to_dict(output.strip()), utils.to_dict("{'20.2.2.2': {}, '30.3.3.3': {}}"))
 
     def test_minigraph_vnet(self, **kwargs):
         graph_file = kwargs.get('graph_file', self.sample_graph_simple)
