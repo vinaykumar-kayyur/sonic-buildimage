@@ -62,24 +62,10 @@ class Chassis(PddfChassis):
         return self.get_system_led("SYS_LED")
 
     def set_status_led(self, color):
-        # ALARM_LED
-        print("rancho test {}".format(color))
         if color == self.get_status_led():
             return False
-        result, output = self.set_system_led("SYS_LED", color)
-        print("result=%s  output=%s" % (result, output))
-        # status, res = self.helper.ipmi_raw(SET_LED_MODE_Manual)
-        # if status != 0:
-        #     return False
-        #
-        # color_val = "0x1"
-        # if color == "green":
-        #     color_val = "0x1"
-        # elif color == "amber":
-        #     color_val = "0x2"
-        # status, res = self.helper.ipmi_raw(SET_SYS_STATUS_LED.format(color_val))
-        #
-        # return True if status else False
+        result = self.set_system_led("SYS_LED", color)
+        return result
 
     def get_sfp(self, index):
         """
