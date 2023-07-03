@@ -30,12 +30,14 @@ class TestMultiNpuCfgGen(TestCase):
         self.port_config = []
         for asic in range(NUM_ASIC):
             self.port_config.append(os.path.join(self.test_data_dir, "sample_port_config-{}.ini".format(asic)))
+        self.sample_no_asic_port_config = os.path.join(self.test_data_dir, 'sample_port_config-4.ini')
         self.output_file = os.path.join(self.test_dir, 'output')
         os.environ["CFGGEN_UNIT_TESTING"] = "2"
 
-    def run_script(self, argument, check_stderr=False, output_file=None):
+    def run_script(self, argument, check_stderr=True, output_file=None, validateYang=True):
         print('\n    Running sonic-cfggen ' + ' '.join(argument))
-        self.assertTrue(self.yang.validate(argument))
+        if validateYang:
+            self.assertTrue(self.yang.validate(argument))
         if check_stderr:
             output = subprocess.check_output(self.script_file + argument, stderr=subprocess.STDOUT)
         else:
@@ -143,6 +145,17 @@ class TestMultiNpuCfgGen(TestCase):
         self.assertDictEqual(output, {'17.39.1.130': {}, '17.39.1.129': {}})
         #NTP data is present only in the host config
         argument = ['-m', self.sample_graph, '--var-json', "NTP_SERVER"]
+        for asic in range(NUM_ASIC):
+            output = json.loads(self.run_script_for_asic(argument, asic, self.port_config[asic]))
+            print("Log:asic{} sku {}".format(asic,output))
+            self.assertDictEqual(output, {})
+
+    def test_metadata_dns_nameserver(self):
+        argument = ['-m', self.sample_graph, '-p', self.sample_port_config, '--var-json', "DNS_NAMESERVER"]
+        output = json.loads(self.run_script(argument))
+        self.assertDictEqual(output, {'1.1.1.1': {}, '8.8.8.8': {}})
+        #DNS_NAMESERVER data is present only in the host config
+        argument = ['-m', self.sample_graph, '--var-json', "DNS_NAMESERVER"]
         for asic in range(NUM_ASIC):
             output = json.loads(self.run_script_for_asic(argument, asic, self.port_config[asic]))
             print("Log:asic{} sku {}".format(asic,output))
@@ -541,6 +554,11 @@ class TestMultiNpuCfgGen(TestCase):
 
     def test_bgpd_frr_backendasic(self):
         self.assertTrue(*self.run_frr_asic_case('bgpd/bgpd.conf.j2', 'bgpd_frr_backend_asic.conf', "asic3", self.port_config[3]))
+
+    def test_no_asic_in_graph(self):
+        argument = ["-m", self.sample_graph, "-p", self.sample_no_asic_port_config, "-n", "asic4", "--var-json", "PORTCHANNEL"]
+        output = json.loads(self.run_script(argument, check_stderr=False, validateYang=False))
+        self.assertDictEqual(output, {})
 
     def tearDown(self):
         os.environ["CFGGEN_UNIT_TESTING"] = ""
