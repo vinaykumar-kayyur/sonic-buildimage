@@ -9,12 +9,13 @@
 # other exit code: returned by post_check_script, define in the post_check_script, should not include 1,2
 
 # check if the start service exists
+# if the start service doesn't exist, do nothing
 # if the start service exists, check if it exits normally
-# if the start service doesn't exist normally, exit with code 2
+# if the start service doesn't exit normally, exit with code 2
 pre_check_service_name="start"
-supervisorctl status |awk '{print $1}' |grep -w $pre_check_service_name > /dev/null
-start_check_result=$?
-if [ $start_check_result = 0 ] && [ $(supervisorctl status $pre_check_service_name |awk '{print $2}') != 'EXITED' ]; then
+no_process_string="ERROR (no such process)"
+service_status=$(supervisorctl status $pre_check_service_name)
+if [[ $service_status != *"$no_process_string"* ]] && [[ $(echo $service_status |awk '{print $2}') != 'EXITED' ]]; then
     exit 2
 fi
 
