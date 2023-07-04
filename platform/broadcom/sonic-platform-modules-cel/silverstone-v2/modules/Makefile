@@ -1,4 +1,4 @@
-TARGET:= pddf_custom_fan_driver_module
+TARGET:= pddf_fan_driver_module
 $(TARGET)-objs := ./fan_driver/pddf_custom_fan_api.o ./fan_driver/pddf_custom_fan_driver.o
 
 TARGET1:= pddf_custom_led_module

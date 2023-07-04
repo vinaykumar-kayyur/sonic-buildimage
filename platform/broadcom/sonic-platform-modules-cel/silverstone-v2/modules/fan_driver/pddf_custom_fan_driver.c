@@ -34,7 +34,7 @@
 #include "pddf_custom_fan_driver.h"
 #include "../../../../../pddf/i2c/modules/include/pddf_fan_api.h"
 
-#define DRVNAME "pddf_fan"
+#define DRVNAME "pddf_costom_fan"
 
 struct pddf_ops_t pddf_fan_ops = {
 	.pre_init = NULL,
