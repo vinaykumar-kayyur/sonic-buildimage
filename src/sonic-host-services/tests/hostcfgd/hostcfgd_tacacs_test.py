@@ -53,21 +53,12 @@ class TestHostcfgdTACACS(TestCase):
 
         hostcfgd.PAM_AUTH_CONF_TEMPLATE = t_path + "/common-auth-sonic.j2"
         hostcfgd.NSS_TACPLUS_CONF_TEMPLATE = t_path + "/tacplus_nss.conf.j2"
-        hostcfgd.NSS_RADIUS_CONF_TEMPLATE = t_path + "/radius_nss.conf.j2"
-        hostcfgd.PAM_RADIUS_AUTH_CONF_TEMPLATE = t_path + "/pam_radius_auth.conf.j2"
         hostcfgd.PAM_AUTH_CONF = op_path + "/common-auth-sonic"
         hostcfgd.NSS_TACPLUS_CONF = op_path + "/tacplus_nss.conf"
-        hostcfgd.NSS_RADIUS_CONF = op_path + "/radius_nss.conf"
         hostcfgd.NSS_CONF = op_path + "/nsswitch.conf"
-        hostcfgd.ETC_PAMD_SSHD = op_path + "/sshd"
-        hostcfgd.ETC_PAMD_LOGIN = op_path + "/login"
-        hostcfgd.RADIUS_PAM_AUTH_CONF_DIR = op_path + "/"
 
         shutil.rmtree( op_path, ignore_errors=True)
         os.mkdir( op_path)
-
-        shutil.copyfile( sop_path + "/sshd.old", op_path + "/sshd")
-        shutil.copyfile( sop_path + "/login.old", op_path + "/login")
 
         MockConfigDb.set_config_db(test_data[config_name])
         host_config_daemon = hostcfgd.HostConfigDaemon()
@@ -84,7 +75,7 @@ class TestHostcfgdTACACS(TestCase):
         except:
             tacacs_server = []
 
-        host_config_daemon.aaacfg.load(aaa,tacacs_global,tacacs_server,[],[])
+        host_config_daemon.aaacfg.load(aaa,tacacs_global,tacacs_server)
         dcmp = filecmp.dircmp(sop_path, op_path)
         diff_output = ""
         for name in dcmp.diff_files:
