@@ -54,3 +54,41 @@ class Psu(PddfPsu):
         psu_present_index = 0 if self.psu_index == 1 else 1
         psu_present = self.plugin_data['PSU']['psu_present']["i2c"]['valmap'][psu_status[psu_present_index]]
         return psu_present
+
+    @staticmethod
+    def get_revision():
+        """
+        Get PSU HW Revision by read psu eeprom data.
+        return: HW Revision or 'N/A'
+        """
+        return "N/A"
+
+    @staticmethod
+    def get_voltage_high_threshold():
+        """
+        Retrieves the high threshold PSU voltage output
+        Returns:
+            A float number, the high threshold output voltage in volts,
+            e.g. 12.1
+        """
+        return 13.5
+
+    @staticmethod
+    def get_voltage_low_threshold():
+        """
+        Retrieves the low threshold PSU voltage output
+        Returns:
+            A float number, the low threshold output voltage in volts,
+            e.g. 12.1
+        """
+        return 11.4
+
+    @staticmethod
+    def get_maximum_supplied_power():
+        """
+        Retrieves the maximum supplied power by PSU
+        Returns:
+            A float number, the maximum power output in Watts.
+            e.g. 1200.1
+        """
+        return 1500
