@@ -163,9 +163,11 @@ module sonic-syslog {
                 leaf rate_limit_burst {
                     type syslog-rate-limit-burst;
                 }
+
                 leaf format {
                     description "Log format";
                     type log-format;
+                    default standard;
                 }
 
                 leaf welf_firewall_name {
@@ -176,6 +178,7 @@ module sonic-syslog {
 
                 leaf severity {
                     type rsyslog-severity;
+                    default notice;
                 }
 
             }
