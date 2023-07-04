@@ -6,6 +6,7 @@
 # @Function: Fan control strategy main program
 
 try:
+    import re
     import os
     import sys
     import getopt
@@ -22,6 +23,7 @@ except ImportError as e:
     raise ImportError('%s - required module not found' % str(e))
 
 FUNCTION_NAME = "FanControl"
+ERROR_COLOR = "amber"
 DUTY_MAX = 100
 FAN_NUMBER = 7
 PSU_NUMBER = 2
@@ -106,13 +108,9 @@ class FanControl(object):
                                 % (fan_drawer_index + 1, fan_presence, fan_status))
         return fan_presence_list
 
-    def set_fans_pwm_by_presence(self, fan_duty_list):
+    def check_fans_presence(self):
         """
-        Set fans pwm by fans presence. If all fans normal or 1 fan broken,
-        manage the fans follow thermal policy.
-        More than 1 fans broken, Will increase the fan speed to 100%
-        :param fan_duty_list: A list.TO app the fans target pwm
-        :return:
+        check all fans presence or not
         """
         fans_inserted_list = self.get_fan_status()
         fans_inserted_num = fans_inserted_list.count(True)
@@ -121,8 +119,6 @@ class FanControl(object):
                                  "Please insert Fans immediately or power off the device")
             logging.critical("No fans inserted!!! Severe overheating hazard. "
                              "Please insert Fans immediately or power off the device")
-            # TODO 关机问题
-            os.popen("power off")
 
     def set_fans_pwm_by_rpm(self, fan_duty_list):
         """
@@ -151,6 +147,16 @@ class FanControl(object):
             self.syslog.warning("%s rpm less than the set minimum speed. Fans pwm isn't changed" % fan_rpm_error_list)
             logging.warning("%s rpm less than the set minimum speed. Fans pwm isn't changed" % fan_rpm_error_list)
 
+        fan_modules_index_list = list(set(int(re.findall(r"Fantray(\d)_\d", x)[0]) // 2 for x in fan_rpm_error_list))
+        for error_fan in fan_modules_index_list:
+            self.syslog.warning("Fantray%d will be set to %s " % (error_fan, ERROR_COLOR))
+            logging.warning("Fantray%d will be set to %s " % (error_fan, ERROR_COLOR))
+            self.platform_chassis_obj.get_fan(error_fan).set_status_led(ERROR_COLOR)
+
+        self.syslog.warning("The STA front panel light will be set to %s" % ERROR_COLOR)
+        logging.warning("The STA front panel light will be set to %s " % ERROR_COLOR)
+        self.platform_chassis_obj.set_status_led(ERROR_COLOR)
+
     def get_linear_pid_pwm(self, fan_duty_list):
         """
         Get the pwm value of liner regulation, cpu pid adjustment, switch internal pid adjustment
@@ -174,8 +180,8 @@ class FanControl(object):
         # Fan speed setting judgment-PSU
         self.get_psu_status(fan_duty_speed_list)
 
-        # Fan speed setting judgment-FAN
-        self.set_fans_pwm_by_presence(fan_duty_speed_list)
+        # Fan speed setting judgment-FAN presence
+        self.check_fans_presence()
 
         # Fan speed setting judgment-FAN SPEED
         self.set_fans_pwm_by_rpm(fan_duty_speed_list)
