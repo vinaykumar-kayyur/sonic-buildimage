@@ -94,7 +94,8 @@
             "0": {"Front": "32000", "Rear": "30200"},
             "1": {"Front": "32000", "Rear": "28000"}
         },
-        "pwm_to_duty_cycle": "lambda pwm: ((pwm*100)/255)"
+        "pwm_to_duty_cycle": "lambda pwm: ((pwm*100)/255)",
+	    "duty_cycle_to_pwm": "lambda dc: ((dc*255)/100)"
     },
 
     "THERMAL":
@@ -103,7 +104,8 @@
         {
             "temp1_high_threshold":
             {
-                "PSU_TEMP": {"B2F": "116", "F2B": "116"},
+                "PSU1_TEMP1": {"B2F": "116", "F2B": "116"},
+                "PSU2_TEMP1": {"B2F": "116", "F2B": "116"},
                 "TEMP_FB_U17": {"B2F": "56", "F2B": "N/A"},
                 "TEMP_SW_U16": {"B2F": "N/A", "F2B": "59"},
                 "XP0R8V_Temp": {"B2F": "125", "F2B": "125"},
