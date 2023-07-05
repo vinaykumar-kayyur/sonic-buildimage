@@ -565,7 +565,7 @@ class FeatureTransitionHandler:
             log_debug("try to tag latest label after {} seconds @{}".format(
                     remote_ctr_config[TAG_IMAGE_LATEST], start_time))
         
-        # This is for going back to local without waiting the sytemd restart time
+        # This is for going back to local without waiting the systemd restart time
         # when k8s is down, can't deploy containers to worker and need to go back to local
         if (remote_state == REMOTE_NONE) and (old_remote_state == REMOTE_STOPPED):
             restart_systemd_service(self.server, key, OWNER_LOCAL)
