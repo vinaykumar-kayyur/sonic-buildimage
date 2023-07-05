@@ -132,7 +132,11 @@ def main(argv):
         sys.exit(1)
 
     critical_group_list, critical_process_list = get_group_and_process_list(CRITICAL_PROCESSES_FILE)
-    _, watch_process_list = get_group_and_process_list(WATCH_PROCESSES_FILE)
+
+    # WATCH_PROCESSES_FILE is optional
+    watch_process_list = []
+    if os.path.exists(WATCH_PROCESSES_FILE):
+        _, watch_process_list = get_group_and_process_list(WATCH_PROCESSES_FILE)
 
     process_under_alerting = defaultdict(dict)
     process_heart_beat_info = defaultdict(dict)
