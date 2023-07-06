@@ -12,6 +12,7 @@ except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
 PSU_STATUS_INFO_CMD = "i2cget -y -f 100 0x0d 0x60"
+MFR_ID = "DELTA"
 
 
 class Psu(PddfPsu):
@@ -20,6 +21,7 @@ class Psu(PddfPsu):
     def __init__(self, index, pddf_data=None, pddf_plugin_data=None):
         PddfPsu.__init__(self, index, pddf_data, pddf_plugin_data)
         self.helper = helper.APIHelper()
+        self.get_mfr_id = self.get_mfr_id()
 
     @staticmethod
     def get_capacity():
@@ -63,32 +65,29 @@ class Psu(PddfPsu):
         """
         return "N/A"
 
-    @staticmethod
-    def get_voltage_high_threshold():
+    def get_voltage_high_threshold(self):
         """
         Retrieves the high threshold PSU voltage output
         Returns:
             A float number, the high threshold output voltage in volts,
             e.g. 12.1
         """
-        return 13.5
+        return 13.5 if self.get_mfr_id == MFR_ID else 0.0
 
-    @staticmethod
-    def get_voltage_low_threshold():
+    def get_voltage_low_threshold(self):
         """
         Retrieves the low threshold PSU voltage output
         Returns:
             A float number, the low threshold output voltage in volts,
             e.g. 12.1
         """
-        return 11.4
+        return 11.4 if self.get_mfr_id == MFR_ID else 0.0
 
-    @staticmethod
-    def get_maximum_supplied_power():
+    def get_maximum_supplied_power(self):
         """
         Retrieves the maximum supplied power by PSU
         Returns:
             A float number, the maximum power output in Watts.
             e.g. 1200.1
         """
-        return 1500
+        return 1500 if self.get_mfr_id == MFR_ID else 0.0
