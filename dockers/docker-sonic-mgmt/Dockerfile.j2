@@ -67,7 +67,6 @@ RUN pip3 install aiohttp \
                  ncclient \
                  netaddr \
                  netmiko==2.4.2 \
-                 nnpy \
                  paramiko==2.7.1 \
                  passlib \
                  pexpect \
@@ -99,7 +98,19 @@ RUN pip3 install aiohttp \
                  tabulate \
                  textfsm==1.1.2 \
                  thrift==0.11.0 \
-                 virtualenv
+                 virtualenv \
+    && wget https://github.com/nanomsg/nanomsg/archive/1.0.0.tar.gz \
+    && tar xvfz 1.0.0.tar.gz \
+    && cd nanomsg-1.0.0    \
+    && mkdir -p build      \
+    && cd build            \
+    && cmake ..            \
+    && make install        \
+    && ldconfig            \
+    && cd ../..            \
+    && rm -fr nanomsg-1.0.0 \
+    && rm -f 1.0.0.tar.gz  \
+    && pip3 install nnpy
 
 RUN curl -fsSL http://archive.ubuntu.com/ubuntu/pool/universe/s/scapy/python-scapy_2.3.3-3_all.deb \
     --output python-scapy_2.3.3-3_all.deb \
@@ -135,6 +146,7 @@ RUN pip install allure-pytest==2.8.22 \
                 natsort \
                 netaddr \
                 netmiko==2.4.2 \
+                nnpy \
                 paramiko==2.7.1 \
                 passlib \
                 pexpect \
@@ -171,18 +183,6 @@ RUN pip install allure-pytest==2.8.22 \
     && python setup.py install \
     && cd .. \
     && rm -fr scapy-vxlan \
-    && wget https://github.com/nanomsg/nanomsg/archive/1.0.0.tar.gz \
-    && tar xvfz 1.0.0.tar.gz \
-    && cd nanomsg-1.0.0    \
-    && mkdir -p build      \
-    && cd build            \
-    && cmake ..            \
-    && make install        \
-    && ldconfig            \
-    && cd ../..            \
-    && rm -fr nanomsg-1.0.0 \
-    && rm -f 1.0.0.tar.gz  \
-    && pip install nnpy \
     && pip install scapy==2.4.5 --upgrade --ignore-installed
 
 # Install docker-ce-cli
