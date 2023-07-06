@@ -433,6 +433,10 @@ def container_wait(feature, **kwargs):
         debug_msg("END -- transitioning to docker wait")
         ret = docker_action("wait", docker_id, **kwargs)
 
+        # It's planned stop for kube, so exit code should be 0
+        if docker_id != feature:
+            ret = SUCCESS
+
     return ret
 
 def main():

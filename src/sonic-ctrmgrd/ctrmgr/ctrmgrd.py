@@ -151,7 +151,7 @@ def is_systemd_active(feat):
 def restart_systemd_service(server, feat, owner):
     log_debug("Restart service {} to owner:{}".format(feat, owner))
     if not UNIT_TESTING:
-        subprocess.call(["systemctl", "reset-failed", str(feat)])
+        # subprocess.call(["systemctl", "reset-failed", str(feat)])
         status = subprocess.call(["systemctl", "restart", str(feat)])
     else:
         server.mod_db_entry(STATE_DB_NAME,
