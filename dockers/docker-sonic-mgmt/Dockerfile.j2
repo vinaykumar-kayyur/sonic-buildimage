@@ -99,17 +99,17 @@ RUN pip3 install aiohttp \
                  textfsm==1.1.2 \
                  thrift==0.11.0 \
                  virtualenv \
-    && wget https://github.com/nanomsg/nanomsg/archive/1.0.0.tar.gz \
-    && tar xvfz 1.0.0.tar.gz \
-    && cd nanomsg-1.0.0    \
+    && wget https://github.com/nanomsg/nanomsg/archive/1.2.tar.gz \
+    && tar xvfz 1.2.tar.gz \
+    && cd nanomsg-1.2      \
     && mkdir -p build      \
     && cd build            \
     && cmake ..            \
     && make install        \
     && ldconfig            \
     && cd ../..            \
-    && rm -fr nanomsg-1.0.0 \
-    && rm -f 1.0.0.tar.gz  \
+    && rm -fr nanomsg-1.2  \
+    && rm -f 1.2.tar.gz  \
     && pip3 install nnpy
 
 RUN curl -fsSL http://archive.ubuntu.com/ubuntu/pool/universe/s/scapy/python-scapy_2.3.3-3_all.deb \
