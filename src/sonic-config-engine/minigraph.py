@@ -1024,8 +1024,6 @@ def parse_meta(meta, hname):
                     dhcp_servers = value_group
                 elif name == "NtpResources":
                     ntp_servers = value_group
-                elif name == "DnsNameserverResources":
-                    dns_nameservers = value_group
                 elif name == "SyslogResources":
                     syslog_servers = value_group
                 elif name == "TacacsServer":
