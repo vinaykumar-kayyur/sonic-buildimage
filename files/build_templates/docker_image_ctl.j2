@@ -256,15 +256,16 @@ function postStartAction()
                 # set the key to expire in 3 minutes
                 $SONIC_DB_CLI STATE_DB SET "FAST_REBOOT|system" "1" "EX" "180"
             fi
-
-            $SONIC_DB_CLI CONFIG_DB SET "CONFIG_DB_INITIALIZED" "1"
         fi
 
         if [ -e /tmp/pending_config_migration ]; then
             # this is first boot to a new image, config-setup execution is pending.
+            # for warmboot case, DB is loaded but migration is still pending
             # For fast/cold reboot case, DB contains nothing at this point
-            # Call db_migrator after config-setup loads the config (from old config or minigraph)
+            # Call db_migrator and set CONFIG_DB_INITIALIZED after config-setup loads the config (from old config or minigraph)
             echo "Delaying db_migrator until config migration is over"
+            # unset CONFIG_DB_INITIALIZED to indicate pending config load and migration
+            $SONIC_DB_CLI CONFIG_DB SET "CONFIG_DB_INITIALIZED" "0"
         else
             # this is not a first time boot to a new image. Datbase container starts w/ old pre-existing config
             if [[ -x /usr/local/bin/db_migrator.py ]]; then
@@ -273,6 +274,8 @@ function postStartAction()
                     /usr/local/bin/db_migrator.py -o migrate
                 fi
             fi
+            # set CONFIG_DB_INITIALIZED to indicate end of config load and migration
+            $SONIC_DB_CLI CONFIG_DB SET "CONFIG_DB_INITIALIZED" "1"
         fi
         # Add redis UDS to the redis group and give read/write access to the group
         REDIS_SOCK="/var/run/redis${DEV}/redis.sock"
