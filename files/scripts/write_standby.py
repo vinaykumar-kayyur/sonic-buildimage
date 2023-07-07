@@ -97,13 +97,15 @@ class MuxStateWriter(object):
         """
         Checks if script is running on a mocked dual ToR system
         """
+        if not self.is_dualtor:
+            return False
         subtype = ''
         with open("/etc/sonic/config_db.json", 'r') as config_file:
             file_data = json.load(config_file)
             if 'subtype' in file_data['DEVICE_METADATA']['localhost']:
                 subtype = file_data['DEVICE_METADATA']['localhost']['subtype']
 
-        return self.is_dualtor and 'dualtor' not in subtype.lower()
+        return 'dualtor' not in subtype.lower()
 
     @property
     def is_warmrestart(self):
