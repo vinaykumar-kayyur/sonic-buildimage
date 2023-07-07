@@ -1995,9 +1995,6 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     results['DHCP_SERVER'] = dict((item, {}) for item in dhcp_servers)
     results['DHCP_RELAY'] = dhcp_relay_table
     results['NTP_SERVER'] = dict((item, {}) for item in ntp_servers)
-    # Reserve for SONiC DNS configuration
-    dns_nameservers = []
-    results['DNS_NAMESERVER'] = dict((item, {}) for item in dns_nameservers)
     results['TACPLUS_SERVER'] = dict((item, {'priority': '1', 'tcp_port': '49'}) for item in tacacs_servers)
     if len(acl_table_types) > 0:
         results['ACL_TABLE_TYPE'] = acl_table_types
