@@ -36,7 +36,8 @@ RUN apt-get update && apt-get install -y apt-transport-https \
                                          sudo \
                                          tcpdump \
                                          telnet \
-                                         vim
+                                         vim \
+                                         unzip
 
 RUN curl -fsSL http://archive.ubuntu.com/ubuntu/pool/universe/s/scapy/python-scapy_2.3.3-3_all.deb \
     --output python-scapy_2.3.3-3_all.deb \
@@ -146,6 +147,19 @@ RUN dpkg -i \
 {% for deb in docker_sonic_mgmt_debs.split(' ') -%}
 debs/{{ deb }}{{' '}}
 {%- endfor %}
+
+# Download and install sonic util packages for ubuntu20.04
+RUN ubuntu2004_pkg_build_id=$(curl "https://dev.azure.com/mssonic/build/_apis/build/builds?definitions=1055&branchName=refs/heads/master&resultFilter=succeeded&statusFilter=completed&api-version=6.0" | jq -r '.value[0].id') \
+    && ubuntu2004_pkg_url=$(curl "https://dev.azure.com/mssonic/build/_apis/build/builds/${ubuntu2004_pkg_build_id}/artifacts?artifactName=sonic-buildimage.amd64.ubuntu20_04&api-version=5.0" | jq -r '.resource.downloadUrl') \
+    && wget "${ubuntu2004_pkg_url}" -O sonic-buildimage.amd64.ubuntu20_04.zip \
+    && unzip sonic-buildimage.amd64.ubuntu20_04.zip \
+    && dpkg -i sonic-buildimage.amd64.ubuntu20_04/libprotobuf-*_amd64.deb \
+               sonic-buildimage.amd64.ubuntu20_04/python3-protobuf_*_amd64.deb \
+               sonic-buildimage.amd64.ubuntu20_04/libprotobuf*_amd64.deb \
+               sonic-buildimage.amd64.ubuntu20_04/libprotoc*_amd64.deb \
+               sonic-buildimage.amd64.ubuntu20_04/protobuf-compiler_3.21.12-3_amd64.deb \
+               sonic-buildimage.amd64.ubuntu20_04/libdashapi_*_amd64.deb \
+    && rm -rf sonic-buildimage.amd64.ubuntu20_04
 
 RUN mkdir /var/run/sshd
 EXPOSE 22
