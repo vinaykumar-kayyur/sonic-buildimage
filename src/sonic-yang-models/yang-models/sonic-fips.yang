@@ -20,11 +20,16 @@ module sonic-fips {
 
             container global {
 
-                leaf mode {
-                    type string {
-                        pattern '[Nn]one|[Ee]nforce|[Nn]one[Ee]nforce';
-                    }
-                    default "none";
+                leaf enable {
+                    description "This configuration identicates whether enable fips";
+                    type stypes:boolean_type;
+                    default "false";
+                }
+
+                leaf enforce {
+                    description "This configuration identicates whether enforce fips";
+                    type stypes:boolean_type;
+                    default "false";
                 }
             }
             /* end of container global */

@@ -2425,7 +2425,8 @@ The FIPS table introduces FIPS  configuration.
 {
     "FIPS": {
         "global" : {
-            "mode": "Enforce"
+            "enable": "true",
+            "enforce": "false"
         }
     }
 }
