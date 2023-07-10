@@ -210,7 +210,7 @@ static int user_add(const char* name, char* gid, char* sec_grp, char* gecos,
     return status;
 }
 
-static int user_del(const char* cmd, const char* name) {
+static int user_del(const char* name) {
     pid_t pid, w;
     int status = 0;
     int wstatus;
@@ -248,7 +248,7 @@ static int user_del(const char* cmd, const char* name) {
     return status;
 }
 
-static int user_mod(const char* cmd, const char* name, char* sec_grp) {
+static int user_mod(const char* name, char* sec_grp) {
     pid_t pid, w;
     int status = 0;
     int wstatus;
