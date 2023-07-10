@@ -42,7 +42,7 @@ $UDPServerRun 514
 ###########################
 #### GLOBAL DIRECTIVES ####
 ###########################
-{% set format = gconf.get('format') -%}
+{% set format = gconf.get('format', 'standard') -%}
 {% set fw_name = gconf.get('welf_firewall_name', hostname) -%}
 #
 # Use traditional timestamp format.
