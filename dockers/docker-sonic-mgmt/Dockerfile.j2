@@ -148,18 +148,37 @@ RUN dpkg -i \
 debs/{{ deb }}{{' '}}
 {%- endfor %}
 
-# Download and install sonic util packages for ubuntu20.04
-RUN ubuntu2004_pkg_build_id=$(curl "https://dev.azure.com/mssonic/build/_apis/build/builds?definitions=1055&branchName=refs/heads/master&resultFilter=succeeded&statusFilter=completed&api-version=6.0" | jq -r '.value[0].id') \
-    && ubuntu2004_pkg_url=$(curl "https://dev.azure.com/mssonic/build/_apis/build/builds/${ubuntu2004_pkg_build_id}/artifacts?artifactName=sonic-buildimage.amd64.ubuntu20_04&api-version=5.0" | jq -r '.resource.downloadUrl') \
-    && wget "${ubuntu2004_pkg_url}" -O sonic-buildimage.amd64.ubuntu20_04.zip \
-    && unzip sonic-buildimage.amd64.ubuntu20_04.zip \
-    && dpkg -i sonic-buildimage.amd64.ubuntu20_04/libprotobuf-*_amd64.deb \
-               sonic-buildimage.amd64.ubuntu20_04/python3-protobuf_*_amd64.deb \
-               sonic-buildimage.amd64.ubuntu20_04/libprotobuf*_amd64.deb \
-               sonic-buildimage.amd64.ubuntu20_04/libprotoc*_amd64.deb \
-               sonic-buildimage.amd64.ubuntu20_04/protobuf-compiler_3.21.12-3_amd64.deb \
-               sonic-buildimage.amd64.ubuntu20_04/libdashapi_*_amd64.deb \
-    && rm -rf sonic-buildimage.amd64.ubuntu20_04
+
+# Build and install protobuf
+RUN apt-get install -y make wget libtool m4 autoconf dh-exec libdebhelper-perl=13.6ubuntu1~bpo20.04.1 debhelper=13.6ubuntu1~bpo20.04.1 \
+        cmake pkg-config python3-pip python cmake libgtest-dev libgmock-dev libyang-dev \
+        debhelper-compat dh-elpa dh-sequence-python3 python3-all \
+        libpython3-all-dev python3-six xmlto unzip rake-compiler gem2deb pkg-php-tools \
+        ant default-jdk maven-repo-helper libguava-java \
+    && wget http://ftp.us.debian.org/debian/pool/main/libg/libgoogle-gson-java/libgoogle-gson-java_2.8.6-1+deb11u1_all.deb \
+    && dpkg -i libgoogle-gson-java_2.8.6-1+deb11u1_all.deb \
+    && rm -f libgoogle-gson-java_2.8.6-1+deb11u1_all.deb
+RUN mkdir -p /tmp/protobuf \
+    && mkdir -p /tmp/artifacts
+COPY src/protobuf/Makefile /tmp/protobuf/
+COPY rules/protobuf.mk /tmp/protobuf/
+RUN cd /tmp/protobuf \
+    && SONIC_CONFIG_MAKE_JOBS=$(nproc) CONFIGURED_ARCH=amd64 DEST=/tmp/artifacts make -f protobuf.mk -f Makefile \
+    && cd /tmp/artifacts \
+    && dpkg -i libprotobuf*_amd64.deb \
+                python3-protobuf_*_amd64.deb \
+                libprotoc*_amd64.deb \
+                protobuf-compiler_3.21.12-3_amd64.deb \
+    && rm -rf /tmp/protobuf \
+    && rm -rf /tmp/artifacts
+
+# Build and install sonic-dash-api
+RUN mkdir -p /tmp/sonic-dash-api/src
+COPY src/sonic-dash-api /tmp/sonic-dash-api/src
+RUN cd /tmp/sonic-dash-api/src \
+    && dpkg-buildpackage -rfakeroot -b -us -uc \
+    && dpkg -i ../libdashapi_*_amd64.deb \
+    && rm -rf /tmp/sonic-dash-api
 
 RUN mkdir /var/run/sshd
 EXPOSE 22
