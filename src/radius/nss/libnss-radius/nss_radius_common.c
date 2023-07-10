@@ -168,11 +168,14 @@ static void init_rnm(RADIUS_NSS_CONF_B * conf) {
 
 }
 
-static int user_add(const char* cmd, const char* name, char* gid, char* sec_grp, char* gecos, 
+static int user_add(const char* name, char* gid, char* sec_grp, char* gecos, 
                         char* home, char* shell, const char* unconfirmed_user, int many_to_one) {
     pid_t pid, w;
     int status = 0;
     int wstatus;
+    char cmd[64];
+
+    snprintf(cmd, 63, "%s", USERADD);
 
     pid = fork();
 
@@ -192,9 +195,11 @@ static int user_add(const char* cmd, const char* name, char* gid, char* sec_grp,
     } else if(pid == 0) {
 
         if (many_to_one)
-          return execl(cmd, cmd, "-g", gid, "-G", sec_grp, "-c", gecos, "-m", "-s", shell, name, NULL);
+          execl(cmd, cmd, "-g", gid, "-G", sec_grp, "-c", gecos, "-m", "-s", shell, name, NULL);
         else
-          return execl(cmd, cmd, "-U", "-G", sec_grp, "-c", unconfirmed_user, "-d", home, "-m", "-s", shell, name, NULL);
+          execl(cmd, cmd, "-U", "-G", sec_grp, "-c", unconfirmed_user, "-d", home, "-m", "-s", shell, name, NULL);
+        syslog(LOG_ERR, "exec of %s failed with errno=%d", cmd, errno);
+        return -1;
 
     // Error
     } else {
@@ -209,6 +214,9 @@ static int user_del(const char* cmd, const char* name) {
     pid_t pid, w;
     int status = 0;
     int wstatus;
+    char cmd[64];
+
+    snprintf(cmd, 63, "%s", USERDEL);
 
     pid = fork();
 
@@ -227,7 +235,9 @@ static int user_del(const char* cmd, const char* name) {
 
     } else if(pid == 0) {
 
-        return execl(cmd, cmd, "-r", name, NULL);
+        execl(cmd, cmd, "-r", name, NULL);
+        syslog(LOG_ERR, "exec of %s failed with errno=%d", cmd, errno);
+        return -1;
 
     // Error
     } else {
@@ -242,6 +252,9 @@ static int user_mod(const char* cmd, const char* name, char* sec_grp) {
     pid_t pid, w;
     int status = 0;
     int wstatus;
+    char cmd[64];
+
+    snprintf(cmd, 63, "%s", USERMOD);
 
     pid = fork();
 
@@ -260,7 +273,9 @@ static int user_mod(const char* cmd, const char* name, char* sec_grp) {
 
     } else if(pid == 0) {
 
-        return execl(cmd, cmd, "-G", sec_grp, "-c", name, name, NULL);
+        execl(cmd, cmd, "-G", sec_grp, "-c", name, name, NULL);
+        syslog(LOG_ERR, "exec of %s failed with errno=%d", cmd, errno);
+        return -1;
 
     // Error
     } else {
@@ -552,7 +567,7 @@ int radius_update_user(RADIUS_NSS_CONF_B * conf, const char * user, int mpl) {
     if (conf->trace)
         dump_rnm(mpl, rnm, "update");
 
-    if(0 != user_mod(USERMOD, user, rnm->groups)) {
+    if(0 != user_mod(user, rnm->groups)) {
       syslog(LOG_ERR, "%s: %s %s failed", conf->prog, USERMOD, user);
         return -1;
     }
@@ -582,7 +597,7 @@ int radius_create_user(RADIUS_NSS_CONF_B * conf, const char * user, int mpl,
 
     snprintf(buf, sizeof(buf), "Unconfirmed-%ld", time(NULL));
 
-    if(0 != user_add(USERADD, user, sgid, rnm->groups, rnm->gecos, home, rnm->shell, unconfirmed ? buf : user, conf->many_to_one)) {
+    if(0 != user_add(user, sgid, rnm->groups, rnm->gecos, home, rnm->shell, unconfirmed ? buf : user, conf->many_to_one)) {
       syslog(LOG_ERR, "%s: %s %s failed", conf->prog, USERADD, user);
 
         return -1;
@@ -593,7 +608,7 @@ int radius_create_user(RADIUS_NSS_CONF_B * conf, const char * user, int mpl,
 int radius_delete_user(RADIUS_NSS_CONF_B * conf, const char * user) {
 
     syslog(LOG_INFO, "%s: Deleting user \"%s\"", conf->prog, user);
-    if(0 != user_del(USERDEL, user)) {
+    if(0 != user_del(user)) {
       syslog(LOG_ERR, "%s: %s %s failed", conf->prog, USERDEL, user);
 
         return -1;
