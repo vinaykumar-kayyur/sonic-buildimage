@@ -316,6 +316,7 @@ devices = {
             "temp_id": "TEMP5",
             "api_name": "ASIC_TEMP",
             "Temperature": {
+                "flag": {"bus": 2, "addr": 0x33, "offset": 0xd4, "way": "i2c", 'okbit': 0, 'okval': 1},
                 "value": {"loc": "/sys/wb_plat/sensor/temp1/temp_input", "way": "sysfs"},
                 "Min": 2000,
                 "Low": 10000,
@@ -372,6 +373,14 @@ devices = {
             "led_attrs": {
                 "green": 0x01, "red": 0x02, "amber": 0x03, "default": 0x01,
                 "flash": 0xff, "light": 0xff, "off": 0, "mask": 0xff
+            },
+        },
+        {
+            "name": "BACK_SYS_LED",
+            "led": {"bus": 2, "addr": 0x37,  "offset":0xb2, "way":"i2c"},
+            "led_attrs" : {
+                "green":0x01, "red":0x02, "yellow":0x03, "default":0x01,
+                "flash":0xff, "light":0xff, "off": 0, "mask":0xff
             },
         },
         {
@@ -755,7 +764,7 @@ devices = {
                 },
             },
         },
-        "txdisable_val_is_on": 0,
+        "txdisable_val_is_on": 1,
         "reset_cpld": {
             "dev_id": {
                 6: {
