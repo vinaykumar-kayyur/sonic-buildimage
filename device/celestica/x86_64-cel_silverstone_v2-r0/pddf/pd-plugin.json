@@ -91,8 +91,8 @@
 
         "FAN_MAX_RPM_SPEED":
         {
-            "0": {"Front": "32000", "Rear": "30200"},
-            "1": {"Front": "32000", "Rear": "28000"}
+            "0": {"Front": "32000", "Rear": "28000"},
+            "1": {"Front": "32000", "Rear": "30200"}
         },
         "pwm_to_duty_cycle": "lambda pwm: ((pwm*100)/255)",
 	"duty_cycle_to_pwm": "lambda dc: ((dc*255)/100)"
