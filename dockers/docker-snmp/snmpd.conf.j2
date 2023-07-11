@@ -17,7 +17,7 @@
 # Listen on managment and loopback0 ips for single asic platform
 #
 {% macro protocol(ip_addr) %}
-{%- if ':' in ip_addr -%}
+{%- if ip_addr|ipv6 -%}
 {{ 'udp6' }}
 {%- else -%}
 {{ 'udp' }}
