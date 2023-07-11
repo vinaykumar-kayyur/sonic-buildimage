@@ -331,6 +331,14 @@ def main():
         else:
             deep_update(data, parse_xml(minigraph, port_config_file=args.port_config, asic_name=asic_name, hwsku_config_file=args.hwsku_config))
 
+        # enable TACACS per-command accounting by default on 202012 branch
+        tacacs_accounting = {
+                'AAA': {
+                    'accounting': {
+                        "login": "tacacs+"
+                }}}
+        deep_update(data, tacacs_accounting)
+
     if args.device_description is not None:
         deep_update(data, parse_device_desc_xml(args.device_description))
 
