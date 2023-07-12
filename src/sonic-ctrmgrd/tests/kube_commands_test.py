@@ -400,7 +400,7 @@ clean_image_test_data = {
         common_test.ARGS: ["snmp", "20201231.84", "20201231.74"],
         common_test.PROC_CMD: [
             "docker images |grep snmp |grep -v latest |awk '{print $1,$2,$3}'",
-            "docker rmi 507f8d28bf6f && docker tag 507f8d28bf6e sonick8scue.azurecr.io/docker-sonic-telemetry:20201231.74 && docker rmi docker-sonic-telemetry:20201231.74"
+            "docker rmi sonick8scue.azurecr.io/docker-sonic-telemetry:20201231.74 && docker tag 507f8d28bf6e sonick8scue.azurecr.io/docker-sonic-telemetry:20201231.74 && docker rmi docker-sonic-telemetry:20201231.74"
         ],
         common_test.PROC_OUT: [
             "docker-sonic-telemetry 20201231.74 507f8d28bf6e\n\
