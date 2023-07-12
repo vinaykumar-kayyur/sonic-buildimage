@@ -4,7 +4,7 @@
     },
     "FIPS_WITH_INVALID_VALUES_ENABLE" : {
         "desc": "Configure invalid mode in fips.",
-        "eStrKey": "InvalidValue",
-        "eStr": ["enable"]
+        "eStrKey": "Pattern",
+        "eStr": ["false|true|False|True"]
     }
 }
