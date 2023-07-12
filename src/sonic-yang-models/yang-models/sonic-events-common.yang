@@ -31,14 +31,14 @@ module sonic-events-common {
     grouping sonic-events-usage {
         leaf usage {
             type decimal64 {
-                fraction-digits 2;
+                fraction-digits 1;
             }
             description "Percentage in use";
         }
 
         leaf limit {
             type decimal64 {
-                fraction-digits 2;
+                fraction-digits 1;
             }
             description "Percentage limit set";
         }
