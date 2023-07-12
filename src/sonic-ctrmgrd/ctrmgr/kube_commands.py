@@ -510,9 +510,13 @@ def _do_clean(feat, current_version, last_version):
         # should be only one item in version_dict_default
         for k, v in version_dict_default.items():
             local_version, local_repo, local_image_id = k, v[REPO], v[IMAGE_ID]
+            # if there is a kube image with same version, need to remove the kube version
+            # and tag the local version to kube version for fallback preparation
+            # and remove the local version
+            # if there is no kube image with same version, just remove the local version
             if local_version in version_dict:
-                tag_res, _, err = _run_command("docker rmi {} && docker tag {} {}:{} && docker rmi {}:{}".format(
-                version_dict[local_version][IMAGE_ID], local_image_id, image_prefix, local_version, local_repo, local_version))
+                tag_res, _, err = _run_command("docker rmi {}:{} && docker tag {} {}:{} && docker rmi {}:{}".format(
+                image_prefix, local_version, local_image_id, image_prefix, local_version, local_repo, local_version))
             else:
                 tag_res, _, err = _run_command("docker rmi {}:{}".format(local_repo, local_version))
             if tag_res == 0:
