@@ -426,8 +426,8 @@ $(info "INCLUDE_MACSEC"                  : "$(INCLUDE_MACSEC)")
 $(info "INCLUDE_MUX"                     : "$(INCLUDE_MUX)")
 $(info "INCLUDE_TEAMD"                   : "$(INCLUDE_TEAMD)")
 $(info "INCLUDE_ROUTER_ADVERTISER"       : "$(INCLUDE_ROUTER_ADVERTISER)")
-$(info "INCLUDE_BOOTCHART                : "$(INCLUDE_BOOTCHART)")
-$(info "ENABLE_BOOTCHART                 : "$(ENABLE_BOOTCHART)")
+$(info "INCLUDE_BOOTCHART"               : "$(INCLUDE_BOOTCHART)")
+$(info "ENABLE_BOOTCHART"                : "$(ENABLE_BOOTCHART)")
 $(info "ENABLE_FIPS_FEATURE"             : "$(ENABLE_FIPS_FEATURE)")
 $(info "ENABLE_TRANSLIB_WRITE"           : "$(ENABLE_TRANSLIB_WRITE)")
 $(info "ENABLE_NATIVE_WRITE"             : "$(ENABLE_NATIVE_WRITE)")
@@ -478,15 +478,6 @@ export vs_build_prepare_mem=$(VS_PREPARE_MEM)
 ##
 ##     docker-swss:latest <=SAVE/LOAD=> docker-swss-<user>:<tag>
 
-# $(call docker-get-tag,tag)
-# Get the docker tag. For packages it is an image version, for other dockers it stays latest.
-#
-# $(1) => Docker name
-
-define docker-get-tag
-$(shell [ ! -z $(filter $(1).gz,$(SONIC_PACKAGES_LOCAL)) ] && [ x$(SONIC_CONFIG_USE_NATIVE_DOCKERD_FOR_BUILD) == x"y" ] && echo $(SONIC_IMAGE_VERSION) || echo latest)
-endef
-
 # $(call docker-image-save,from,to)
 # Sonic docker images are always created with username as extension. During the save operation,
 # it removes the username extension from docker image and saved them as compressed tar file for SONiC image generation.
@@ -499,13 +490,13 @@ define docker-image-save
     @echo "Attempting docker image lock for $(1) save" $(LOG)
     $(call MOD_LOCK,$(1),$(DOCKER_LOCKDIR),$(DOCKER_LOCKFILE_SUFFIX),$(DOCKER_LOCKFILE_TIMEOUT))
     @echo "Obtained docker image lock for $(1) save" $(LOG)
-    @echo "Tagging docker image $(1)-$(DOCKER_USERNAME):$(DOCKER_USERTAG) as $(1):$(call docker-get-tag,$(1))" $(LOG)
-    docker tag $(1)-$(DOCKER_USERNAME):$(DOCKER_USERTAG) $(1):$(call docker-get-tag,$(1)) $(LOG)
-    @echo "Saving docker image $(1):$(call docker-get-tag,$(1))" $(LOG)
-        docker save $(1):$(call docker-get-tag,$(1)) | $(GZ_COMPRESS_PROGRAM) -c > $(2)
+    @echo "Tagging docker image $(1)-$(DOCKER_USERNAME):$(DOCKER_USERTAG) as $(1):latest" $(LOG)
+    docker tag $(1)-$(DOCKER_USERNAME):$(DOCKER_USERTAG) $(1):latest $(LOG)
+    @echo "Saving docker image $(1):latest" $(LOG)
+    docker save $(1):latest | $(GZ_COMPRESS_PROGRAM) -c > $(2)
     if [ x$(SONIC_CONFIG_USE_NATIVE_DOCKERD_FOR_BUILD) == x"y" ]; then
-        @echo "Removing docker image $(1):$(call docker-get-tag,$(1))" $(LOG)
-        docker rmi -f $(1):$(call docker-get-tag,$(1)) $(LOG)
+        @echo "Removing docker image $(1):latest" $(LOG)
+        docker rmi -f $(1):latest $(LOG)
     fi
     $(call MOD_UNLOCK,$(1))
     @echo "Released docker image lock for $(1) save" $(LOG)
@@ -526,11 +517,11 @@ define docker-image-load
     @echo "Obtained docker image lock for $(1) load" $(LOG)
     @echo "Loading docker image $(TARGET_PATH)/$(1).gz" $(LOG)
     docker load -i $(TARGET_PATH)/$(1).gz $(LOG)
-    @echo "Tagging docker image $(1):$(call docker-get-tag,$(1)) as $(1)-$(DOCKER_USERNAME):$(DOCKER_USERTAG)" $(LOG)
-    docker tag $(1):$(call docker-get-tag,$(1)) $(1)-$(DOCKER_USERNAME):$(DOCKER_USERTAG) $(LOG)
+    @echo "Tagging docker image $(1):latest as $(1)-$(DOCKER_USERNAME):$(DOCKER_USERTAG)" $(LOG)
+    docker tag $(1):latest $(1)-$(DOCKER_USERNAME):$(DOCKER_USERTAG) $(LOG)
     if [ x$(SONIC_CONFIG_USE_NATIVE_DOCKERD_FOR_BUILD) == x"y" ]; then
         @echo "Removing docker image $(1):latest" $(LOG)
-        docker rmi -f $(1):$(call docker-get-tag,$(1)) $(LOG)
+        docker rmi -f $(1):latest $(LOG)
     fi
     $(call MOD_UNLOCK,$(1))
     @echo "Released docker image lock for $(1) load" $(LOG)
