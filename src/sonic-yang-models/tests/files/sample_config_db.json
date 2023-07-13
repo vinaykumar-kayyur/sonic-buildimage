@@ -1571,6 +1571,27 @@
                 "local_ip": "12.12.0.2"
             }
         },
+	"NAC_PROFILE": {
+            "profile1": {
+                "quiet_period": "300",
+                "supp_timeout": "450",
+                "tx_period": "310",
+                "eap_auth_method": "MD5"
+            }
+        },
+        "NAC_SESSION": {
+            "Ethernet0": {
+                "admin_state": "up",
+                "nac_status": "authenticated"
+            }
+        },
+        "NAC": {
+            "GLOBAL": {
+                "admin_state": "down",
+                "auth_type": "local",
+                "nac_type": "port"
+            }
+        },
         "BGP_GLOBALS": {
             "default": {
                 "router_id": "5.5.5.5",

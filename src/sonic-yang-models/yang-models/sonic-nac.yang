@@ -1,0 +1,114 @@
+module sonic-nac {
+
+    yang-version 1.1;
+
+    namespace "http://github.com/Azure/sonic-nac";
+
+    prefix snac;
+
+    import sonic-types {
+        prefix stypes;
+    }
+    import sonic-port {
+        prefix port;
+        revision-date 2019-07-01;
+    }
+    import sonic-portchannel {
+        prefix lag;
+    }
+
+    description "NAC yang Module for SONiC OS";
+
+    revision 2023-01-03 {
+        description "First Revision";
+    }
+    container sonic-nac {
+
+        container NAC_PROFILE {
+
+            description "NAC profile for config_db.json";
+
+            list NAC_PROFILE_LIST {
+
+                key "name";
+
+                leaf name {
+                    type string {
+                        length 1..64;
+                    }
+                }
+
+                leaf quiet_period {
+                    type uint32;
+                    description "Quiet Period";
+                }
+                leaf supp_timeout {
+                    type uint32;
+                    description " supp_timeout";
+                }
+                leaf tx_period {
+                    type uint32;
+                    description "transmit period";
+                }
+                leaf eap_auth_method {
+                    type string {
+                        length 1..128;
+                    }
+                    description "EAP authentication method.";
+                }
+            } /* end of list NAC_PROFILE_LIST */
+        } /* end of container NAC_PROFILE_LIST */
+        container NAC_SESSION {
+
+            description "NAC session for config_db.json";
+
+            list NAC_SESSION_LIST {
+
+                key "port";
+
+                leaf port {
+                    type leafref {
+                        path /port:sonic-port/port:PORT/port:PORT_LIST/port:name;
+                    }
+                    description "Port on which nac to be configured.";
+                }
+                leaf admin_state {
+                    type string {
+                        length 1..64;
+                    }
+                }
+                leaf nac_status {
+                    type string {
+                        length 1..63;
+                    }
+                    description "Operational status of the port Authentication";
+                }
+            } /* end of list NAC_SESSION_LIST  */
+        } /* end of container NAC_SESSION */
+        container NAC {
+
+            description "NAC for config_db.json";
+            container GLOBAL {
+
+                leaf admin_state {
+                    type string {
+                        length 1..64;
+                    }
+                    default "down";
+                }
+                leaf auth_type {
+                    type string {
+                       length 1..64;
+		    }
+                    default "local";
+		}
+		leaf nac_type {
+                    type string {
+                       length 1..64;
+		    }
+                    default "port";
+		}
+            } /* end of container GLOBAL */
+        } /* end of container NAC */
+    } /* end of container sonic-nac */
+} /* end of module sonic-nac */

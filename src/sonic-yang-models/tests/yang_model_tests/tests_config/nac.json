@@ -1,0 +1,49 @@
+{
+    "NAC_ENTRY_WITH_VALID_VALUES": {
+	"sonic-port:sonic-port": {
+            "sonic-port:PORT": {
+                "PORT_LIST": [
+                    {
+                        "admin_status": "up",
+                        "alias": "eth0",
+                        "description": "Ethernet0",
+                        "lanes": "65",
+                        "mtu": 9000,
+                        "name": "Ethernet0",
+                        "tpid": "0x8100",
+                        "speed": 25000
+                    }
+                ]
+            }
+        },
+        "sonic-nac:sonic-nac": {
+            "sonic-nac:NAC_PROFILE": {
+                "NAC_PROFILE_LIST": [
+		    {
+                        "name": "nac-profile",
+                        "quiet_period": "300",
+                        "supp_timeout": "450",
+                        "tx_period": "310",
+                        "eap_auth_method": "MD5"
+                    }
+                ]
+            },
+             "sonic-nac:NAC_SESSION": {
+                "NAC_SESSION_LIST": [
+		    {
+                        "port": "Ethernet0",
+                        "admin_state": "up",
+                        "nac_status": "authenticated"
+                    }
+                ]
+            },
+            "sonic-nac:NAC": {
+                "sonic-nac:GLOBAL": {
+                    "admin_state": "down",
+                    "auth_type": "local",
+                    "nac_type": "port"
+                }
+            }
+        }
+    }
+}

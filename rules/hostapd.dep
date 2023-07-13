@@ -1,0 +1,16 @@
+
+SPATH       := $($(HOSTAPD)_SRC_PATH)
+DEP_FILES   := $(SONIC_COMMON_FILES_LIST) rules/hostapd.mk rules/hostapd.dep   
+DEP_FILES   += $(SONIC_COMMON_BASE_FILES_LIST)
+# Account files under the src/hostapd/ except submodule directory.
+DEP_FILES   += $(shell git ls-files $(SPATH) | grep -Ev 'sonic-hostapd')
+
+# Account for source files under the sonic-wpa-supplicant submodule directory as well.
+HOSTAPD_SPATH := $(SPATH)/sonic-hostapd
+SMDEP_FILES         := $(addprefix $(HOSTAPD_SPATH)/,$(shell cd $(HOSTAPD_SPATH) && git ls-files))
+
+$(HOSTAPD)_CACHE_MODE  := GIT_CONTENT_SHA 
+$(HOSTAPD)_DEP_FLAGS   := $(SONIC_COMMON_FLAGS_LIST)
+$(HOSTAPD)_DEP_FILES   := $(DEP_FILES)
+$(HOSTAPD)_SMDEP_FILES := $(SMDEP_FILES)
+$(HOSTAPD)_SMDEP_PATHS := $(HOSTAPD_SPATH)
