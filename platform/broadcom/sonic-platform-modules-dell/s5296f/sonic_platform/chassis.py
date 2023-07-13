@@ -21,7 +21,6 @@ try:
     from sonic_platform.watchdog import Watchdog
     from sonic_platform.fan_drawer import FanDrawer
     from sonic_platform.hwaccess import pci_get_value, pci_set_value
-    import sonic_platform.hwaccess as hwaccess
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
