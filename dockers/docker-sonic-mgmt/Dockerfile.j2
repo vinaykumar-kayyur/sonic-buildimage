@@ -148,18 +148,26 @@ RUN dpkg -i \
 debs/{{ deb }}{{' '}}
 {%- endfor %}
 
-# Download and install sonic util packages for ubuntu20.04
-RUN ubuntu2004_pkg_build_id=$(curl "https://dev.azure.com/mssonic/build/_apis/build/builds?definitions=1055&branchName=refs/heads/master&resultFilter=succeeded&statusFilter=completed&api-version=6.0" | jq -r '.value[0].id') \
-    && ubuntu2004_pkg_url=$(curl "https://dev.azure.com/mssonic/build/_apis/build/builds/${ubuntu2004_pkg_build_id}/artifacts?artifactName=sonic-buildimage.amd64.ubuntu20_04&api-version=5.0" | jq -r '.resource.downloadUrl') \
-    && wget "${ubuntu2004_pkg_url}" -O sonic-buildimage.amd64.ubuntu20_04.zip \
-    && unzip sonic-buildimage.amd64.ubuntu20_04.zip \
-    && dpkg -i sonic-buildimage.amd64.ubuntu20_04/libprotobuf-*_amd64.deb \
-               sonic-buildimage.amd64.ubuntu20_04/python3-protobuf_*_amd64.deb \
-               sonic-buildimage.amd64.ubuntu20_04/libprotobuf*_amd64.deb \
-               sonic-buildimage.amd64.ubuntu20_04/libprotoc*_amd64.deb \
-               sonic-buildimage.amd64.ubuntu20_04/protobuf-compiler_3.21.12-3_amd64.deb \
-               sonic-buildimage.amd64.ubuntu20_04/libdashapi_*_amd64.deb \
-    && rm -rf sonic-buildimage.amd64.ubuntu20_04
+# Install protobuf 3.21.12
+RUN mkdir -p /tmp/protobuf \
+    cd /tmp/protobuf \
+    && wget https://sonicstorage.blob.core.windows.net/public/ubuntu/20.04/libprotobuf-dev_3.21.12-3_amd64.deb \
+    && wget https://sonicstorage.blob.core.windows.net/public/ubuntu/20.04/libprotobuf-lite32_3.21.12-3_amd64.deb \
+    && wget https://sonicstorage.blob.core.windows.net/public/ubuntu/20.04/libprotobuf32_3.21.12-3_amd64.deb \
+    && wget https://sonicstorage.blob.core.windows.net/public/ubuntu/20.04/libprotoc-dev_3.21.12-3_amd64.deb \
+    && wget https://sonicstorage.blob.core.windows.net/public/ubuntu/20.04/libprotoc32_3.21.12-3_amd64.deb \
+    && wget https://sonicstorage.blob.core.windows.net/public/ubuntu/20.04/protobuf-compiler_3.21.12-3_amd64.deb \
+    && wget https://sonicstorage.blob.core.windows.net/public/ubuntu/20.04/python3-protobuf_3.21.12-3_amd64.deb \
+    && dpkg -i *.deb \
+    && rm -rf /tmp/protobuf
+
+# Install dash-api
+RUN cd /tmp \
+    && mkdir -p /usr/lib/python3/dist-packages/dash_api \
+    && wget https://raw.githubusercontent.com/sonic-net/sonic-buildimage/master/src/sonic-dash-api/pypkg/__init__.py -O /usr/lib/python3/dist-packages/dash_api/__init__.py \
+    && git clone https://github.com/sonic-net/sonic-dash-api.git \
+    && protoc -I=sonic-dash-api/proto --python_out=/usr/lib/python3/dist-packages/dash_api sonic-dash-api/proto/*.proto \
+    && rm -rf /tmp/sonic-dash-api
 
 RUN mkdir /var/run/sshd
 EXPOSE 22
