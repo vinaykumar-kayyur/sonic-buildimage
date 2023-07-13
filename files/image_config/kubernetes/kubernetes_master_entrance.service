@@ -1,0 +1,12 @@
+[Unit]
+Description=Setup k8s master services
+Requires=rc-local.service
+After=rc-local.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/sbin/kubernetes_master_entrance.sh
+
+[Install]
+WantedBy=multi-user.target

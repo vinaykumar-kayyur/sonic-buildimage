@@ -802,8 +802,9 @@ sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install kubern
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install azure-storage-blob azure-identity
 sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable kubelet.service
 # Add kubernetes master entrance
+sudo cp files/image_config/kubernetes/kubernetes_master_entrance.service ${FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM}/
 sudo cp files/image_config/kubernetes/kubernetes_master_entrance.sh $FILESYSTEM_ROOT/usr/sbin/
-sudo sed -i '/^exit 0/i\bash /usr/sbin/kubernetes_master_entrance.sh' $FILESYSTEM_ROOT/etc/rc.local
+sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable kubernetes_master_entrance.service
 {% endif %}
 
 {% macro get_install_options(set_owner, enabled) -%}
