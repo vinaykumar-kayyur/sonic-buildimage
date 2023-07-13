@@ -65,29 +65,3 @@ class Psu(PddfPsu):
         """
         return "N/A"
 
-    def get_voltage_high_threshold(self):
-        """
-        Retrieves the high threshold PSU voltage output
-        Returns:
-            A float number, the high threshold output voltage in volts,
-            e.g. 12.1
-        """
-        return 13.5 if self.get_mfr_id == MFR_ID else 0.0
-
-    def get_voltage_low_threshold(self):
-        """
-        Retrieves the low threshold PSU voltage output
-        Returns:
-            A float number, the low threshold output voltage in volts,
-            e.g. 12.1
-        """
-        return 11.4 if self.get_mfr_id == MFR_ID else 0.0
-
-    def get_maximum_supplied_power(self):
-        """
-        Retrieves the maximum supplied power by PSU
-        Returns:
-            A float number, the maximum power output in Watts.
-            e.g. 1200.1
-        """
-        return 1500 if self.get_mfr_id == MFR_ID else 0.0
