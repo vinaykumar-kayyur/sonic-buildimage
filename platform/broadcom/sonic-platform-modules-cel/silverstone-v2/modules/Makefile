@@ -4,5 +4,8 @@ $(TARGET)-objs := ./fan_driver/pddf_custom_fan_api.o ./fan_driver/pddf_custom_fa
 TARGET1:= pddf_custom_led_module
 $(TARGET1)-objs := ./led_driver/pddf_custom_led_module.o
 
-obj-m := $(TARGET).o $(TARGET1).o
-obj-m += pddf_custom_fpga_algo.o pddf_custom_fpga_extend.o pddf_custom_psu.o tps536c7.o
+TARGET2:= pddf_psu_driver_module
+$(TARGET2)-objs := ./psu_driver/pddf_psu_api.o ./psu_driver/pddf_psu_driver.o 
+
+obj-m := $(TARGET).o $(TARGET1).o $(TARGET2).o
+obj-m += pddf_custom_fpga_algo.o pddf_custom_fpga_extend.o tps536c7.o
