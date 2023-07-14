@@ -6,7 +6,7 @@ After=rc-local.service
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-ExecStart=/usr/sbin/kubernetes_master_entrance.sh
+ExecStart=/usr/bin/kubernetes_master_entrance.sh
 
 [Install]
 WantedBy=multi-user.target

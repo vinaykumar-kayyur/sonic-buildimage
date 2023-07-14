@@ -808,8 +808,8 @@ sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install azure-
 sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable kubelet.service
 # Add kubernetes master entrance
 sudo cp files/image_config/kubernetes/kubernetes_master_entrance.service ${FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM}/
-sudo cp files/image_config/kubernetes/kubernetes_master_entrance.sh $FILESYSTEM_ROOT/usr/sbin/
-sudo chmod +x $FILESYSTEM_ROOT/usr/sbin/kubernetes_master_entrance.sh
+sudo cp files/image_config/kubernetes/kubernetes_master_entrance.sh $FILESYSTEM_ROOT/usr/bin/
+sudo chmod +x $FILESYSTEM_ROOT/usr/bin/kubernetes_master_entrance.sh
 sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable kubernetes_master_entrance.service
 {% endif %}
 
