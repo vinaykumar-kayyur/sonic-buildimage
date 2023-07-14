@@ -927,7 +927,8 @@ instance is supported in SONiC.
         "bgp_adv_lo_prefix_as_128" : "true",
         "buffer_model": "traditional",
         "yang_config_validation": "disable",
-        "rack_mgmt_map": "dummy_value"
+        "rack_mgmt_map": "dummy_value",
+        "timezome": "Europe/Kiev"
     }
   }
 }
@@ -1101,6 +1102,14 @@ The FG_NHG_PREFIX table provides the FG_NHG_PREFIX for which FG behavior is desi
 		"TUNNEL": {
 			"FLEX_COUNTER_STATUS": "enable",
 			"POLL_INTERVAL": "10000"
+		},
+		"WRED_ECN_QUEUE": {
+			"FLEX_COUNTER_STATUS": "enable",
+			"POLL_INTERVAL": "10000"
+		},
+		"WRED_ECN_PORT": {
+			"FLEX_COUNTER_STATUS": "enable",
+			"POLL_INTERVAL": "1000"
 		}
 	}
 }
@@ -1776,7 +1785,8 @@ SFLOW
 
 | Field            | Description                                                                             | Mandatory   | Default   | Reference                                 |
 |------------------|-----------------------------------------------------------------------------------------|-------------|-----------|-------------------------------------------|
-| admin_state      | Global sflow admin state                                                                |             | down      |                                           |
+| admin_state      | Global sflow admin state                                                                |             | down      |    
+| sample_direction | Global sflow sample direction                                                           |             | rx        |                                        |
 | polling_interval | The interval within which sFlow data is collected and sent to the configured collectors |             | 20        |                                           |
 | agent_id         | Interface name                                                                          |             |           | PORT:name,PORTCHANNEL:name,MGMT_PORT:name, VLAN:name |
 
@@ -1788,7 +1798,7 @@ key - port
 | port        | Sets sflow session table attributes for either all interfaces or a specific Ethernet interface.                         |             |           | PORT:name   |
 | admin_state | Per port sflow admin state                                                                                              |             | up        |             |
 | sample_rate | Sets the packet sampling rate.  The rate is expressed as an integer N, where the intended sampling rate is 1/N packets. |             |           |             |
-
+| sample_direction| Per port sflow sample direction                                                                                               |             |   rx
 SFLOW_COLLECTOR
 
 key - name
