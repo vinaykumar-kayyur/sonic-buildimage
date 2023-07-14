@@ -499,12 +499,23 @@
                 "source": "1111::1111",
                 "port": "514",
                 "vrf": "Vrf_blue"
+            },
+            "somehostname": {
+                "filter": "include",
+                "filter_regex": "ololo",
+                "port": "514",
+                "protocol": "tcp",
+                "severity": "notice",
+                "vrf": "default"
             }
         },
         "SYSLOG_CONFIG" : {
             "GLOBAL": {
                 "rate_limit_interval": "5",
-                "rate_limit_burst": "100"
+                "rate_limit_burst": "100",
+                "format": "welf",
+                "welf_firewall_name": "bla",
+                "severity": "info"
             }
         },
         "SYSLOG_CONFIG_FEATURE" : {
@@ -1271,6 +1282,18 @@
                 "monErrThreshRxCells": "61035156",
                 "monPollThreshIsolation": "1",
                 "monPollThreshRecovery": "8"
+            }
+        },
+        "FABRIC_PORT": {
+            "Fabric0": {
+                "alias": "Fabric0",
+                "isolateStatus": "False",
+                "lanes": "0"
+            },
+            "Fabric1": {
+                "alias": "Fabric1",
+                "isolateStatus": "False",
+                "lanes": "1"
             }
         },
         "FLEX_COUNTER_TABLE": {
@@ -2210,6 +2233,14 @@
                 "lower_class": "true",
                 "special_class": "true",
                 "upper_class": "true"
+            }
+        },
+
+        "SSH_SERVER": {
+            "POLICIES":{
+                "authentication_retries": "6",
+                "login_timeout": "120",
+                "ports": "22"
             }
         },
 
