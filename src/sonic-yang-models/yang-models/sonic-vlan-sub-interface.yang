@@ -42,7 +42,7 @@ module sonic-vlan-sub-interface {
                      "(substring-before(name, '.') = /lag:sonic-portchannel/lag:PORTCHANNEL/lag:PORTCHANNEL_LIST/lag:name) or " +
                      "vlan"
                 {
-                    error-message "Mux condition not satisfied, no encap vlan provided for short-name format vlan sub interface";
+                    error-message "Must condition not satisfied, no encap vlan provided for short-name format vlan sub interface";
                 }
 
                 key "name";
