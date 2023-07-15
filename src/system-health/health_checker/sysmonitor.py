@@ -455,13 +455,26 @@ class Sysmonitor(ProcessTaskBase):
             self.state_db = swsscommon.SonicV2Connector(use_unix_socket_path=True)
             self.state_db.connect(self.state_db.STATE_DB)
 
-        if srv_status == "OK":
-            logger.log_notice("{} service status: {}, app status: {}"
-                              "".format(srv_name, srv_status, app_status))
-        else:
-            logger.log_error("{} service status: {}, app status: {}, fail "
-                             "reason: {}".format(srv_name, srv_status,
-                                                 app_status, fail_reason))
+        # Log message with proper level
+        logf = logger.log_notice
+        msg = f'{srv_name} service status: {srv_status}, '
+        msg += f'app status: {app_status}'
+
+        if srv_status != 'OK':
+            msg += f', fail reason: {fail_reason}'
+
+            # So far good down reasons for each service status
+            good_dr = {
+                'Down': ['Inactive'],
+                'Starting': ['-'],
+                'Stopping': ['-']
+            }
+
+            # Only allowed combinations
+            if fail_reason not in good_dr.get(srv_status, []):
+                logf = logger.log_error
+
+        logf(msg)
 
         key = 'ALL_SERVICE_STATUS|{}'.format(srv_name)
         statusvalue = {}
