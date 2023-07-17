@@ -292,3 +292,13 @@ class Psu(PsuBase):
         else:
             return 'N/A'
 
+    def get_maximum_supplied_power(self):
+        """
+        Retrieves the maximum supplied power by PSU
+
+        Returns:
+            A float number, the maximum power output in Watts.
+            e.g. 1200.1
+        """
+        return 2400.0
+

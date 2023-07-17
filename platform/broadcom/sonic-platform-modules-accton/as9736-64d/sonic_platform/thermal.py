@@ -40,13 +40,13 @@ PSU_CPLD_I2C_MAPPING = {
     }
 }
 
-THERMAL_NAME_LIST = ["Temp sensor 1", "Temp sensor 2", "Temp sensor 3",
-                     "Temp sensor 4", "Temp sensor 5", "Temp sensor 6",
-                     "Temp sensor 7", "Temp sensor 8", "Temp sensor 9",
-                     "Temp sensor 10", "Temp sensor 11", "CPU Package Temp",
-                     "CPU Core 0 Temp", "CPU Core 1 Temp", "CPU Core 2 Temp",
-                     "CPU Core 3 Temp", "CPU Core 4 Temp", "CPU Core 5 Temp",
-                     "CPU Core 6 Temp", "CPU Core 7 Temp"]
+THERMAL_NAME_LIST = ["SMB_RearMiddle_temp(0x48)", "SMB_FrontMiddle_temp(0x49)", "SMB_LeftMiddle_temp(0x4C)",
+                     "FCM_Center_temp(0x48)", "FCM_Left_temp(0x49)", "PDB-L_temp(0x48)",
+                     "PDB-R_temp(0x49)", "UDB_RearLeft_temp(0x48)", "UDB_RearMiddle_temp(0x4C)",
+                     "LDB_FrontRight_temp(0x4C)", "LDB_RearRight_temp(0x4D)", "CPU_Package_temp",
+                     "CPU_Core_0_temp", "CPU_Core_1_temp", "CPU_Core_2_temp",
+                     "CPU_Core_3_temp", "CPU_Core_4_temp", "CPU_Core_5_temp",
+                     "CPU_Core_6_temp", "CPU_Core_7_temp"]
 
 PSU_THERMAL_NAME_LIST = ["PSU-1 temp sensor 1", "PSU-2 temp sensor 1"]
 

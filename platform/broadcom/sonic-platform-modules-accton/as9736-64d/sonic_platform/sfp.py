@@ -97,8 +97,9 @@ class Sfp(SfpOptoeBase):
     def __init__(self, sfp_index=0, sfp_name=None):
         SfpOptoeBase.__init__(self)
 
-        self.index = sfp_index
-        self.port_num = self.index + 1
+        self._index = sfp_index
+        self.port_num = self._index + 1
+        self.index = self.port_num
         self._api_helper = APIHelper()
         self._name = sfp_name
 
@@ -148,10 +149,10 @@ class Sfp(SfpOptoeBase):
             return 'N/A'
 
     def get_eeprom_path(self):
-        if self.index < 32:
-            port_eeprom_path = PCIE_UDB_EEPROM_PATH.format(self.index)
+        if self._index < 32:
+            port_eeprom_path = PCIE_UDB_EEPROM_PATH.format(self._index)
         else:
-            port_eeprom_path = PCIE_LDB_EEPROM_PATH.format(self.index - 32)
+            port_eeprom_path = PCIE_LDB_EEPROM_PATH.format(self._index - 32)
 
         return port_eeprom_path
 
@@ -191,12 +192,12 @@ class Sfp(SfpOptoeBase):
 
 
     def refresh_optoe_dev_class(self):
-        if self.index < 32:
-            port = "pcie_udb_fpga_device.{}".format(self.index)
+        if self._index < 32:
+            port = "pcie_udb_fpga_device.{}".format(self._index)
             port_dev_unbind = PCIE_UDB_BIND_PATH.format("unbind")
             port_dev_bind = PCIE_UDB_BIND_PATH.format("bind")
         else:
-            port = "pcie_ldb_fpga_device.{}".format(self.index-32)
+            port = "pcie_ldb_fpga_device.{}".format(self._index-32)
             port_dev_unbind = PCIE_LDB_BIND_PATH.format("unbind")
             port_dev_bind = PCIE_LDB_BIND_PATH.format("bind")
 
@@ -296,7 +297,7 @@ class Sfp(SfpOptoeBase):
             try:
                 tx_disable_value = 0xf if tx_disable else 0x0
                 # Write to eeprom
-                sysfsfile_eeprom = open(self._eeprom_path, "r+b")
+                sysfsfile_eeprom = open(self.get_eeprom_path(), "r+b")
                 sysfsfile_eeprom.seek(QSFP_CONTROL_OFFSET)
                 sysfsfile_eeprom.write(struct.pack('B', tx_disable_value))
             except IOError:
@@ -439,7 +440,7 @@ class Sfp(SfpOptoeBase):
         sfputil_helper = SfpUtilHelper()
         sfputil_helper.read_porttab_mappings(
             self.__get_path_to_port_config_file())
-        name = sfputil_helper.logical[self.index] or "Unknown"
+        name = sfputil_helper.logical[self._index] or "Unknown"
         return name
 
     def get_presence(self):
