@@ -16,6 +16,7 @@
     neighbor {{ bgp_session['name'] }} soft-reconfiguration inbound
     neighbor {{ bgp_session['name'] }} route-map FROM_BGP_SENTINEL in
     neighbor {{ bgp_session['name'] }} route-map TO_BGP_SENTINEL out
+    neighbor {{ bgp_session['name'] }} maximum-prefix 200
   exit-address-family
   address-family ipv6
     neighbor {{ bgp_session['name'] }} activate
@@ -23,6 +24,7 @@
     neighbor {{ bgp_session['name'] }} soft-reconfiguration inbound
     neighbor {{ bgp_session['name'] }} route-map FROM_BGP_SENTINEL in
     neighbor {{ bgp_session['name'] }} route-map TO_BGP_SENTINEL out
+    neighbor {{ bgp_session['name'] }} maximum-prefix 200
   exit-address-family
 !
 ! end of template: bgpd/templates/sentinels/instance.conf.j2
