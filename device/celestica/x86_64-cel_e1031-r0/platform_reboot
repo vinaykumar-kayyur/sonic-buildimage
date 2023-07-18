@@ -1,0 +1,6 @@
+#!/bin/bash
+
+CPLD_SETREG_PATH="/sys/bus/platform/devices/e1031.smc/setreg"
+
+# Board level power cycle
+echo "0x0113 0xAA" > ${CPLD_SETREG_PATH}
