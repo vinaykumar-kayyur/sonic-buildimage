@@ -182,7 +182,7 @@
 - bus: ff
   dev: 0b
   fn: '3'
-  id: '0001'
+  id: '6f76'
   name: 'System peripheral: Arastra Inc. Device 0001 (rev 03)'
 - bus: ff
   dev: 0c
