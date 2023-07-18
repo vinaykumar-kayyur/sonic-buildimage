@@ -726,6 +726,9 @@ if [[ $TARGET_BOOTLOADER == uboot ]]; then
     fi
 fi
 
+## Ensure the system-map readable only by root
+sudo chmod 0600 /boot/System.map-*
+
 # Collect host image version files before cleanup
 SONIC_VERSION_CACHE=${SONIC_VERSION_CACHE}  \
 	DBGOPT="${DBGOPT}" \
