@@ -233,7 +233,7 @@ class Chassis(ChassisBase):
     def get_port_or_cage_type(self, port):
         from sonic_platform_base.sfp_base import SfpBase
         if port in range(1, 49):
-            return SfpBase.SFP_PORT_TYPE_BIT_SFP |SFP_PORT_TYPE_BIT_SFP_PLUS
+            return SfpBase.SFP_PORT_TYPE_BIT_SFP | SfpBase.SFP_PORT_TYPE_BIT_SFP_PLUS
         else:
             return SfpBase.SFP_PORT_TYPE_BIT_QSFP | SfpBase.SFP_PORT_TYPE_BIT_QSFP_PLUS | SfpBase.SFP_PORT_TYPE_BIT_QSFP28
 
