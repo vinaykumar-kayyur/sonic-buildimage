@@ -2,6 +2,7 @@
 Description=Setup k8s master services
 Requires=rc-local.service
 After=rc-local.service
+Before=sonic.target
 
 [Service]
 Type=oneshot
