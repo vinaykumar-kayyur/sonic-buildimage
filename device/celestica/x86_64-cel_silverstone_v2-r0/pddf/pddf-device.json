@@ -42,8 +42,8 @@
             "ipmi_devintf",
             "i2c_mux_pca954x",
             "optoe",
-	    "at24",
-	    "i2c-i801"
+	        "at24",
+	        "i2c-i801"
         ],
         "pddf_kos":
         [
@@ -147,7 +147,9 @@
                 {"chn":"10", "dev":"MUX3"},
                 {"chn":"10", "dev":"MUX4"},
                 {"chn":"10", "dev":"MUX5"},
-                {"chn":"10", "dev":"MUX6"}
+                {"chn":"10", "dev":"MUX6"},
+                {"chn":"11", "dev":"PORT33"},
+                {"chn":"12", "dev":"PORT34"}
             ]
         }
     },
@@ -171,7 +173,7 @@
             "dev_attr":{}
         }
     },
-    
+
     "FAN_CPLD":
     {
         "dev_info": { "device_type":"CPLD", "device_name":"FAN_CPLD", "device_parent":"FPGAPCIE0"},
@@ -181,7 +183,7 @@
             "dev_attr":{}
         }
     },
-    
+
     "CPLD_S1":
     {
         "dev_info": {"device_type":"CPLD", "device_name":"CPLD_S1", "device_parent":"FPGAPCIE0"},
@@ -391,8 +393,7 @@
             ]
         }
     },
-
-
+    
     "PORT3":
     {
         "dev_info": {"device_type":"QSFP-DD", "device_name":"PORT3", "device_parent":"MUX5"},
@@ -1664,7 +1665,6 @@
             ]
         }
     },
-
     "PORT34":
     {
         "dev_info": {"device_type":"SFP+", "device_name":"PORT34", "device_parent":"FPGAPCIE0"},
@@ -1705,7 +1705,6 @@
             ]
         }
     },
-    
 
     "PSU1":
     {
@@ -1743,7 +1742,10 @@
                 {"attr_name":"psu_i_in", "attr_devaddr":"0x58", "attr_devtype":"pmbus", "attr_offset":"0x89", "attr_mask":"0x0", "attr_cmpval":"0xff", "attr_len":"2"},
                 {"attr_name":"psu_fan1_speed_rpm", "attr_devaddr":"0x58", "attr_devtype":"pmbus", "attr_offset":"0x90", "attr_mask":"0x0", "attr_cmpval":"0xff", "attr_len":"2"},
                 {"attr_name":"psu_temp1_input", "attr_devaddr":"0x58", "attr_devtype":"pmbus", "attr_offset":"0x8e", "attr_mask":"0x0", "attr_cmpval":"0xff", "attr_len":"2"},
-                {"attr_name":"psu_temp1_high_threshold", "attr_devaddr":"0x58", "attr_devtype":"pmbus", "attr_offset":"0xc0", "attr_mask":"0x0", "attr_cmpval":"0xff", "attr_len":"2"}
+                {"attr_name":"psu_temp1_high_threshold", "attr_devaddr":"0x58", "attr_devtype":"pmbus", "attr_offset":"0xc0", "attr_mask":"0x0", "attr_cmpval":"0xff", "attr_len":"2"},
+                {"attr_name":"psu_v_out_max", "attr_devaddr":"0x58", "attr_devtype":"pmbus", "attr_offset":"0xa5", "attr_mask":"0x0", "attr_cmpval":"0xff", "attr_len":"2"},
+                {"attr_name":"psu_v_out_min", "attr_devaddr":"0x58", "attr_devtype":"pmbus", "attr_offset":"0xa4", "attr_mask":"0x0", "attr_cmpval":"0xff", "attr_len":"2"},
+                {"attr_name":"psu_p_out_max", "attr_devaddr":"0x58", "attr_devtype":"pmbus", "attr_offset":"0xa7", "attr_mask":"0x0", "attr_cmpval":"0xff", "attr_len":"2"}
             ]
         }
     },
@@ -1784,7 +1786,10 @@
                 {"attr_name":"psu_i_in", "attr_devaddr":"0x59", "attr_devtype":"pmbus", "attr_offset":"0x89", "attr_mask":"0x0", "attr_cmpval":"0xff", "attr_len":"2"},
                 {"attr_name":"psu_fan1_speed_rpm", "attr_devaddr":"0x59", "attr_devtype":"pmbus", "attr_offset":"0x90", "attr_mask":"0x0", "attr_cmpval":"0xff", "attr_len":"2"},
                 {"attr_name":"psu_temp1_input", "attr_devaddr":"0x59", "attr_devtype":"pmbus", "attr_offset":"0x8e", "attr_mask":"0x0", "attr_cmpval":"0xff", "attr_len":"2"},
-                {"attr_name":"psu_temp1_high_threshold", "attr_devaddr":"0x59", "attr_devtype":"pmbus", "attr_offset":"0xc0", "attr_mask":"0x0", "attr_cmpval":"0xff", "attr_len":"2"}
+                {"attr_name":"psu_temp1_high_threshold", "attr_devaddr":"0x59", "attr_devtype":"pmbus", "attr_offset":"0xc0", "attr_mask":"0x0", "attr_cmpval":"0xff", "attr_len":"2"},
+                {"attr_name":"psu_v_out_max", "attr_devaddr":"0x59", "attr_devtype":"pmbus", "attr_offset":"0xa5", "attr_mask":"0x0", "attr_cmpval":"0xff", "attr_len":"2"},
+                {"attr_name":"psu_v_out_min", "attr_devaddr":"0x59", "attr_devtype":"pmbus", "attr_offset":"0xa4", "attr_mask":"0x0", "attr_cmpval":"0xff", "attr_len":"2"},
+                {"attr_name":"psu_p_out_max", "attr_devaddr":"0x59", "attr_devtype":"pmbus", "attr_offset":"0xa7", "attr_mask":"0x0", "attr_cmpval":"0xff", "attr_len":"2"}
              ]
         }
     },
