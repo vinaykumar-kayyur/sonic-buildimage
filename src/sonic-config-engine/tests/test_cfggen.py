@@ -697,7 +697,7 @@ class TestCfgGen(TestCase):
         self.assertEqual(utils.to_dict(output.strip()), utils.to_dict("{'10.0.10.1': {}, '10.0.10.2': {}}"))
 
     def test_dns_nameserver(self):
-        argument = ['-m', self.sample_graph_simple, '-p', self.port_config, '-v', "DNS_NAMESERVER"]
+        argument = ['-m', self.sample_graph_metadata, '-p', self.port_config, '-v', "DNS_NAMESERVER"]
         output = self.run_script(argument)
         self.assertEqual(utils.to_dict(output.strip()), utils.to_dict("{'6.6.6.6': {}}"))
 
