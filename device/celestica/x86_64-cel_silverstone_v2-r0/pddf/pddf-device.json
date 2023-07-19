@@ -63,6 +63,7 @@
         "custom_kos":
         [
             "pddf_custom_led_module",
+            "pddf_custom_wdt",
             "pddf_custom_fpga_algo",
             "pddf_fan_driver_module",
             "pddf_psu_driver_module",
@@ -393,7 +394,7 @@
             ]
         }
     },
-    
+
     "PORT3":
     {
         "dev_info": {"device_type":"QSFP-DD", "device_name":"PORT3", "device_parent":"MUX5"},
