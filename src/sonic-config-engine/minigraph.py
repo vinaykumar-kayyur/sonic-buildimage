@@ -2003,7 +2003,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     # Set default DNS nameserver from dns.j2
     results['DNS_NAMESERVER'] = {}
     if os.environ.get("CFGGEN_UNIT_TESTING", "0") == "2":
-        dns_conf = os.path.join(os.path.dirname(__file__), "data/", "dns.j2")
+        dns_conf = os.path.join(os.path.dirname(__file__), "tests/", "dns.j2")
     else:
         dns_conf = "/usr/local/sonic/dns/dns.j2"
     if os.path.isfile(dns_conf):
