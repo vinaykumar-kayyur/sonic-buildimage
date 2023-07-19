@@ -220,14 +220,6 @@ class FanControl(object):
                 logging.info('PASS. Set Fan%d duty_cycle (%d)' % (fan_index, self._new_perc))
             else:
                 logging.error('FAIL. Set Fan%d duty_cycle (%d)' % (fan_index, self._new_perc))
-        # for i in range(FAN_NUMBER * 2):
-        #     fan_rpm = self.platform_chassis_obj.get_fan(i).get_speed()
-        #     logging.info("Get before setting fan speed: %s" % fan_rpm)
-        #     set_stat = self.platform_chassis_obj.get_fan(i).set_speed(self._new_perc)
-        #     if set_stat is True:
-        #         logging.info('PASS. Set Fan%d duty_cycle (%d)' % (i, self._new_perc))
-        #     else:
-        #         logging.error('FAIL. Set Fan%d duty_cycle (%d)' % (i, self._new_perc))
 
 
 def handler(signum, frame):
