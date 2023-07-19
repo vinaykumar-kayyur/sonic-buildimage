@@ -3,7 +3,6 @@
 # @Time    : 2023/3/9 16:19
 # @Mail    : yajiang@celestica.com
 # @Author  : jiang tao
-
 import fcntl
 import os
 import array
@@ -44,7 +43,7 @@ WDIOS_DISABLECARD = 0x0001
 WDIOS_ENABLECARD = 0x0002
 
 WDT_COMMON_ERROR = -1
-WD_MAIN_IDENTITY = "iTCO_wdt"
+WD_MAIN_IDENTITY = "cpld_wdt"
 WDT_SYSFS_PATH = "/sys/class/watchdog/"
 
 DEFAULT_TIMEOUT = 180
@@ -52,57 +51,26 @@ watchdog = 0
 
 
 class Watchdog(WatchdogBase):
+    watchdog = None
+
     def __init__(self):
-        self.watchdog = None
-        self.wdt_main_dev_name = self._get_wdt()
-        if self.wdt_main_dev_name is None:
-            raise Exception("Watchdog device is not instantiated")
-
-        self.time_left = "/sys/class/watchdog/%s/timeleft" % self.wdt_main_dev_name
-        self.state_path = "/sys/class/watchdog/%s/state" % self.wdt_main_dev_name
-        self.timeout_path = "/sys/class/watchdog/%s/timeout" % self.wdt_main_dev_name
-
-        self.armed = False if self._read_file(self.state_path) == "inactive" else True
-        self.watchdog_device_path = "/dev/{}".format(self.wdt_main_dev_name)
-
+        global watchdog
+        self.helper = helper.APIHelper()
+        self.status_path = "/sys/devices/platform/cpld_wdt/status"
+        self.state_path = "/sys/devices/platform/cpld_wdt/state"
+        self.timeout_path = "/sys/devices/platform/cpld_wdt/timeout"
+        # Set default value
+        state = self.helper.read_txt_file(self.state_path)
+        self.armed = True if state == "active" else False
         self.timeout = DEFAULT_TIMEOUT
-
-    def _is_wd_main(self, dev):
-        """
-        Checks watchdog identity
-        """
-        identity = self._read_file("{}/{}/identity".format(WDT_SYSFS_PATH, dev))
-        return identity == WD_MAIN_IDENTITY or identity == 'wdat_wdt'
-
-    def _get_wdt(self):
-        """
-        Retrieves watchdog device
-        """
-
-        wdt_main_dev_list = [dev for dev in os.listdir("/dev/") if dev.startswith("watchdog") and self._is_wd_main(dev)]
-        if not wdt_main_dev_list:
-            return None
-        wdt_main_dev_name = wdt_main_dev_list[0]
-        return wdt_main_dev_name
-
-    @staticmethod
-    def _read_file(file_path):
-        """
-        Read text file
-        """
-        try:
-            with open(file_path, "r") as fd:
-                txt = fd.read()
-        except IOError:
-            return WDT_COMMON_ERROR
-        return txt.strip()
+        if not watchdog:
+            watchdog = os.open("/dev/cpld_wdt", os.O_RDWR)
+        self.watchdog = watchdog
 
     def _enable(self):
         """
         Turn on the watchdog timer
         """
-        if self.watchdog is None:
-            self.watchdog = os.open(self.watchdog_device_path, os.O_RDWR)
         req = array.array('h', [WDIOS_ENABLECARD])
         fcntl.ioctl(self.watchdog, WDIOC_SETOPTIONS, req, False)
 
@@ -110,8 +78,6 @@ class Watchdog(WatchdogBase):
         """
         Turn off the watchdog timer
         """
-        if self.watchdog is None:
-            self.watchdog = os.open(self.watchdog_device_path, os.O_RDWR)
         req = array.array('h', [WDIOS_DISABLECARD])
         fcntl.ioctl(self.watchdog, WDIOC_SETOPTIONS, req, False)
 
@@ -119,8 +85,6 @@ class Watchdog(WatchdogBase):
         """
         Keep alive watchdog timer
         """
-        if self.watchdog is None:
-            self.watchdog = os.open(self.watchdog_device_path, os.O_RDWR)
         fcntl.ioctl(self.watchdog, WDIOC_KEEPALIVE)
 
     def _set_timeout(self, seconds):
@@ -129,8 +93,6 @@ class Watchdog(WatchdogBase):
         @param seconds - timeout in seconds
         @return is the actual set timeout
         """
-        if self.watchdog is None:
-            self.watchdog = os.open(self.watchdog_device_path, os.O_RDWR)
         req = array.array('I', [seconds])
         fcntl.ioctl(self.watchdog, WDIOC_SETTIMEOUT, req, True)
         return int(req[0])
@@ -140,16 +102,22 @@ class Watchdog(WatchdogBase):
         Get watchdog timeout
         @return watchdog timeout
         """
-        return int(self._read_file(self.timeout_path))
+        req = array.array('I', [0])
+        fcntl.ioctl(self.watchdog, WDIOC_GETTIMEOUT, req, True)
+
+        return int(req[0])
 
     def _get_time_left(self):
         """
         Get time left before watchdog timer expires
         @return time left in seconds
         """
-        return int(self._read_file(self.time_left))
+        req = array.array('I', [0])
+        fcntl.ioctl(self.watchdog, WDIOC_GETTIMELEFT, req, True)
 
-    # Watchdog Base API #
+        return int(req[0])
+
+    #################################################################
 
     def arm(self, seconds):
         """
@@ -169,7 +137,6 @@ class Watchdog(WatchdogBase):
             return ret
 
         try:
-            self._set_timeout(DEFAULT_TIMEOUT)
             if self.timeout != seconds:
                 self.timeout = self._set_timeout(seconds)
 
@@ -178,6 +145,7 @@ class Watchdog(WatchdogBase):
             else:
                 self._enable()
                 self.armed = True
+
             ret = self.timeout
         except IOError:
             pass
@@ -197,6 +165,7 @@ class Watchdog(WatchdogBase):
                 disarmed = True
             except IOError:
                 pass
+
         return disarmed
 
     def is_armed(self):
@@ -213,7 +182,7 @@ class Watchdog(WatchdogBase):
         If the watchdog is armed, retrieve the number of seconds remaining on
         the watchdog timer
         Returns:
-            An integer specifying the number of seconds remaining on the
+            An integer specifying the number of seconds remaining on thei
             watchdog timer. If the watchdog is not armed, returns -1.
         """
 
