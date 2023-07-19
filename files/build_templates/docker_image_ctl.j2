@@ -235,12 +235,10 @@ function postStartAction()
                  ($(docker exec -i database$DEV sonic-db-cli PING | grep -c PONG) -gt 0) ]]; do
           sleep 1;
         done
+
         if [[ ("$BOOT_TYPE" == "warm" || "$BOOT_TYPE" == "fastfast" || "$BOOT_TYPE" == "fast") && -f $WARM_DIR/dump.rdb ]]; then
             # retain the dump file from last boot for debugging purposes
             mv $WARM_DIR/dump.rdb $WARM_DIR/dump.rdb.old
-            # CONFIG_DB init flag will be set to 1 at the time when device warm-reboots and old config is loaded on DB
-            # Reset CONFIG_DB init value to 0 to indicate start of new system. This will be set to "1" after DB migration is completed
-            $SONIC_DB_CLI CONFIG_DB SET "CONFIG_DB_INITIALIZED" "0"
         else
             # If there is a config_db.json dump file, load it.
             if [ -r /etc/sonic/config_db$DEV.json ]; then
@@ -251,29 +249,16 @@ function postStartAction()
                     $SONIC_CFGGEN -j /etc/sonic/config_db$DEV.json --write-to-db
                 fi
             fi
-
-            if [[ "$BOOT_TYPE" == "fast" ]]; then
-                # set the key to expire in 3 minutes
-                $SONIC_DB_CLI STATE_DB SET "FAST_REBOOT|system" "1" "EX" "180"
-            fi
         fi
 
         if [ -e /tmp/pending_config_migration ] || [ -e /tmp/pending_config_initialization ]; then
             # this is first boot to a new image, config-setup execution is pending.
             # for warmboot case, DB is loaded but migration is still pending
-            # For fast/cold reboot case, DB contains nothing at this point
-            # Call db_migrator and set CONFIG_DB_INITIALIZED after config-setup loads the config (from old config or minigraph)
-            echo "Delaying db_migrator until config migration is over"
+            # For firstbboot/fast/cold reboot case, DB contains nothing at this point
             # unset CONFIG_DB_INITIALIZED to indicate pending config load and migration
+            # This flag will be set to "1" after DB migration/initialization is completed as part of config-setup
             $SONIC_DB_CLI CONFIG_DB SET "CONFIG_DB_INITIALIZED" "0"
         else
-            # this is not a first time boot to a new image. Datbase container starts w/ old pre-existing config
-            if [[ -x /usr/local/bin/db_migrator.py ]]; then
-                # Migrate the DB to the latest schema version if needed
-                if [ -z "$DEV" ]; then
-                    /usr/local/bin/db_migrator.py -o migrate
-                fi
-            fi
             # set CONFIG_DB_INITIALIZED to indicate end of config load and migration
             $SONIC_DB_CLI CONFIG_DB SET "CONFIG_DB_INITIALIZED" "1"
         fi
