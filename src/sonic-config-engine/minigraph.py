@@ -2015,9 +2015,10 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
             dns_res = json.loads(text)
         except ValueError as e:
             print("Warning: fail to load dns configuration, {}".format(e), file=sys.stderr)
-        dns_nameservers = dns_res.get('DNS_NAMESERVER', {})
-        for k in dns_nameservers.keys():
-            results['DNS_NAMESERVER'][k] = {}
+        else:
+            dns_nameservers = dns_res.get('DNS_NAMESERVER', {})
+            for k in dns_nameservers.keys():
+                results['DNS_NAMESERVER'][k] = {}
     results['TACPLUS_SERVER'] = dict((item, {'priority': '1', 'tcp_port': '49'}) for item in tacacs_servers)
     if len(acl_table_types) > 0:
         results['ACL_TABLE_TYPE'] = acl_table_types
