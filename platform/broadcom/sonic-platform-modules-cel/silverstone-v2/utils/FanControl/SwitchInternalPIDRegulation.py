@@ -86,29 +86,58 @@ class SwitchInternalPIDRegulation(object):
             logging.warning("Can't Get switch internal temperature! Cause:%s" % str(E))
             return False
 
+    def exception_data_handling(self):
+        """
+        Get the temperature of switch internal, and confirm whether the obtained value meets the conditions:
+        1. The temperature range is 0~150;
+        2. The temperature difference from the last time is within 20
+        Otherwise, loop 5 times to get the temperature value again
+        :return:Qualified temperature value
+        """
+        re_try = False
+        sw_temp = self.get_switch_internal_temperature()
+        if sw_temp is False:
+            re_try = True
+        elif sw_temp not in range(0, 151):
+            re_try = True
+
+        if re_try:
+            error_temp_list = list()
+            for _ in range(5):
+                sw_temp = self.get_switch_internal_temperature()
+                if type(sw_temp) is int and T_LIST and (abs(sw_temp - T_LIST[-1]) <= 20):
+                    return sw_temp
+                else:
+                    error_temp_list.append(sw_temp)
+            else:
+                sw_temp = False
+                self.syslog.debug(
+                    "Cycle five times, and the obtained 'switch internal' temperatures are all abnormal values::%s"
+                    % error_temp_list)
+                logging.info(
+                    "Cycle five times, and the obtained 'switch internal' temperatures are all abnormal values::%s"
+                    % error_temp_list)
+        return sw_temp
+
     def pid_control(self):
         """
         PID adjustment according to Switch Internal Temperature
         :return: fans pwm
         """
+        sw_temp = self.exception_data_handling()
+        if not sw_temp:
+            return DUTY_MAX
         if len(T_LIST) < 3:
-            sw_temp = self.get_switch_internal_temperature()
-            if sw_temp:
-                T_LIST.append(float(sw_temp))
-                self.syslog.debug("Init PID Control T_LIST:%s" % T_LIST)
-                logging.info("Init PID Control T_LIST:%s" % T_LIST)
-                return PWM_LIST[0]
-            else:
-                return DUTY_MAX
+            T_LIST.append(float(sw_temp))
+            self.syslog.debug("Init PID Control T_LIST:%s" % T_LIST)
+            logging.info("Init PID Control T_LIST:%s" % T_LIST)
+            return PWM_LIST[0]
+
         else:
-            sw_temp = self.get_switch_internal_temperature()
-            if sw_temp:
-                T_LIST.append(float(sw_temp))
-            else:
-                return DUTY_MAX
+            T_LIST.append(float(sw_temp))
             pwm_k = PWM_LIST[0] + Kp * (T_LIST[2] - T_LIST[1]) + \
-                Ki * (T_LIST[2] - SET_POINT) + \
-                Kd * (T_LIST[2] - 2 * T_LIST[1] + T_LIST[0])
+                    Ki * (T_LIST[2] - SET_POINT) + \
+                    Kd * (T_LIST[2] - 2 * T_LIST[1] + T_LIST[0])
             if pwm_k < PWM_MIN:
                 logging.info("Switch Internal PID PWM calculation value < %d, %d will be used"
                              % (PWM_MIN, PWM_MIN))
