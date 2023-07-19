@@ -8,4 +8,4 @@ TARGET2:= pddf_psu_driver_module
 $(TARGET2)-objs := ./psu_driver/pddf_psu_api.o ./psu_driver/pddf_psu_driver.o 
 
 obj-m := $(TARGET).o $(TARGET1).o $(TARGET2).o
-obj-m += pddf_custom_fpga_algo.o pddf_custom_fpga_extend.o tps536c7.o
+obj-m += pddf_custom_fpga_algo.o pddf_custom_fpga_extend.o tps536c7.o pddf_custom_wdt.o
