@@ -28,6 +28,10 @@ DUTY_MAX = 100
 FAN_NUMBER = 7
 PSU_NUMBER = 2
 SENSOR_NUMBER = 6
+Fan_Front_MAX = 40000
+Fan_Front_MIN = 7800
+Fan_Rear_MAX = 37800
+Fan_Rear_MIN = 6600
 
 
 class FanControl(object):
@@ -80,7 +84,12 @@ class FanControl(object):
         for psu_index in range(PSU_NUMBER):
             psu_presence = self.platform_chassis_obj.get_psu(psu_index).get_presence()
             psu_status = self.platform_chassis_obj.get_psu(psu_index).get_status()
-            if not psu_presence or not psu_status:
+            if not psu_status:
+                self.syslog.warning(
+                    "psu%s was error,presence:%s, status:%s" % (psu_index + 1, str(psu_presence), str(psu_status)))
+                logging.warning(
+                    "psu%s was error,presence:%s, status:%s" % (psu_index + 1, str(psu_presence), str(psu_status)))
+            if not psu_presence:
                 psu_presence_list[psu_index] = False
                 self.syslog.warning(
                     "psu%s was error,presence:%s, status:%s" % (psu_index + 1, str(psu_presence), str(psu_status)))
@@ -128,13 +137,20 @@ class FanControl(object):
         :param fan_duty_list: A list.TO app the fans target pwm
         """
         fan_rpm_error_list = list()
-        for fan_index_ in range(FAN_NUMBER * 2):
-            fan_name = self.platform_chassis_obj.get_fan(fan_index_).get_name()
-            fan_speed_rpm = self.platform_chassis_obj.get_fan(fan_index_).get_speed_rpm()
-            if fan_name.endswith("1") and fan_speed_rpm < 7200:
+        for fan in self.platform_chassis_obj.get_all_fans():
+            fan_name = fan.get_name()
+            fan_speed_rpm = fan.get_speed_rpm()
+            if fan_name.endswith("1") and (fan_speed_rpm not in range(Fan_Front_MIN, Fan_Front_MAX + 1)):
                 fan_rpm_error_list.append(fan_name)
-            if fan_name.endswith("2") and fan_speed_rpm < 6600:
+            if fan_name.endswith("2") and (fan_speed_rpm not in range(Fan_Rear_MIN, Fan_Rear_MAX + 1)):
                 fan_rpm_error_list.append(fan_name)
+        # for fan_index_ in range(FAN_NUMBER * 2):
+        #     fan_name = self.platform_chassis_obj.get_fan(fan_index_).get_name()
+        #     fan_speed_rpm = self.platform_chassis_obj.get_fan(fan_index_).get_speed_rpm()
+        #     if fan_name.endswith("1") and (fan_speed_rpm not in range(Fan_Front_MIN, Fan_Front_MAX+1)):
+        #         fan_rpm_error_list.append(fan_name)
+        #     if fan_name.endswith("2") and (fan_speed_rpm not in range(Fan_Rear_MIN, Fan_Rear_MAX+1)):
+        #         fan_rpm_error_list.append(fan_name)
         if not fan_rpm_error_list:
             return
         if len(fan_rpm_error_list) >= 2:
@@ -147,7 +163,7 @@ class FanControl(object):
             self.syslog.warning("%s rpm less than the set minimum speed. Fans pwm isn't changed" % fan_rpm_error_list)
             logging.warning("%s rpm less than the set minimum speed. Fans pwm isn't changed" % fan_rpm_error_list)
 
-        fan_modules_index_list = list(set(int(re.findall(r"Fantray(\d)_\d", x)[0]) // 2 for x in fan_rpm_error_list))
+        fan_modules_index_list = list(set(int(re.findall(r"Fantray(\d)_\d", x)[0]) for x in fan_rpm_error_list))
         for error_fan in fan_modules_index_list:
             self.syslog.warning("Fantray%d will be set to %s " % (error_fan, ERROR_COLOR))
             logging.warning("Fantray%d will be set to %s " % (error_fan, ERROR_COLOR))
@@ -194,24 +210,39 @@ class FanControl(object):
             self._new_perc = 35
         if self._new_perc > 100:
             self._new_perc = 100
-        for i in range(FAN_NUMBER):
-            fan_rpm = self.platform_chassis_obj.get_fan(i).get_speed()
+        fan_index = 0
+        for fan in self.platform_chassis_obj.get_all_fans():
+            fan_index += 1
+            fan_rpm = fan.get_speed()
             logging.info("Get before setting fan speed: %s" % fan_rpm)
-            set_stat = self.platform_chassis_obj.get_fan(i).set_speed(self._new_perc)
+            set_stat = fan.set_speed(self._new_perc)
             if set_stat is True:
-                logging.info('PASS. Set Fan%d duty_cycle (%d)' % (i, self._new_perc))
+                logging.info('PASS. Set Fan%d duty_cycle (%d)' % (fan_index, self._new_perc))
             else:
-                logging.error('FAIL. Set Fan%d duty_cycle (%d)' % (i, self._new_perc))
+                logging.error('FAIL. Set Fan%d duty_cycle (%d)' % (fan_index, self._new_perc))
+        # for i in range(FAN_NUMBER * 2):
+        #     fan_rpm = self.platform_chassis_obj.get_fan(i).get_speed()
+        #     logging.info("Get before setting fan speed: %s" % fan_rpm)
+        #     set_stat = self.platform_chassis_obj.get_fan(i).set_speed(self._new_perc)
+        #     if set_stat is True:
+        #         logging.info('PASS. Set Fan%d duty_cycle (%d)' % (i, self._new_perc))
+        #     else:
+        #         logging.error('FAIL. Set Fan%d duty_cycle (%d)' % (i, self._new_perc))
 
 
 def handler(signum, frame):
+    logging.warning('Cause signal %d, will set all fan speed to max.' % signum)
     platform_chassis = platform.Platform().get_chassis()
-    for _ in range(FAN_NUMBER):
-        set_stat = platform_chassis.get_fan(_).set_speed(DUTY_MAX)
-        if set_stat is True:
-            logging.warning('INFO:Cause signal %d, set fan speed max.' % signum)
-        else:
-            logging.error('INFO: FAIL. set_fan_duty_cycle (%d)' % DUTY_MAX)
+    set_error = list()
+    fan_index = 1
+    for fan in platform_chassis.get_all_fans():
+        set_stat = fan.set_speed(DUTY_MAX)
+        fan_drawer = fan_index//2
+        if not set_stat:
+            set_error.append(fan_drawer)
+        fan_index += 1
+    if set_error:
+        logging.error('Fail. Set Fantray %s to (%d) failed' % (list(set(set_error)), DUTY_MAX))
     sys.exit(0)
 
 

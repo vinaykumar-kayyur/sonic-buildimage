@@ -33,6 +33,7 @@ class FanLinearAdjustment(object):
         self.fan_num = fan_num
         self.psu_num = psu_num
         self.sensor_num = sensor_num
+        self.last_pwm = 0
         #  Needs a logger and a logger level
         formatter = logging.Formatter('%(name)s %(message)s')
         sys_handler = logging.handlers.SysLogHandler(address='/dev/log')
@@ -82,10 +83,10 @@ class FanLinearAdjustment(object):
         :return: According to the sensor temperature, select the maximum expected fan value at each point(int)
         """
         fan_direction = "NA"
-        for fan_index in range(self.fan_num * 2):
-            fan_status = self.platform_chassis_obj.get_fan(fan_index).get_status()
+        for fan in self.platform_chassis_obj.get_all_fans():
+            fan_status = fan.get_status()
             if fan_status:
-                fan_direction = self.platform_chassis_obj.get_fan(fan_index).get_direction()
+                fan_direction = fan.get_direction()
                 logging.info("fan direction: %s. INTAKE=B2F, EXHAUST=F2B" % str(fan_direction))
                 break
         all_temp = self.get_all_temperature()
@@ -102,7 +103,8 @@ class FanLinearAdjustment(object):
         sensor_temp = float(all_temp[sensor_index])
         logging.info("Use to adjustment sensor=%d, index=%d" % (sensor_temp, sensor_index))
         update_temp_sensor = True
-        if all_temp[sensor_index] - temp_list[sensor_index] < 0:
+        diff_temp = temp_list[sensor_index] - all_temp[sensor_index]
+        if diff_temp > 0:
             update_temp_sensor = False
 
         if sensor_index == 0:
@@ -122,6 +124,7 @@ class FanLinearAdjustment(object):
                     sensor_temp_pwm = self.duty_max
                 else:
                     sensor_temp_pwm = int((31 / 6) * sensor_temp - b)
+            return self.choose_pwm(update_temp_sensor, self.last_pwm, sensor_temp_pwm)
         else:
             if not update_temp_sensor:  # U17 temperature down
                 b = 20
@@ -139,7 +142,22 @@ class FanLinearAdjustment(object):
                     sensor_temp_pwm = self.duty_max
                 else:
                     sensor_temp_pwm = int((60 / 23) * sensor_temp - b)
-        return sensor_temp_pwm
+            return self.choose_pwm(update_temp_sensor, self.last_pwm, sensor_temp_pwm)
+
+    @staticmethod
+    def choose_pwm(status, last_pwm, now_pwm):
+        """
+        choose the pwm with Thermal rules
+        :param status: Temperature rises (True) or falls(False)
+        :param last_pwm:last pwm value
+        :param now_pwm:Calculated pwm from current temperature
+        :return:int.The pwm value
+        """
+        logging.info("Status=%s, last_pwm=%s, now_pwm=%s" % (status, last_pwm, now_pwm))
+        if status:
+            return last_pwm if last_pwm >= now_pwm else now_pwm
+        else:
+            return now_pwm if last_pwm >= now_pwm else last_pwm
 
     def linear_control(self):
         """
@@ -148,4 +166,5 @@ class FanLinearAdjustment(object):
         """
         new_perc = self.get_fan_pwm_by_temperature(self.init_fan_temperature)
         self.init_fan_temperature = self.get_all_temperature()
+        self.last_pwm = new_perc
         return new_perc

@@ -119,5 +119,5 @@ class SwitchInternalPIDRegulation(object):
                 pwm_k = PWM_MAX
             PWM_LIST[0] = pwm_k
             T_LIST.pop(0)
-            logging.info("Switch Internal PID: PWM=%d" % pwm_k)
+            logging.info("Switch Internal PID: PWM=%d Temp list=%s" % (pwm_k, T_LIST))
             return pwm_k
