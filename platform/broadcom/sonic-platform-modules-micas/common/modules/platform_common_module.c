@@ -49,13 +49,13 @@ module_param(dfd_my_type_i2c_bus, int, S_IRUGO | S_IWUSR);
 uint32_t dfd_my_type_i2c_addr = 0;
 module_param(dfd_my_type_i2c_addr, int, S_IRUGO | S_IWUSR);
 
-#define RUJIE_COMMON_DEBUG_VERBOSE(fmt, args...) do {                                        \
+#define PLATFORM_COMMON_DEBUG_VERBOSE(fmt, args...) do {                                        \
     if (g_common_debug_verbose) { \
         printk(KERN_ERR "[PLATFORM_COMMON][VER][func:%s line:%d]\r\n"fmt, __func__, __LINE__, ## args); \
     } \
 } while (0)
 
-#define RUJIE_COMMON_DEBUG_ERROR(fmt, args...) do {                                        \
+#define PLATFORM_COMMON_DEBUG_ERROR(fmt, args...) do {                                        \
     if (g_common_debug_error) { \
         printk(KERN_ERR "[PLATFORM_COMMON][ERROR][func:%s line:%d]\r\n"fmt, __func__, __LINE__, ## args); \
     } \
@@ -75,7 +75,7 @@ buf, int32_t size)
     fp = filp_open(dev, O_RDWR, S_IRUSR | S_IWUSR);
     if (IS_ERR(fp)) {
         DBG_ERROR("i2c open fail.\n");
-        RUJIE_COMMON_DEBUG_ERROR("i2c open fail.\n");
+        PLATFORM_COMMON_DEBUG_ERROR("i2c open fail.\n");
         return -1;
     }
     memcpy(&client, fp->private_data, sizeof(struct i2c_client));
@@ -122,12 +122,12 @@ static int dfd_tlvinfo_get_cardtype(void)
         i2c_dev.addr = DFD_TLVEEPROM_I2C_ADDR;
     }
     snprintf(i2c_path, sizeof(i2c_path), "/dev/i2c-%d", i2c_dev.bus);
-    RUJIE_COMMON_DEBUG_VERBOSE("Read device eeprom info:(dev:%s, addr:%02x).\n", i2c_path, i2c_dev.addr);
+    PLATFORM_COMMON_DEBUG_VERBOSE("Read device eeprom info:(dev:%s, addr:%02x).\n", i2c_path, i2c_dev.addr);
 
     ret = dfd_i2c_read(i2c_path, i2c_dev.addr, 0, eeprom, DFD_E2PROM_MAX_LEN);
     if (ret != 0) {
         DBG_ERROR("Read eeprom info error(dev: %s, addr: %02x).\n", i2c_path, i2c_dev.addr);
-        RUJIE_COMMON_DEBUG_ERROR("Read eeprom info error(dev: %s, addr: %02x).\n", i2c_path, i2c_dev.addr);
+        PLATFORM_COMMON_DEBUG_ERROR("Read eeprom info error(dev: %s, addr: %02x).\n", i2c_path, i2c_dev.addr);
         return ret;
     }
 
@@ -168,11 +168,11 @@ int dfd_get_my_card_type(void)
     while (cnt--) {
         type = __dfd_get_my_card_type();
         if (type < 0) {
-            RUJIE_COMMON_DEBUG_ERROR("__dfd_get_my_card_type fail cnt %d, ret %d.\n", cnt, type);
+            PLATFORM_COMMON_DEBUG_ERROR("__dfd_get_my_card_type fail cnt %d, ret %d.\n", cnt, type);
             msleep(PLATFORM_CARDTYPE_RETRY_TIMES);
             continue;
         }
-        RUJIE_COMMON_DEBUG_VERBOSE("success to get type 0x%x.\n", type);
+        PLATFORM_COMMON_DEBUG_VERBOSE("success to get type 0x%x.\n", type);
         break;
     }
 
@@ -185,21 +185,21 @@ static int __init platform_common_init(void)
 {
     int ret;
 
-    RUJIE_COMMON_DEBUG_VERBOSE("Enter.\n");
+    PLATFORM_COMMON_DEBUG_VERBOSE("Enter.\n");
     ret = dfd_get_my_card_type();
     if (ret <= 0) {
-        RUJIE_COMMON_DEBUG_ERROR("dfd_get_my_card_type failed, ret %d.\n", ret);
+        PLATFORM_COMMON_DEBUG_ERROR("dfd_get_my_card_type failed, ret %d.\n", ret);
         printk(KERN_ERR "Warning: Device type get failed, please check the TLV-EEPROM!\n");
         return -1;
     }
 
-    RUJIE_COMMON_DEBUG_VERBOSE("Leave success type 0x%x.\n", ret);
+    PLATFORM_COMMON_DEBUG_VERBOSE("Leave success type 0x%x.\n", ret);
     return 0;
 }
 
 static void __exit platform_common_exit(void)
 {
-    RUJIE_COMMON_DEBUG_VERBOSE("Exit.\n");
+    PLATFORM_COMMON_DEBUG_VERBOSE("Exit.\n");
 }
 
 module_init(platform_common_init);
