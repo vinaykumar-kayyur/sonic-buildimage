@@ -83,25 +83,51 @@ class CPUPIDRegulation(object):
             logging.warning("Can't Get CPU temperature! Cause:%s" % str(E))
             return False
 
+    def exception_data_handling(self):
+        """
+        Get the temperature of CPU, and confirm whether the obtained value meets the conditions:
+        1. The temperature range is 0~130;
+        2. The temperature difference from the last time is within 20
+        Otherwise, loop 5 times to get the temperature value again
+        :return:Qualified temperature value
+        """
+        re_try = False
+        cpu_temp = self.get_cpu_temperature()
+        if cpu_temp is False:
+            re_try = True
+        elif cpu_temp not in range(0, 131):
+            re_try = True
+
+        if re_try:
+            error_temp_list = list()
+            for _ in range(5):
+                cpu_temp = self.get_cpu_temperature()
+                if type(cpu_temp) is int and T_LIST and (abs(cpu_temp - T_LIST[-1]) <= 20):
+                    return cpu_temp
+            else:
+                cpu_temp = False
+                self.syslog.debug(
+                    "Cycle five times, and the obtained 'CPU' temperatures are all abnormal values::%s"
+                    % error_temp_list)
+                logging.info(
+                    "Cycle five times, and the obtained 'CPU' temperatures are all abnormal values::%s"
+                    % error_temp_list)
+        return cpu_temp
+
     def pid_control(self):
         """
         PID adjustment according to Switch Internal Temperature
         :return: fans pwm
         """
+        cpu_temp = self.exception_data_handling()
+        if not cpu_temp:
+            return DUTY_MAX
         if len(T_LIST) < 3:
-            cpu_temp = self.get_cpu_temperature()
-            if cpu_temp:
-                T_LIST.append(float(cpu_temp))
-                logging.info("Init CPU PID Control T_LIST:%s" % T_LIST)
-                return PWM_LIST[0]
-            else:
-                return DUTY_MAX
+            T_LIST.append(float(cpu_temp))
+            logging.info("Init CPU PID Control T_LIST:%s" % T_LIST)
+            return PWM_LIST[0]
         else:
-            cpu_temp = self.get_cpu_temperature()
-            if cpu_temp:
-                T_LIST.append(float(cpu_temp))
-            else:
-                return DUTY_MAX
+            T_LIST.append(float(cpu_temp))
             pwm_k = PWM_LIST[0] + Kp * (T_LIST[2] - T_LIST[1]) + \
                 Ki * (T_LIST[2] - SET_POINT) + \
                 Kd * (T_LIST[2] - 2 * T_LIST[1] + T_LIST[0])
