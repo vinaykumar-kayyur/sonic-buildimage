@@ -10,6 +10,7 @@ try:
     import sys
     import getopt
     import subprocess
+    import statistics
     import logging
     import logging.config
     import time  # this is only being used as part of the example
@@ -21,6 +22,8 @@ except ImportError as e:
 # Defaults
 FUNCTION_NAME = 'FanControl'
 DUTY_MAX = 100
+SW_TEMP_MAX = 150
+TEMP_DIFF = 15  # abs(Tk - Tk-1) limit
 SWITCH_INTERNAL_PATH = "/sys/devices/platform/fpga_sysfs/getreg"
 
 # PID Defaults Value
@@ -132,12 +135,11 @@ class SwitchInternalPIDRegulation(object):
             self.syslog.debug("Init Switch Internal PID Control T_LIST:%s" % T_LIST)
             logging.info("Init Switch Internal PID Control T_LIST:%s" % T_LIST)
             return PWM_LIST[0]
-
         else:
             T_LIST.append(float(sw_temp))
             pwm_k = PWM_LIST[0] + Kp * (T_LIST[2] - T_LIST[1]) + \
-                    Ki * (T_LIST[2] - SET_POINT) + \
-                    Kd * (T_LIST[2] - 2 * T_LIST[1] + T_LIST[0])
+                Ki * (T_LIST[2] - SET_POINT) + \
+                Kd * (T_LIST[2] - 2 * T_LIST[1] + T_LIST[0])
             if pwm_k < PWM_MIN:
                 logging.info("Switch Internal PID PWM calculation value < %d, %d will be used"
                              % (PWM_MIN, PWM_MIN))
@@ -148,5 +150,5 @@ class SwitchInternalPIDRegulation(object):
                 pwm_k = PWM_MAX
             PWM_LIST[0] = pwm_k
             logging.info("Switch Internal PID: PWM=%d Temp list=%s" % (pwm_k, T_LIST))
-            T_LIST.pop(0)            
+            T_LIST.pop(0)
             return pwm_k
