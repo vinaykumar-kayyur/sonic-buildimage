@@ -88,35 +88,35 @@ class SwitchInternalPIDRegulation(object):
 
     def exception_data_handling(self):
         """
-        Get the temperature of switch internal, and confirm whether the obtained value meets the conditions:
+        Get the temperature of Switch Internal, and confirm whether the obtained value meets the conditions:
         1. The temperature range is 0~150;
-        2. The temperature difference from the last time is within 20
-        Otherwise, loop 5 times to get the temperature value again
-        :return:Qualified temperature value
+        2. The temperature difference from the last time is within 15
+        Otherwise, loop 5 times to get the temperature value again:
+        1. if can't get the int value of temperature, return False;
+        2. all temperatures are int, return the temperatures average value
         """
         re_try = False
         sw_temp = self.get_switch_internal_temperature()
         if sw_temp is False:
             re_try = True
-        elif sw_temp not in range(0, 151):
+        elif sw_temp not in range(SW_TEMP_MAX+1):
+            re_try = True
+        elif T_LIST and abs(sw_temp - T_LIST[-1]) > TEMP_DIFF:
             re_try = True
 
         if re_try:
             error_temp_list = list()
-            for _ in range(5):
+            while len(error_temp_list) < 5:
                 sw_temp = self.get_switch_internal_temperature()
-                if type(sw_temp) is int and T_LIST and (abs(sw_temp - T_LIST[-1]) <= 20):
+                if (type(sw_temp) is int) and \
+                        (sw_temp in range(SW_TEMP_MAX+1)) and \
+                        (abs(sw_temp - T_LIST[-1]) <= TEMP_DIFF):
                     return sw_temp
                 else:
                     error_temp_list.append(sw_temp)
-            else:
-                sw_temp = False
-                self.syslog.debug(
-                    "Cycle five times, and the obtained 'switch internal' temperatures are all abnormal values::%s"
-                    % error_temp_list)
-                logging.info(
-                    "Cycle five times, and the obtained 'switch internal' temperatures are all abnormal values::%s"
-                    % error_temp_list)
+            if False in error_temp_list:
+                return False
+            return statistics.mean(error_temp_list)
         return sw_temp
 
     def pid_control(self):
