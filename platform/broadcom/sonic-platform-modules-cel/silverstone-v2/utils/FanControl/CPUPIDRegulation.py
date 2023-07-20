@@ -122,7 +122,7 @@ class CPUPIDRegulation(object):
         cpu_temp = self.exception_data_handling()
         if not cpu_temp:
             return DUTY_MAX
-        if len(T_LIST) < 3:
+        if len(T_LIST) < 2:
             T_LIST.append(float(cpu_temp))
             logging.info("Init CPU PID Control T_LIST:%s" % T_LIST)
             return PWM_LIST[0]
@@ -140,6 +140,6 @@ class CPUPIDRegulation(object):
                              % (PWM_MAX, PWM_MAX))
                 pwm_k = PWM_MAX
             PWM_LIST[0] = pwm_k
-            T_LIST.pop(0)
             logging.info("CPU PID: PWM=%d Temp list=%s" % (pwm_k, T_LIST))
+            T_LIST.pop(0)
             return pwm_k
