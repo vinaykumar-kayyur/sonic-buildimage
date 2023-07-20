@@ -5,7 +5,7 @@
         "num_fantrays":4,
         "num_fans_pertray":2,
         "num_ports":64,
-        "num_temps": 7,
+        "num_temps": 11,
         "pddf_dev_types":
         {
             "description":"AS7816-64X - Below is the list of supported PDDF device types (chip names) for various components. If any component uses some other driver, we will create the client using 'echo <dev-address> <dev-type> > <path>/new_device' method",
@@ -417,7 +417,7 @@
     "TEMP7" :
     {
         "dev_info": { "device_type":"TEMP_SENSOR", "device_name":"TEMP7"},
-        "dev_attr": { "display_name":"coretemp-isa-0000"},
+        "dev_attr": { "display_name":"CPU_Package_temp"},
         "i2c":
         {
             "path_info": {"sysfs_base_path": "/sys/class/hwmon/hwmon0"},
@@ -426,6 +426,66 @@
                 { "attr_name": "temp1_high_crit_threshold", "drv_attr_name":"temp1_crit"},
                 { "attr_name": "temp1_high_threshold", "drv_attr_name":"temp1_max"},
                 { "attr_name": "temp1_input"}
+            ]
+        }
+    },
+    "TEMP8" :
+    {
+        "dev_info": { "device_type":"TEMP_SENSOR", "device_name":"TEMP8"},
+        "dev_attr": { "display_name":"CPU_Core_0_temp"},
+        "i2c":
+        {
+            "path_info": {"sysfs_base_path": "/sys/class/hwmon/hwmon0"},
+            "attr_list":
+            [
+                { "attr_name": "temp1_high_crit_threshold", "drv_attr_name":"temp2_crit"},
+                { "attr_name": "temp1_high_threshold", "drv_attr_name":"temp2_max"},
+                { "attr_name": "temp1_input", "drv_attr_name":"temp2_input"}
+            ]
+        }
+    },
+    "TEMP9" :
+    {
+        "dev_info": { "device_type":"TEMP_SENSOR", "device_name":"TEMP9"},
+        "dev_attr": { "display_name":"CPU_Core_1_temp"},
+        "i2c":
+        {
+            "path_info": {"sysfs_base_path": "/sys/class/hwmon/hwmon0"},
+            "attr_list":
+            [
+                { "attr_name": "temp1_high_crit_threshold", "drv_attr_name":"temp3_crit"},
+                { "attr_name": "temp1_high_threshold", "drv_attr_name":"temp3_max"},
+                { "attr_name": "temp1_input", "drv_attr_name":"temp3_input"}
+            ]
+        }
+    },
+    "TEMP10" :
+    {
+        "dev_info": { "device_type":"TEMP_SENSOR", "device_name":"TEMP10"},
+        "dev_attr": { "display_name":"CPU_Core_2_temp"},
+        "i2c":
+        {
+            "path_info": {"sysfs_base_path": "/sys/class/hwmon/hwmon0"},
+            "attr_list":
+            [
+                { "attr_name": "temp1_high_crit_threshold", "drv_attr_name":"temp4_crit"},
+                { "attr_name": "temp1_high_threshold", "drv_attr_name":"temp4_max"},
+                { "attr_name": "temp1_input", "drv_attr_name":"temp4_input"}
+            ]
+        }
+    },
+    "TEMP11" :
+    {
+        "dev_info": { "device_type":"TEMP_SENSOR", "device_name":"TEMP11"},
+        "dev_attr": { "display_name":"CPU_Core_3_temp"},
+        "i2c":
+        {
+            "path_info": {"sysfs_base_path": "/sys/class/hwmon/hwmon0"},
+            "attr_list":
+            [
+                { "attr_name": "temp1_high_crit_threshold", "drv_attr_name":"temp5_crit"},
+                { "attr_name": "temp1_high_threshold", "drv_attr_name":"temp5_max"},
+                { "attr_name": "temp1_input", "drv_attr_name":"temp5_input"}
             ]
         }
     },
