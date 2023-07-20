@@ -9,7 +9,7 @@ set -x
 mount_point="/from_host"
 disk_by_path_dir="/dev/disk/by-path"
 # We can't ensure the mounted disk name is sda or sdb
-# But we can specify the disk logic unit number to 2
+# Currently we specify the disk logic unit number to 2 when create master VM
 # We find the correct disk by the disk logic unit number from by-path directory
 target_str="lun-2-part1"
 disk_path_file=$(ls $disk_by_path_dir | grep $target_str)
