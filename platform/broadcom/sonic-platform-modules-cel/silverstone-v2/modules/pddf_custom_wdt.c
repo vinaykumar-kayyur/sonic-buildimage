@@ -37,20 +37,6 @@
 
 #define WDT_CONTROL_BASE             0xA100	
 #define TEST_SCRATCH_REG             0xA101
-/*
-#define REBOOT_CAUSE_REG             0xA105
-#define WDT_SET_TIMER_H_BIT_REG      0xA161
-#define WDT_SET_TIMER_M_BIT_REG      0xA162
-#define WDT_SET_TIMER_L_BIT_REG      0xA163
-#define WDT_TIMER_H_BIT_REG          0xA164
-#define WDT_TIMER_M_BIT_REG          0xA165
-#define WDT_TIMER_L_BIT_REG          0xA166
-#define WDT_ENABLE_REG               0xA167
-#define WDT_FEED_REG                 0xA168
-#define WDT_PUNCH_REG                0xA169
-#define WDT_START_FEED               0x01
-#define WDT_STOP_FEED                0x00
-*/
 #define REBOOT_CAUSE_REG             0xA106
 #define WDT_SET_TIMER_H_BIT_REG      0xA181
 #define WDT_SET_TIMER_M_BIT_REG      0xA182
@@ -64,17 +50,12 @@
 #define WDT_START_FEED               0x01
 #define WDT_STOP_FEED                0x00
 
-// #define POWER_CYCLE_RESET	     0x00
+
 #define POWER_ON_RESET		     0x11
 #define SOFT_SET_WARM_RESET	     0x22
 #define SOFT_SET_COLD_RESET	     0x33
 #define CPU_WARM_RESET		     0x44
 #define WDT_RESET		     0x66
-// #define CPU_COLD_RESET		     0x55
-// #define CPU_GPIO_WARM_RESET	     0x66
-// #define WDT_RESET		     0x77
-// #define CPU_OVERLOAD_RESET	     0x88
-// #define INSUFFICIENT_FAN_SPEED_RESET 0xAA
 
 
 #define MAX_TIMER_VALUE     0xffffff
@@ -99,10 +80,10 @@ struct wdt_data {
 
 struct cpld_wdt_private {
 	struct platform_device *pdev;
-        struct watchdog_device wddev;
+	struct watchdog_device wddev;
 	struct cdev cdev;
-		struct miscdevice mdev;
-        bool suspended;
+	struct miscdevice mdev;
+	bool suspended;
 	struct wdt_data wdat;	
 };
 
@@ -286,10 +267,10 @@ static const struct watchdog_info ident = {
 static ssize_t identity_show(struct device *dev, struct device_attribute *attr,
                                 char *buf)
 {
-        struct cpld_wdt_private *wdt = dev_get_drvdata(dev);
+	struct cpld_wdt_private *wdt = dev_get_drvdata(dev);
 	if(!wdt)
 	   return -EINVAL;
-        return sprintf(buf, "%s\n", wdt->wdat.ident.identity);
+	return sprintf(buf, "%s\n", wdt->wdat.ident.identity);
 }
 
 static DEVICE_ATTR_RO(identity);
@@ -298,12 +279,12 @@ static DEVICE_ATTR_RO(identity);
 static ssize_t state_show(struct device *dev, struct device_attribute *attr,
                                 char *buf)
 {
-        struct cpld_wdt_private *wdt = dev_get_drvdata(dev);
+	struct cpld_wdt_private *wdt = dev_get_drvdata(dev);
 	bool state = watchdog_is_running(wdt);
 	if(true == state)
 		return sprintf(buf, "active\n");
 	else
-        	return sprintf(buf, "inactive\n");
+		return sprintf(buf, "inactive\n");
 }
 
 static DEVICE_ATTR_RO(state);
@@ -324,11 +305,10 @@ static DEVICE_ATTR_RO(status);
 static ssize_t reason_show(struct device *dev,
                                 struct device_attribute *attr, char *buf)
 {
-        char bootstatus;
+	char bootstatus;
 	struct cpld_wdt_private *wdt = dev_get_drvdata(dev);
-        if(!wdt)
-           return -EINVAL;
-
+	if(!wdt)
+		return -EINVAL;
 	bootstatus = watchdog_get_reason(wdt);
 
         return sprintf(buf, "0x%02x\n", bootstatus);
@@ -359,7 +339,7 @@ static ssize_t timeout_show(struct device *dev, struct device_attribute *attr,
  	unsigned int timeout;	
 	struct cpld_wdt_private *wdt = dev_get_drvdata(dev);
 	if(!wdt)
-           return -EINVAL;
+		return -EINVAL;
 
 	timeout = watchdog_get_timeout(wdt);
 
@@ -386,7 +366,7 @@ static int watchdog_open(struct inode *inode, struct file *file)
 {
 	struct cpld_wdt_private *wdt;
 
-		wdt = container_of(file->private_data, struct cpld_wdt_private, mdev);
+	wdt = container_of(file->private_data, struct cpld_wdt_private, mdev);
 
 	/* If the watchdog is alive we don't need to start it again */
 
@@ -399,15 +379,13 @@ static int watchdog_open(struct inode *inode, struct file *file)
 		__module_get(THIS_MODULE);
 
 	wdt->wdat.expect_close = 0;
-
-	
 	return nonseekable_open(inode, file);
 }
 
 static int watchdog_release(struct inode *inode, struct file *file)
 {
 	struct cpld_wdt_private *p;
-		p = container_of(file->private_data, struct cpld_wdt_private, mdev);
+	p = container_of(file->private_data, struct cpld_wdt_private, mdev);
 
 	if(!p)
 	    return -EINVAL;
@@ -538,8 +516,7 @@ static long watchdog_ioctl(struct file *file, unsigned int cmd,
 		new_timeout = new_timeout*1000;	
 		if (watchdog_set_timeout(p, new_timeout))
 			return -EINVAL;
-		
-                val = watchdog_get_timeout(p);	
+		val = watchdog_get_timeout(p);	
 		return put_user(val, uarg.i);
 	case WDIOC_GETTIMEOUT:
 		val = watchdog_get_timeout(p);
@@ -593,15 +570,12 @@ static int cpld_wdt_probe(struct platform_device *pdev)
 
 	p = devm_kzalloc(dev, sizeof(*p), GFP_KERNEL);
         if (!p)
-                return -ENOMEM;
-
-
+            return -ENOMEM;
 	mutex_init(&(p->wdat.lock));
-
-        p->wdat.ident.options = WDIOC_SETTIMEOUT
-				| WDIOF_MAGICCLOSE
-				| WDIOF_KEEPALIVEPING
-				| WDIOC_GETTIMELEFT;
+	p->wdat.ident.options = WDIOC_SETTIMEOUT
+			| WDIOF_MAGICCLOSE
+			| WDIOF_KEEPALIVEPING
+			| WDIOC_GETTIMELEFT;
 
 	snprintf(p->wdat.ident.identity,
 		sizeof(p->wdat.ident.identity), "%s", DRV_NAME);
@@ -612,13 +586,12 @@ static int cpld_wdt_probe(struct platform_device *pdev)
 	pr_info("Watchdog CPLD Version:0x%02x\n",
                  ver);
 
-        if (timeout) {
-		if (timeout <= 0
-		 || timeout >  max_timeout) {
+	if (timeout) {
+		if (timeout <= 0 || timeout >  max_timeout) {
 			pr_err("starting timeout out of range\n");
 			err = -EINVAL;
 			return err;
-		}
+			}
 
 		//watchdog_start(p);
 
@@ -632,67 +605,49 @@ static int cpld_wdt_probe(struct platform_device *pdev)
 		if (nowayout)
 			__module_get(THIS_MODULE);
 
-		pr_info("watchdog started with initial timeout of %u Second(s)\n",
-			timeout/1000);
-	}
+		pr_info("watchdog started with initial timeout of %u Second(s)\n", timeout/1000);
+		}
 
         err = watchdog_set_timeout(p, timeout);
 	if (err)
 		return err;
 
-        err = register_reboot_notifier(&watchdog_notifier);
+	err = register_reboot_notifier(&watchdog_notifier);
 	if (err)
 		return err;
-		p->mdev = watchdog_miscdev;
-        err = misc_register(&p->mdev);
+	p->mdev = watchdog_miscdev;
+	err = misc_register(&p->mdev);
 	if (err) {
-		pr_err("cannot register miscdev on minor=%d\n",
-		       watchdog_miscdev.minor);
-		return err;;
-	}
+		pr_err("cannot register miscdev on minor=%d\n", watchdog_miscdev.minor);
+		return err;
+		}
 
-       /*p->wdat.res = platform_get_resource(pdev, IORESOURCE_IO, WDT_CONTROL_BASE);
-        if (!p->wdat.res)
-                return -ENODEV;
-
-	if (!devm_request_region(dev, p->wdat.res->start,
-                                 resource_size(p->wdat.res),
-                                 pdev->name)) {
-                return -EBUSY;
-        }
-	*/
 	err = sysfs_create_group(&pdev->dev.kobj, &wdt_group);
-    	if (err) {
-        	printk(KERN_ERR "Cannot create sysfs for cpld_wdt.\n");
-        	return err;
-   	 }
+	if (err) {
+		printk(KERN_ERR "Cannot create sysfs for cpld_wdt.\n");
+		return err;
+		}
 
-        platform_set_drvdata(pdev, p);
-        dev_set_drvdata(dev, p);
+	platform_set_drvdata(pdev, p);
+	dev_set_drvdata(dev, p);
 
-        pr_info("initialized.  sec (nowayout=%d)\n",
-                 nowayout);
+	pr_info("initialized.  sec (nowayout=%d)\n",
+				nowayout);
 
 	return 0;
 }
 
 static int cpld_wdt_remove(struct platform_device *pdev)
 {
-        struct cpld_wdt_private *p = platform_get_drvdata(pdev);
-	/*
-        if (!nowayout)
-                watchdog_stop(&p->wddev);
-	*/
+    struct cpld_wdt_private *p = platform_get_drvdata(pdev);
+	
 	if(!p)
 		return 0;
     
-    	sysfs_remove_group(&pdev->dev.kobj, &wdt_group);
-
-        misc_deregister(&p->mdev);
-
+	sysfs_remove_group(&pdev->dev.kobj, &wdt_group);
+	misc_deregister(&p->mdev);
 	unregister_reboot_notifier(&watchdog_notifier);
-
-        return 0;
+	return 0;
 
 }
 
@@ -737,14 +692,14 @@ static int __init cpld_wdt_init_module(void)
 	    pr_info("Platform Device/Driver Register Failed. err:%d\n", err);
 
 	pr_info("CPLD WatchDog Timer Driver v%s\n", DRV_VERSION);
-        return err;
+	return err;
 }
 
 static void __exit cpld_wdt_cleanup_module(void)
 {
-        platform_driver_unregister(&cpld_wdt_driver);
+	platform_driver_unregister(&cpld_wdt_driver);
 	platform_device_unregister(&cpld_wdt_dev);
-        pr_info("Watchdog Module Unloaded\n");
+	pr_info("Watchdog Module Unloaded\n");
 }
 
 module_init(cpld_wdt_init_module);
