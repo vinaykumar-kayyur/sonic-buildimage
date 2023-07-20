@@ -10,6 +10,7 @@ try:
     import sys
     import getopt
     import subprocess
+    import statistics
     import logging
     import logging.config
     import time  # this is only being used as part of the example
@@ -21,6 +22,8 @@ except ImportError as e:
 # Defaults
 FUNCTION_NAME = 'FanControl'
 DUTY_MAX = 100
+CPU_TEMP_MAX = 130
+TEMP_DIFF = 15  # abs(Tk - Tk-1) limit
 CPU_TEMPERATURE = "cat /sys/class/thermal/thermal_zone0/temp"
 
 # PID Defaults Value
@@ -87,31 +90,33 @@ class CPUPIDRegulation(object):
         """
         Get the temperature of CPU, and confirm whether the obtained value meets the conditions:
         1. The temperature range is 0~130;
-        2. The temperature difference from the last time is within 20
-        Otherwise, loop 5 times to get the temperature value again
-        :return:Qualified temperature value
+        2. The temperature difference from the last time is within 15
+        Otherwise, loop 5 times to get the temperature value again:
+        1. if can't get the int value of temperature, return False;
+        2. all temperatures are int, return the temperatures average value
         """
         re_try = False
         cpu_temp = self.get_cpu_temperature()
         if cpu_temp is False:
             re_try = True
-        elif cpu_temp not in range(0, 131):
+        elif cpu_temp not in range(CPU_TEMP_MAX+1):
+            re_try = True
+        elif T_LIST and abs(cpu_temp - T_LIST[-1]) > TEMP_DIFF:
             re_try = True
 
         if re_try:
             error_temp_list = list()
             for _ in range(5):
                 cpu_temp = self.get_cpu_temperature()
-                if type(cpu_temp) is int and T_LIST and (abs(cpu_temp - T_LIST[-1]) <= 20):
+                if (type(cpu_temp) is int) and \
+                        (cpu_temp in range(CPU_TEMP_MAX+1)) and \
+                        (abs(cpu_temp - T_LIST[-1]) <= TEMP_DIFF):
                     return cpu_temp
-            else:
-                cpu_temp = False
-                self.syslog.debug(
-                    "Cycle five times, and the obtained 'CPU' temperatures are all abnormal values::%s"
-                    % error_temp_list)
-                logging.info(
-                    "Cycle five times, and the obtained 'CPU' temperatures are all abnormal values::%s"
-                    % error_temp_list)
+                else:
+                    error_temp_list.append(cpu_temp)
+            if False in error_temp_list:
+                return False
+            return statistics.mean(error_temp_list)
         return cpu_temp
 
     def pid_control(self):
