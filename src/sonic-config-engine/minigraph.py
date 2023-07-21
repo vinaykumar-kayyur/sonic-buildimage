@@ -1771,6 +1771,8 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         port_default_speed =  port_speeds_default.get(port_name, None)
         port_png_speed = port_speed_png[port_name]
 
+        ports.setdefault(port_name, {})['speed'] = port_speed_png[port_name]
+
         # when the port speed is changes from 400g to 100g/40g
         # update the port lanes, use the first 4 lanes of the 400G port to support 100G/40G port
         if port_default_speed == '400000' and (port_png_speed == '100000' or port_png_speed == '40000'):
@@ -1779,7 +1781,6 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
             updated_lanes = ",".join(port_lanes[:4])
             ports[port_name]['lanes'] = updated_lanes
 
-        ports.setdefault(port_name, {})['speed'] = port_speed_png[port_name]
 
     for port_name, port in list(ports.items()):
         # get port alias from port_config.ini
