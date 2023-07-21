@@ -68,15 +68,15 @@ mknod = [
     # LM75
     'echo lm75 0x48 > /sys/bus/i2c/devices/i2c-2/new_device',
     'echo lm75 0x49 > /sys/bus/i2c/devices/i2c-2/new_device',
-    'echo lm75 0x4c > /sys/bus/i2c/devices/i2c-14/new_device',
+    'echo tmp421 0x4c > /sys/bus/i2c/devices/i2c-14/new_device',
     'echo lm75 0x48 > /sys/bus/i2c/devices/i2c-27/new_device',
     'echo lm75 0x49 > /sys/bus/i2c/devices/i2c-27/new_device',
     'echo lm75 0x48 > /sys/bus/i2c/devices/i2c-34/new_device',
     'echo lm75 0x49 > /sys/bus/i2c/devices/i2c-42/new_device',
     'echo lm75 0x48 > /sys/bus/i2c/devices/i2c-57/new_device',
-    'echo lm75 0x4c > /sys/bus/i2c/devices/i2c-58/new_device',
+    'echo tmp421 0x4c > /sys/bus/i2c/devices/i2c-58/new_device',
     'echo lm75 0x4c > /sys/bus/i2c/devices/i2c-65/new_device',
-    'echo lm75 0x4d > /sys/bus/i2c/devices/i2c-66/new_device',
+    'echo tmp421 0x4d > /sys/bus/i2c/devices/i2c-66/new_device',
 
     # PSU-1
     'echo delta_dps2400 0x59 > /sys/bus/i2c/devices/i2c-41/new_device',
