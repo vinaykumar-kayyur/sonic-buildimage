@@ -538,7 +538,7 @@
             "lanes": "69,70,71,72",
             "breakout_modes": {
                 "1x400G": ["Eth2(Port2)"],
-                "2x200G": ["Eth2/1(Port2)", "Eth2/2(Port2)"]
+                "2x200G": ["Eth2/1(Port2)", "Eth2/2(Port2)"],
                 "4x100G": ["Eth2/1(Port2)", "Eth2/2(Port2)", "Eth2/3(Port2)", "Eth2/4(Port2)"],
                 "1x100G[40G](2)": ["Eth2(Port2)"],
                 "2x50G(2)": ["Eth2/1(Port2)", "Eth2/2(Port2)"],
