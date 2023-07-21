@@ -214,7 +214,7 @@
                 "high-crit-threshold": true
             },
             {
-                "name": "UDB_RearLeft_temp_temp(0x48)",
+                "name": "UDB_RearLeft_temp(0x48)",
                 "controllable": true,
                 "low-threshold": false,
                 "high-threshold": true,
@@ -222,7 +222,7 @@
                 "high-crit-threshold": true
             },
             {
-                "name": "UDB_RearMiddle_temp_temp(0x4C)",
+                "name": "UDB_RearMiddle_temp(0x4C)",
                 "controllable": true,
                 "low-threshold": false,
                 "high-threshold": true,
@@ -230,7 +230,7 @@
                 "high-crit-threshold": true
             },
             {
-                "name": "LDB_FrontRight_temp_temp(0x4C)",
+                "name": "LDB_FrontRight_temp(0x4C)",
                 "controllable": true,
                 "low-threshold": false,
                 "high-threshold": true,
@@ -238,7 +238,7 @@
                 "high-crit-threshold": true
             },
             {
-                "name": "LDB_RearRight_temp_temp(0x4D)",
+                "name": "LDB_RearRight_temp(0x4D)",
                 "controllable": true,
                 "low-threshold": false,
                 "high-threshold": true,
