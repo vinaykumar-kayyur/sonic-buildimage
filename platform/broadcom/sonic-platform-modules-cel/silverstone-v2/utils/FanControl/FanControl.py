@@ -266,4 +266,5 @@ def main(argv):
 
 
 if __name__ == '__main__':
-    main(sys.argv[1:])
+    if os.popen("cat /usr/local/bin/bmc_present").read().strip() == "False":
+        main(sys.argv[1:])
