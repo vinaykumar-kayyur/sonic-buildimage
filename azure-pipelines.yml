@@ -34,7 +34,7 @@ resources:
       name: sonic-net/sonic-buildimage
       endpoint: sonic-net
       ref: master
-    - repository: sonic-mgmt
+    - repository: sonic-mgmt-chunangli
       type: github
       name: lerry-lee/sonic-mgmt
       ref: chunangli/add_run_test_elastictest_template
@@ -69,7 +69,7 @@ stages:
               done
               return 1
               displayName: "print env"
-          - template: .azure-pipelines/run-test-elastictest-template.yml@sonic-mgmt
+          - template: .azure-pipelines/run-test-elastictest-template.yml@sonic-mgmt-chunangli
             parameters:
               TOPOLOGY: t0
               MIN_WORKER: $(T0_INSTANCE_NUM)
