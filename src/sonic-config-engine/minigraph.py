@@ -2002,7 +2002,6 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     results['NTP_SERVER'] = dict((item, {}) for item in ntp_servers)
     # Set default DNS nameserver from dns.j2
     results['DNS_NAMESERVER'] = {}
-    cloud_data = {'DEVICE_METADATA': {'localhost': {'cloudtype': cloudtype}}}
     if os.environ.get("CFGGEN_UNIT_TESTING", "0") == "2":
         dns_conf = os.path.join(os.path.dirname(__file__), "tests/", "dns.j2")
     else:
@@ -2010,9 +2009,9 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     if os.path.isfile(dns_conf):
         text = ""
         with open(dns_conf) as template_file:
-            environment = jinja2.Environment(autoescape=False)
+            environment = jinja2.Environment(trim_blocks=True) # nosemgrep
             dns_template = environment.from_string(template_file.read())
-            text = dns_template.render(cloud_data)
+            text = dns_template.render(results)
         try:
             dns_res = json.loads(text)
         except ValueError as e:
