@@ -2010,7 +2010,8 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     if os.path.isfile(dns_conf):
         text = ""
         with open(dns_conf) as template_file:
-            dns_template = jinja2.Template(template_file.read())
+            environment = jinja2.Environment(autoescape=False)
+            dns_template = environment.from_string(template_file.read())
             text = dns_template.render(cloud_data)
         try:
             dns_res = json.loads(text)
