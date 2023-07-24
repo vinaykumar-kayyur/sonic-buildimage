@@ -255,7 +255,6 @@ ssize_t set_status_led(struct device_attribute *da)
         if (strcmp(ops_ptr->data[cur_state].attr_devtype, "cpld") == 0) {
             cpld_type = 1;
             sys_val = board_i2c_cpld_read_new(ops_ptr->swpld_addr, ops_ptr->attr_devname, ops_ptr->swpld_addr_offset);
-            printk("yagami-sys_val=%d\n", sys_val);
         } else if (strcmp(ops_ptr->data[cur_state].attr_devtype, "fpgai2c") == 0) {
             sys_val = board_i2c_fpga_read(ops_ptr->swpld_addr, ops_ptr->swpld_addr_offset);
         } else {
@@ -265,16 +264,12 @@ ssize_t set_status_led(struct device_attribute *da)
         }
 
         if (sys_val < 0){
-            printk("yagami-sys_val < 0\n");
             return sys_val;
         }
-        if (strcmp(ops_ptr->attr_devname, "FAN_CPLD") == 0) {
-            printk("yagami-sys_val 1111111111111111\n");
-        }
+
         
         new_val = (sys_val & ops_ptr->data[cur_state].bits.mask_bits) |
                     (ops_ptr->data[cur_state].reg_values[0] << ops_ptr->data[cur_state].bits.pos);
-        printk("sys_val=%d, ops_ptr->data[cur_state].bits.mask_bits=%d, ops_ptr->data[cur_state].reg_values[0]=%d, ops_ptr->data[cur_state].bits.pos=%d\n", sys_val, ops_ptr->data[cur_state].bits.mask_bits, ops_ptr->data[cur_state].reg_values[0], ops_ptr->data[cur_state].bits.pos);
     } else {
         pddf_dbg(LED, KERN_ERR "ERROR %s: %s %d devtype:%s state %d; %s not configured\n",__func__,
             ops_ptr->device_name, ops_ptr->index, ops_ptr->attr_devtype, cur_state, _buf);
@@ -284,7 +279,6 @@ ssize_t set_status_led(struct device_attribute *da)
     if (strcmp(ops_ptr->data[cur_state].attr_devtype, "cpld") == 0) {
         ret = board_i2c_cpld_write_new(ops_ptr->swpld_addr, ops_ptr->attr_devname, ops_ptr->swpld_addr_offset, new_val);
         read_val = board_i2c_cpld_read_new(ops_ptr->swpld_addr, ops_ptr->attr_devname, ops_ptr->swpld_addr_offset);
-	printk("ret=%d  write_new_val=%d read_val=%d, swpld_addr=%d, swpld_addr_offset=%d", ret, new_val, read_val, ops_ptr->swpld_addr, ops_ptr->swpld_addr_offset);
     } else if (strcmp(ops_ptr->data[cur_state].attr_devtype, "fpgai2c") == 0) {
         ret = board_i2c_fpga_write(ops_ptr->swpld_addr, ops_ptr->swpld_addr_offset, (uint8_t)new_val);
         read_val = board_i2c_fpga_read(ops_ptr->swpld_addr, ops_ptr->swpld_addr_offset);
