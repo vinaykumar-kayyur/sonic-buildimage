@@ -2002,6 +2002,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     results['NTP_SERVER'] = dict((item, {}) for item in ntp_servers)
     # Set default DNS nameserver from dns.j2
     results['DNS_NAMESERVER'] = {}
+    cloud_data = {'DEVICE_METADATA': {'localhost': {'cloudtype': cloudtype}}}
     if os.environ.get("CFGGEN_UNIT_TESTING", "0") == "2":
         dns_conf = os.path.join(os.path.dirname(__file__), "tests/", "dns.j2")
     else:
@@ -2010,7 +2011,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         text = ""
         with open(dns_conf) as template_file:
             dns_template = jinja2.Template(template_file.read())
-            text = dns_template.render(results)
+            text = dns_template.render(cloud_data)
         try:
             dns_res = json.loads(text)
         except ValueError as e:
@@ -2018,6 +2019,8 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         else:
             dns_nameservers = dns_res.get('DNS_NAMESERVER', {})
             for k in dns_nameservers.keys():
+                if sys.version_info.major == 2:
+                    k = k.encode('utf-8')
                 results['DNS_NAMESERVER'][k] = {}
     results['TACPLUS_SERVER'] = dict((item, {'priority': '1', 'tcp_port': '49'}) for item in tacacs_servers)
     if len(acl_table_types) > 0:
