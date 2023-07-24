@@ -81,6 +81,12 @@ class minigraph_encoder(json.JSONEncoder):
             return str(obj)
         return json.JSONEncoder.default(self, obj)
 
+def convert_unicode(input):
+    if sys.version_info.major == 2:
+        if isinstance(input, unicode):
+            input = input.encode('utf-8')
+    return input
+
 def exec_cmd(cmd):
     p = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE)
     outs, errs = p.communicate()
@@ -2009,19 +2015,18 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     if os.path.isfile(dns_conf):
         text = ""
         with open(dns_conf) as template_file:
+            # Semgrep does not allow to use jinja2 directly, but we do need jinja2 for SONiC
             environment = jinja2.Environment(trim_blocks=True) # nosemgrep
             dns_template = environment.from_string(template_file.read())
             text = dns_template.render(results)
         try:
             dns_res = json.loads(text)
         except ValueError as e:
-            print("Warning: fail to load dns configuration, {}".format(e), file=sys.stderr)
+            sys.exit("Error: fail to load dns configuration, %s" % str(e))
         else:
             dns_nameservers = dns_res.get('DNS_NAMESERVER', {})
             for k in dns_nameservers.keys():
-                if sys.version_info.major == 2:
-                    k = k.encode('utf-8')
-                results['DNS_NAMESERVER'][k] = {}
+                results['DNS_NAMESERVER'][convert_unicode(k)] = {}
     results['TACPLUS_SERVER'] = dict((item, {'priority': '1', 'tcp_port': '49'}) for item in tacacs_servers)
     if len(acl_table_types) > 0:
         results['ACL_TABLE_TYPE'] = acl_table_types
