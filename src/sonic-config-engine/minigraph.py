@@ -81,12 +81,6 @@ class minigraph_encoder(json.JSONEncoder):
             return str(obj)
         return json.JSONEncoder.default(self, obj)
 
-def convert_unicode(input):
-    if sys.version_info.major == 2:
-        if isinstance(input, unicode):
-            input = input.encode('utf-8')
-    return input
-
 def exec_cmd(cmd):
     p = subprocess.Popen(cmd, shell=False, stdout=subprocess.PIPE)
     outs, errs = p.communicate()
@@ -2026,7 +2020,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         else:
             dns_nameservers = dns_res.get('DNS_NAMESERVER', {})
             for k in dns_nameservers.keys():
-                results['DNS_NAMESERVER'][convert_unicode(k)] = {}
+                results['DNS_NAMESERVER'][str(k)] = {}
     results['TACPLUS_SERVER'] = dict((item, {'priority': '1', 'tcp_port': '49'}) for item in tacacs_servers)
     if len(acl_table_types) > 0:
         results['ACL_TABLE_TYPE'] = acl_table_types
