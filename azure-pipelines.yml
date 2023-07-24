@@ -67,7 +67,7 @@ stages:
               for var in $(compgen -e); do
                 echo $var ${!var};
               done
-              displayName: "print env"
+            displayName: "print env"
           - template: .azure-pipelines/run-test-elastictest-template.yml@sonic-mgmt-chunangli
             parameters:
               TOPOLOGY: t0
