@@ -2,7 +2,7 @@ steps:
 - ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
   - script: |
       set -ex
-      tar_branch=origin/$(System.PullRequest.TargetBranch)
+      tar_branch=origin/$(System.PullRequest.TargetBranchName)
       # Check if k8s master entrance script is changed
       k8s_master_changed=$(git diff $tar_branch..HEAD --name-only | grep -F files/image_config/kubernetes/kubernetes_master_entrance.sh)
       if [ -z "$k8s_master_changed" ]; then
