@@ -83,9 +83,6 @@ class SfpUtil(SfpUtilBase):
             return False
 
     def get_transceiver_change_event(self, timeout):
-        # print " SfpUtil(SfpUtilBase) targeted for deprecation "
-#
-#        raise NotImplementedError
 
         now = time.time()
         port_dict = {}

@@ -55,7 +55,7 @@ class LedControl(LedControlBase):
             with open(reg_file, 'w') as fd:
                 rv = fd.write(str(value))
         except Exception as e:
-            rv = 'ERR'
+            DBG_PRINT("File _set_i2c_register exception")
 
         return rv
 
