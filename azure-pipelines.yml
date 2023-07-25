@@ -21,7 +21,7 @@ pr:
     exclude:
       - .github
 
-name: "test env"
+name: $(TeamProject)_$(Build.DefinitionName)_$(SourceBranchName)_$(Date:yyyyMMdd)$(Rev:.r)
 
 resources:
   repositories:
@@ -49,7 +49,17 @@ variables:
     value: y
 
 stages:
+  - stage: BuildVS
+    pool: sonicbld
+    jobs:
+      - template: .azure-pipelines/azure-pipelines-build.yml
+        parameters:
+          buildOptions: 'USERNAME=admin SONIC_BUILD_JOBS=$(nproc) BUILD_MULTIASIC_KVM=y ${{ variables.VERSION_CONTROL_OPTIONS }}'
+          jobGroups:
+            - name: vs
   - stage: Test
+    dependsOn: BuildVS
+    condition: and(succeeded(), and(ne(stageDependencies.BuildVS.outputs['vs.SetVar.SKIP_VSTEST'], 'YES'), in(dependencies.BuildVS.result, 'Succeeded', 'SucceededWithIssues')))
     variables:
       - group: SONiC-Elastictest
       - name: inventory
@@ -63,11 +73,6 @@ stages:
         timeoutInMinutes: 240
         continueOnError: false
         steps:
-          - script: |
-              for var in $(compgen -e); do
-                echo $var ${!var};
-              done
-            displayName: "print env"
           - template: .azure-pipelines/run-test-elastictest-template.yml@sonic-mgmt-chunangli
             parameters:
               TOPOLOGY: t0
