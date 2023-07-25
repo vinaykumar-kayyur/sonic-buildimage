@@ -1,34 +1,59 @@
 #!/usr/bin/env python
 # @Company ：Celestica
-# @Time   : 2023/3/3 17:09
+# @Time   : 2023/7/21 17:09
 # @Mail   : yajiang@celestica.com
 # @Author : jiang tao
 try:
     from sonic_platform_base.component_base import ComponentBase
     from . import helper
+    from . import bmc_present_config
     import re
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
-
+BMC_EXIST = bmc_present_config.get_bmc_status()
 FPGA_VERSION_PATH = "/sys/devices/platform/fpga-sys/version"
-Check_Bios_Boot = "i2cget -y -f 100 0x0d 0x70 | tr a-z A-Z | cut -d 'X' -f 2"
 Bios_Version_Cmd = "dmidecode -t bios | grep Version"
-Fan_CPLD_Cmd = "i2cget -y -f 107 0x0d 0x00 | tr a-z A-Z | cut -d 'X' -f 2"
-COME_CPLD_Cmd = "i2cget -y -f 104 0x0d 0xe0 | tr a-z A-Z | cut -d 'X' -f 2"
-Sys_Cpld_Cmd = "i2cget -y -f 100 0x0d 0x00 | tr a-z A-Z | cut -d 'X' -f 2"
-Sw_Cpld1_Cmd = "i2cget -y -f 108 0x30 0x00 | tr a-z A-Z | cut -d 'X' -f 2"
-Sw_Cpld2_Cmd = "i2cget -y -f 108 0x31 0x00 | tr a-z A-Z | cut -d 'X' -f 2"
 
-COMPONENT_NAME_LIST = ["FPGA", "COME_CPLD", "SWCPLD1", "SWCPLD2", "FANCPLD", "SYSCPLD",
-                       "Main_BIOS", "Backup_BIOS"]
-COMPONENT_DES_LIST = ["Used for managering the CPU and expanding I2C channels",
-                      "Used for managing the CPU",
-                      "Used for managing QSFP+ ports (1-16)",
-                      "Used for managing QSFP+ ports (17-32)",
-                      "Used for managing fans",
-                      "Used for managing control the system power & reset",
-                      "Main basic Input/Output System",
-                      "Backup basic Input/Output System"]
+if BMC_EXIST:
+    Check_Bios_Boot = "ipmitool raw 0x3a 0x25 0x02"
+    Fan_CPLD_Cmd = "ipmitool raw 0x3a 0x64 02 01 00"
+    COME_CPLD_Cmd = "ipmitool raw 0x3a 0x3e 1 0x1a 1 0xe0"
+    Sys_Cpld_Cmd = "ipmitool raw 0x3a 0x64 0x00 0x01 0x00"
+    Sw_Cpld1_Cmd = "i2cget -y -f 108 0x30 0 | tr a-z A-Z | cut -d 'X' -f 2"
+    Sw_Cpld2_Cmd = "i2cget -y -f 108 0x31 0 | tr a-z A-Z | cut -d 'X' -f 2"
+    Main_BMC_Cmd = "0x32 0x8f 0x08 0x01"
+    Backup_BMC_Cmd = "0x32 0x8f 0x08 0x01"
+
+    COMPONENT_NAME_LIST = ["FPGA", "COME_CPLD", "SWCPLD1", "SWCPLD2", "FANCPLD", "SYSCPLD",
+                           "Main_BMC", "Backup_BMC", "Main_BIOS", "Backup_BIOS"]
+    COMPONENT_DES_LIST = ["Used for managering the CPU and expanding I2C channels",
+                          "Used for managing the CPU",
+                          "Used for managing QSFP+ ports (1-16)",
+                          "Used for managing QSFP+ ports (17-32)",
+                          "Used for managing fans",
+                          "Used for managing control the system power & reset",
+                          "Main Baseboard Management Controller",
+                          "Backup Baseboard Management Controller",
+                          "Main basic Input/Output System",
+                          "Backup basic Input/Output System"]
+else:
+    Check_Bios_Boot = "i2cget -y -f 100 0x0d 0x70 | tr a-z A-Z | cut -d 'X' -f 2"
+    Fan_CPLD_Cmd = "i2cget -y -f 107 0x0d 0x00 | tr a-z A-Z | cut -d 'X' -f 2"
+    COME_CPLD_Cmd = "i2cget -y -f 104 0x0d 0xe0 | tr a-z A-Z | cut -d 'X' -f 2"
+    Sys_Cpld_Cmd = "i2cget -y -f 100 0x0d 0x00 | tr a-z A-Z | cut -d 'X' -f 2"
+    Sw_Cpld1_Cmd = "i2cget -y -f 108 0x30 0x00 | tr a-z A-Z | cut -d 'X' -f 2"
+    Sw_Cpld2_Cmd = "i2cget -y -f 108 0x31 0x00 | tr a-z A-Z | cut -d 'X' -f 2"
+
+    COMPONENT_NAME_LIST = ["FPGA", "COME_CPLD", "SWCPLD1", "SWCPLD2", "FANCPLD", "SYSCPLD",
+                           "Main_BIOS", "Backup_BIOS"]
+    COMPONENT_DES_LIST = ["Used for managering the CPU and expanding I2C channels",
+                          "Used for managing the CPU",
+                          "Used for managing QSFP+ ports (1-16)",
+                          "Used for managing QSFP+ ports (17-32)",
+                          "Used for managing fans",
+                          "Used for managing control the system power & reset",
+                          "Main basic Input/Output System",
+                          "Backup basic Input/Output System"]
 
 
 class Component(ComponentBase):
@@ -97,6 +122,21 @@ class Component(ComponentBase):
         if not status:
             return "N/A"
         return fpga_version.replace("0x", "")
+
+    def __get_bmc_version(self):
+        """
+        Get main/backup bmc version
+        """
+        version = "N/A"
+        cmd = Main_BMC_Cmd if self.name == "Main_BMC" else Backup_BMC_Cmd
+        status, result = self.helper.ipmi_raw(cmd)
+        if not status:
+            print("Fail! Can't get the %s version by command:%s" % (self.name, cmd))
+            return version
+        str_1 = str(int(result.strip().split(" ")[0]))
+        str_2 = str(int(result.strip().split(" ")[1], 16))
+        version = "%s.%s" % (str_1, str_2)
+        return version
 
     def get_name(self):
         """
