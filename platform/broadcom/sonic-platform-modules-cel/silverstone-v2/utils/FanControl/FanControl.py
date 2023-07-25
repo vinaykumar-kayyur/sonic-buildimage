@@ -144,13 +144,6 @@ class FanControl(object):
                 fan_rpm_error_list.append(fan_name)
             if fan_name.endswith("2") and (fan_speed_rpm not in range(Fan_Rear_MIN, Fan_Rear_MAX + 1)):
                 fan_rpm_error_list.append(fan_name)
-        # for fan_index_ in range(FAN_NUMBER * 2):
-        #     fan_name = self.platform_chassis_obj.get_fan(fan_index_).get_name()
-        #     fan_speed_rpm = self.platform_chassis_obj.get_fan(fan_index_).get_speed_rpm()
-        #     if fan_name.endswith("1") and (fan_speed_rpm not in range(Fan_Front_MIN, Fan_Front_MAX+1)):
-        #         fan_rpm_error_list.append(fan_name)
-        #     if fan_name.endswith("2") and (fan_speed_rpm not in range(Fan_Rear_MIN, Fan_Rear_MAX+1)):
-        #         fan_rpm_error_list.append(fan_name)
         if not fan_rpm_error_list:
             return
         if len(fan_rpm_error_list) >= 2:
