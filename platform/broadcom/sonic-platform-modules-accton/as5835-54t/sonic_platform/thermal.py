@@ -38,10 +38,34 @@ DEFAULT_THRESHOLD = {
         HIGH_CRIT_THRESHOLD : NOT_AVAILABLE,
         LOW_CRIT_THRESHOLD : NOT_AVAILABLE
     },
-    'coretemp-isa-0000' : {
-        HIGH_THRESHOLD : '82.0',
+    'CPU_Package_temp' : {
+        HIGH_THRESHOLD : '71.0',
         LOW_THRESHOLD : NOT_AVAILABLE,
-        HIGH_CRIT_THRESHOLD : '104.0',
+        HIGH_CRIT_THRESHOLD : '91.0',
+        LOW_CRIT_THRESHOLD : NOT_AVAILABLE
+    },
+    'CPU_Core_0_temp' : {
+        HIGH_THRESHOLD : '71.0',
+        LOW_THRESHOLD : NOT_AVAILABLE,
+        HIGH_CRIT_THRESHOLD : '91.0',
+        LOW_CRIT_THRESHOLD : NOT_AVAILABLE
+    },
+    'CPU_Core_1_temp' : {
+        HIGH_THRESHOLD : '71.0',
+        LOW_THRESHOLD : NOT_AVAILABLE,
+        HIGH_CRIT_THRESHOLD : '91.0',
+        LOW_CRIT_THRESHOLD : NOT_AVAILABLE
+    },
+    'CPU_Core_2_temp' : {
+        HIGH_THRESHOLD : '71.0',
+        LOW_THRESHOLD : NOT_AVAILABLE,
+        HIGH_CRIT_THRESHOLD : '91.0',
+        LOW_CRIT_THRESHOLD : NOT_AVAILABLE
+    },
+    'CPU_Core_3_temp' : {
+        HIGH_THRESHOLD : '71.0',
+        LOW_THRESHOLD : NOT_AVAILABLE,
+        HIGH_CRIT_THRESHOLD : '91.0',
         LOW_CRIT_THRESHOLD : NOT_AVAILABLE
     },
     'PSU-1 temp sensor 1' : {
@@ -260,7 +284,7 @@ class Thermal(PddfThermal):
             A float number, the maximum recorded temperature of thermal in Celsius
             up to nearest thousandth of one degree Celsius, e.g. 30.125
         """
-        if self.min_temperature is None:
+        if self.max_temperature is None:
             self.get_temperature()
 
         return self.max_temperature

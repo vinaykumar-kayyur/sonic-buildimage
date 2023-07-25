@@ -63,3 +63,12 @@ class Psu(PddfPsu):
         A string, the type of PSU (AC/DC)
         """
         return "AC"
+
+    def get_revision(self):
+        """
+        Retrieves the hardware revision of the device
+
+        Returns:
+            string: Revision value of device
+        """
+        return 'N/A'
