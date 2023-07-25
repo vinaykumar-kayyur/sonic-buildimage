@@ -59,7 +59,7 @@ stages:
             - name: vs
   - stage: Test
     dependsOn: BuildVS
-    condition: and(succeeded(), and(ne(stageDependencies.BuildVS.outputs['vs.SetVar.SKIP_VSTEST'], 'YES'), in(dependencies.BuildVS.result, 'Succeeded', 'SucceededWithIssues')))
+    condition: and(succeeded(), in(dependencies.BuildVS.result, 'Succeeded', 'SucceededWithIssues'))
     variables:
       - group: SONiC-Elastictest
       - name: inventory
