@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # @Company ：Celestica
-# @Time    : 2023/5/26 15:37
+# @Time    : 2023/7/22 15:37
 # @Mail    : yajiang@celestica.com
 # @Author  : jiang tao
 
@@ -16,7 +16,11 @@ try:
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
+BMC_EXIST = True
+
 REBOOT_CAUSE_PATH = "/sys/devices/platform/cpld_wdt/reason"
+SET_SYS_STATUS_LED = "0x3A 0x39 0x2 0x0 {}"
+SET_LED_MODE_Manual = "0x3a 0x42 0x02 0x00"
 
 
 class Chassis(PddfChassis):
@@ -58,10 +62,25 @@ class Chassis(PddfChassis):
         return self.get_system_led("SYS_LED")
 
     def set_status_led(self, color):
-        if color == self.get_status_led():
-            return False
-        result = self.set_system_led("SYS_LED", color)
-        return result
+        if BMC_EXIST:
+            if color == self.get_status_led():
+                return False
+            status, res = self.helper.ipmi_raw(SET_LED_MODE_Manual)
+            if status != 0:
+                return False
+
+            color_val = "0x1"
+            if color == "green":
+                color_val = "0x1"
+            elif color == "amber":
+                color_val = "0x2"
+            status, res = self.helper.ipmi_raw(SET_SYS_STATUS_LED.format(color_val))
+            return True if status else False
+        else:
+            if color == self.get_status_led():
+                return False
+            result = self.set_system_led("SYS_LED", color)
+            return result
 
     def get_sfp(self, index):
         """
