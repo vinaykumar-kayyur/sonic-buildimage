@@ -1,8 +1,10 @@
 #!/usr/bin/env python
-# @Company ：Celestica
-# @Time    : 2023/3/9 16:19
-# @Mail    : yajiang@celestica.com
-# @Author  : jiang tao
+
+#############################################################################
+#
+# Watchdog contains an implementation of SONiC Platform Base Watchdog API
+#
+#############################################################################
 import fcntl
 import os
 import array
@@ -203,3 +205,4 @@ class Watchdog(WatchdogBase):
 
         if self.watchdog is not None:
             os.close(self.watchdog)
+
