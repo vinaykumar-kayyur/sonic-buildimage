@@ -31,7 +31,6 @@ l3_alpm_enable=2
 ipv6_lpm_128b_enable=1
 ifp_inports_support_enable=1
 
-l3_defip_sizing=1
 num_ipv6_lpm_128b_entries=512
 
 
