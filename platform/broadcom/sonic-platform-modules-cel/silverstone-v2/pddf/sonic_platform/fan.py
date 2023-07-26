@@ -90,4 +90,4 @@ class Fan(PddfFan):
         f_r_fan = "Front" if fan_name.endswith("1") else "Rear"
         max_fan_rpm = eval(self.plugin_data['FAN']['FAN_MAX_RPM_SPEED'][direction][f_r_fan])
         speed_percentage = round(speed_rpm / max_fan_rpm * 100)
-        return speed_rpm if speed_percentage > 100 else speed_percentage
+        return 100 if speed_percentage > 100 else speed_percentage
