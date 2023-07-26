@@ -297,7 +297,7 @@
     "PSU2_LED":
     {
         "dev_info": { "device_type":"LED", "device_name":"PSU_LED"},
-        "dev_attr": { "index":"0", "flag": "r"},
+        "dev_attr": { "index":"1", "flag": "r"},
         "i2c" : {
             "attr_list":
             [
