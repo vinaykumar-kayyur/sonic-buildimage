@@ -11,7 +11,7 @@ try:
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 BMC_EXIST = bmc_present_config.get_bmc_status()
-FPGA_VERSION_PATH = "/sys/devices/platform/fpga-sys/version"
+FPGA_VERSION_PATH = "/sys/bus/platform/devices/fpga_sysfs/version"
 Bios_Version_Cmd = "dmidecode -t bios | grep Version"
 
 if BMC_EXIST:
