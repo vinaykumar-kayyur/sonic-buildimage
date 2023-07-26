@@ -216,6 +216,10 @@ module sonic-vlan {
 				leaf mac {
 					type yang:mac-address;
 				}
+
+				leaf Subnets {
+					type string;
+				}
 			}
 			/* end of VLAN_LIST */
 		}
