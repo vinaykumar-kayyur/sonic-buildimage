@@ -20,7 +20,7 @@
             },
             "i2c":
             {
-                "valmap": {"0":true, "1":false}
+                "valmap": {"1":true, "0": false}
             }
         },
         "psu_fan_dir":
@@ -56,7 +56,7 @@
             },
             "i2c":
             {
-                "valmap": {"1":true, "0":false}
+                "valmap": {"1":true, "0": false}
             }
         },
         "PSU_FAN_MAX_SPEED":"29000"
@@ -95,7 +95,7 @@
             "1": {"Front": "32000", "Rear": "30200"}
         },
         "pwm_to_duty_cycle": "lambda pwm: ((pwm*100)/255)",
-	"duty_cycle_to_pwm": "lambda dc: ((dc*255)/100)"
+	    "duty_cycle_to_pwm": "lambda dc: ((dc*255)/100)"
     },
 
     "THERMAL":
