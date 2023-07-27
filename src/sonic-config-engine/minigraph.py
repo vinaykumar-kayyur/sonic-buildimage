@@ -2005,7 +2005,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     if os.environ.get("CFGGEN_UNIT_TESTING", "0") == "2":
         dns_conf = os.path.join(os.path.dirname(__file__), "tests/", "dns.j2")
     else:
-        dns_conf = "/usr/local/sonic/dns/dns.j2"
+        dns_conf = "/usr/share/sonic/templates/dns.j2"
     if os.path.isfile(dns_conf):
         text = ""
         with open(dns_conf) as template_file:

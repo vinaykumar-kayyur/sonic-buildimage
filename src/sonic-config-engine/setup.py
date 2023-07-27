@@ -85,7 +85,6 @@ setup(
     install_requires = dependencies,
     data_files = [
         ('/usr/share/sonic/templates', glob.glob('data/*')),
-        ('sonic/dns', ['data/dns.j2']),
     ],
     setup_requires= [
         'pytest-runner',
