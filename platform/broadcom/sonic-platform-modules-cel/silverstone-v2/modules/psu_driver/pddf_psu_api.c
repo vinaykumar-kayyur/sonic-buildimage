@@ -386,6 +386,7 @@ exit:
     return count;
 }
 
+extern int board_i2c_cpld_read_new(unsigned short cpld_addr, char *name, u8 reg);
 int sonic_i2c_get_psu_byte_default(void *client, PSU_DATA_ATTR *adata, void *data)
 {
     int status = 0;
@@ -395,7 +396,7 @@ int sonic_i2c_get_psu_byte_default(void *client, PSU_DATA_ATTR *adata, void *dat
 
     if (strncmp(adata->devtype, "cpld", strlen("cpld")) == 0)
     {
-        val = board_i2c_cpld_read(adata->devaddr , adata->offset);
+        val = board_i2c_cpld_read_new(adata->devaddr, adata->devname, adata->offset);
         if (val < 0){
             return val;
 		}
