@@ -322,14 +322,6 @@ start() {
     # Obtain our platform as we will mount directories with these names in each docker
     PLATFORM=${PLATFORM:-`$SONIC_CFGGEN -H -v DEVICE_METADATA.localhost.platform`}
 
-    REDIS_SOCK="/var/run/redis${DEV}/redis.sock"
-    REDIS_PID="/var/run/redis${DEV}/redis.pid"
-    REDIS_SONIC_DB="/var/run/redis${DEV}/sonic-db/"
-
-    REDIS_CHASSIS_SOCK="/var/run/redis-chassis/redis_chassis.sock"
-    REDIS_CHASSIS_PID="/var/run/redis-chassis/redis_chassis.pid"
-    REDIS_CHASSIS_SONIC_DB="/var/run/redis-chassis/sonic-db/"
-
     # Parse the device specific asic conf file, if it exists
     ASIC_CONF=/usr/share/sonic/device/$PLATFORM/asic.conf
     if [ -f "$ASIC_CONF" ]; then
