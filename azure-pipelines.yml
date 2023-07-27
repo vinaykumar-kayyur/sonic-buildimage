@@ -144,7 +144,6 @@ stages:
         TOPOLOGY: t0
         MIN_WORKER: $(T0_INSTANCE_NUM)
         MAX_WORKER: $(T0_INSTANCE_NUM)
-        KVM_IMAGE_BRANCH: "202012"
         MGMT_BRANCH: "202012"
 
   - job: t0_2vlans_elastictest
@@ -160,7 +159,6 @@ stages:
         MIN_WORKER: $(T0_2VLANS_INSTANCE_NUM)
         MAX_WORKER: $(T0_2VLANS_INSTANCE_NUM)
         DEPLOY_MG_EXTRA_PARAMS: "-e vlan_config=two_vlan_a"
-        KVM_IMAGE_BRANCH: "202012"
         MGMT_BRANCH: "202012"
 
   - job: t1_lag_elastictest
@@ -174,7 +172,6 @@ stages:
         TOPOLOGY: t1-lag
         MIN_WORKER: $(T1_LAG_INSTANCE_NUM)
         MAX_WORKER: $(T1_LAG_INSTANCE_NUM)
-        KVM_IMAGE_BRANCH: "202012"
         MGMT_BRANCH: "202012"
 
   - job: dualtor_elastictest
@@ -189,5 +186,4 @@ stages:
           MIN_WORKER: $(T0_DUALTOR_INSTANCE_NUM)
           MAX_WORKER: $(T0_DUALTOR_INSTANCE_NUM)
           COMMON_EXTRA_PARAMS: "--disable_loganalyzer "
-          KVM_IMAGE_BRANCH: "202012"
           MGMT_BRANCH: "202012"
