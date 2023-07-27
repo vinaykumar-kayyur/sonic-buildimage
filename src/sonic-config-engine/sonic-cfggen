@@ -87,7 +87,10 @@ def is_ipv6(value):
 def getGatewayAddrIPv4(value):
         subnets = value.split(';')
         for subnet in subnets:
-                network_def = ipaddress.ip_network(subnet, strict=False)
+                if PY3x:
+                    network_def = ipaddress.ip_network(subnet, strict=False)
+                else:
+                    network_def = ipaddress.ip_network(unicode(subnet), strict=False)
                 if is_ipv4(network_def[1]):
                     return str(network_def[1])
         return ""
@@ -95,7 +98,10 @@ def getGatewayAddrIPv4(value):
 def getGatewayAddrIPv6(value):
         subnets = value.split(';')
         for subnet in subnets:
-                network_def = ipaddress.ip_network(subnet, strict=False)
+                if PY3x:
+                    network_def = ipaddress.ip_network(subnet, strict=False)
+                else:
+                    network_def = ipaddress.ip_network(unicode(subnet), strict=False)
                 if is_ipv6(network_def[1]):
                     return str(network_def[1])
         return ""
