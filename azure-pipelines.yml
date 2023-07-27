@@ -28,8 +28,8 @@ resources:
   - repository: sonic-mgmt
     type: github
     name: sonic-net/sonic-mgmt
+    ref: master
     endpoint: sonic-net
-    ref: refs/heads/202012
   - repository: buildimage
     type: github
     name: sonic-net/sonic-buildimage
