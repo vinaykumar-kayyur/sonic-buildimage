@@ -1,0 +1,73 @@
+#!/bin/bash
+# This script starts/stops dpu sw
+
+### BEGIN INIT INFO
+# Provides:          load-dpu
+# Required-Start:
+# Required-Stop:
+# Should-Start:
+# Should-Stop:
+# Default-Start:     S
+# Default-Stop:      0 6
+# Short-Description: Load dpu sw
+### END INIT INFO
+ACTIVE_FILE="/boot/active.txt"
+NIC_MOUNT=""
+LOG_FILE="/tmp/active_nic"
+
+function start_dpu()
+{
+    mkdir -p /host/dpu/update
+    mkdir -p /host/dpu/sysconfig/config0
+    mkdir -p /host/dpu/sysconfig/config1
+    mkdir -p  /host/dpu/obfl
+    mkdir -p /host/dpu/data
+    mkdir -p /host/dpu/tmpfsshare
+    mkdir -p /host/dpu/runfs
+    mkdir -p /host/dpu/logfs
+    mount -t tmpfs -o size=20M,mode=1777  tmpfs /host/dpu/tmpfsshare
+    mount -t tmpfs -o size=20M,mode=0755  runs /host/dpu/runfs
+    mount -t tmpfs -o size=20M,mode=0755  logfs /host/dpu/logfs
+
+    if [ -f "$ACTIVE_FILE" ]; then
+        ACTIVE_CONTENTS=$(cat "$ACTIVE_FILE")
+        ACTIVE_NIC=$(echo "$ACTIVE_CONTENTS" | cut -d " " -f 8-)
+        if [ "$ACTIVE_NIC" = "/boot/nicA" ]; then
+            NIC_MOUNT="-v /dev/shm:/dev/shm -v /boot/nicA/nic_core:/nic -v /boot/nicA/shared/conf/gen:/nic/conf/gen"
+        elif [ "$ACTIVE_NIC" = "/boot/nicB" ]; then
+            NIC_MOUNT="-v /dev/shm:/dev/shm -v /boot/nicB/nic_core:/nic -v /boot/nicB/shared/conf/gen:/nic/conf/gen"
+        fi
+    else
+        echo "/boot/active.txt not present" > $LOG_FILE
+    fi
+    echo "Active Nic: $ACTIVE_NIC" >> $LOG_FILE
+    echo "NIC_MOUNT: $NIC_MOUNT" >> $LOG_FILE 
+
+    docker run -v /host/dpu/update:/update -v /host/dpu/sysconfig/config0:/sysconfig/config0 -v /host/dpu/sysconfig/config1:/sysconfig/config1 -v /host/dpu/obfl:/obfl  -v /host/dpu/data:/data -v /host/dpu/tmpfsshare:/tmp -v /host/dpu/runfs:/run -v /host/dpu/logfs:/var/log -v /sys:/sys $NIC_MOUNT --net=host --privileged dpu:v1
+}
+
+case "$1" in
+start)
+    echo -n "Start dpu... "
+
+    start_dpu
+
+    echo "done."
+    ;;
+
+stop)
+    echo "Not supported"
+    ;;
+
+force-reload|restart)
+    echo "Not supported"
+    ;;
+
+*)
+    echo "Usage: /etc/init.d/dpu.init {start}"
+    exit 1
+    ;;
+esac
+
+exit 0
+

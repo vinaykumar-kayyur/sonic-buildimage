@@ -31,6 +31,7 @@ IMAGE_DISTRO=$3
 set -x -e
 
 CONFIGURED_ARCH=$([ -f .arch ] && cat .arch || echo amd64)
+CONFIGURED_PLATFORM=$([ -f .platform ] && cat .platform || echo generic)
 
 . functions.sh
 BUILD_SCRIPTS_DIR=files/build_scripts
@@ -761,6 +762,17 @@ sudo LANG=C DOCKER_HOST="$DOCKER_HOST" chroot $FILESYSTEM_ROOT docker tag {{imag
 {% endif %}
 fi
 {% endfor %}
+
+if [[ $CONFIGURED_PLATFORM == pensando ]]; then
+#we need to start pciemgrd process soon at the bootup for pci txn to be up.
+#if we don't start pciemgrd early pcie timeout happens and server reboots.
+#pciemgrd runs as part of dpu docker. So load this at build time itself.
+sudo LANG=C DOCKER_HOST="$DOCKER_HOST" chroot $FILESYSTEM_ROOT docker load -i boot/dpu_sw.tar
+sudo LANG=C chroot $FILESYSTEM_ROOT rm -f boot/dpu_sw.tar
+
+#Disable rc.local
+sudo LANG=C chroot $FILESYSTEM_ROOT chmod -x /etc/rc.local
+fi
 
 SONIC_PACKAGE_MANAGER_FOLDER="/var/lib/sonic-package-manager/"
 sudo mkdir -p $FILESYSTEM_ROOT/$SONIC_PACKAGE_MANAGER_FOLDER
