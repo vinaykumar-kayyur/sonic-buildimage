@@ -12,6 +12,10 @@ RUN apt-get update
 # Install redis-server
 RUN apt-get install -y redis-tools redis-server
 
+RUN groupmod -g 1001 redis
+RUN chgrp -R redis /etc/redis/
+RUN chgrp -R redis /var/lib/redis/
+
 {% if docker_database_debs.strip() -%}
 # Copy locally-built Debian package dependencies
 {{ copy_files("debs/", docker_database_debs.split(' '), "/debs/") }}
@@ -30,6 +34,7 @@ RUN apt-get clean -y                                  && \
              s/^logfile .*$/logfile ""/;                 \
              s/^# syslog-enabled no$/syslog-enabled no/; \
              s/^# unixsocket/unixsocket/;                \
+             s/^unixsocketperm 700/unixsocketperm 770/;  \
              s/redis-server.sock/redis.sock/g;           \
              s/^client-output-buffer-limit pubsub [0-9]+mb [0-9]+mb [0-9]+/client-output-buffer-limit pubsub 0 0 0/; \
              s/^notify-keyspace-events ""$/notify-keyspace-events AKE/ \

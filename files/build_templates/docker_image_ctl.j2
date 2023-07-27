@@ -7,23 +7,6 @@
 
 
 {%- if docker_container_name == "database" %}
-add_redis_paths() {
-    REDIS_SOCK_PATH=$REDIS_SOCK
-    REDIS_PID_PATH=$REDIS_PID
-    REDIS_SONIC_DB_PATH=$REDIS_SONIC_DB
-}
-
-add_redis_chassis_paths(){
-    REDIS_SOCK_PATH=$REDIS_CHASSIS_SOCK
-    REDIS_PID_PATH=$REDIS_CHASSIS_PID
-    REDIS_SONIC_DB_PATH=$REDIS_CHASSIS_SONIC_DB
-}
-
-change_redis_permission() {
-    chgrp -f redis $REDIS_SOCK && chmod -f 0760 $REDIS_SOCK
-    chmod -f 0644 $REDIS_PID
-}
-
 link_namespace() {
     # Makes namespace of a docker container available in
     # /var/run/netns so it can be managed with iproute2
@@ -124,12 +107,11 @@ function preStartAction()
             docker cp /tmp/dump.rdb database$DEV:/var/lib/redis/
         fi
         # Add redis UDS to the redis group and give read/write access to the group
-        add_redis_paths
+        REDIS_SOCK="/var/run/redis${DEV}/redis.sock"
     else
-        add_redis_chassis_paths
+        REDIS_SOCK="/var/run/redis-chassis/redis_chassis.sock"
     fi
-    chmod -f -R 0777 "$(dirname "$REDIS_SOCK_PATH")"
-    change_redis_permission
+    chgrp -f -R redis "$(dirname "$REDIS_SOCK")" && chmod -f -R 0770 "$(dirname "$REDIS_SOCK")"
 {%- elif docker_container_name == "pde" %}
     if [[ $(/bin/systemctl status swss | grep -c running) -gt 0 ]]; then
         echo "Stopping SWSS before starting PDE"
@@ -295,7 +277,7 @@ function postStartAction()
             fi
         fi
         # Add redis UDS to the redis group and give read/write access to the group
-        add_redis_paths
+        REDIS_SOCK="/var/run/redis${DEV}/redis.sock"
     else
         until [[ ($(docker exec -i ${DOCKERNAME} pgrep -x -c supervisord) -gt 0) &&
                  ($(docker exec -i ${DOCKERNAME} $SONIC_DB_CLI CHASSIS_APP_DB PING | grep -c True) -gt 0) ]]; do
@@ -304,10 +286,9 @@ function postStartAction()
         if [[ -n "$lag_id_start" && -n "$lag_id_end" ]]; then
            setPlatformLagIdBoundaries
         fi
-        add_redis_chassis_paths
+        REDIS_SOCK="/var/run/redis-chassis/redis_chassis.sock"
     fi
-    change_redis_permission
-    chmod -f -R 0755 $REDIS_SONIC_DB_PATH
+    chgrp -f -R redis "$(dirname "$REDIS_SOCK")" && chmod -f -R 0770 "$(dirname "$REDIS_SOCK")"
 {%- elif docker_container_name == "swss" %}
     docker exec swss$DEV rm -f /ready   # remove cruft
     if [[ "$BOOT_TYPE" == "fast" ]] && [[ -d /host/fast-reboot ]]; then
