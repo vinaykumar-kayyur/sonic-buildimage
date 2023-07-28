@@ -248,10 +248,6 @@ if grep -q '\bsonic_fips=1\b' /proc/cmdline && echo " $extra_cmdline_linux" | gr
     extra_cmdline_linux="$extra_cmdline_linux sonic_fips=1"
 fi
 
-if grep -q '\bfips=1\b' /proc/cmdline && echo " $extra_cmdline_linux" | grep -qv '\bfips=.\b'; then
-    extra_cmdline_linux="$extra_cmdline_linux fips=1"
-fi
-
 echo "EXTRA_CMDLINE_LINUX=$extra_cmdline_linux"
 
 # Update Bootloader Menu with installed image
