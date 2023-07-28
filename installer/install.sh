@@ -244,11 +244,11 @@ echo "ONIE_IMAGE_PART_SIZE=$demo_part_size"
 
 extra_cmdline_linux=%%EXTRA_CMDLINE_LINUX%%
 # Inherit the FIPS option, so not necessary to do another reboot after upgraded
-if grep -qE '\ssonic_fips=1' /proc/cmdline && echo " $extra_cmdline_linux" | grep -qEv '\ssonic_fips='; then
+if grep -q '\bsonic_fips=1\b' /proc/cmdline && echo " $extra_cmdline_linux" | grep -qv '\bsonic_fips=.\b'; then
     extra_cmdline_linux="$extra_cmdline_linux sonic_fips=1"
 fi
 
-if grep -qE '\sfips=1' /proc/cmdline && echo " $extra_cmdline_linux" | grep -qEv '\sfips='; then
+if grep -q '\bfips=1\b' /proc/cmdline && echo " $extra_cmdline_linux" | grep -qv '\bfips=.\b'; then
     extra_cmdline_linux="$extra_cmdline_linux fips=1"
 fi
 
