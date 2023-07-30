@@ -1,7 +1,6 @@
 [Unit]
 Description=Silverstone-V2 Platform background monitor service
-Before=pmon.service
-After=pddf-platform-init.service
+After=pmon.service
 DefaultDependencies=no
 
 [Service]
