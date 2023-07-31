@@ -256,8 +256,3 @@ def main(argv):
     while True:
         monitor.manage_fans()
         time.sleep(2)
-
-
-if __name__ == '__main__':
-    if os.popen("cat /usr/local/bin/bmc_present").read().strip() == "False":
-        main(sys.argv[1:])
