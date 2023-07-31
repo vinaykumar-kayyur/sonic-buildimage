@@ -61,7 +61,7 @@
         "custom_kos":
         [
             "pddf_custom_fpga_algo",
-	    "pddf_custom_wdt"
+            "pddf_custom_wdt"
         ]
     },
 
