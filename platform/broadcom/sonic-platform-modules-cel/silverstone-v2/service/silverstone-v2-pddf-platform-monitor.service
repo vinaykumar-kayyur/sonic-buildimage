@@ -4,9 +4,9 @@ After=pmon.service
 DefaultDependencies=no
 
 [Service]
-Type=oneshot
-ExecStart=/usr/local/bin/pddf_sensor_list_refresh.py
-ExecStart=/usr/local/bin/FanControl/FanControl.py
+ExecStart=/usr/local/bin/pddf_fan_control_sensor_refresh.py
+Restart=always
+RestartSec=30s
 KillSignal=SIGKILL
 SuccessExitStatus=SIGKILL
 
