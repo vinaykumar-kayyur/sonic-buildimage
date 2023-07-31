@@ -82,9 +82,22 @@ class PrePddfInit(object):
         self.run_command("cp %s%s %spddf-device.json" % (device_path, device_name, device_path))
         print("The selection of the %s file has been completed" % device_name)
 
+    def choose_platform_components(self):
+        """
+        Depending on the state of the BMC, different platform_components.json file configurations will be used:
+        1.BMC exist: cp platform_components.json-bmc platform_components.json
+        2.None BMC : cp platform_components.json-nonebmc platform_components.json
+        """
+        # ./usr/share/sonic/device/x86_64-cel_silverstone_v2-r0/platform_components.json
+        device_name = "platform_components.json-bmc" if self.bmc_present else "platform_components.json-nonebmc"
+        device_path = "/usr/share/sonic/device/%s/" % self.platform_name
+        self.run_command("cp %s%s %splatform_components.json" % (device_path, device_name, device_path))
+        print("The selection of the %s file has been completed" % device_name)
+
     def main(self):
         self.get_bmc_status()
         self.choose_pddf_device_json()
+        self.choose_platform_components()
 
 
 if __name__ == '__main__':
