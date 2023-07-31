@@ -40,12 +40,15 @@ PSU_CPLD_I2C_MAPPING = {
     },
 }
 
-THERMAL_NAME_LIST = ("Main Board 0x48", "Main Board 0x49", "Main Board 0x4A",
-                     "CPU Board 0x4B", "OCXO 0x4C", "Main Board 0x4F")
+THERMAL_NAME_LIST = ["MB_FrontMiddle_temp(0x48)", "MB_RightCenter_temp(0x49)", "MB_LeftCenter_temp(0x4A)",
+                     "CB_temp(0x4B)", "OCXO_temp(0x4C)", "MB_RearRight_temp(0x4F)",
+                     "CPU_Package_temp", "CPU_Core_0_temp", "CPU_Core_1_temp",
+                     "CPU_Core_2_temp", "CPU_Core_3_temp"]
 
-PSU_THERMAL_NAME_LIST = ("PSU-1 temp sensor 1", "PSU-2 temp sensor 1")
+PSU_THERMAL_NAME_LIST = ["PSU-1 temp sensor 1", "PSU-2 temp sensor 1"]
 
 SYSFS_PATH = "/sys/bus/i2c/devices"
+CPU_SYSFS_PATH = "/sys/devices/platform"
 
 class Thermal(ThermalBase):
     """Platform-specific Thermal class"""
@@ -105,6 +108,36 @@ class Thermal(ThermalBase):
                 self.conf.HIGH_CRIT_THRESHOLD_FIELD : self.conf.NOT_AVAILABLE,
                 self.conf.LOW_CRIT_THRESHOLD_FIELD : self.conf.NOT_AVAILABLE
             },
+            THERMAL_NAME_LIST[6] : {
+                self.conf.HIGH_THRESHOLD_FIELD : '82.0',
+                self.conf.LOW_THRESHOLD_FIELD : self.conf.NOT_AVAILABLE,
+                self.conf.HIGH_CRIT_THRESHOLD_FIELD : '104.0',
+                self.conf.LOW_CRIT_THRESHOLD_FIELD : self.conf.NOT_AVAILABLE
+            },
+            THERMAL_NAME_LIST[7] : {
+                self.conf.HIGH_THRESHOLD_FIELD : '82.0',
+                self.conf.LOW_THRESHOLD_FIELD : self.conf.NOT_AVAILABLE,
+                self.conf.HIGH_CRIT_THRESHOLD_FIELD : '104.0',
+                self.conf.LOW_CRIT_THRESHOLD_FIELD : self.conf.NOT_AVAILABLE
+            },
+            THERMAL_NAME_LIST[8] : {
+                self.conf.HIGH_THRESHOLD_FIELD : '82.0',
+                self.conf.LOW_THRESHOLD_FIELD : self.conf.NOT_AVAILABLE,
+                self.conf.HIGH_CRIT_THRESHOLD_FIELD : '104.0',
+                self.conf.LOW_CRIT_THRESHOLD_FIELD : self.conf.NOT_AVAILABLE
+            },
+            THERMAL_NAME_LIST[9] : {
+                self.conf.HIGH_THRESHOLD_FIELD : '82.0',
+                self.conf.LOW_THRESHOLD_FIELD : self.conf.NOT_AVAILABLE,
+                self.conf.HIGH_CRIT_THRESHOLD_FIELD : '104.0',
+                self.conf.LOW_CRIT_THRESHOLD_FIELD : self.conf.NOT_AVAILABLE
+            },
+            THERMAL_NAME_LIST[10] : {
+                self.conf.HIGH_THRESHOLD_FIELD : '82.0',
+                self.conf.LOW_THRESHOLD_FIELD : self.conf.NOT_AVAILABLE,
+                self.conf.HIGH_CRIT_THRESHOLD_FIELD : '104.0',
+                self.conf.LOW_CRIT_THRESHOLD_FIELD : self.conf.NOT_AVAILABLE
+            },
             PSU_THERMAL_NAME_LIST[0] : {
                 self.conf.HIGH_THRESHOLD_FIELD : '80.0',
                 self.conf.LOW_THRESHOLD_FIELD : self.conf.NOT_AVAILABLE,
@@ -121,24 +154,35 @@ class Thermal(ThermalBase):
 
         # Set hwmon path
         i2c_path = {
-            0: "15-0048/hwmon/hwmon*/",
-            1: "15-0049/hwmon/hwmon*/",
-            2: "15-004a/hwmon/hwmon*/",
-            3: "15-004b/hwmon/hwmon*/",
-            4: "15-004c/hwmon/hwmon*/",
-            5: "15-004f/hwmon/hwmon*/"
+            0: {"hwmon_path":"15-0048/hwmon/hwmon*/", "ss_index":1},
+            1: {"hwmon_path":"15-0049/hwmon/hwmon*/", "ss_index":1},
+            2: {"hwmon_path":"15-004a/hwmon/hwmon*/", "ss_index":1},
+            3: {"hwmon_path":"15-004b/hwmon/hwmon*/", "ss_index":1},
+            4: {"hwmon_path":"15-004c/hwmon/hwmon*/", "ss_index":1},
+            5: {"hwmon_path":"15-004f/hwmon/hwmon*/", "ss_index":1},
+            6: {"hwmon_path":"coretemp.0/hwmon/hwmon*/", "ss_index":1},
+            7: {"hwmon_path":"coretemp.0/hwmon/hwmon*/", "ss_index":2},
+            8: {"hwmon_path":"coretemp.0/hwmon/hwmon*/", "ss_index":3},
+            9: {"hwmon_path":"coretemp.0/hwmon/hwmon*/", "ss_index":4},
+            10: {"hwmon_path":"coretemp.0/hwmon/hwmon*/", "ss_index":5}
         }.get(self.index, None)
 
-        self.hwmon_path = "{}/{}".format(SYSFS_PATH, i2c_path)
+        self.is_cpu = False
+        if self.index in range(6,11):
+            self.is_cpu = True
+            self.hwmon_path = "{}/{}".format(CPU_SYSFS_PATH, i2c_path["hwmon_path"])
+        else:
+            self.hwmon_path = "{}/{}".format(SYSFS_PATH, i2c_path["hwmon_path"])
         self.ss_key = THERMAL_NAME_LIST[self.index]
-        self.ss_index = 1
+        self.ss_index = i2c_path["ss_index"]
 
     def __read_txt_file(self, file_path):
         for filename in glob.glob(file_path):
             try:
                 with open(filename, 'r') as fd:                    
-                    data =fd.readline().rstrip()
-                    return data
+                    data =fd.readline().strip()
+                    if len(data) > 0:
+                        return data
             except IOError as e:
                 pass
 
@@ -239,7 +283,7 @@ class Thermal(ThermalBase):
             up to nearest thousandth of one degree Celsius, e.g. 30.125
         """
         if self.is_psu:
-            return 80
+            return 80.0
 
         temp_file = "temp{}_max".format(self.ss_index)
         return self.__get_temp(temp_file)
@@ -276,9 +320,15 @@ class Thermal(ThermalBase):
         Returns:
             bool: True if Thermal is present, False if not
         """
+        if self.is_cpu:
+            return True
+
         if self.is_psu:
             val = self.__read_txt_file(self.cpld_path + "psu_present")
-            return int(val, 10) == 1
+            if val is not None:
+                return int(val, 10) == 1
+            else:
+                return False
         temp_file = "temp{}_input".format(self.ss_index)
         temp_file_path = os.path.join(self.hwmon_path, temp_file)
         raw_txt = self.__read_txt_file(temp_file_path)
@@ -293,10 +343,15 @@ class Thermal(ThermalBase):
         Returns:
             A boolean value, True if device is operating properly, False if not
         """
+        if self.is_cpu:
+            return True
+
         if self.is_psu:
             temp_file = self.psu_hwmon_path + "psu_temp_fault"
-            return self.get_presence() and (not int(
-                self.__read_txt_file(temp_file)))
+            psu_temp_fault = self.__read_txt_file(temp_file)
+            if psu_temp_fault is None:
+                psu_temp_fault = '1'
+            return self.get_presence() and (not int(psu_temp_fault))
 
         file_str = "temp{}_input".format(self.ss_index)
         file_path = os.path.join(self.hwmon_path, file_str)
@@ -359,4 +414,3 @@ class Thermal(ThermalBase):
             self.get_temperature()
 
         return self.max_temperature
-
