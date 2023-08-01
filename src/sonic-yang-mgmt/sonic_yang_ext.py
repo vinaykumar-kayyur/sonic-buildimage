@@ -2,7 +2,7 @@
 # class sonic_yang. A separate file is used to avoid a single large file.
 
 from __future__ import print_function
-import yang as ly
+import libyang as ly
 import syslog
 from json import dump, dumps, loads
 from xmltodict import parse
