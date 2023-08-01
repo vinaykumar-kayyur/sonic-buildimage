@@ -6,5 +6,3 @@ declare -r REBOOT_CAUSE_FILE="/host/reboot-cause/reboot-cause.txt"
 
 echo "User issued 'reboot' with platform-specific command [User: ${REBOOT_USER}, Time: ${REBOOT_TIME}]" > ${REBOOT_CAUSE_FILE}
 sync
-/sbin/fstrim -av
-sleep 2
