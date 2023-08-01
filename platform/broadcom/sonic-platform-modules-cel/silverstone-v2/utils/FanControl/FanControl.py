@@ -16,9 +16,9 @@ try:
     import time  # this is only being used as part of the example
     import signal
     from sonic_platform import platform
-    import CPUPIDRegulation
-    import FanLinearAdjustment
-    import SwitchInternalPIDRegulation
+    from . import CPUPIDRegulation
+    from . import FanLinearAdjustment
+    from . import SwitchInternalPIDRegulation
 except ImportError as e:
     raise ImportError('%s - required module not found' % str(e))
 
@@ -254,5 +254,8 @@ def main(argv):
     monitor = FanControl(log_file, log_level)
     # Loop forever, doing something useful hopefully:
     while True:
+        start_time = time.time()
         monitor.manage_fans()
-        time.sleep(2)
+        end_time = time.time()
+        sleep_time = 0 if end_time - start_time > 2 else end_time - start_time
+        time.sleep(sleep_time)
