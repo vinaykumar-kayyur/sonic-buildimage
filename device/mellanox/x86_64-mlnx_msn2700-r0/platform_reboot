@@ -30,7 +30,7 @@ ParseArguments "$@"
 
 # Reboot immediately if the kdump capture kernel is running
 VMCORE_FILE=/proc/vmcore
-if [ $VMCORE_FILE -a -s $VMCORE_FILE ]; then
+if [ -s $VMCORE_FILE ]; then
     sync; sync
     umount -fa > /dev/null 2>&1
 
