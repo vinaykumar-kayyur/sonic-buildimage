@@ -16,7 +16,7 @@ jobs:
         dotnet-version: '6.0.x'
     - name: submodule
       run: |
-        git -c submodule.src/sonic-genl-packet.update=none submodule update --init
+        git -c submodule.src/sonic-genl-packet.update=none -c submodule.src/sonic-gnmi.update=none submodule update --init
     - name: Run OSSAR
       uses: github/ossar-action@v1
       id: ossar
