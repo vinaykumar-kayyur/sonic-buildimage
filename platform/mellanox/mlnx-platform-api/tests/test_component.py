@@ -506,8 +506,8 @@ class TestComponent:
     def test_read_generic_file(self):
         with pytest.raises(RuntimeError):
             Component._read_generic_file('invalid', 1)
-        content = Component._read_generic_file(os.path.abspath(__file__), 6)
-        assert content == 'import'
+        content = Component._read_generic_file(os.path.abspath(__file__), 1)
+        assert content == '#'
 
     def test_check_file_validity(self):
         c = ComponentONIE()
