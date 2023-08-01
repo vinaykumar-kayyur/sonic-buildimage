@@ -1,0 +1,29 @@
+name: BinSkim
+on:
+  pull_request:
+    branches:
+    - master
+  push:
+
+jobs:
+  binskim:
+    if: github.repository_owner == 'sonic-net'
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: '6.0.x'
+    - name: submodule
+      run: |
+        git -c submodule.src/sonic-genl-packet.update=none submodule update --init
+    - name: Run OSSAR
+      uses: github/ossar-action@v1
+      id: ossar
+      env:
+        GDN_BANDIT_TARGET: D:/a/sonic-buildimage/sonic-buildimage/src
+        GDN_BANDIT_RECURSIVE: true
+    - name: Upload results to Security tab
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: ${{ steps.ossar.outputs.sarifFile }}
