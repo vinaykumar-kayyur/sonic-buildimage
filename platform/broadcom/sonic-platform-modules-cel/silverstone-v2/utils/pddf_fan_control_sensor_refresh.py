@@ -11,9 +11,9 @@ sys.path.append(r"/usr/local/bin")
 from FanControl import FanControl
 import pddf_sensor_list_refresh
 
-
-if os.popen("cat /usr/local/bin/bmc_present").read().strip() == "False":
+bmc_present_path = "/host/bmc_present"
+if os.popen("cat %s" % bmc_present_path).read().strip() == "False":
     FanControl.main(sys.argv[1:])
 
-if os.popen("cat /usr/local/bin/bmc_present").read().strip() == "True":
+if os.popen("cat %s" % bmc_present_path).read().strip() == "True":
     pddf_sensor_list_refresh.main()
