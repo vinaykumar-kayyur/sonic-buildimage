@@ -1781,7 +1781,6 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
             # check if the 400g port has only 8 lanes
             if len(port_lanes) != 8:
                 continue
-
             updated_lanes = ",".join(port_lanes[:4])
             ports[port_name]['lanes'] = updated_lanes
 
