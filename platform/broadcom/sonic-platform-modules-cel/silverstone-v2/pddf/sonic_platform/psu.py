@@ -8,11 +8,10 @@ try:
     import re
     import os
     from . import helper
-    from . import bmc_present_config
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
-BMC_EXIST = bmc_present_config.get_bmc_status()
+BMC_EXIST = helper.APIHelper().get_bmc_status()
 
 
 class Psu(PddfPsu):
