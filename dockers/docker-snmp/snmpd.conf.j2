@@ -16,7 +16,7 @@
 # Listen for connections on all ip addresses, including eth0, ipv4 lo for multi-asic platform
 # Listen on managment and loopback0 ips for single asic platform
 #
-{% macro protocol(ip_addr) %}
+{% macro get_protocol(ip_addr) %}
 {%- if ip_addr|ipv6 -%}
 {{ 'udp6' }}
 {%- else -%}
@@ -32,14 +32,25 @@ agentAddress {{ protocol(agentip) }}:[{{ agentip }}]{% if port %}:{{ port }}{% e
 {% if MGMT_INTERFACE is defined %}
 {% for if, ip in MGMT_INTERFACE %}
 {% set agentip = ip.split('/')[0] %}
-agentAddress {{ protocol(agentip) }}:[{{ agentip }}]:161
+{% set protocol = get_protocol(agentip) %}
+{% if protocol == 'udp6' %}
+agentAddress {{ protocol }}:[{{ agentip }}%{{ if }}]:161
+{% else %}
+agentAddress {{ protocol }}:[{{ agentip }}]:161
+{% endif %}
 {% endfor %}
 {% endif %}
 {% if LOOPBACK_INTERFACE is defined %}
 {% for lo in LOOPBACK_INTERFACE %}
 {% if lo | length == 2 %}
 {% set agentip = lo[1].split('/')[0] %}
-agentAddress {{ protocol(agentip) }}:[{{ agentip }}]:161
+{% set if = lo[0] %}
+{% set protocol = get_protocol(agentip) %}
+{% if protocol == 'udp6' %}
+agentAddress {{ protocol }}:[{{ agentip }}%{{ if }}]:161
+{% else %}
+agentAddress {{ protocol }}:[{{ agentip }}]:161
+{% endif %}
 {% endif %}
 {% endfor %}
 {% endif %}
