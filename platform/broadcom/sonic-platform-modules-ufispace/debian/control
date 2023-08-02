@@ -20,3 +20,7 @@ Description: This package contains s8901-54xc platform driver utility for SONiC 
 Package: sonic-platform-ufispace-s7801-54xs
 Architecture: amd64
 Description: This package contains s7801-54xs platform driver utility for SONiC project.
+
+Package: sonic-platform-ufispace-s6301-56st
+Architecture: amd64
+Description: This package contains s6301-56st platform driver utility for SONiC project.
