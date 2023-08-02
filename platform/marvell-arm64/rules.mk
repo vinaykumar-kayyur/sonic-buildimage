@@ -10,6 +10,7 @@ include $(PLATFORM_PATH)/platform-rd98dx35xx.mk
 include $(PLATFORM_PATH)/platform-db98cx8540-16cd.mk
 include $(PLATFORM_PATH)/platform-db98cx8580-32cd.mk
 include $(PLATFORM_PATH)/platform-rd98dx35xx-ext.mk
+include $(PLATFORM_PATH)/platform-rd98dx35xx-cn9131.mk
 
 SONIC_ALL += $(SONIC_ONE_IMAGE) \
              $(DOCKER_FPM) 	\

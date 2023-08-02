@@ -42,7 +42,7 @@
                 algo = "sha1";
             };
         };
-        kernel_7020 {
+        kernel_1 {
             description = "Linux Kernel";
             data = /incbin/("/boot/vmlinuz-5.10.0-18-2-arm64");
             type = "kernel";
@@ -67,7 +67,7 @@
                 algo = "sha1";
             };
         };
-        ramdisk_7020 {
+        ramdisk_1 {
             description = "ramdisk";
             data = /incbin/("/boot/initrd.img-5.10.0-18-2-arm64");
             type = "ramdisk";
@@ -76,6 +76,18 @@
             compression = "gzip";
             load = <0x6000000>;
             entry = <0x6000000>;
+            hash@1 {
+                algo = "sha1";
+            };
+        };
+        fdt_cn9131 {
+            description = "Flattened Device Tree blob";
+            data = /incbin/("/usr/lib/linux-image-5.10.0-18-2-arm64/marvell/cn9131-db-comexpress.dtb");
+            type = "flat_dt";
+            arch = "arm64";
+            compression = "none";
+            load = <0x1000000>;
+            entry = <0x1000000>;
             hash@1 {
                 algo = "sha1";
             };
@@ -94,9 +106,18 @@
         };
         conf@1 {
             description = "Boot Linux kernel with FDT blob + ramdisk for Armada7020";
-            kernel = "kernel_7020";
+            kernel = "kernel_1";
             fdt = "fdt_7020";
-            ramdisk = "ramdisk_7020";
+            ramdisk = "ramdisk_1";
+            hash@1 {
+                algo = "sha1";
+            };
+        };
+        conf_cn9131 {
+            description = "Boot Linux kernel with FDT blob + ramdisk for CN9131";
+            kernel = "kernel_1";
+            fdt = "fdt_cn9131";
+            ramdisk = "ramdisk_1";
             hash@1 {
                 algo = "sha1";
             };

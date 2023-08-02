@@ -1,0 +1,78 @@
+#!/usr/bin/make -f
+# See debhelper(7) (uncomment to enable)
+# output every command that modifies files on the build system.
+#export DH_VERBOSE = 1
+
+include /usr/share/dpkg/pkg-info.mk
+#--------------------------------------------------------
+
+PACKAGE_PRE_NAME := sonic-platform-rd98dx35xx-cn9131
+ifneq ($(CROSS_BUILD_ENVIRON), y)
+KVERSION   ?= $(shell uname -r)
+endif
+KERNEL_SRC :=  /lib/modules/$(KVERSION)
+INSTALL_MOD_DIR := kernel/extra/
+MOD_SRC_DIR:= $(shell pwd)
+MODULE_DIRS:= rd98dx35xx_cn9131
+UTILS_DIR := utils
+SERVICE_DIR := service
+PRESTERA_MODULE_DIR := mrvl-prestera/drivers/generic/cpssEnabler/linuxNoKernelModule/drivers
+
+%:
+	dh $@ --with systemd,python3 --buildsystem=pybuild
+
+clean:
+	dh_testdir
+	dh_testroot
+	dh_clean
+
+build:
+	(for mod in $(MODULE_DIRS); do \
+		cd $(MOD_SRC_DIR)/$${mod}/; \
+		rm -rf mrvl-prestera || true; \
+		git clone ${MRVL_PRESTERA_SRC_URL}; \
+		cd mrvl-prestera && git checkout ${MRVL_PRESTERA_SRC_TAG} && cd ..; \
+		cd $(MOD_SRC_DIR); \
+		make modules -C $(KERNEL_SRC)/build M=$(MOD_SRC_DIR)/$${mod}/$(PRESTERA_MODULE_DIR)/ CONFIG_KM_MVPCI=y CONFIG_KM_MVINT=y || exit 1; \
+		python3 $${mod}/setup.py bdist_wheel -d $(MOD_SRC_DIR)/$${mod}; \
+	done)
+
+binary: binary-arch binary-indep
+	# Nothing to do
+
+binary-arch:
+	# Nothing to do
+
+binary-indep:
+	dh_testdir
+	dh_installdirs
+
+	# Custom package commands
+	(for mod in $(MODULE_DIRS); do \
+		dh_installdirs -p$(PACKAGE_PRE_NAME) /$(KERNEL_SRC)/$(INSTALL_MOD_DIR); \
+		dh_installdirs -p$(PACKAGE_PRE_NAME) /usr/local/bin; \
+		dh_installdirs -p$(PACKAGE_PRE_NAME) /lib/systemd/system; \
+		cp $(MOD_SRC_DIR)/$${mod}/$(SERVICE_DIR)/*.service debian/$(PACKAGE_PRE_NAME)/lib/systemd/system/; \
+		cp $(MOD_SRC_DIR)/$${mod}/$(UTILS_DIR)/* debian/$(PACKAGE_PRE_NAME)/usr/local/bin/; \
+		cp $(MOD_SRC_DIR)/$${mod}/$(PRESTERA_MODULE_DIR)/mvcpss.ko debian/$(PACKAGE_PRE_NAME)/$(KERNEL_SRC)/$(INSTALL_MOD_DIR); \
+		python3 $${mod}/setup.py install --root=$(MOD_SRC_DIR)/debian/$(PACKAGE_PRE_NAME) --install-layout=deb; \
+	done)
+
+	# Resuming debhelper scripts
+	dh_testroot
+	dh_install
+	dh_installchangelogs
+	dh_installdocs
+	dh_systemd_enable
+	dh_installinit
+	dh_systemd_start
+	dh_link
+	dh_fixperms
+	dh_compress
+	dh_strip
+	dh_installdeb
+	dh_gencontrol
+	dh_md5sums
+	dh_builddeb
+
+.PHONY: build binary binary-arch binary-indep clean
