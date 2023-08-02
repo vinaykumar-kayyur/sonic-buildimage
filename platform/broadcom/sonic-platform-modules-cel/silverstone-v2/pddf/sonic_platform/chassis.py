@@ -16,7 +16,7 @@ try:
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
-BMC_EXIST = True
+BMC_EXIST = helper.APIHelper().get_bmc_status()
 
 REBOOT_CAUSE_PATH = "/sys/devices/platform/cpld_wdt/reason"
 SET_SYS_STATUS_LED = "0x3A 0x39 0x2 0x0 {}"
