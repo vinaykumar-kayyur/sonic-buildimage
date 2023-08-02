@@ -6,12 +6,11 @@
 try:
     from sonic_platform_pddf_base.pddf_fan import PddfFan
     from . import helper
-    from . import bmc_present_config
     import re
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
-BMC_EXIST = bmc_present_config.get_bmc_status()
+BMC_EXIST = helper.APIHelper().get_bmc_status()
 Fan_Direction_Cmd = "0x3a 0x62 {}"
 Set_Pwm_Cmd = "0x3a 0x26 0x02 {} {}"
 Disable_Fcs_mode = "0x3a 0x26 0x01 0x00"
