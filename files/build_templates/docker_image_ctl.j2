@@ -281,9 +281,6 @@ function postStartAction()
                 fi
             fi
         fi
-        # Add redis UDS to the redis group and give read/write access to the group
-        REDIS_PID="/var/run/redis${DEV}/redis.pid"
-        REDIS_SOCK="/var/run/redis${DEV}/redis.sock"
     else
         until [[ ($(docker exec -i ${DOCKERNAME} pgrep -x -c supervisord) -gt 0) &&
                  ($(docker exec -i ${DOCKERNAME} $SONIC_DB_CLI CHASSIS_APP_DB PING | grep -c True) -gt 0) ]]; do
@@ -292,13 +289,7 @@ function postStartAction()
         if [[ -n "$lag_id_start" && -n "$lag_id_end" ]]; then
            setPlatformLagIdBoundaries
         fi
-        REDIS_PID="/var/run/redis-chassis/redis_chassis.pid"
-        REDIS_SOCK="/var/run/redis-chassis/redis_chassis.sock"
     fi
-    chgrp -f -R redis "$(dirname "$REDIS_SOCK")" && \
-    chmod -f -R 0775 "$(dirname "$REDIS_SOCK")"  && \
-    chmod -f 0660 $REDIS_PID                     && \
-    chmod -f 0770 $REDIS_SOCK
 {%- elif docker_container_name == "swss" %}
     docker exec swss$DEV rm -f /ready   # remove cruft
     if [[ "$BOOT_TYPE" == "fast" ]] && [[ -d /host/fast-reboot ]]; then
