@@ -101,7 +101,7 @@ class FanLinearAdjustment(object):
         logging.info("[u16_temperature, u17_temperature]: %s" % all_temp)
         sensor_index = 1 if fan_direction.lower() == "intake" else 0
         sensor_temp = float(all_temp[sensor_index])
-        logging.info("Use to adjustment sensor=%d, index=%d" % (sensor_temp, sensor_index))
+        logging.info("Use to adjustment sensor=%s, index=%s" % (sensor_temp, sensor_index))
         update_temp_sensor = True
         diff_temp = temp_list[sensor_index] - all_temp[sensor_index]
         if diff_temp > 0:
