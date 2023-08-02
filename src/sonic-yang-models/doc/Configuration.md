@@ -1421,6 +1421,9 @@ The **MUX_LINKMGR** table is used for dualtor device configuration.
         },
         "MUXLOGGER": {
             "log_verbosity": "debug"
+        },
+        "SERVICE_MGMT": {
+            "kill_radv": "True"
         }
     }
 }
