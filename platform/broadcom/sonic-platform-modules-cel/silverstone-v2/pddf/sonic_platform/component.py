@@ -6,11 +6,10 @@
 try:
     from sonic_platform_base.component_base import ComponentBase
     from . import helper
-    from . import bmc_present_config
     import re
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
-BMC_EXIST = bmc_present_config.get_bmc_status()
+BMC_EXIST = helper.APIHelper().get_bmc_status()
 FPGA_VERSION_PATH = "/sys/bus/platform/devices/fpga_sysfs/version"
 Bios_Version_Cmd = "dmidecode -t bios | grep Version"
 
