@@ -16,3 +16,7 @@ Description: This package contains s9110-32x platform driver utility for SONiC p
 Package: sonic-platform-ufispace-s8901-54xc
 Architecture: amd64
 Description: This package contains s8901-54xc platform driver utility for SONiC project.
+
+Package: sonic-platform-ufispace-s7801-54xs
+Architecture: amd64
+Description: This package contains s7801-54xs platform driver utility for SONiC project.

@@ -1,5 +1,11 @@
 sonic-ufispace-platform-modules (1.0.0) unstable; urgency=low
 
+  * Add support for S7801-54XS
+
+ -- Ufispace <jason.cy.tsai@ufispace.com>  Thu, 27 Jul 2023 11:49:07 +0800
+
+sonic-ufispace-platform-modules (1.0.0) unstable; urgency=low
+
   * Add support for S8901-54XC 
 
  -- Ufispace <jason.cy.tsai@ufispace.com>  Thu, 27 Jul 2023 11:12:21 +0800
