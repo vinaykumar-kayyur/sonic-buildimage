@@ -7,11 +7,10 @@
 try:
     from sonic_platform_pddf_base.pddf_thermal import PddfThermal
     from . import helper
-    from . import bmc_present_config
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
-BMC_EXIST = bmc_present_config.get_bmc_status()
+BMC_EXIST = helper.APIHelper().get_bmc_status()
 FAN_STATUS_INFO_CMD = "i2cget -y -f 107 0x0d 0x26"
 
 
