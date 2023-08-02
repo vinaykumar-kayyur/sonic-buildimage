@@ -2,6 +2,7 @@
 FROM docker-config-engine-bullseye-{{DOCKER_USERNAME}}:{{DOCKER_USERTAG}}
 
 ARG docker_container_name
+ARG redis_user_gid
 
 # Make apt-get non-interactive
 ENV DEBIAN_FRONTEND=noninteractive
@@ -12,9 +13,9 @@ RUN apt-get update
 # Install redis-server
 RUN apt-get install -y redis-tools redis-server
 
-RUN groupmod -g 1001 redis
-RUN chgrp -R redis /etc/redis/
-RUN chgrp -R redis /var/lib/redis/
+RUN groupmod -g ${redis_user_gid} redis               && \
+    chgrp -R redis /etc/redis/                        && \
+    chgrp -R redis /var/lib/redis/
 
 {% if docker_database_debs.strip() -%}
 # Copy locally-built Debian package dependencies

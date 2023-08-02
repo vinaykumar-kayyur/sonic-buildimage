@@ -318,7 +318,7 @@ sudo LANG=C chroot $FILESYSTEM_ROOT useradd -G sudo,docker $USERNAME -c "$DEFAUL
 echo "$USERNAME:$PASSWORD" | sudo LANG=C chroot $FILESYSTEM_ROOT chpasswd
 
 ## Create redis group
-sudo LANG=C chroot $FILESYSTEM_ROOT groupadd -f redis
+sudo LANG=C chroot $FILESYSTEM_ROOT groupadd -f -g $REDIS_USER_GID redis
 sudo LANG=C chroot $FILESYSTEM_ROOT usermod -aG redis $USERNAME
 
 if [[ $CONFIGURED_ARCH == amd64 ]]; then
