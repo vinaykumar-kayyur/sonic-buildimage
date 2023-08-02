@@ -144,3 +144,8 @@ class APIHelper(object):
         except Exception:
             status = False
         return status, result
+
+    def get_bmc_status(self):
+        bmc_present_path = r"/host/bmc_present"
+        bmc_status = self.read_txt_file(bmc_present_path)
+        return True if bmc_status == "True" else False
