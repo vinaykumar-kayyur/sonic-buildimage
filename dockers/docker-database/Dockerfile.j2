@@ -16,6 +16,7 @@ RUN apt-get install -y redis-tools redis-server
 RUN groupmod -g ${redis_user_gid} redis               && \
     chgrp -R redis /etc/redis/                        && \
     chgrp -R redis /var/lib/redis/
+RUN chown -R redis:redis /var/run/redis/
 
 {% if docker_database_debs.strip() -%}
 # Copy locally-built Debian package dependencies
