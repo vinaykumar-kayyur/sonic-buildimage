@@ -4,6 +4,7 @@
 # @Mail    : yajiang@celestica.com
 # @Author  : jiang tao
 import os
+import json
 import struct
 import subprocess
 from sonic_py_common import device_info
@@ -144,8 +145,15 @@ class APIHelper(object):
         except Exception:
             status = False
         return status, result
-
-    def get_bmc_status(self):
-        bmc_present_path = r"/host/bmc_present"
-        bmc_status = self.read_txt_file(bmc_present_path)
-        return True if bmc_status == "True" else False
+    
+    @staticmethod
+    def get_bmc_status():
+        """
+        get bmc present by pddf-device.json
+        return: True(present), False(absent)
+        """
+        pddf_device_path = '/usr/share/sonic/platform/pddf/pddf-device.json'
+        with open(pddf_device_path) as f:
+            json_data = json.load(f)
+        bmc_present = json_data["PLATFORM"]["bmc_present"]
+        return True if bmc_present == "True" else False

@@ -61,14 +61,13 @@ class PrePddfInit(object):
 
     def get_bmc_status(self):
         """
-        get bmc status and save bmc status to '/usr/local/bin/bmc_present'
+        get bmc status
         """
         self.install_lpc_basecpld()
         if os.path.exists(self.bmc_exist_cmd):
             # "1": "absent", "0": "present"
             sta, res = self.run_command("cat %s" % self.bmc_exist_cmd)
             self.bmc_present = True if res == "0" else False
-        self.run_command("echo '%s' > /host/bmc_present" % self.bmc_present)
         self.uninstall_lpc_basecpld()
 
     def choose_pddf_device_json(self):
