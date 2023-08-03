@@ -696,6 +696,11 @@ class TestCfgGen(TestCase):
         output = self.run_script(argument)
         self.assertEqual(utils.to_dict(output.strip()), utils.to_dict("{'10.0.10.1': {}, '10.0.10.2': {}}"))
 
+    def test_dns_nameserver(self):
+        argument = ['-m', self.sample_graph_metadata, '-p', self.port_config, '-v', "DNS_NAMESERVER"]
+        output = self.run_script(argument)
+        self.assertEqual(utils.to_dict(output.strip()), utils.to_dict("{'6.6.6.6': {}}"))
+
     def test_minigraph_vnet(self, **kwargs):
         graph_file = kwargs.get('graph_file', self.sample_graph_simple)
         argument = ['-m', graph_file, '-p', self.port_config, '-v', "VNET"]
@@ -728,6 +733,21 @@ class TestCfgGen(TestCase):
         argument = ['-m', self.sample_graph_simple, '-p', self.port_config, '-v', "BGP_VOQ_CHASSIS_NEIGHBOR[\'10.0.0.57\']"]
         output = self.run_script(argument)
         self.assertEqual(output.strip(), "")
+
+    def test_minigraph_bgp_sentinel(self):
+        argument = ['-m', self.sample_graph_simple, '-p', self.port_config, '-v', "BGP_SENTINELS[\'BGPSentinel\']"]
+        output = self.run_script(argument)
+        self.assertEqual(
+            utils.to_dict(output.strip()),
+            utils.to_dict("{'name': 'BGPSentinel', 'ip_range': ['10.154.232.0/21','10.42.168.0/21'], 'src_address': '10.2.0.20'}")
+        )
+
+        argument = ['-m', self.sample_graph_simple, '-p', self.port_config, '-v', "BGP_SENTINELS[\'BGPSentinelV6\']"]
+        output = self.run_script(argument)
+        self.assertEqual(
+            utils.to_dict(output.strip()),
+            utils.to_dict("{'name': 'BGPSentinelV6', 'ip_range': ['2603:10a0:321:82f9::/64','2603:10a1:30a:8000::/59'], 'src_address': 'fc00:1::32'}")
+        )
 
     def test_minigraph_sub_port_intf_resource_type_non_backend_tor(self, check_stderr=True):
         self.verify_sub_intf_non_backend_tor(graph_file=self.sample_resource_graph, check_stderr=check_stderr)
