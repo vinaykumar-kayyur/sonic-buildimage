@@ -33,8 +33,8 @@ agentAddress {{ protocol(agentip) }}:[{{ agentip }}]{% if port %}:{{ port }}{% e
 {% for if, ip in MGMT_INTERFACE %}
 {% set agentip = ip.split('/')[0]|lower %}
 {% set zoneid = '' %}
-{% if agentip.startswith('fe80') %}
 # Use interface as zoneid for link local ipv6
+{% if agentip.startswith('fe80') %}
 {% set zoneid = '%' + if %}
 {% endif %}
 agentAddress {{ protocol(agentip) }}:[{{ agentip }}{{ zoneid }}]:161
@@ -46,11 +46,13 @@ agentAddress {{ protocol(agentip) }}:[{{ agentip }}{{ zoneid }}]:161
 {% set if = lo[0] %}
 {% set agentip = lo[1].split('/')[0]|lower %}
 {% set zoneid = '' %}
-{% if agentip.startswith('fe80') %}
 # Use interface as zoneid for link local ipv6
+{% if agentip.startswith('fe80') %}
 {% set zoneid = '%' + if %}
 {% endif %}
 agentAddress {{ protocol(agentip) }}:[{{ agentip }}{{ zoneid }}]:161
+{% endif %}
+{% endfor %}
 {% endif %}
 {% else %}
 agentAddress udp:161
