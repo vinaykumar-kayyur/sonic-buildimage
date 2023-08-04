@@ -326,8 +326,8 @@ sudo LANG=C chroot $FILESYSTEM_ROOT usermod -aG $REDIS_GROUP $USERNAME
 # Ensure redis gid is 1001.
 # If another GID 1001 already exists, groupadd -f -g will choose another unique GID for redis group.
 redis_gid=$(sudo LANG=C chroot $FILESYSTEM_ROOT getent group $REDIS_GROUP | awk -F: '{print $3}') || true
-if [ "${redis_gid}" != "1001" ]; then
-    die "Expect Redis group GID 1001. Current: ${redis_gid}"
+if [ "${redis_gid}" != "${REDIS_USER_GID}" ]; then
+    die "Expect Redis group GID ${REDIS_USER_GID}. Current: ${redis_gid}"
 fi
 
 if [[ $CONFIGURED_ARCH == amd64 ]]; then
