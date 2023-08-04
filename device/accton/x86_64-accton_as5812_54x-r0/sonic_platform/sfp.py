@@ -14,6 +14,7 @@ import struct
 from ctypes import create_string_buffer
 
 try:
+    import natsort
     from sonic_py_common.logger import Logger
     from sonic_platform_base.sonic_xcvr.sfp_optoe_base import SfpOptoeBase
     from sonic_platform_base.sonic_sfp.sfputilhelper import SfpUtilHelper
@@ -22,26 +23,27 @@ except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
 #Edge-core definitions
-CPLD_ADDR_MAPPING = {
-    0: {
-        "bus": 0,
-        "addr": "61"
-    },  # port 1-24
-    1: {
-        "bus": 0,
-        "addr": "62"
-    },  # port  25-54
-}
-CPLD_I2C_PATH = "/sys/bus/i2c/devices/{}-00{}/"
 
-NULL_VAL = 'N/A'
+CPLD2_I2C_PATH = "/sys/bus/i2c/devices/0-0061/"
+CPLD3_I2C_PATH = "/sys/bus/i2c/devices/0-0062/"
+
+XCVR_TYPE_OFFSET = 0
+XCVR_TYPE_WIDTH = 1
+
+QSFP_CONTROL_WIDTH = 8
+QSFP_CONTROL_OFFSET = 86
+
+
+QSFP_POWEROVERRIDE_OFFSET = 93
+
+
 
 I2C_EEPROM_PATH = '/sys/bus/i2c/devices/{0}-0050/eeprom'
+OPTOE_DEV_CLASS_PATH = '/sys/bus/i2c/devices/{0}-0050/dev_class'
 
 logger = Logger()
 class Sfp(SfpOptoeBase):
     """Platform-specific Sfp class"""
-    # Path to sysfs
     PLATFORM_ROOT_PATH = "/usr/share/sonic/device"
     PMON_HWSKU_PATH = "/usr/share/sonic/hwsku"
     HOST_CHK_CMD = "which systemctl > /dev/null 2>&1"
@@ -52,8 +54,39 @@ class Sfp(SfpOptoeBase):
     PORT_END = 54
     QSFP_PORT_START = 49
     QSFP_PORT_END = 54
-    SFP_TYPE = 'SFP'
-    QSFP_TYPE = 'QSFP'
+
+    UPDATE_DONE = "Done"
+    EEPROM_DATA_NOT_READY = "eeprom not ready"
+    UNKNOWN_SFP_TYPE_ID = "unknow sfp ID"
+
+
+
+    SFP_TYPE_CODE_LIST = [
+        0x03,  # SFP/SFP+/SFP28
+        0x0b   # DWDM-SFP/SFP+
+    ]
+    QSFP_TYPE_CODE_LIST = [
+        0x0c, # QSFP
+        0x0d, # QSFP+ or later
+        0x11, # QSFP28 or later
+        0xe1  # QSFP28 EDFA
+    ]
+    QSFP_DD_TYPE_CODE_LIST = [
+        0x18,  # QSFP-DD Double Density 8X Pluggable Transceiver
+        0x1E  # QSFP+ or later with CMIS
+    ]
+    OSFP_TYPE_CODE_LIST = [
+        0x19  # OSFP
+    ]
+
+
+
+    SFP_TYPE = "SFP"
+    QSFP_TYPE = "QSFP"
+    OSFP_TYPE = "OSFP"
+    QSFP_DD_TYPE = "QSFP_DD"
+
+    NULL_VAL = 'N/A'
 
     _port_to_i2c_mapping = {
         1: 2,
@@ -113,37 +146,103 @@ class Sfp(SfpOptoeBase):
 
     }
 
+
+    CPLD2_PORT_START = 1
+    CPLD2_PORT_END = 24
+    CPLD3_PORT_START = 25
+    CPLD3_PORT_END = 54
+    PRS_PATH = "/sys/devices/platform/dx010_cpld/qsfp_modprs"
+
     def __init__(self, sfp_index=0, sfp_name=None):
         SfpOptoeBase.__init__(self)
         self._api_helper=APIHelper()
-        self.index = sfp_index
-        self.port_num = self.index + 1
+        self.port_num = sfp_index + 1
+        self.index = self.port_num
         self._name = sfp_name
 
-        cpld_idx = 1 if self.port_num > 24 else 0
-
-        self.bus = CPLD_ADDR_MAPPING[cpld_idx]["bus"]
-        self.addr = CPLD_ADDR_MAPPING[cpld_idx]["addr"]
-        self.i2c_cpld_path = CPLD_I2C_PATH.format(self.bus,self.addr)
 
         if self.port_num < self.QSFP_PORT_START:
             self.sfp_type = self.SFP_TYPE
         else:
             self.sfp_type = self.QSFP_TYPE
+        self.update_sfp_type()
+        self.refresh_optoe_dev_class()
 
+    def __write_txt_file(self, file_path, value):
+        try:
+            reg_file = open(file_path, "w")
+        except IOError as e:
+            logger.log_error("Error: unable to open file: %s" % str(e))
+            return False
 
-    def __is_host(self):
-        return os.system(self.HOST_CHK_CMD) == 0
+        reg_file.write(str(value))
+        reg_file.close()
+
+        return True
 
     def __get_path_to_port_config_file(self):
         platform_path = "/".join([self.PLATFORM_ROOT_PATH, self.PLATFORM])
         hwsku_path = "/".join([platform_path, self.HWSKU]
-                              ) if self.__is_host() else self.PMON_HWSKU_PATH
+                              ) if self._api_helper.is_host() else self.PMON_HWSKU_PATH
         return "/".join([hwsku_path, "port_config.ini"])
 
     def get_eeprom_path(self):
         port_eeprom_path = I2C_EEPROM_PATH.format(self._port_to_i2c_mapping[self.port_num])
         return port_eeprom_path
+
+    def read_eeprom(self, offset, num_bytes):
+        port_eeprom_path = self.get_eeprom_path()
+        #Try to solved IOError
+        tries = 15
+        for i in range(tries):
+            try:
+                eeprom = open(port_eeprom_path, mode='rb', buffering=0)
+            except (IOError):
+                if i < tries - 1:
+                    time.sleep(0.02)
+                    continue
+                else:
+                    return None
+                break
+        try:
+            eeprom.seek(offset)
+            eeprom_raw = bytearray(eeprom.read(num_bytes))
+            eeprom.close()
+            return eeprom_raw
+        except (OSError, IOError):
+            return None
+
+    def refresh_optoe_dev_class(self):
+        if self.get_presence():
+            for retry in range(5):
+                ret = self.update_sfp_type()
+                if ret == self.EEPROM_DATA_NOT_READY:
+                    time.sleep(1)
+                else:
+                    break
+            if ret != self.UPDATE_DONE:
+                logger.log_error("Error: port {}: update sfp type fail due to {}".format(self.port_num, ret))
+                return False
+
+        devclass_path = OPTOE_DEV_CLASS_PATH.format(self._port_to_i2c_mapping[self.port_num])
+        devclass = self._api_helper.read_txt_file(devclass_path)
+        if devclass is None:
+            return False
+
+        if self.sfp_type == self.QSFP_TYPE:
+            if devclass == '1':
+                return True
+            return self._api_helper.write_txt_file(devclass_path, 1)
+        elif self.sfp_type == self.SFP_TYPE:
+            if devclass == '2':
+                return True
+            return self._api_helper.write_txt_file(devclass_path, 2)
+        elif self.sfp_type == self.QSFP_DD_TYPE:
+            if devclass == '3':
+                return True
+            return self._api_helper.write_txt_file(devclass_path, 3)
+        else:
+            return False
 
     def get_reset_status(self):
         """
@@ -153,9 +252,8 @@ class Sfp(SfpOptoeBase):
         """
         if not self.get_presence():
             return False
-
         if self.QSFP_PORT_START <= self.port_num <= self.QSFP_PORT_END:
-            reset_path = "{}{}{}".format(self.i2c_cpld_path, '/module_reset_', self.port_num)
+            reset_path = "{}{}{}".format(CPLD3_I2C_PATH, '/module_reset_', self.port_num)
         else:
             return False
 
@@ -165,12 +263,38 @@ class Sfp(SfpOptoeBase):
         else:
             return False
 
+
+    def get_tx_disable_channel(self):
+        """
+        Retrieves the TX disabled channels in this SFP
+        Returns:
+            A hex of 4 bits (bit 0 to bit 3 as channel 0 to channel 3) to represent
+            TX channels which have been disabled in this SFP.
+            As an example, a returned value of 0x5 indicates that channel 0
+            and channel 2 have been disabled.
+        """
+        tx_disable_list = self.get_tx_disable()
+        if tx_disable_list is None:
+            return 0
+        tx_disabled = 0
+        for i in range(len(tx_disable_list)):
+            if tx_disable_list[i]:
+                tx_disabled |= 1 << i
+        return tx_disabled
+
     def get_lpmode(self):
         """
         Retrieves the lpmode (low power mode) status of this SFP
         Returns:
             A Boolean, True if lpmode is enabled, False if disabled
         """
+        if self.port_num > self.PORT_END:
+            # SFP doesn't support this feature
+            return False
+
+        if not self.get_presence():
+            return False
+
         if self.sfp_type == self.SFP_TYPE:
             # SFP doesn't support this feature
             return False
@@ -188,6 +312,7 @@ class Sfp(SfpOptoeBase):
             api = self.get_xcvr_api()
             return api.get_power_set() if api is not None else None
 
+
     def reset(self):
         """
         Reset SFP and return all user module settings to their default srate.
@@ -195,21 +320,20 @@ class Sfp(SfpOptoeBase):
             A boolean, True if successful, False if not
         """
         # Check for invalid port_num
-
         if not self.get_presence():
             return False
 
         if self.QSFP_PORT_START <= self.port_num <= self.QSFP_PORT_END:
-            reset_path = "{}{}{}".format(self.i2c_cpld_path, 'module_reset_', self.port_num)
+            reset_path = "{}{}{}".format(CPLD3_I2C_PATH, 'module_reset_', self.port_num)
         else:
             return False
 
-        ret = self._api_helper.write_txt_file(reset_path, 1) #sysfs 1: enable reset
+        ret = self.__write_txt_file(reset_path, 1) #sysfs 1: enable reset
         if ret is not True:
             return ret
 
         time.sleep(0.2)
-        ret = self._api_helper.write_txt_file(reset_path, 0) #sysfs 1: disable reset
+        ret = self.__write_txt_file(reset_path, 0) #sysfs 0: disable reset
         time.sleep(0.2)
 
         return ret
@@ -227,13 +351,18 @@ class Sfp(SfpOptoeBase):
             api = self.get_xcvr_api()
             return api.tx_disable(tx_disable) if api is not None else None
         elif self.sfp_type == self.SFP_TYPE:
-            disable_path = "{}{}{}".format(self.i2c_cpld_path, 'module_tx_disable_', self.port_num)
+            if self.port_num <= self.CPLD2_PORT_END :
+                disable_path = "{}{}{}".format(CPLD2_I2C_PATH, 'module_tx_disable_', self.port_num)
+            else :
+                disable_path = "{}{}{}".format(CPLD3_I2C_PATH, 'module_tx_disable_', self.port_num)
+
             tx_disable_value = 1 if tx_disable else 0
             ret = self._api_helper.write_txt_file(disable_path, tx_disable_value) #sysfs 1: disable tx
             if ret is not True:
                 return ret
 
         return False
+
 
     def set_lpmode(self, lpmode):
         """
@@ -246,6 +375,8 @@ class Sfp(SfpOptoeBase):
         """
         if self.sfp_type == self.SFP_TYPE:
             return False # SFP doesn't support this feature
+        elif self.port_num > self.PORT_END:
+            return False # SFP doesn't support this feature
         else:
             if not self.get_presence():
                 return False
@@ -254,14 +385,14 @@ class Sfp(SfpOptoeBase):
             if api is None:
                 return False
             if api.get_lpmode_support() == False:
-                logger.log_notice("The transceiver of port {} doesn't support to set low power mode.". format(self.port_num))
+                logger.log_notice("The transceiver of port {} doesn't support to set low power mode.". format(self.port_num)) 
                 return True
             if lpmode:
                 ret = api.set_power_override(True, True)
             else:
                 ret = api.set_power_override(True, False)
-
             return ret
+
 
     def set_power_override(self, power_override, power_set):
         """
@@ -288,6 +419,7 @@ class Sfp(SfpOptoeBase):
             api = self.get_xcvr_api()
             return api.set_power_override(power_override, power_set) if api is not None else None
 
+
     ##############################################################
     ###################### Device methods ########################
     ##############################################################
@@ -301,7 +433,9 @@ class Sfp(SfpOptoeBase):
         sfputil_helper = SfpUtilHelper()
         sfputil_helper.read_porttab_mappings(
             self.__get_path_to_port_config_file())
-        name = sfputil_helper.logical[self.index] or "Unknown"
+        logical_port_list = sfputil_helper.logical
+        logical_port_list = natsort.natsorted(logical_port_list)
+        name = logical_port_list[self.index - 1] or "Unknown"
         return name
 
     def get_presence(self):
@@ -310,32 +444,17 @@ class Sfp(SfpOptoeBase):
         Returns:
             bool: True if device is present, False if not
         """
-        val = self._api_helper.read_txt_file(
-            self.i2c_cpld_path + "module_present_" + str(self.port_num))
-        
+        if self.port_num <= self.CPLD2_PORT_END:
+            present_path = "{}{}{}".format(CPLD2_I2C_PATH, '/module_present_', self.port_num)
+        else:
+            present_path = "{}{}{}".format(CPLD3_I2C_PATH, '/module_present_', self.port_num)
+
+        val=self._api_helper.read_txt_file(present_path)
         if val is not None:
             return int(val, 10)==1
         else:
             return False
 
-
-    def get_model(self):
-        """
-        Retrieves the model number (or part number) of the device
-        Returns:
-            string: Model/part number of device
-        """
-        transceiver_dom_info_dict = self.get_transceiver_info()
-        return transceiver_dom_info_dict.get("model", "N/A")
-
-    def get_serial(self):
-        """
-        Retrieves the serial number of the device
-        Returns:
-            string: Serial number of device
-        """
-        transceiver_dom_info_dict = self.get_transceiver_info()
-        return transceiver_dom_info_dict.get("serial", "N/A")
 
     def get_status(self):
         """
@@ -344,7 +463,7 @@ class Sfp(SfpOptoeBase):
             A boolean value, True if device is operating properly, False if not
         """
         return self.get_presence() and not self.get_reset_status()
-
+    
     def get_position_in_parent(self):
         """
         Retrieves 1-based relative physical position in parent device.
@@ -364,6 +483,30 @@ class Sfp(SfpOptoeBase):
             A boolean value, True if replaceable
         """
         return True
+
+    def update_sfp_type(self):
+        """
+        Updates the sfp type
+
+        """
+        ret = self.UPDATE_DONE
+        eeprom_raw = []
+        eeprom_raw = self.read_eeprom(0, 1)
+        if eeprom_raw and hasattr(self,'sfp_type'):
+            if eeprom_raw[0] in self.SFP_TYPE_CODE_LIST:
+                self.sfp_type = self.SFP_TYPE
+            elif eeprom_raw[0] in self.QSFP_TYPE_CODE_LIST:
+                self.sfp_type = self.QSFP_TYPE
+            elif eeprom_raw[0] in self.QSFP_DD_TYPE_CODE_LIST:
+                self.sfp_type = self.QSFP_DD_TYPE
+            elif eeprom_raw[0] in self.OSFP_TYPE_CODE_LIST:
+                self.sfp_type = self.OSFP_TYPE
+            else:
+                ret = self.UNKNOWN_SFP_TYPE_ID
+        else:
+            ret = self.EEPROM_DATA_NOT_READY
+
+        return ret
 
     def validate_eeprom_sfp(self):
         checksum_test = 0
@@ -473,16 +616,19 @@ class Sfp(SfpOptoeBase):
             if checksum_test != eeprom_raw[127]:
                 return False
 
-        checksum_test = 0
-        eeprom_raw = self.read_eeprom(640, 128)
-        if eeprom_raw is None:
-            return None
+        # CMIS_5.0 starts to support the checksum of page 04h
+        cmis_rev = float(api.get_cmis_rev())
+        if cmis_rev >= 5.0:
+            checksum_test = 0
+            eeprom_raw = self.read_eeprom(640, 128)
+            if eeprom_raw is None:
+                return None
 
-        for i in range(0, 127):
-            checksum_test = (checksum_test + eeprom_raw[i]) & 0xFF
-        else:
-            if checksum_test != eeprom_raw[127]:
-                return False
+            for i in range(0, 127):
+                checksum_test = (checksum_test + eeprom_raw[i]) & 0xFF
+            else:
+                if checksum_test != eeprom_raw[127]:
+                    return False
 
         return True
 
@@ -492,21 +638,21 @@ class Sfp(SfpOptoeBase):
             return None
 
         id = id_byte_raw[0]
-        if id in QSFP_TYPE_CODE_LIST:
+        if id in self.QSFP_TYPE_CODE_LIST:
             return self.validate_eeprom_qsfp()
-        elif id in SFP_TYPE_CODE_LIST:
+        elif id in self.SFP_TYPE_CODE_LIST:
             return self.validate_eeprom_sfp()
-        elif id in QSFP_DD_TYPE_CODE_LIST:
+        elif id in self.QSFP_DD_TYPE_CODE_LIST:
             return self.validate_eeprom_cmis()
         else:
             return False
 
     def validate_temperature(self):
         temperature = self.get_temperature()
+        threshold_dict = self.get_transceiver_threshold_info()
         if temperature is None:
             return None
 
-        threshold_dict = self.get_transceiver_threshold_info()
         if threshold_dict is None:
             return None
 
@@ -536,7 +682,7 @@ class Sfp(SfpOptoeBase):
             err_stat = (err_stat | self.SFP_ERROR_BIT_BAD_EEPROM)
 
         status = self.validate_temperature()
-        if status is not True:
+        if status is False:
             err_stat = (err_stat | self.SFP_ERROR_BIT_HIGH_TEMP)
 
         if err_stat is self.SFP_STATUS_BIT_INSERTED:
