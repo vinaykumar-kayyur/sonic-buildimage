@@ -43,6 +43,8 @@ HOSTNAME=sonic
 DEFAULT_USERINFO="Default admin user,,,"
 BUILD_TOOL_PATH=src/sonic-build-hooks/buildinfo
 TRUSTED_GPG_DIR=$BUILD_TOOL_PATH/trusted.gpg.d
+## Redis group name
+REDIS_GROUP=redis
 
 ## Read ONIE image related config file
 . ./onie-image.conf
@@ -318,8 +320,15 @@ sudo LANG=C chroot $FILESYSTEM_ROOT useradd -G sudo,docker $USERNAME -c "$DEFAUL
 echo "$USERNAME:$PASSWORD" | sudo LANG=C chroot $FILESYSTEM_ROOT chpasswd
 
 ## Create redis group
-sudo LANG=C chroot $FILESYSTEM_ROOT groupadd -f -g $REDIS_USER_GID redis
-sudo LANG=C chroot $FILESYSTEM_ROOT usermod -aG redis $USERNAME
+sudo LANG=C chroot $FILESYSTEM_ROOT groupadd -f -g $REDIS_USER_GID $REDIS_GROUP
+sudo LANG=C chroot $FILESYSTEM_ROOT usermod -aG $REDIS_GROUP $USERNAME
+
+# Ensure redis gid is 1001.
+# If another GID 1001 already exists, groupadd -f -g will choose another unique GID for redis group.
+redis_gid=$(sudo LANG=C chroot $FILESYSTEM_ROOT getent group $REDIS_GROUP | awk -F: '{print $3}') || true
+if [ "${redis_gid}" != "1001" ]; then
+    die "Expect Redis group GID 1001. Current: ${redis_gid}"
+fi
 
 if [[ $CONFIGURED_ARCH == amd64 ]]; then
     ## Pre-install hardware drivers
