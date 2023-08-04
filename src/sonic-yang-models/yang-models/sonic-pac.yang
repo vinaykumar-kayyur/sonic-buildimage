@@ -8,7 +8,7 @@ module sonic-pac {
     }
 
     description
-        "SONiC PAC";
+       "SONiC PAC";
 
     revision 2023-03-28 {
         description "Initial revision.";
