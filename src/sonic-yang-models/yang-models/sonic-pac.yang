@@ -226,7 +226,7 @@ module sonic-pac {
                 leaf mab_auth_type {
                     type auth_type_enumeration;
                     description
-                        "MAB authentication type."
+                        "MAB authentication type.";
                 }
             }
         }
