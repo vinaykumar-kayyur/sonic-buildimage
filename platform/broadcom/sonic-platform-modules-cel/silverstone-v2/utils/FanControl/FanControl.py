@@ -257,8 +257,5 @@ def main(argv):
     monitor = FanControl(log_file, log_level)
     # Loop forever, doing something useful hopefully:
     while True:
-        start_time = time.time()
         monitor.manage_fans()
-        end_time = time.time()
-        sleep_time = 0 if end_time - start_time > 2 else end_time - start_time
-        time.sleep(sleep_time)
+        time.sleep(2)
