@@ -36,6 +36,10 @@ RUN apt-get update && apt-get install -y apt-transport-https \
                                          sudo \
                                          tcpdump \
                                          telnet \
+                                         libboost-dev \
+                                         libboost-serialization-dev \
+                                         libzmq5 \
+                                         libpython3.9 \ 
                                          vim
 
 RUN pip3 install --upgrade pip setuptools wheel
