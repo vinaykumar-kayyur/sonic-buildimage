@@ -20,8 +20,8 @@ function usage()
     echo ""
     echo "Options:"
     echo "  -h              Show this help"
-    echo "  -t <timeout>    WDT timeout period: {30|60|180}"
-    echo "  -k <keepalive>  WDT keep alive period, {1..(timeout-5)}"
+    echo "  -t <timeout>    WDT timeout period: {30|60|180}, default 180"
+    echo "  -k <keepalive>  WDT keep alive period, {1..(timeout-5)}, default 60"
     exit 1
 }
 
