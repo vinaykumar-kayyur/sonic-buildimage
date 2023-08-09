@@ -7,8 +7,12 @@ SONiC interface types and access functions.
  "Human readable interface string":"Sonic interface prefix"
  Currently this is a static mapping, but in future could be stored as metadata in DB.
 """
+import re
+from swsscommon.swsscommon import FRONT_PANEL_PORT_PREFIX_REGEX
+
 
 SONIC_INTERFACE_PREFIXES = {
+    "FrontPanel" : FRONT_PANEL_PORT_PREFIX_REGEX,
     "Ethernet-FrontPanel": "Ethernet",
     "PortChannel": "PortChannel",
     "Vlan": "Vlan",
@@ -21,6 +25,14 @@ SONIC_INTERFACE_PREFIXES = {
 }
 
 VLAN_SUB_INTERFACE_SEPARATOR = '.'
+
+
+def front_panel_prefix_regex():
+    """
+    Retrieves the SONIC front panel interface name prefix regex.
+    """
+    return SONIC_INTERFACE_PREFIXES["FrontPanel"]
+
 
 def front_panel_prefix():
     """
@@ -79,7 +91,7 @@ def portchannel_subinterface_prefix():
 def get_interface_table_name(interface_name):
     """Get table name by interface_name prefix
     """
-    if interface_name.startswith(front_panel_prefix()):
+    if re.match(front_panel_prefix_regex(), interface_name):
         if VLAN_SUB_INTERFACE_SEPARATOR in interface_name:
             return "VLAN_SUB_INTERFACE"
         return "INTERFACE"
@@ -100,7 +112,7 @@ def get_interface_table_name(interface_name):
 def get_port_table_name(interface_name):
     """Get table name by port_name prefix
     """
-    if interface_name.startswith(front_panel_prefix()):
+    if re.match(front_panel_prefix_regex(), interface_name):
         if VLAN_SUB_INTERFACE_SEPARATOR in interface_name:
             return "VLAN_SUB_INTERFACE"
         return "PORT"
