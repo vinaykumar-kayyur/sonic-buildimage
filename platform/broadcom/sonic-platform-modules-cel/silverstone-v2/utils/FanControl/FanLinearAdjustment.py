@@ -69,7 +69,15 @@ class FanLinearAdjustment(object):
         for sensor_index in range(self.sensor_num):
             temp = self.platform_chassis_obj.get_thermal(sensor_index).get_temperature()
             if temp is None or str(temp).strip() == "":
-                return False
+                for count in range(5):  # retry to get the temperature
+                    temp = self.platform_chassis_obj.get_thermal(sensor_index).get_temperature()
+                    try:
+                        float(temp)
+                        break
+                    except ValueError:
+                        pass
+                else:
+                    return None
             all_temperature_list.append(temp)
         u16_temperature = all_temperature_list[4]
         u17_temperature = all_temperature_list[5]
@@ -90,7 +98,7 @@ class FanLinearAdjustment(object):
                 logging.info("fan direction: %s. INTAKE=B2F, EXHAUST=F2B" % str(fan_direction))
                 break
         all_temp = self.get_all_temperature()
-        if all_temp is False:
+        if all_temp is None:
             # According to Thermal suggestion, when the temperature can't be
             # obtained, set the fan to full speed
             self.syslog.warning("Can't get TEMP_FB_U17/TEMP_SW_U16, Will increase the fan speed to 100%%")
