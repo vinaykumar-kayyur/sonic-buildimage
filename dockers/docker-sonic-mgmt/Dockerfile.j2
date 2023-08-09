@@ -36,10 +36,6 @@ RUN apt-get update && apt-get install -y apt-transport-https \
                                          sudo \
                                          tcpdump \
                                          telnet \
-                                         libboost-dev \
-                                         libboost-serialization-dev \
-                                         libzmq5 \
-                                         libpython3.9 \ 
                                          vim
 
 RUN pip3 install --upgrade pip setuptools wheel
@@ -213,6 +209,13 @@ RUN dpkg -i \
 {% for deb in docker_sonic_mgmt_debs.split(' ') -%}
 debs/{{ deb }}{{' '}}
 {%- endfor %}
+
+# Install GNMI client
+RUN mkdir -p /tmp/gnmi \
+    && cd /tmp/gnmi \
+    && wget "https://sonic-build.azurewebsites.net/api/sonic/artifacts?branchName=master&definitionId=142&artifactName=sonic-buildimage.vs&target=target/debs/bullseye/sonic-gnmi_0.1_amd64.deb" -O sonic-gnmi_0.1_amd64.deb \
+    && dpkg --force-depends --install  *.deb \
+    && rm -rf /tmp/gnmi
 
 # Install protobuf 3.21.12
 RUN mkdir -p /tmp/protobuf \
