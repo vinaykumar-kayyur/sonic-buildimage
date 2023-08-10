@@ -38,12 +38,12 @@
             "pddf_psu_module",
             "pddf_fan_driver_module",
             "pddf_fan_module",
-            "pddf_led_module"
+            "pddf_led_module",
+            "pddf_gpio_module"
         ],
         "custom_kos": [
             "x86-64-ufispace-s8901-54xc-lpc",
             "x86-64-ufispace-s8901-54xc-sys-eeprom",
-            "pddf_custom_gpio_module",
             "pddf_custom_sysstatus_module"
         ]
     },
