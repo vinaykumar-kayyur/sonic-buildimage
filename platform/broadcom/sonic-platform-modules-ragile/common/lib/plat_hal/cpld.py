@@ -54,7 +54,7 @@ class cpld(devicebase):
             val = "N/A"
             return val
         if self.type == "str":
-            return self.byteTostr(val).strip('\n')
+            return val.strip('\n')
         val = val.strip('\n').split(" ")
         if len(val) < 4:
             val = "N/A"

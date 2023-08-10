@@ -11,10 +11,13 @@
 try:
     import time
     import subprocess
+    import os
     from sonic_platform_base.component_base import ComponentBase
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found") from e
 
+
+FIRMWARE_UPDATE_DIR = "/tmp/.firmwareupdate/"
 
 class Component(ComponentBase):
     """Platform-specific Component class"""
@@ -117,12 +120,15 @@ class Component(ComponentBase):
         Returns:
             A boolean, True if install was successful, False if not
         """
+        if not os.path.isfile(image_path):
+            print("ERROR: %s not found" % image_path)
+            return False
         cmdstr = "upgrade.py cold %s %d" % (image_path, self.get_slot())
         status, output = subprocess.getstatusoutput(cmdstr)
         if status == 0:
-            print("INFO: %s firmware upgrade succeeded" % self.get_name())
+            print("INFO: %s firmware install succeeded" % self.get_name())
             return True
-        print("%s upgrade failed. status:%d, output:\n%s" % (self.get_name(), status, output))
+        print("%s install failed. status:%d, output:\n%s" % (self.get_name(), status, output))
         return False
 
     def update_firmware(self, image_path):
@@ -139,21 +145,20 @@ class Component(ComponentBase):
         Raises:
             RuntimeError: update failed
         """
+        if not os.path.isfile(image_path):
+            raise RuntimeError("ERROR: %s not found" % image_path)
         if self.get_warm_upgrade_flag() == 1:  # use warm upgrade
             cmdstr = "upgrade.py warm %s %d" % (image_path, self.get_slot())
         else:
             cmdstr = "upgrade.py cold %s %d" % (image_path, self.get_slot())
         status, output = subprocess.getstatusoutput(cmdstr)
         if status == 0:
-            if self.get_warm_upgrade_flag() != 1:  # not support warm upgrade, need to reboot
-                reboot_log = "update %s firmware %s, the system is going to reboot now." % (self.get_name(), image_path)
-                reboot_log_cmd = "echo '%s' > /dev/ttyS0" % reboot_log
-                print(reboot_log)
-                subprocess.call(reboot_log_cmd)
-                subprocess.call("sync")
-                time.sleep(3)
-                subprocess.call("reboot")
-            print("INFO: %s firmware version up-to-date" % self.get_name())
+            if self.get_warm_upgrade_flag() != 1:  # not support warm upgrade, need to cold reboot
+                print("INFO: %s firmware install succeeded" % self.get_name())
+                print("INFO: please cold reboot to make the %s firmware up-to-date" % self.get_name())
+            else:
+                print("INFO: %s firmware update succeeded" % self.get_name())
+                print("INFO: %s firmware version up-to-date" % self.get_name())
             return None
         raise RuntimeError(output)
 
@@ -187,25 +192,34 @@ class Component(ComponentBase):
         Raises:
             RuntimeError: auto-update failure cause
         """
-        if self.get_warm_upgrade_flag() == 1:  # use warm upgrade
+        if not os.path.isfile(image_path):
+            print("ERROR: %s not found" % image_path)
+            return -2
+
+        if not os.path.isdir(FIRMWARE_UPDATE_DIR):
+            os.mkdir(FIRMWARE_UPDATE_DIR)
+
+        warm_upgrade_flag = self.get_warm_upgrade_flag()
+        file_name = os.path.basename(image_path)
+        file_path = os.path.join(FIRMWARE_UPDATE_DIR, file_name)
+        if os.path.exists(file_path):   # firmware already update
+            if warm_upgrade_flag == 1:
+                print("INFO: %s firmware update succeeded, firmware version up-to-date" % self.get_name())
+                return 2
+            print("INFO: %s firmware install succeeded, please cold reboot to make it up-to-date" % self.get_name())
+            return 1
+
+        if warm_upgrade_flag == 1:  # use warm upgrade
             cmdstr = "upgrade.py warm %s %d" % (image_path, self.get_slot())
         else:
             cmdstr = "upgrade.py cold %s %d" % (image_path, self.get_slot())
         status, output = subprocess.getstatusoutput(cmdstr)
         if status == 0:
-            reboot_log = "update %s firmware %s, the system is going to reboot now." % (self.get_name(), image_path)
-            reboot_log_cmd = "echo '%s' > /dev/ttyS0" % reboot_log
-            print(reboot_log)
-            subprocess.call(reboot_log_cmd)
-            subprocess.call("sync")
-            time.sleep(3)
-            if boot_type == "none":
-                subprocess.call("sync")
-            elif boot_type == "cold":
-                subprocess.call("reboot_ctrl.py reset power")
-            else:
-                subprocess.call("reboot")
-            print("INFO: %s firmware version up-to-date" % self.get_name())
-            return 2
-        print("%s upgrade failed. status:%d, output:\n%s" % (self.get_name(), status, output))
+            os.mknod(file_path)
+            if warm_upgrade_flag == 1:
+                print("INFO: %s firmware update succeeded, firmware version up-to-date" % self.get_name())
+                return 2
+            print("INFO: %s firmware install succeeded, please cold reboot to make it up-to-date" % self.get_name())
+            return 1
+        print("%s update failed, status:%d, output:\n%s" % (self.get_name(), status, output))
         return -3

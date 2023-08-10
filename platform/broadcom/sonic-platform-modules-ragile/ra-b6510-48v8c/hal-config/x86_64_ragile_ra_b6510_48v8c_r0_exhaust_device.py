@@ -604,6 +604,7 @@ devices = {
             "VersionFile": {"loc": "/dev/cpld0", "offset": 0, "len": 4, "way": "devfile_ascii"},
             "desc": "Used for system power",
             "slot": 0,
+            "warm": 0,
         },
         {
             "name": "CONNECT_CPLD",
@@ -611,6 +612,7 @@ devices = {
             "VersionFile": {"loc": "/dev/cpld1", "offset": 0, "len": 4, "way": "devfile_ascii"},
             "desc": "Used for base functions",
             "slot": 0,
+            "warm": 0,
         },
         {
             "name": "CONNECT_CPLD-FAN",
@@ -618,6 +620,7 @@ devices = {
             "VersionFile": {"loc": "/dev/cpld2", "offset": 0, "len": 4, "way": "devfile_ascii"},
             "desc": "Used for fan modules",
             "slot": 0,
+            "warm": 0,
         },
         {
             "name": "MAC_CPLD1",
@@ -625,6 +628,7 @@ devices = {
             "VersionFile": {"loc": "/dev/cpld3", "offset": 0, "len": 4, "way": "devfile_ascii"},
             "desc": "Used for sff modules",
             "slot": 0,
+            "warm": 0,
         },
         {
             "name": "MAC_CPLD2",
@@ -632,6 +636,7 @@ devices = {
             "VersionFile": {"loc": "/dev/cpld4", "offset": 0, "len": 4, "way": "devfile_ascii"},
             "desc": "Used for sff modules",
             "slot": 0,
+            "warm": 0,
         },
         {
             "name": "FPGA",
@@ -640,6 +645,16 @@ devices = {
             "desc": "Used for base functions",
             "slot": 0,
             "format": "little_endian",
+            "warm": 0,
+        },
+        {
+            "name": "BIOS",
+            "cpld_id": "CPLD7",
+            "VersionFile": {"cmd": "dmidecode -s bios-version", "way": "cmd"},
+            "desc": "Performs initialization of hardware components during booting",
+            "slot": 0,
+            "type": "str",
+            "warm": 0,
         },
     ],
     "dcdc": [

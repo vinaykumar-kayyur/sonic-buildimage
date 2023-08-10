@@ -29,6 +29,10 @@ extern int i2c_device_func_write(const char *path, uint32_t pos, uint8_t *val, s
 extern int i2c_device_func_read(const char *path, uint32_t pos, uint8_t *val, size_t size);
 extern int pcie_device_func_read(const char *path, uint32_t offset, uint8_t *buf, size_t count);
 extern int pcie_device_func_write(const char *path, uint32_t offset, uint8_t *buf, size_t count);
+extern int io_device_func_write(const char *path, uint32_t pos, uint8_t *val, size_t size);
+extern int io_device_func_read(const char *path, uint32_t pos, uint8_t *val, size_t size);
+extern int spi_device_func_read(const char *path, uint32_t offset, uint8_t *buf, size_t count);
+extern int spi_device_func_write(const char *path, uint32_t offset, uint8_t *buf, size_t count);
 
 #define FPGA_I2C_STRETCH_TIMEOUT  (0x01)
 #define FPGA_I2C_DEADLOCK_FAILED  (0x02)
@@ -47,6 +51,7 @@ extern int pcie_device_func_write(const char *path, uint32_t offset, uint8_t *bu
 #define FILE_MODE                 (2)
 #define SYMBOL_PCIE_DEV_MODE      (3)
 #define SYMBOL_IO_DEV_MODE        (4)
+#define SYMBOL_SPI_DEV_MODE       (5)
 
 int g_wb_fpga_i2c_debug = 0;
 int g_wb_fpga_i2c_error = 0;
@@ -144,6 +149,12 @@ static int fpga_device_write(fpga_i2c_dev_t *fpga_i2c, uint32_t pos, uint8_t *va
     case SYMBOL_PCIE_DEV_MODE:
         ret = pcie_device_func_write(fpga_i2c->dev_name, pos, val, size);
         break;
+    case SYMBOL_IO_DEV_MODE:
+        ret = io_device_func_write(fpga_i2c->dev_name, pos, val, size);
+        break;
+    case SYMBOL_SPI_DEV_MODE:
+        ret = spi_device_func_write(fpga_i2c->dev_name, pos, val, size);
+        break;
     default:
         FPGA_I2C_ERROR("err func_mode, write failed.\n");
         return -EINVAL;
@@ -165,6 +176,12 @@ static int fpga_device_read(fpga_i2c_dev_t *fpga_i2c, uint32_t pos, uint8_t *val
         break;
     case SYMBOL_PCIE_DEV_MODE:
         ret = pcie_device_func_read(fpga_i2c->dev_name, pos, val, size);
+        break;
+    case SYMBOL_IO_DEV_MODE:
+        ret = io_device_func_read(fpga_i2c->dev_name, pos, val, size);
+        break;
+    case SYMBOL_SPI_DEV_MODE:
+        ret = spi_device_func_read(fpga_i2c->dev_name, pos, val, size);
         break;
     default:
         FPGA_I2C_ERROR("err func_mode, read failed.\n");
