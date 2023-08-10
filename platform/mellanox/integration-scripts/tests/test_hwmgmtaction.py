@@ -1,6 +1,24 @@
+#
+# Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+# Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
 import sys
 import shutil
 from unittest import mock, TestCase
+from pyfakefs.fake_filesystem_unittest import Patcher
 sys.path.append('../')
 from hwmgmt_kernel_patches import *
 
@@ -32,6 +50,27 @@ NEW_UP_LIST = """\
 0105-mlxsw-reg-Extend-MTBR-register-with-new-slot-number-.patch
 0106-mlxsw-reg-Extend-MCIA-register-with-new-slot-number-.patch
 0107-mlxsw-reg-Extend-MCION-register-with-new-slot-number.patch
+0188-i2c-mux-Add-register-map-based-mux-driver.patch
+"""
+
+TEST_SLK_COMMIT = """\
+Intgerate HW-MGMT 7.0030.0937 Changes
+ ## Patch List
+* 0002-i2c-mlxcpld-Decrease-polling-time-for-performance-im.patch : https://github.com/torvalds/linux/commit/cb9744178f33
+* 0003-i2c-mlxcpld-Add-support-for-I2C-bus-frequency-settin.patch : https://github.com/torvalds/linux/commit/66b0c2846ba8
+* 0005-i2c-mux-mlxcpld-Move-header-file-out-of-x86-realm.patch : https://github.com/torvalds/linux/commit/98d29c410475
+* 0006-i2c-mux-mlxcpld-Convert-driver-to-platform-driver.patch : https://github.com/torvalds/linux/commit/84af1b168c50
+* 0007-i2c-mux-mlxcpld-Prepare-mux-selection-infrastructure.patch : https://github.com/torvalds/linux/commit/81566938083a
+* 0008-i2c-mux-mlxcpld-Get-rid-of-adapter-numbers-enforceme.patch : https://github.com/torvalds/linux/commit/cae5216387d1
+* 0009-i2c-mux-mlxcpld-Extend-driver-to-support-word-addres.patch : https://github.com/torvalds/linux/commit/c52a1c5f5db5
+* 0010-i2c-mux-mlxcpld-Extend-supported-mux-number.patch : https://github.com/torvalds/linux/commit/699c0506543e
+* 0011-i2c-mux-mlxcpld-Add-callback-to-notify-mux-creation-.patch : https://github.com/torvalds/linux/commit/a39bd92e92b9
+* 0188-i2c-mux-Add-register-map-based-mux-driver.patch : https://patchwork.ozlabs.org/project/linux-i2c/patch/20230215195322.21955-1-vadimp@nvidia.com/
+"""
+
+TEST_SB_COMMIT = """\
+Intgerate HW-MGMT 7.0030.0937 Changes
+
 """
 
 REL_INPUTS_DIR = "platform/mellanox/integration-scripts/tests/data/"
@@ -54,6 +93,10 @@ def mock_hwmgmt_args():
                                 "--config_inclusion", MOCK_INPUTS_DIR+"/new_kconfig",
                                 "--series", MOCK_INPUTS_DIR+"/new_series",
                                 "--current_non_up_patches", MOCK_INPUTS_DIR+"/hwmgmt_nonup_patches",
+                                "--kernel_version", "5.10.140",
+                                "--hw_mgmt_ver", "7.0030.0937",
+                                "--sb_msg", "/tmp/sb_msg.log",
+                                "--slk_msg", "/tmp/slk_msg.log",
                                 "--build_root", "/sonic", 
                                 "--is_test"]):
         parser = create_parser()
@@ -85,12 +128,6 @@ class TestHwMgmtPostAction(TestCase):
             Data.current_kcfg.extend(all_kcfg.get(hdr, []))
         Data.current_kcfg = KCFG.parse_opts_strs(Data.current_kcfg)
         Data.kcfg_exclude = FileHandler.read_raw(MOCK_INPUTS_DIR+"/kconfig-exclusions")
-
-    def tearDown(self):
-        try:
-            os.remove(MOCK_WRITE_FILE)
-        except:
-            pass
 
     def test_find_mlnx_hw_mgmt_markers(self):
         self.action.find_mlnx_hw_mgmt_markers()
@@ -142,3 +179,17 @@ class TestHwMgmtPostAction(TestCase):
         self.action.construct_series_with_non_up()
         self.action.write_series_diff()
         assert check_file_content(MOCK_INPUTS_DIR+"expected_data/series.patch")
+
+    def test_commit_msg(self):
+        root_dir = "/sonic/" + PATCH_TABLE_LOC + PATCHWORK_LOC.format("5.10")
+        content = "patchwork_link: https://patchwork.ozlabs.org/project/linux-i2c/patch/20230215195322.21955-1-vadimp@nvidia.com/\n"
+        file = "0188-i2c-mux-Add-register-map-based-mux-driver.patch.txt"
+        table = load_patch_table(MOCK_INPUTS_DIR, "5.10")
+        with Patcher() as patcher:
+            patcher.fs.create_file(os.path.join(root_dir, file), contents=content)
+            sb, slk = self.action.create_commit_msg(table)
+            print(slk)
+            print(TEST_SLK_COMMIT)
+            assert slk.split() == TEST_SLK_COMMIT.split()
+            assert sb.split() == TEST_SB_COMMIT.split()
+
