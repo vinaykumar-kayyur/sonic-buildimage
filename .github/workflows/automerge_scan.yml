@@ -10,7 +10,7 @@ jobs:
     # GH_TOKEN: mssonicbld PAT to comment, close cherry pick PR and merge PR
     # ADO_ID_SUBMODULE: ADO to record status, then power automation
     # AZURE_DEVOPS_EXT_PAT: TOKEN for az boards
-    #if: github.repository_owner == 'sonic-net'
+    if: github.repository_owner == 'sonic-net'
     runs-on: ubuntu-latest
     steps:
     - name: Debug
