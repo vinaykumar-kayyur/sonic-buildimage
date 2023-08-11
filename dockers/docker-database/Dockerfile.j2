@@ -2,6 +2,7 @@
 FROM docker-config-engine-bullseye-{{DOCKER_USERNAME}}:{{DOCKER_USERTAG}}
 
 ARG docker_container_name
+ARG redis_user_uid
 ARG redis_user_gid
 
 # Make apt-get non-interactive
@@ -13,10 +14,10 @@ RUN apt-get update
 # Install redis-server
 RUN apt-get install -y redis-tools redis-server
 
-RUN if getent group ${redis_user_gid}; then echo "Error: GID ${redis_user_gid} already exists"; exit 1; fi
-RUN groupmod -g ${redis_user_gid} redis               && \
-    chgrp -R redis /etc/redis/                        && \
-    chgrp -R redis /var/lib/redis/
+RUN if [ "$(id -u redis)" -ne $redis_user_uid ] || [ "$(id -g redis)" -ne $redis_user_gid ]; then \
+        echo "Error: Default Redis user must have UID/GID $redis_user_uid/$redis_user_gid."    && \
+        exit 1; \
+    fi
 
 {% if docker_database_debs.strip() -%}
 # Copy locally-built Debian package dependencies

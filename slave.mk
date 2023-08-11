@@ -359,6 +359,7 @@ export ENABLE_FIPS
 ###############################################################################
 ## Redis related exports
 ###############################################################################
+export REDIS_USER_UID
 export REDIS_USER_GID
 
 ###############################################################################
@@ -399,6 +400,7 @@ ifeq ($(SONIC_ROUTING_STACK),frr)
 $(info "FRR_USER_UID"                    : "$(FRR_USER_UID)")
 $(info "FRR_USER_GID"                    : "$(FRR_USER_GID)")
 endif
+$(info "REDIS_USER_UID"                  : "$(REDIS_USER_UID)")
 $(info "REDIS_USER_GID"                  : "$(REDIS_USER_GID)")
 $(info "ENABLE_SYNCD_RPC"                : "$(ENABLE_SYNCD_RPC)")
 $(info "SAITHRIFT_V2"                    : "$(SAITHRIFT_V2)")
@@ -1100,6 +1102,7 @@ $(addprefix $(TARGET_PATH)/, $(DOCKER_IMAGES)) : $(TARGET_PATH)/%.gz : .platform
 			--build-arg docker_container_name=$($*.gz_CONTAINER_NAME) \
 			--build-arg frr_user_uid=$(FRR_USER_UID) \
 			--build-arg frr_user_gid=$(FRR_USER_GID) \
+			--build-arg redis_user_uid=$(REDIS_USER_UID) \
 			--build-arg redis_user_gid=$(REDIS_USER_GID) \
 			--build-arg SONIC_VERSION_CACHE=$(SONIC_VERSION_CACHE) \
 			--build-arg SONIC_VERSION_CACHE_SOURCE=$(SONIC_VERSION_CACHE_SOURCE) \

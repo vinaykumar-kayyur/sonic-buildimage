@@ -43,8 +43,15 @@ HOSTNAME=sonic
 DEFAULT_USERINFO="Default admin user,,,"
 BUILD_TOOL_PATH=src/sonic-build-hooks/buildinfo
 TRUSTED_GPG_DIR=$BUILD_TOOL_PATH/trusted.gpg.d
-## Redis group name
-REDIS_GROUP=redis
+## Remapped docker usernames
+REMAPREDIS=remapredis
+REMAPROOT=remaproot
+## Start and Range ID for the default user defined in /etc/subuid and /etc/subgid
+START_ID=100000
+RANGE_ID=65536
+## Remapped Redis user id and group id
+REDIS_REMAPPED_UID=$(($START_ID + $REDIS_USER_UID))
+REDIS_REMAPPED_GID=$(($START_ID + $REDIS_USER_GID))
 
 ## Read ONIE image related config file
 . ./onie-image.conf
@@ -319,16 +326,21 @@ sudo LANG=C chroot $FILESYSTEM_ROOT useradd -G sudo,docker $USERNAME -c "$DEFAUL
 ## Create password for the default user
 echo "$USERNAME:$PASSWORD" | sudo LANG=C chroot $FILESYSTEM_ROOT chpasswd
 
-## Create redis group
-sudo LANG=C chroot $FILESYSTEM_ROOT groupadd -f -g $REDIS_USER_GID $REDIS_GROUP
-sudo LANG=C chroot $FILESYSTEM_ROOT usermod -aG $REDIS_GROUP $USERNAME
+## Create remapped redis group and user, add default user to remapped redis group
+sudo LANG=C chroot $FILESYSTEM_ROOT groupadd -f -g $REDIS_REMAPPED_GID $REMAPREDIS
+sudo LANG=C chroot $FILESYSTEM_ROOT useradd -u $REDIS_REMAPPED_UID -g $REMAPREDIS $REMAPREDIS -c "remapped docker redis user" -m -s /bin/bash
+sudo LANG=C chroot $FILESYSTEM_ROOT usermod -aG $REMAPREDIS $USERNAME
 
-# Ensure redis gid is 1001.
-# If another GID 1001 already exists, groupadd -f -g will choose another unique GID for redis group.
-redis_gid=$(sudo LANG=C chroot $FILESYSTEM_ROOT getent group $REDIS_GROUP | awk -F: '{print $3}') || true
-if [ "${redis_gid}" != "${REDIS_USER_GID}" ]; then
-    die "Expect Redis group GID ${REDIS_USER_GID}. Current: ${redis_gid}"
+## Check expected entry in /etc/subuid and /etc/subgid
+EXPECTED_ENTRY="$USERNAME:$START_ID:$RANGE_ID"
+if ! grep -q "$EXPECTED_ENTRY" $FILESYSTEM_ROOT/etc/subuid || ! grep -q "$EXPECTED_ENTRY" $FILESYSTEM_ROOT/etc/subgid; then
+  echo "The entry $EXPECTED_ENTRY is not found in /etc/subuid or /etc/subgid."
+  exit 1
 fi
+
+## Create remapped docker root user and group
+sudo LANG=C chroot $FILESYSTEM_ROOT groupadd -f -g $START_ID $REMAPROOT
+sudo LANG=C chroot $FILESYSTEM_ROOT useradd -u $START_ID -g $REMAPROOT $REMAPROOT -c "remapped docker root user" -m -s /bin/bash
 
 if [[ $CONFIGURED_ARCH == amd64 ]]; then
     ## Pre-install hardware drivers
@@ -556,6 +568,8 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
 
 ## Create /var/run/redis folder for docker-database to mount
 sudo mkdir -p $FILESYSTEM_ROOT/var/run/redis
+## Enable userns-remap in docker
+sudo cp files/docker/daemon.json $FILESYSTEM_ROOT/etc/docker/
 
 ## Config DHCP for eth0
 sudo tee -a $FILESYSTEM_ROOT/etc/network/interfaces > /dev/null <<EOF

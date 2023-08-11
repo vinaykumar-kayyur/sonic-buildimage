@@ -283,7 +283,7 @@ function postStartAction()
         fi
         REDIS_SOCK="/var/run/redis-chassis/redis_chassis.sock"
     fi
-    chmod -f 0760 $REDIS_SOCK
+    chgrp -f remapredis $REDIS_SOCK && chmod -f 0760 $REDIS_SOCK
 {%- elif docker_container_name == "swss" %}
     docker exec swss$DEV rm -f /ready   # remove cruft
     if [[ "$BOOT_TYPE" == "fast" ]] && [[ -d /host/fast-reboot ]]; then
@@ -539,6 +539,9 @@ start() {
     # TODO: Mellanox will remove the --tmpfs exception after SDK socket path changed in new SDK version
 {%- endif %}
     docker create {{docker_image_run_opt}} \
+{%- if docker_container_name != "database" %}
+        --userns=host \
+{%- endif %}
         --net=$NET \
         -e RUNTIME_OWNER=local \
         --uts=host \{# W/A: this should be set per-docker, for those dockers which really need host's UTS namespace #}
