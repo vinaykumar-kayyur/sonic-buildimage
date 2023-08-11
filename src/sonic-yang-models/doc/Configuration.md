@@ -1449,6 +1449,9 @@ The **MUX_LINKMGR** table is used for dualtor device configuration.
         },
         "MUXLOGGER": {
             "log_verbosity": "debug"
+        },
+        "SERVICE_MGMT": {
+            "kill_radv": "True"
         }
     }
 }
@@ -2505,6 +2508,21 @@ The DNS_NAMESERVER table introduces static DNS nameservers configuration.
 		"1.1.1.1": {},
 		"fe80:1000:2000:3000::1": {}
 	},
+}
+```
+
+### FIPS
+
+The FIPS table introduces FIPS  configuration.
+
+```json
+{
+    "FIPS": {
+        "global" : {
+            "enable": "true",
+            "enforce": "false"
+        }
+    }
 }
 ```
 

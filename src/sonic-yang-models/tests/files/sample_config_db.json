@@ -2175,6 +2175,9 @@
             },
             "MUXLOGGER": {
                 "log_verbosity": "debug"
+            },
+            "SERVICE_MGMT": {
+                "kill_radv": "False"
             }
         },
 
@@ -2453,6 +2456,12 @@
             },
             "192.168.0.0/16": {
                 "FG_NHG": "nhg2"
+            }
+        },
+        "FIPS":{
+            "global": {
+                "enable": "true",
+                "enforce": "true"
             }
         },
         "FG_NHG_MEMBER": {
