@@ -80,7 +80,7 @@ class Psu(PsuBase):
             e.g. 12.1
         """
         if self.get_status() is not True:
-            return None
+            return 0
 
         vout_path = "{}{}".format(self.pmbus_path, 'psu_v_out')
         vout_val=self._api_helper.read_txt_file(vout_path)
@@ -96,7 +96,7 @@ class Psu(PsuBase):
             A float number, the electric current in amperes, e.g 15.4
         """
         if self.get_status() is not True:
-            return None
+            return 0
 
         iout_path = "{}{}".format(self.pmbus_path, 'psu_i_out')
         val = self._api_helper.read_txt_file(iout_path)
@@ -112,7 +112,7 @@ class Psu(PsuBase):
             A float number, the power in watts, e.g. 302.6
         """
         if self.get_status() is not True:
-            return None
+            return 0
 
         pout_path = "{}{}".format(self.pmbus_path, 'psu_p_out')
         val = self._api_helper.read_txt_file(pout_path)
