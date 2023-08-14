@@ -43,15 +43,9 @@ HOSTNAME=sonic
 DEFAULT_USERINFO="Default admin user,,,"
 BUILD_TOOL_PATH=src/sonic-build-hooks/buildinfo
 TRUSTED_GPG_DIR=$BUILD_TOOL_PATH/trusted.gpg.d
-## Remapped docker usernames
+## Remapped docker usernames and group names
 REMAPREDIS=remapredis
 REMAPROOT=remaproot
-## Start and Range ID for the default user defined in /etc/subuid and /etc/subgid
-START_ID=100000
-RANGE_ID=65536
-## Remapped Redis user id and group id
-REDIS_REMAPPED_UID=$(($START_ID + $REDIS_USER_UID))
-REDIS_REMAPPED_GID=$(($START_ID + $REDIS_USER_GID))
 
 ## Read ONIE image related config file
 . ./onie-image.conf
@@ -326,21 +320,20 @@ sudo LANG=C chroot $FILESYSTEM_ROOT useradd -G sudo,docker $USERNAME -c "$DEFAUL
 ## Create password for the default user
 echo "$USERNAME:$PASSWORD" | sudo LANG=C chroot $FILESYSTEM_ROOT chpasswd
 
+## Start UID and GID for the default user defined in /etc/subuid and /etc/subgid
+START_UID=$(sudo grep ^$USERNAME $FILESYSTEM_ROOT/etc/subuid | cut -d: -f2)
+START_GID=$(sudo grep ^$USERNAME $FILESYSTEM_ROOT/etc/subgid | cut -d: -f2)
+## Remapped Redis user id and group id
+REDIS_REMAP_UID=$(($START_UID + $REDIS_USER_UID))
+REDIS_REMAP_GID=$(($START_GID + $REDIS_USER_GID))
+
 ## Create remapped redis group and user, add default user to remapped redis group
-sudo LANG=C chroot $FILESYSTEM_ROOT groupadd -f -g $REDIS_REMAPPED_GID $REMAPREDIS
-sudo LANG=C chroot $FILESYSTEM_ROOT useradd -u $REDIS_REMAPPED_UID -g $REMAPREDIS $REMAPREDIS -c "remapped docker redis user" -m -s /bin/bash
+sudo LANG=C chroot $FILESYSTEM_ROOT groupadd -f -g $REDIS_REMAP_GID $REMAPREDIS
+sudo LANG=C chroot $FILESYSTEM_ROOT useradd -u $REDIS_REMAP_UID -g $REMAPREDIS $REMAPREDIS -c "remapped docker redis user" -m -s /bin/bash
 sudo LANG=C chroot $FILESYSTEM_ROOT usermod -aG $REMAPREDIS $USERNAME
-
-## Check expected entry in /etc/subuid and /etc/subgid
-EXPECTED_ENTRY="$USERNAME:$START_ID:$RANGE_ID"
-if ! grep -q "$EXPECTED_ENTRY" $FILESYSTEM_ROOT/etc/subuid || ! grep -q "$EXPECTED_ENTRY" $FILESYSTEM_ROOT/etc/subgid; then
-  echo "The entry $EXPECTED_ENTRY is not found in /etc/subuid or /etc/subgid."
-  exit 1
-fi
-
 ## Create remapped docker root user and group
-sudo LANG=C chroot $FILESYSTEM_ROOT groupadd -f -g $START_ID $REMAPROOT
-sudo LANG=C chroot $FILESYSTEM_ROOT useradd -u $START_ID -g $REMAPROOT $REMAPROOT -c "remapped docker root user" -m -s /bin/bash
+sudo LANG=C chroot $FILESYSTEM_ROOT groupadd -f -g $START_UID $REMAPROOT
+sudo LANG=C chroot $FILESYSTEM_ROOT useradd -u $START_GID -g $REMAPROOT $REMAPROOT -c "remapped docker root user" -m -s /bin/bash
 
 if [[ $CONFIGURED_ARCH == amd64 ]]; then
     ## Pre-install hardware drivers

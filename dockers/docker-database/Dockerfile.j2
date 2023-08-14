@@ -16,7 +16,7 @@ RUN apt-get install -y redis-tools redis-server
 
 RUN if [ "$(id -u redis)" -ne $redis_user_uid ] || [ "$(id -g redis)" -ne $redis_user_gid ]; then \
         echo "Error: Default Redis user must have UID/GID $redis_user_uid/$redis_user_gid."    && \
-        exit 1; \
+        exit 1;                                                                                   \
     fi
 
 {% if docker_database_debs.strip() -%}
