@@ -33,6 +33,8 @@
 #include <linux/slab.h>
 #include <linux/delay.h>
 #include <linux/dmi.h>
+#define __STDC_WANT_LIB_EXT1__ 1
+#include <linux/string.h>
 
 #define DRVNAME "as4625_54t_psu"
 
@@ -328,9 +330,21 @@ static struct as4625_54t_psu_data *as4625_54t_psu_update_device(struct device *d
 			data->status = status;
 		}
 
+		#ifdef __STDC_LIB_EXT1__
+		memset_s(data->model_name, sizeof(data->model_name), 0, sizeof(data->model_name));
+		#else
 		memset(data->model_name, 0, sizeof(data->model_name));
+		#endif
+		#ifdef __STDC_LIB_EXT1__
+		memset_s(data->serial, sizeof(data->serial), 0, sizeof(data->serial));
+		#else
 		memset(data->serial, 0, sizeof(data->serial));
+		#endif
+		#ifdef __STDC_LIB_EXT1__
+		memset_s(data->fan_dir, sizeof(data->fan_dir), 0, sizeof(data->fan_dir));
+		#else
 		memset(data->fan_dir, 0, sizeof(data->fan_dir));
+		#endif
 
 		if (IS_POWER_GOOD(data->index, data->status)) {
 			/* Read model name */
