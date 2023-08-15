@@ -649,6 +649,7 @@ if [ "$install_env" = "onie" ]; then
     # ONIE distribution.
     $onie_root_dir/grub.d/50_onie_grub >> $grub_cfg
     mkdir -p $onie_initrd_tmp/$demo_mnt/grub
+    mkdir -p $onie_initrd_tmp/$demo_mnt/boot
 else
 cat <<EOF >> $grub_cfg
 $old_sonic_menuentry
@@ -661,6 +662,7 @@ if [ "$install_env" = "build" ]; then
     umount $demo_mnt
 else
     cp $grub_cfg $onie_initrd_tmp/$demo_mnt/grub/grub.cfg
+    cp $grub_cfg $onie_initrd_tmp/$demo_mnt/boot/grub/grub.cfg
 fi
 
 cd /
