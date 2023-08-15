@@ -39,6 +39,8 @@ RUN apt-get clean -y                                  && \
              s/^# unixsocket/unixsocket/;                \
              s/redis-server.sock/redis.sock/g;           \
              s/^client-output-buffer-limit pubsub [0-9]+mb [0-9]+mb [0-9]+/client-output-buffer-limit pubsub 0 0 0/; \
+             s/^bind 127.0.0.1 ::1$/# bind 127.0.0.1 ::1/;             \
+             s/^protected-mode yes/protected-mode no/;                 \
              s/^notify-keyspace-events ""$/notify-keyspace-events AKE/ \
             ' /etc/redis/redis.conf
 

@@ -473,7 +473,12 @@ start() {
     {%- endif %}
 
     if [ -z "$DEV" ]; then
-        NET="host"
+        {%- if docker_container_name == "database" %}
+            NET="bridge"
+        PORT_MAP="-p 127.0.0.1:6379:6379"
+        {%- else %}
+            NET="host"
+        {%- endif %}
 
         # For Multi-ASIC platform we have to mount the redis paths for database instances running in different
         # namespaces, into the single instance dockers like snmp, pmon on linux host. These global dockers
@@ -532,6 +537,9 @@ start() {
     docker create {{docker_image_run_opt}} \
 {%- if docker_container_name != "database" %}
         --userns=host \
+{%- endif %}
+{%- if docker_container_name == "database" %}
+        $PORT_MAP \
 {%- endif %}
         --net=$NET \
         -e RUNTIME_OWNER=local \
