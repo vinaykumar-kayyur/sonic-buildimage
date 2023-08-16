@@ -1,4 +1,5 @@
 
+
 =======
 =======
 # SONiC Configuration Database Manual
@@ -426,7 +427,14 @@ group name and IP ranges in **BGP_PEER_RANGE** table.
         "ip_range": [
             "10.2.0.0/16"
         ]
-    }
+    },
+    "BGPSentinel": {
+        "name": "BGPSentinel",
+        "ip_range": [
+            "10.1.0.0/24"
+        ],
+        "src_address": "10.1.0.32"
+     }
   }
 }
 ```
@@ -1441,6 +1449,12 @@ The **MUX_LINKMGR** table is used for dualtor device configuration.
             "use_well_known_mac": "enabled",
             "src_mac": "ToRMac",
             "interval_pck_loss_count_update": "3"
+        },
+        "MUXLOGGER": {
+            "log_verbosity": "debug"
+        },
+        "SERVICE_MGMT": {
+            "kill_radv": "True"
         }
     }
 }
@@ -1609,6 +1623,7 @@ optional attributes.
             "lanes": "101,102",
             "description": "fortyGigE1/1/1",
             "mtu": "9100",
+            "mode": "routed",
             "alias": "fortyGigE1/1/1",
             "speed": "40000",
             "link_training": "off",
@@ -1620,6 +1635,7 @@ optional attributes.
             "lanes": "103,104",
             "description": "fortyGigE1/1/2",
             "mtu": "9100",
+            "mode":"routed",
             "alias": "fortyGigE1/1/2",
             "admin_status": "up",
             "speed": "40000",
@@ -1632,6 +1648,7 @@ optional attributes.
             "lanes": "87,88",
             "description": "fortyGigE1/4/16",
             "mtu": "9100",
+            "mode":"routed"
             "alias": "fortyGigE1/4/16",
             "speed": "40000",
             "laser_freq": "191300",
@@ -1683,7 +1700,8 @@ name as object key and member list as attribute.
         "members": [
             "Ethernet54"
         ],
-        "mtu": "9100"
+        "mtu": "9100",
+        "mode":"routed"
     },
     "PortChannel0004": {
         "admin_status": "up",
@@ -1692,6 +1710,7 @@ name as object key and member list as attribute.
             "Ethernet56"
         ],
         "mtu": "9100",
+        "mode":"routed"
         "fallback": "false",
         "fast_rate": "true"
     }
@@ -2500,6 +2519,21 @@ The DNS_NAMESERVER table introduces static DNS nameservers configuration.
 }
 ```
 
+### FIPS
+
+The FIPS table introduces FIPS  configuration.
+
+```json
+{
+    "FIPS": {
+        "global" : {
+            "enable": "true",
+            "enforce": "false"
+        }
+    }
+}
+```
+
 #### 5.2.3 Update value directly in db memory
 
 For Developers
@@ -2516,4 +2550,3 @@ Incremental Configuration by Subscribing to ConfigDB
 Detail instruction to be added. A sample could be found in this
 [PR](https://github.com/Azure/sonic-buildimage/pull/861) that
 implemented dynamic configuration for BGP.
-
