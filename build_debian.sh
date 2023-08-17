@@ -636,7 +636,7 @@ if [[ $RFS_SPLIT_FIRST_STAGE == y ]]; then
     sudo LANG=C chroot $FILESYSTEM_ROOT umount /proc
 
     sudo rm -f $TARGET_PATH/$RFS_SQUASHFS_NAME
-    sudo mksquashfs $FILESYSTEM_ROOT $TARGET_PATH/$RFS_SQUASHFS_NAME
+    sudo mksquashfs $FILESYSTEM_ROOT $TARGET_PATH/$RFS_SQUASHFS_NAME -Xcompression-level 1
 
     exit 0
 fi
