@@ -1213,21 +1213,23 @@ $(DOCKER_LOAD_TARGETS) : $(TARGET_PATH)/%.gz-load : .platform docker-start $$(TA
 ## Installers
 ###############################################################################
 
-ifeq ($(ENABLE_RFS_SPLIT_BUILD),y)
+
 define rfs_get_installer_dependencies
 $(1)__$($(1)_MACHINE)__rfs.squashfs $(if $($(1)_DEPENDENT_MACHINE),$(1)__$($(1)_DEPENDENT_MACHINE)__rfs.squashfs)
 endef
 
 $(foreach installer, $(SONIC_INSTALLERS), $(eval $(installer)_RFS_DEPENDS=$(call rfs_get_installer_dependencies,$(installer))))
-
 SONIC_RFS_TARGETS= $(foreach installer, $(SONIC_INSTALLERS), $(call rfs_get_installer_dependencies,$(installer)))
+
+ifeq ($(ENABLE_RFS_SPLIT_BUILD),y)
 SONIC_TARGET_LIST += $(addprefix $(TARGET_PATH)/, $(SONIC_RFS_TARGETS))
 endif
 
 $(addprefix $(TARGET_PATH)/, $(SONIC_RFS_TARGETS)) : $(TARGET_PATH)/% : \
         .platform \
         build_debian.sh \
-        $(addprefix $(IMAGE_DISTRO_DEBS_PATH)/,$(INITRAMFS_TOOLS) $(LINUX_KERNEL))
+        $(addprefix $(IMAGE_DISTRO_DEBS_PATH)/,$(INITRAMFS_TOOLS) $(LINUX_KERNEL)) \
+        $(addsuffix -install,$(addprefix $(IMAGE_DISTRO_DEBS_PATH)/,$(DEBOOTSTRAP)))
 	$(HEADER)
 
 	$(eval installer=$(word 1,$(subst __, ,$*)))
@@ -1584,7 +1586,9 @@ SONIC_CLEAN_TARGETS += $(addsuffix -clean,$(addprefix $(TARGET_PATH)/, \
 		       $(SONIC_DOCKER_IMAGES) \
 		       $(SONIC_DOCKER_DBG_IMAGES) \
 		       $(SONIC_SIMPLE_DOCKER_IMAGES) \
-		       $(SONIC_INSTALLERS)))
+		       $(SONIC_INSTALLERS) \
+		       $(SONIC_RFS_TARGETS)))
+
 $(SONIC_CLEAN_TARGETS) :: $(TARGET_PATH)/%-clean : .platform
 	$(Q)rm -rf $(TARGET_PATH)/$* target/versions/dockers/$(subst .gz,,$*)
 
