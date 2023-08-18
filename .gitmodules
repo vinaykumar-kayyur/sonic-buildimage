@@ -118,3 +118,6 @@
 [submodule "src/sonic-device-health"]
 	path = src/sonic-device-health
 	url = https://github.com/renukamanavalan/sonic-device-health.git
+[submodule "src/sonic-dash-api/sonic-dash-api"]
+	path = src/sonic-dash-api/sonic-dash-api
+	url = https://github.com/sonic-net/sonic-dash-api.git
