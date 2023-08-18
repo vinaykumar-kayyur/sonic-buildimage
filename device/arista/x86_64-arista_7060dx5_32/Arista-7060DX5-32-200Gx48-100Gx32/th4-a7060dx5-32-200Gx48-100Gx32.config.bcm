@@ -668,7 +668,15 @@ device:
             ?
                PORT_ID: 239
             :
+               PC_PHYS_PORT_ID: 226
+            ?
+               PORT_ID: 240
+            :
                PC_PHYS_PORT_ID: 227
+            ?
+               PORT_ID: 241
+            :
+               PC_PHYS_PORT_ID: 228
             ?
                PORT_ID: 242
             :
@@ -676,7 +684,15 @@ device:
             ?
                PORT_ID: 243
             :
+               PC_PHYS_PORT_ID: 230
+            ?
+               PORT_ID: 244
+            :
                PC_PHYS_PORT_ID: 231
+            ?
+               PORT_ID: 245
+            :
+               PC_PHYS_PORT_ID: 232
             ?
                PORT_ID: 246
             :
@@ -684,7 +700,15 @@ device:
             ?
                PORT_ID: 247
             :
+               PC_PHYS_PORT_ID: 234
+            ?
+               PORT_ID: 248
+            :
                PC_PHYS_PORT_ID: 235
+            ?
+               PORT_ID: 249
+            :
+               PC_PHYS_PORT_ID: 236
             ?
                PORT_ID: 250
             :
@@ -692,7 +716,15 @@ device:
             ?
                PORT_ID: 251
             :
+               PC_PHYS_PORT_ID: 238
+            ?
+               PORT_ID: 252
+            :
                PC_PHYS_PORT_ID: 239
+            ?
+               PORT_ID: 253
+            :
+               PC_PHYS_PORT_ID: 240
             ?
                PORT_ID: 255
             :
@@ -700,7 +732,15 @@ device:
             ?
                PORT_ID: 256
             :
+               PC_PHYS_PORT_ID: 242
+            ?
+               PORT_ID: 257
+            :
                PC_PHYS_PORT_ID: 243
+            ?
+               PORT_ID: 258
+            :
+               PC_PHYS_PORT_ID: 244
             ?
                PORT_ID: 259
             :
@@ -708,7 +748,15 @@ device:
             ?
                PORT_ID: 260
             :
+               PC_PHYS_PORT_ID: 246
+            ?
+               PORT_ID: 261
+            :
                PC_PHYS_PORT_ID: 247
+            ?
+               PORT_ID: 262
+            :
+               PC_PHYS_PORT_ID: 248
             ?
                PORT_ID: 263
             :
@@ -716,7 +764,15 @@ device:
             ?
                PORT_ID: 264
             :
+               PC_PHYS_PORT_ID: 250
+            ?
+               PORT_ID: 265
+            :
                PC_PHYS_PORT_ID: 251
+            ?
+               PORT_ID: 266
+            :
+               PC_PHYS_PORT_ID: 252
             ?
                PORT_ID: 267
             :
@@ -724,7 +780,16 @@ device:
             ?
                PORT_ID: 268
             :
+               PC_PHYS_PORT_ID: 254
+            ?
+               PORT_ID: 269
+            :
                PC_PHYS_PORT_ID: 255
+            ?
+               PORT_ID: 270
+            :
+               PC_PHYS_PORT_ID: 256
+
 ...
 ---
 device:
@@ -768,8 +833,7 @@ device:
                          [221, 222],
                          [225, 226],
                          [229, 230],
-                         [233, 234],
-                         [238, 239]]
+                         [233, 234]]
             :
                 ENABLE: 0
                 SPEED: 200000
@@ -777,17 +841,19 @@ device:
                 FEC_MODE: PC_FEC_RS544_2XN
                 MAX_FRAME_SIZE: 9416
             ?
-               PORT_ID: [[242, 243],
-                         [246, 247],
-                         [250, 251],
-                         [255, 256],
-                         [259, 260],
-                         [263, 264],
-                         [267, 268]]
+               PORT_ID: [[238, 241],
+                         [242, 245],
+                         [246, 249],
+                         [250, 253],
+                         [255, 258],
+                         [259, 262],
+                         [263, 266],
+                         [267, 270]]
             :
                 ENABLE: 0
                 SPEED: 100000
-                NUM_LANES: 4
+                NUM_LANES: 2
+                FEC_MODE: PC_FEC_RS544
                 MAX_FRAME_SIZE: 9416
 ...
 ---
