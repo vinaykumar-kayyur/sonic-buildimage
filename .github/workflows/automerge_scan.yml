@@ -6,6 +6,10 @@ on:
 
 jobs:
   automerge_scan:
+    # secrets to set
+    # GH_TOKEN: mssonicbld PAT to comment, close cherry pick PR and merge PR
+    # ADO_ID_SUBMODULE: ADO to record status, then power automation
+    # AZURE_DEVOPS_EXT_PAT: TOKEN for az boards
     #if: github.repository_owner == 'sonic-net'
     runs-on: ubuntu-latest
     steps:
@@ -26,12 +30,20 @@ jobs:
       run: |
         set -e
 
+        # PR merge run per 2 hours
+        # PR checker rerun, PR comment, Failure PR alert run per day.
+        # more than 3 days, send alert(submodule PR)
+        # more than 6 days, @author to check(cherry pick PR)
+        # more than 28 days, @author to close(cherry pick PR)
+        # more than 30 days, close PR(cherry pick PR)
         date_3d_ago=$(date --date "3 day ago" -u +"%FT%TZ")
         date_6d_ago=$(date --date "6 day ago" -u +"%FT%TZ")
         date_28d_ago=$(date --date "28 day ago" -u +"%FT%TZ")
         date_30d_ago=$(date --date "30 day ago" -u +"%FT%TZ")
-        # date_now format 08:00:00
         date_now=$(date -u +"%T")
+        operate=false
+        [[ "$date_now" < "22:00:00" ]] && operate=true
+
         count=$(cat prs.log | jq 'length')
         rm -rf old_prs.log
         for ((i=0;i<$count;i++))
@@ -81,7 +93,7 @@ jobs:
           # rerun Azure.sonic-buildimage per day
           if ! $pr_success;then
             completedAt=$(echo $check | jq -r '.completedAt')
-            [[ "$completedAt" < $(date --date "2 hour ago" -u +"%FT%TZ") ]] && [[ $date_now < "02:00:00" ]] && gh pr comment $url --body "/azp run Azure.sonic-buildimage"
+            [[ "$completedAt" < $(date --date "2 hour ago" -u +"%FT%TZ") ]] && $operate && gh pr comment $url --body "/azp run Azure.sonic-buildimage"
           fi
 
           # Auto cherry pick PRs failed for 3days trigger alert
@@ -89,9 +101,9 @@ jobs:
             origin_pr_url=https://github.com/sonic-net/sonic-buildimage/pull/$origin_pr_id
             author=$(gh pr view $origin_pr_url --json author | jq .author.login -r)
             echo "Original author will check."
-            [[ $date_now < "02:00:00" ]] && [[ $created_at > $date_6d_ago ]] && gh pr comment $origin_pr_url --body "@$author cherry pick PR didn't pass PR checker. Please check!!! Auto cherry pick PR will be closed in 24 days.<br>$url"
-            [[ $date_now < "02:00:00" ]] && [[ $created_at < $date_28d_ago ]] && gh pr comment $origin_pr_url --body "@$author cherry pick PR didn't pass PR checker. Please check!!! Auto cherry pick PR will be closed in 2 days.<br>$url"
-            [[ $date_now < "02:00:00" ]] && [[ $created_at < $date_30d_ago ]] && echo "$url Closed" && gh pr close $url
+            $operate && [[ $created_at > $date_6d_ago ]] && gh pr comment $origin_pr_url --body "@$author cherry pick PR didn't pass PR checker. Please check!!! Auto cherry pick PR will be closed in 24 days.<br>$url"
+            $operate && [[ $created_at < $date_28d_ago ]] && gh pr comment $origin_pr_url --body "@$author cherry pick PR didn't pass PR checker. Please check!!! Auto cherry pick PR will be closed in 2 days.<br>$url"
+            $operate && [[ $created_at < $date_30d_ago ]] && echo "$url Closed" && gh pr close $url
           fi
 
           ! $pr_success && continue
@@ -105,7 +117,7 @@ jobs:
           echo ========Finished PR========
         done
 
-        if wc -l old_prs.log &>/dev/null && [[ $date_now < "02:00:00" ]]; then
+        if wc -l old_prs.log &>/dev/null && $operate ; then
           DISSCUSSION=$(cat old_prs.log | awk '{print}' ORS='<br>')
           az boards work-item update --org https://dev.azure.com/msazure/ --id $ADO_ID --discussion "$DISSCUSSION" --description "$DISSCUSSION"
         fi
