@@ -42,7 +42,7 @@ jobs:
         date_30d_ago=$(date --date "30 day ago" -u +"%FT%TZ")
         date_now=$(date -u +"%T")
         operate=false
-        [[ "$date_now" < "02:00:00" ]] && operate=true
+        [[ "$date_now" > "22:00:00" ]] && operate=true
 
         count=$(cat prs.log | jq 'length')
         rm -rf old_prs.log
