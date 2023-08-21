@@ -114,12 +114,7 @@ function postStartAction()
         until [[ ($(docker exec -i database$DEV pgrep -x -c supervisord) -gt 0) && ($($SONIC_DB_CLI PING | grep -c PONG) -gt 0) ]]; do
           sleep 1;
         done
-<<<<<<< HEAD
         if [[ ("$BOOT_TYPE" == "warm" || "$BOOT_TYPE" == "fastfast") && -f $WARM_DIR/dump.rdb ]]; then
-=======
-
-        if [[ ("$BOOT_TYPE" == "warm" || "$BOOT_TYPE" == "fastfast" || "$BOOT_TYPE" == "fast") && -f $WARM_DIR/dump.rdb ]]; then
->>>>>>> e12770166... Fix CONFIG_DB_INITIALIZED flag check logic and set/reset flag for warmboot (#15685)
             # retain the dump file from last boot for debugging purposes
             mv $WARM_DIR/dump.rdb $WARM_DIR/dump.rdb.old
         else
