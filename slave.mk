@@ -679,6 +679,7 @@ SONIC_TARGET_LIST += $(addprefix $(FILES_PATH)/, $(SONIC_MAKE_FILES))
 #     $(SOME_NEW_DEB)_DEPENDS = $(SOME_OTHER_DEB1) $(SOME_OTHER_DEB2) ...
 #     SONIC_MAKE_DEBS += $(SOME_NEW_DEB)
 $(addprefix $(DEBS_PATH)/, $(SONIC_MAKE_DEBS)) : $(DEBS_PATH)/% : .platform $$(addsuffix -install,$$(addprefix $(DEBS_PATH)/,$$($$*_DEPENDS))) \
+			$$(addsuffix -install,$$(addprefix $(PYTHON_WHEELS_PATH)/,$$($$*_WHEEL_DEPENDS))) \
 			$$(addprefix $(DEBS_PATH)/,$$($$*_AFTER)) \
 			$(call dpkg_depend,$(DEBS_PATH)/%.dep)
 	$(HEADER)
@@ -1448,6 +1449,11 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 		MASTER_COREDNS_VERSION=$(MASTER_COREDNS_VERSION) \
 		MASTER_ETCD_VERSION=$(MASTER_ETCD_VERSION) \
 		MASTER_CRI_DOCKERD=$(MASTER_CRI_DOCKERD) \
+		MASTER_UI_METRIC_VERSION=$(MASTER_UI_METRIC_VERSION) \
+		MASTER_UI_DASH_VERSION=$(MASTER_UI_DASH_VERSION) \
+		MASTER_MDM_VERSION=$(MASTER_MDM_VERSION) \
+		MASTER_MDS_VERSION=$(MASTER_MDS_VERSION) \
+		MASTER_FLUENTD_VERSION=$(MASTER_FLUENTD_VERSION) \
 			./build_debian.sh $(LOG)
 
 		USERNAME="$(USERNAME)" \
@@ -1513,7 +1519,7 @@ SONIC_CLEAN_TARGETS += $(addsuffix -clean,$(addprefix $(TARGET_PATH)/, \
 		       $(SONIC_SIMPLE_DOCKER_IMAGES) \
 		       $(SONIC_INSTALLERS)))
 $(SONIC_CLEAN_TARGETS) :: $(TARGET_PATH)/%-clean : .platform
-	$(Q)rm -f $(TARGET_PATH)/$* target/versions/dockers/$(subst .gz,,$*)
+	$(Q)rm -rf $(TARGET_PATH)/$* target/versions/dockers/$(subst .gz,,$*)
 
 SONIC_CLEAN_STDEB_DEBS = $(addsuffix -clean,$(addprefix $(PYTHON_DEBS_PATH)/, \
 		     $(SONIC_PYTHON_STDEB_DEBS)))
