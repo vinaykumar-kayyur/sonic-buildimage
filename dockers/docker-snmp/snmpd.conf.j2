@@ -28,8 +28,7 @@
 {% for (agentip, port, vrf) in SNMP_AGENT_ADDRESS_CONFIG %}
 agentAddress {{ protocol(agentip) }}:[{{ agentip }}]{% if port %}:{{ port }}{% endif %}{% if vrf %}%{{ vrf }}{% endif %}{{ "" }}
 {% endfor %}
-{% elif NAMESPACE_COUNT is not defined or NAMESPACE_COUNT|int <= 1 %}
-{% if MGMT_INTERFACE is defined and LOOPBACK_INTERFACE is defined %}
+{% elif (NAMESPACE_COUNT is not defined or NAMESPACE_COUNT|int <= 1) and MGMT_INTERFACE is defined and LOOPBACK_INTERFACE is defined %}
 {% for intf, ip in MGMT_INTERFACE %}
 {% set agentip = ip.split('/')[0]|lower %}
 {% set zoneid = '' %}
@@ -51,7 +50,6 @@ agentAddress {{ protocol(agentip) }}:[{{ agentip }}{{ zoneid }}]:161
 agentAddress {{ protocol(agentip) }}:[{{ agentip }}{{ zoneid }}]:161
 {% endif %}
 {% endfor %}
-{% endif %}
 {% else %}
 agentAddress udp:161
 agentAddress udp6:161
