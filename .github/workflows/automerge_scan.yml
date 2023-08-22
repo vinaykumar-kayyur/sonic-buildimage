@@ -71,7 +71,7 @@ jobs:
           for ((j=0;j<$checks_count;j++))
           do
             check=$(echo $checks | jq ".[$j]")
-            state=$(echo $check | jq -r '.state')
+            status=$(echo $check | jq -r '.status')
             conclusion=$(echo $check | jq -r '.conclusion')
             name=$(echo $check | jq -r '.name')
 
@@ -79,7 +79,7 @@ jobs:
             # Others success flag:   conclusion in SUCCESS,NEUTRAL
             # only check Azure.sonic-buildimage currently
             echo "$name" | grep -v "Azure.sonic-buildimage" > /dev/null && continue
-            [[ "$state" != "COMPLETED" ]] && echo "$name: $state" && continue 2
+            [[ "$status" != "COMPLETED" ]] && echo "$name: $status" && continue 2
 
             success=true
             ( [[ "$conclusion" == "FAILURE" ]] || [[ "$conclusion" == "CANCELLED" ]] ) && success=false && pr_success=false
