@@ -82,24 +82,23 @@ class FanControl(object):
         :param fan_duty_list: A list.TO app the fans target pwm
         """
         psu_presence_list = [True, True]
-        for psu_index in range(PSU_NUMBER):
-            psu_presence = self.platform_chassis_obj.get_psu(psu_index).get_presence()
-            psu_status = self.platform_chassis_obj.get_psu(psu_index).get_status()
-            if not psu_status:
-                self.syslog.warning(
-                    "psu%s was error,presence:%s, status:%s" % (psu_index + 1, str(psu_presence), str(psu_status)))
-                logging.warning(
-                    "psu%s was error,presence:%s, status:%s" % (psu_index + 1, str(psu_presence), str(psu_status)))
-            if not psu_presence:
-                psu_presence_list[psu_index] = False
-                self.syslog.warning(
-                    "psu%s was error,presence:%s, status:%s" % (psu_index + 1, str(psu_presence), str(psu_status)))
-                logging.warning(
-                    "psu%s was error,presence:%s, status:%s" % (psu_index + 1, str(psu_presence), str(psu_status)))
-            else:
-                psu_presence_list[psu_index] = True
-        if False in psu_presence_list:
-            fan_duty_list.append(DUTY_MAX)
+        try:
+            pus_info = os.popen("i2cget -y -f 100 0x0d 0x60").read().strip()
+            psus_present = bin(int(pus_info, 16))[6:8]
+            for psu_index in range(PSU_NUMBER):
+                psu_presence = True if psus_present[psu_index] == "0" else False
+                if not psu_presence:
+                    psu_presence_list[psu_index] = False
+                    self.syslog.warning(
+                        "psu%s was error,presence:%s" % (psu_index + 1, str(psu_presence)))
+                    logging.warning(
+                        "psu%s was error,presence:%s" % (psu_index + 1, str(psu_presence)))
+                else:
+                    psu_presence_list[psu_index] = True
+            if False in psu_presence_list:
+                fan_duty_list.append(DUTY_MAX)
+        except Exception:
+            pass
 
     def get_fan_status(self):
         """
@@ -108,14 +107,17 @@ class FanControl(object):
         """
         fan_presence_list = [True, True, True, True, True, True, True]  # Default state: fans are OK
         for fan_drawer_index in range(FAN_NUMBER):
-            fan_presence = self.platform_chassis_obj.get_fan_drawer(fan_drawer_index).get_presence()
-            fan_status = self.platform_chassis_obj.get_fan_drawer(fan_drawer_index).get_status()
-            if not all([fan_presence, fan_status]):
-                fan_presence_list[fan_drawer_index] = False
-                self.syslog.warning("Fan Drawer-%s has error,presence:%s, status:%s"
+            try:
+                fan_presence = self.platform_chassis_obj.get_fan_drawer(fan_drawer_index).get_presence()
+                fan_status = self.platform_chassis_obj.get_fan_drawer(fan_drawer_index).get_status()
+                if not all([fan_presence, fan_status]):
+                    fan_presence_list[fan_drawer_index] = False
+                    self.syslog.warning("Fan Drawer-%s has error,presence:%s, status:%s"
+                                        % (fan_drawer_index + 1, fan_presence, fan_status))
+                    logging.warning("Fan Drawer-%s has error,presence:%s, status:%s"
                                     % (fan_drawer_index + 1, fan_presence, fan_status))
-                logging.warning("Fan Drawer-%s has error,presence:%s, status:%s"
-                                % (fan_drawer_index + 1, fan_presence, fan_status))
+            except Exception:
+                pass
         return fan_presence_list
 
     def check_fans_presence(self):
