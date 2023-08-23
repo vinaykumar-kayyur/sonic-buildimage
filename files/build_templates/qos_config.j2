@@ -439,11 +439,12 @@
         },
 {% endfor %}
 {% else %}
+{% for port in PORT_ACTIVE %}
         "{{ port }}|4": {
             "scheduler"   : "scheduler.1",
             "wred_profile": "AZURE_LOSSLESS"
         },
-
+{% endfor %}
 {% endif %}
 {% for port in PORT_ACTIVE %}
         "{{ port }}|0": {
@@ -452,8 +453,8 @@
 {% endfor %}
 {% if ('type' in DEVICE_METADATA['localhost'] and
           DEVICE_METADATA['localhost']['type'] in backend_device_types) and
-        ('resource_type' in DEVICE_METADATA['localhost'] and
-          DEVICE_METADATA['localhost']['resource_type'] == 'Compute-AI') %}
+          'resource_type' in DEVICE_METADATA['localhost'] and
+          DEVICE_METADATA['localhost']['resource_type'] == 'Compute-AI' %}
 {% for port in PORT_ACTIVE %}
         "{{ port }}|1": {
             "scheduler": "scheduler.1"
