@@ -130,6 +130,10 @@ class SwitchInternalPIDRegulation(object):
         sw_temp = self.exception_data_handling()
         if not sw_temp:
             return DUTY_MAX
+        if sw_temp >= 124:    # TO power off Switch board
+            self.syslog.critical("If the Switch Internal temperature exceeds 124°, "
+                                 "the Switch board will be powered off. If you want to restore, do AC operation")
+            os.popen("i2cset -y -f 100 0x0d 0x26 0xfd")
         if len(T_LIST) < 2:
             T_LIST.append(float(sw_temp))
             self.syslog.debug("Init Switch Internal PID Control T_LIST:%s" % T_LIST)
