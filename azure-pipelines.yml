@@ -50,4 +50,6 @@ jobs:
   steps:
   - bash: |
       df -h
-      sudo find /nfs/dpkg_cache/ -name '*.tgz' -mtime +30 -type f -delete
+      sudo find /nfs/dpkg_cache/marvell-armhf -name '*.tgz' -mtime -5 -type f -delete
+      sudo find /nfs/dpkg_cache/marvell_armhf -name '*.tgz' -mtime -5 -type f -delete
+      df -h
