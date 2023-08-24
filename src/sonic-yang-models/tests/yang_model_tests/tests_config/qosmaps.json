@@ -663,13 +663,13 @@
                 "SCHEDULER_LIST": [
                 {
                     "name":"port_scheduler",
-                    "cbs": 256,
-                    "cir": 1250000,
+                    "cbs": "256",
+                    "cir": "1250000",
                     "meter_type": "bytes",
-                    "pbs": 1024,
-                    "pir": 25000000,
+                    "pbs": "1024",
+                    "pir": "25000000",
                     "type": "DWRR",
-                    "weight": 10
+                    "weight": "10"
                 }
                 ]
             }
