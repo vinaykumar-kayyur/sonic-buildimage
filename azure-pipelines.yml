@@ -50,4 +50,4 @@ jobs:
   steps:
   - bash: |
       df -h
-      
+      sudo find /nfs/dpkg_cache/ -name '*.tgz' -mtime +30 -type f -delete
