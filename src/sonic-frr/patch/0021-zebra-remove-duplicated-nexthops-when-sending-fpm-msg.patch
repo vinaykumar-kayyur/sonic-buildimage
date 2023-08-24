@@ -1,0 +1,22 @@
+0021-zebra-remove-duplicated-nexthops-when-sending-fpm-msg
+
+From: Arvindsrinivasan Lakshmi Narasimhan <arlakshm@microsoft.com>
+
+
+---
+ zebra/zebra_fpm_netlink.c |    2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/zebra/zebra_fpm_netlink.c b/zebra/zebra_fpm_netlink.c
+index 06c45578a..231047143 100644
+--- a/zebra/zebra_fpm_netlink.c
++++ b/zebra/zebra_fpm_netlink.c
+@@ -305,6 +305,8 @@ static int netlink_route_info_fill(struct netlink_route_info *ri, int cmd,
+ 
+ 		if (CHECK_FLAG(nexthop->flags, NEXTHOP_FLAG_RECURSIVE))
+ 			continue;
++		if (CHECK_FLAG(nexthop->flags, NEXTHOP_FLAG_DUPLICATE))
++			continue;
+ 
+ 		if (nexthop->type == NEXTHOP_TYPE_BLACKHOLE) {
+ 			switch (nexthop->bh_type) {
