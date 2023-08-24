@@ -684,11 +684,9 @@ $(addprefix $(DEBS_PATH)/, $(SONIC_MAKE_DEBS)) : $(DEBS_PATH)/% : .platform $$(a
 			$(call dpkg_depend,$(DEBS_PATH)/%.dep)
 	echo ====================================== $*
 	$(HEADER)
-	echo -------------------------------------- $*
 
 	# Load the target deb from DPKG cache
 	$(call LOAD_CACHE,$*,$@)
-	echo LOAD --------------------------------- $*
 
 	# Skip building the target if it is already loaded from cache
 	if [ -z '$($*_CACHE_LOADED)' ] ; then
@@ -703,10 +701,8 @@ $(addprefix $(DEBS_PATH)/, $(SONIC_MAKE_DEBS)) : $(DEBS_PATH)/% : .platform $$(a
 		# Clean up
 		if [ -f $($*_SRC_PATH).patch/series ]; then pushd $($*_SRC_PATH) && quilt pop -a -f; [ -d .pc ] && rm -rf .pc; popd; fi $(LOG)
 
-		echo SAVE --------------------------------- $*
 		# Save the target deb into DPKG cache
 		$(call SAVE_CACHE,$*,$@)
-		echo SAVE done--------------------------------- $*
 
 	fi
 
