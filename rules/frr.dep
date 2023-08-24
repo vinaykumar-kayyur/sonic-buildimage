@@ -16,6 +16,8 @@ SMDEP_FILES := $(addprefix $(FRR_SPATH)/,$(shell cd $(FRR_SPATH) && git ls-files
 			-e '^tests/topotests/bgp_rfapi_basic_sanity_config2/customize.py$$$$' \
 			-e '^tests/topotests/bgp_rfapi_basic_sanity_config2/scripts$$$$' \
 			-e '^tests/topotests/bgp_rfapi_basic_sanity_config2/test_bgp_rfapi_basic_sanity_config2.py$$$$' \
+			-e '^tests/topotests/grpc_basic/lib$$$$' \
+			-e '^tests/topotests/ospfapi/lib$$$$' \
 			))
 
 $(FRR)_CACHE_MODE  := GIT_CONTENT_SHA 
