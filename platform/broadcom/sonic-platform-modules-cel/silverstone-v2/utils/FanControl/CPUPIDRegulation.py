@@ -23,6 +23,7 @@ except ImportError as e:
 FUNCTION_NAME = 'FanControl'
 DUTY_MAX = 100
 CPU_TEMP_MAX = 130
+CPU_MAJOR_ALARM = 105
 TEMP_DIFF = 15  # abs(Tk - Tk-1) limit
 CPU_TEMPERATURE = "cat /sys/class/thermal/thermal_zone0/temp"
 
@@ -127,6 +128,9 @@ class CPUPIDRegulation(object):
         cpu_temp = self.exception_data_handling()
         if not cpu_temp:
             return DUTY_MAX
+        if cpu_temp >= CPU_MAJOR_ALARM:
+            self.syslog.warning("High temperature warning: CPU temperature %sC, Major Alarm  %sC"
+                                % (cpu_temp, CPU_MAJOR_ALARM))
         if len(T_LIST) < 2:
             T_LIST.append(float(cpu_temp))
             logging.info("Init CPU PID Control T_LIST:%s" % T_LIST)
