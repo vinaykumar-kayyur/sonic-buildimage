@@ -403,38 +403,16 @@
     }
 {% else %}
    "QUEUE": {
-{% if ('type' in DEVICE_METADATA['localhost'] and
-          DEVICE_METADATA['localhost']['type'] in backend_device_types) and
-        ('resource_type' in DEVICE_METADATA['localhost'] and
-          DEVICE_METADATA['localhost']['resource_type'] == 'Compute-AI') %}
-{% for port in PORT_ACTIVE %}
-        "{{ port }}|3": {
-            "scheduler"   : "scheduler.2",
-            "wred_profile": "AZURE_LOSSLESS"
-        },
-{% endfor %}
-{% else %}
 {% for port in PORT_ACTIVE %}
         "{{ port }}|3": {
             "scheduler"   : "scheduler.1",
             "wred_profile": "AZURE_LOSSLESS"
         },
 {% endfor %}
-{% endif %}
 {% if 'resource_type' in DEVICE_METADATA['localhost'] and DEVICE_METADATA['localhost']['resource_type'] in apollo_resource_types %}
 {% for port in PORT_ACTIVE %}
         "{{ port }}|4": {
             "scheduler"   : "scheduler.2",
-            "wred_profile": "AZURE_LOSSLESS"
-        },
-{% endfor %}
-{% elif ('type' in DEVICE_METADATA['localhost'] and
-          DEVICE_METADATA['localhost']['type'] in backend_device_types) and
-        ('resource_type' in DEVICE_METADATA['localhost'] and
-          DEVICE_METADATA['localhost']['resource_type'] == 'Compute-AI') %}
-{% for port in PORT_ACTIVE %}
-        "{{ port }}|4": {
-            "scheduler"   : "scheduler.3",
             "wred_profile": "AZURE_LOSSLESS"
         },
 {% endfor %}
@@ -451,26 +429,11 @@
             "scheduler": "scheduler.0"
         },
 {% endfor %}
-{% if ('type' in DEVICE_METADATA['localhost'] and
-          DEVICE_METADATA['localhost']['type'] in backend_device_types) and
-          'resource_type' in DEVICE_METADATA['localhost'] and
-          DEVICE_METADATA['localhost']['resource_type'] == 'Compute-AI' %}
-{% for port in PORT_ACTIVE %}
-        "{{ port }}|1": {
-            "scheduler": "scheduler.1"
-        },
-{% endfor %}
-{% else %}
 {% for port in PORT_ACTIVE %}
         "{{ port }}|1": {
             "scheduler": "scheduler.0"
         },
 {% endfor %}
-{% endif %}
-{% if not ('type' in DEVICE_METADATA['localhost'] and
-          DEVICE_METADATA['localhost']['type'] in backend_device_types) and
-        ('resource_type' in DEVICE_METADATA['localhost'] and
-          DEVICE_METADATA['localhost']['resource_type'] == 'Compute-AI') %}
 {% for port in PORT_ACTIVE %}
         "{{ port }}|2": {
 {% if port in port_names_list_extra_queues %}
@@ -481,11 +444,6 @@
 {% endif %}
         },
 {% endfor %}
-{% endif %}
-{% if not ('type' in DEVICE_METADATA['localhost'] and
-          DEVICE_METADATA['localhost']['type'] in backend_device_types) and
-        ('resource_type' in DEVICE_METADATA['localhost'] and
-          DEVICE_METADATA['localhost']['resource_type'] == 'Compute-AI') %}
 {% for port in PORT_ACTIVE %}
         "{{ port }}|5": {
             "scheduler": "scheduler.0"
@@ -508,7 +466,6 @@
         }{% if not loop.last %},{% endif %}
 
 {% endfor %}
-{% endif %}
     }
 {% endif %}
 }
