@@ -144,6 +144,11 @@ function clean_up_chassis_db_tables()
     end
     return " 0 $lc $asic
 
+    # Wait for some time before deleting system interface so that the system interface's "object in use"
+    # is cleared in both orchangent and in syncd. Without this delay, the orchagent clears the refcount
+    # but the syncd (meta) still has no-zero refcount. Because of this, orchagent gets "object still in use"
+    # error and aborts.
+
     sleep 30
 
     # Next, delete SYSTEM_INTERFACE entries
@@ -171,6 +176,9 @@ function clean_up_chassis_db_tables()
         end
     end
     return " 0 $lc $asic
+
+    # Wait for some time before deleting system lag so that the all the memebers of the
+    # system lag will be cleared. 
 
     sleep 15
 
