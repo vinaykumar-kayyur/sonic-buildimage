@@ -24,9 +24,11 @@ CPLD_ADDR_MAPPING = {
 }
 GETREG_PATH = "/sys/devices/platform/dx010_cpld/getreg"
 BIOS_VERSION_PATH = "/sys/class/dmi/id/bios_version"
-COMPONENT_NAME_LIST = ["CPLD1", "CPLD2", "CPLD3", "CPLD4", "BIOS"]
+COMPONENT_NAME_LIST = ["CPLD1", "CPLD2", "CPLD3", "CPLD4", "CPLD5", "BIOS"]
 COMPONENT_DES_LIST = ["Used for managing the CPU",
-                      "Used for managing QSFP+ ports (1-10)", "Used for managing QSFP+ ports (11-20)", "Used for managing QSFP+ ports (22-32)", "Basic Input/Output System"]
+                      "Used for managing QSFP+ ports (1-10)", "Used for managing QSFP+ ports (11-21)",
+                      "Used for misc status and control", "Used for managing QSFP+ ports (22-32)",
+                      "Basic Input/Output System"]
 
 
 class Component(ComponentBase):
@@ -49,21 +51,13 @@ class Component(ComponentBase):
         except Exception as e:
             return None
 
-    def get_register_value(self, register):
-        # Retrieves the cpld register value
-        with open(GETREG_PATH, 'w') as file:
-            file.write(register + '\n')
-        with open(GETREG_PATH, 'r') as file:
-            raw_data = file.readline()
-        return raw_data.strip()
-
     def __get_cpld_version(self):
         # Retrieves the CPLD firmware version
         cpld_version = dict()
         for cpld_name in CPLD_ADDR_MAPPING:
             try:
                 cpld_addr = CPLD_ADDR_MAPPING[cpld_name]
-                cpld_version_raw = self.get_register_value(cpld_addr)
+                cpld_version_raw = self._api_helper.get_cpld_reg_value(GETREG_PATH, cpld_addr)
                 cpld_version_str = "{}.{}".format(int(cpld_version_raw[2], 16), int(
                     cpld_version_raw[3], 16)) if cpld_version_raw is not None else 'None'
                 cpld_version[cpld_name] = cpld_version_str

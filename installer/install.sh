@@ -138,6 +138,10 @@ fi
 # with "OS" or "DIAG".
 demo_type="%%DEMO_TYPE%%"
 
+# The build system prepares this script by replacing %%ONIE_IMAGE_PART_SIZE%%
+# with the partition size
+demo_part_size="%%ONIE_IMAGE_PART_SIZE%%"
+
 # The build system prepares this script by replacing %%IMAGE_VERSION%%
 # with git revision hash as a version identifier
 image_version="%%IMAGE_VERSION%%"
@@ -236,10 +240,14 @@ if [ "$install_env" = "onie" ]; then
     fi
 fi
 
-demo_part_size="%%ONIE_IMAGE_PART_SIZE%%"
 echo "ONIE_IMAGE_PART_SIZE=$demo_part_size"
 
 extra_cmdline_linux=%%EXTRA_CMDLINE_LINUX%%
+# Inherit the FIPS option, so not necessary to do another reboot after upgraded
+if grep -q '\bsonic_fips=1\b' /proc/cmdline && echo " $extra_cmdline_linux" | grep -qv '\bsonic_fips=.\b'; then
+    extra_cmdline_linux="$extra_cmdline_linux sonic_fips=1"
+fi
+
 echo "EXTRA_CMDLINE_LINUX=$extra_cmdline_linux"
 
 # Update Bootloader Menu with installed image
