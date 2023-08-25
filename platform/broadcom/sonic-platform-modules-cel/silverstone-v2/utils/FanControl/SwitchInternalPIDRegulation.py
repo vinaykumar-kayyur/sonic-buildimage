@@ -132,13 +132,16 @@ class SwitchInternalPIDRegulation(object):
         sw_temp = self.exception_data_handling()
         if not sw_temp:
             return DUTY_MAX
+        sw_temp = sw_temp + 3
         if sw_temp >= SW_MAJOR_ALARM:
             self.syslog.warning("High temperature warning: switch internal temperature %sC, Major Alarm  %sC"
                                 % (sw_temp, SW_MAJOR_ALARM))
         elif sw_temp >= SW_SHUTDOWN:
             self.syslog.critical("The Switch Internal temperature exceeds %sC, "
-                                 "the Switch board will be powered off. If you want to restore, do AC operation" % SW_SHUTDOWN)
-            os.popen("i2cset -y -f 100 0x0d 0x26 0xfd")
+                                 "the Switch board will be powered off. And will reboot now" % SW_SHUTDOWN)
+            os.popen("i2cset -y -f 100 0x0d 0x40 0x00")
+            os.popen("i2cset -y -f 100 0x0d 0x40 0x01")
+            os.popen("reboot")
         if len(T_LIST) < 2:
             T_LIST.append(float(sw_temp))
             self.syslog.debug("Init Switch Internal PID Control T_LIST:%s" % T_LIST)
