@@ -5,19 +5,19 @@ import subprocess
 from natsort import natsorted
 from swsscommon import swsscommon
 
-from .device_info import CONTAINER_PLATFORM_PATH
-from .device_info import HOST_DEVICE_PATH
-from .device_info import get_platform
-from .device_info import is_supervisor
-from .device_info import is_chassis
+from .device_info import get_asic_conf_file_path
+from .device_info import is_supervisor, is_chassis
 
 ASIC_NAME_PREFIX = 'asic'
 NAMESPACE_PATH_GLOB = '/run/netns/*'
 ASIC_CONF_FILENAME = 'asic.conf'
 FRONTEND_ASIC_SUB_ROLE = 'FrontEnd'
 BACKEND_ASIC_SUB_ROLE = 'BackEnd'
+FABRIC_ASIC_SUB_ROLE = 'Fabric'
 EXTERNAL_PORT = 'Ext'
 INTERNAL_PORT = 'Int'
+INBAND_PORT = 'Inb'
+RECIRC_PORT ='Rec'
 PORT_CHANNEL_CFG_DB_TABLE = 'PORTCHANNEL'
 PORT_CFG_DB_TABLE = 'PORT'
 BGP_NEIGH_CFG_DB_TABLE = 'BGP_NEIGHBOR'
@@ -25,7 +25,8 @@ BGP_INTERNAL_NEIGH_CFG_DB_TABLE = 'BGP_INTERNAL_NEIGHBOR'
 NEIGH_DEVICE_METADATA_CFG_DB_TABLE = 'DEVICE_NEIGHBOR_METADATA'
 DEFAULT_NAMESPACE = ''
 PORT_ROLE = 'role'
-
+CHASSIS_STATE_DB='CHASSIS_STATE_DB'
+CHASSIS_FABRIC_ASIC_INFO_TABLE='CHASSIS_FABRIC_ASIC_TABLE'
 
 # Dictionary to cache config_db connection handle per namespace
 # to prevent duplicate connections from being opened
@@ -77,32 +78,6 @@ def connect_to_all_dbs_for_ns(namespace=DEFAULT_NAMESPACE):
     for db_id in db_list:
         db.connect(db_id)
     return db
-
-
-def get_asic_conf_file_path():
-    """
-    Retrieves the path to the ASIC conguration file on the device
-
-    Returns:
-        A string containing the path to the ASIC conguration file on success,
-        None on failure
-    """
-    asic_conf_path_candidates = []
-
-    asic_conf_path_candidates.append(os.path.join(CONTAINER_PLATFORM_PATH,
-                                                  ASIC_CONF_FILENAME))
-
-    platform = get_platform()
-    if platform:
-        asic_conf_path_candidates.append(os.path.join(
-            HOST_DEVICE_PATH, platform, ASIC_CONF_FILENAME))
-
-    for asic_conf_file_path in asic_conf_path_candidates:
-        if os.path.isfile(asic_conf_file_path):
-            return asic_conf_file_path
-
-    return None
-
 
 def get_num_asics():
     """
@@ -182,10 +157,9 @@ def get_current_namespace(pid=None):
     """
 
     net_namespace = None
-    command = ["sudo /bin/ip netns identify {}".format(os.getpid() if not pid else pid)]
+    command = ["sudo", '/bin/ip', 'netns', 'identify', "{}".format(os.getpid() if not pid else pid)]
     proc = subprocess.Popen(command,
                             stdout=subprocess.PIPE,
-                            shell=True,
                             universal_newlines=True,
                             stderr=subprocess.STDOUT)
     try:
@@ -236,6 +210,7 @@ def get_all_namespaces():
     """
     front_ns = []
     back_ns = []
+    fabric_ns = []
     num_asics = get_num_asics()
 
     if is_multi_asic():
@@ -250,8 +225,10 @@ def get_all_namespaces():
                 front_ns.append(namespace)
             elif metadata['localhost']['sub_role'] == BACKEND_ASIC_SUB_ROLE:
                 back_ns.append(namespace)
+            elif metadata['localhost']['sub_role'] == FABRIC_ASIC_SUB_ROLE:
+                fabric_ns.append(namespace)
 
-    return {'front_ns': front_ns, 'back_ns': back_ns}
+    return {'front_ns': front_ns, 'back_ns': back_ns, 'fabric_ns': fabric_ns}
 
 
 def get_namespace_list(namespace=None):
@@ -351,7 +328,7 @@ def is_port_internal(port_name, namespace=None):
 
     role = get_port_role(port_name, namespace)
 
-    if role == INTERNAL_PORT:
+    if role in [INTERNAL_PORT, INBAND_PORT, RECIRC_PORT]:
         return True
 
     return False
@@ -480,3 +457,31 @@ def validate_namespace(namespace):
         return True
     else:
         return False
+
+def get_asic_presence_list():
+    """
+    @summary: This function will get the asic presence list. On Supervisor, the list includes only the asics
+              for inserted and detected fabric cards. For non-supervisor cards, e.g. line card, the list should
+              contain all supported asics by the card. The function gets the asic list from CHASSIS_ASIC_TABLE from
+              CHASSIS_STATE_DB. The function assumes that the first N asic ids (asic0 to asic(N-1)) in
+              CHASSIS_ASIC_TABLE belongs to the supervisor, where N is the max number of asics supported by the Chassis 
+    @return:  List of asics present
+    """
+    asics_list = []
+    if is_multi_asic():
+        if not is_supervisor():
+            # This is not supervisor, all asics should be present. Assuming that asics
+            # are not removable entity on Line Cards. Add all asics, 0 - num_asics to the list.
+            asics_list = list(range(0, get_num_asics()))
+        else:
+            # This is supervisor card. Some fabric cards may not be inserted.
+            # Get asic list from CHASSIS_ASIC_TABLE which lists only the asics
+            # present based on Fabric card detection by the platform.
+            db = swsscommon.DBConnector(CHASSIS_STATE_DB, 0, True)
+            asic_table = swsscommon.Table(db, CHASSIS_FABRIC_ASIC_INFO_TABLE)
+            if asic_table:
+                asics_presence_list = list(asic_table.getKeys())
+                for asic in asics_presence_list:
+                    # asic is asid id: asic0, asic1.... asicN. Get the numeric value.
+                    asics_list.append(int(get_asic_id_from_name(asic)))
+    return asics_list

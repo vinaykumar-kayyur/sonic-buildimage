@@ -4,25 +4,71 @@ try:
     import os
     import sys
     import time
+    import signal
+    import syslog
+    import logging
+    import threading
 
     sys.path.append(os.path.dirname(__file__))
 
     from .platform_thrift_client import thrift_try
 
     from sonic_platform_base.psu_base import PsuBase
+    from sonic_platform.thermal import psu_thermals_list_get
+    from platform_utils import cancel_on_sigterm
+    from sonic_platform.bfn_extensions.psu_sensors import get_psu_metrics
+    from sonic_platform.bfn_extensions.psu_sensors import get_metric_value
 except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 
 class Psu(PsuBase):
     """Platform-specific PSU class"""
 
+    __lock = threading.Lock()
+    __sensors_info = None
+    __timestamp = 0
+
+    sigterm = False
+    sigterm_default_handler = None
+    cls_inited = False
+
     def __init__(self, index):
         PsuBase.__init__(self)
         self.__index = index
+        self.__thermals = None
         self.__info = None
         self.__ts = 0
         # STUB IMPLEMENTATION
         self.color = ""
+
+        syslog.syslog(syslog.LOG_INFO, "Created PSU #{} instance".format(self.__index))
+        if not Psu.cls_inited:
+            Psu.sigterm_default_handler = signal.getsignal(signal.SIGTERM)
+            signal.signal(signal.SIGTERM, Psu.signal_handler)
+            if Psu.sigterm_default_handler:
+                syslog.syslog(syslog.LOG_INFO, "Default SIGTERM handler overridden!!")
+            Psu.cls_inited = True
+
+    @classmethod
+    def signal_handler(cls, sig, frame):
+        if cls.sigterm_default_handler:
+            cls.sigterm_default_handler(sig, frame)
+        syslog.syslog(syslog.LOG_INFO, "Canceling PSU platform API calls...")
+        cls.sigterm = True
+
+    @classmethod
+    def __sensors_get(cls, cached=True):
+        cls.__lock.acquire()
+        if time.time() > cls.__timestamp + 15:
+            # Update cache once per 15 seconds
+            try:
+                cls.__sensors_info = get_psu_metrics()
+                cls.__timestamp = time.time()
+            except Exception as e:
+                logging.warning("Failed to update sensors cache: " + str(e))
+        info = cls.__sensors_info
+        cls.__lock.release()
+        return info
 
     '''
     Units of returned info object values:
@@ -33,19 +79,22 @@ class Psu(PsuBase):
         fspeed - RPM
     '''
     def __info_get(self):
+        @cancel_on_sigterm
         def psu_info_get(client):
             return client.pltfm_mgr.pltfm_mgr_pwr_supply_info_get(self.__index)
 
         # Update cache once per 2 seconds
-        if self.__ts + 2 < time.time():
+        if self.__ts + 2 < time.time() and not Psu.sigterm:
             self.__info = None
             try:
                 self.__info = thrift_try(psu_info_get, attempts=1)
+            except Exception as e:
+                if "Canceling" in str(e):
+                    syslog.syslog(syslog.LOG_INFO, "{}".format(e))
             finally:
                 self.__ts = time.time()
                 return self.__info
         return self.__info
-
 
     @staticmethod
     def get_num_psus():
@@ -78,8 +127,7 @@ class Psu(PsuBase):
             A float number, the output voltage in volts,
             e.g. 12.1
         """
-        info = self.__info_get()
-        return float(info.vout) if info else 0
+        return get_metric_value(Psu.__sensors_get(), "PSU%d 12V Output Voltage_in1_input" % self.__index)
 
     def get_current(self):
         """
@@ -88,8 +136,24 @@ class Psu(PsuBase):
         Returns:
             A float number, the electric current in amperes, e.g 15.4
         """
-        info = self.__info_get()
-        return info.iout / 1000 if info else 0
+        return get_metric_value(Psu.__sensors_get(), "PSU%d 12V Output Current_curr2_input" % self.__index)
+
+    def get_input_voltage(self):
+        """
+        Retrieves current PSU voltage input
+        Returns:
+            A float number, the input voltage in volts,
+            e.g. 220
+        """
+        return get_metric_value(Psu.__sensors_get(), "PSU%d Input Voltage_in0_input" % self.__index)
+
+    def get_input_current(self):
+        """
+        Retrieves the input current draw of the power supply
+        Returns:
+            A float number, the electric current in amperes, e.g 0.8
+        """
+        return get_metric_value(Psu.__sensors_get(), "PSU%d Input Current_curr1_input" % self.__index)
 
     def get_power(self):
         """
@@ -108,12 +172,16 @@ class Psu(PsuBase):
         :param self.index: An integer, 1-based self.index of the PSU of which to query status
         :return: Boolean, True if PSU is plugged, False if not
         """
+        @cancel_on_sigterm
         def psu_present_get(client):
             return client.pltfm_mgr.pltfm_mgr_pwr_supply_present_get(self.__index)
 
         status = False
         try:
-            status = thrift_try(psu_present_get)
+            status = thrift_try(psu_present_get, attempts=1)
+        except Exception as e:
+            if "Canceling" in str(e):
+                syslog.syslog(syslog.LOG_INFO, "{}".format(e))
         finally:
             return status
 
@@ -198,6 +266,34 @@ class Psu(PsuBase):
             integer: The 1-based relative physical position in parent device or -1 if cannot determine the position
         """
         return self.__index
+
+    def get_temperature(self):
+        """
+        Retrieves current temperature reading from PSU
+        Returns:
+            A float number of current temperature in Celsius up to nearest thousandth
+            of one degree Celsius, e.g. 30.125
+        """
+        return self.get_thermal(0).get_temperature()
+
+    def get_temperature_high_threshold(self):
+        """
+        Retrieves the high threshold temperature of PSU
+        Returns:
+            A float number, the high threshold temperature of PSU in Celsius
+            up to nearest thousandth of one degree Celsius, e.g. 30.125
+        """
+        return self.get_thermal(0).get_high_threshold()
+
+    @property
+    def _thermal_list(self):
+        if self.__thermals is None:
+            self.__thermals = psu_thermals_list_get(self.get_name())
+        return self.__thermals
+
+    @_thermal_list.setter
+    def _thermal_list(self, value):
+        pass
 
 def psu_list_get():
     psu_list = []

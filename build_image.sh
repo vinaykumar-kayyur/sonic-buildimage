@@ -56,10 +56,10 @@ generate_kvm_image()
         exit 1
     }
 
-    gzip $KVM_IMAGE_DISK
+    $GZ_COMPRESS_PROGRAM $KVM_IMAGE_DISK
 
     [ -r $KVM_IMAGE_DISK.gz ] || {
-        echo "Error : gzip $KVM_IMAGE_DISK failed!"
+        echo "Error : $GZ_COMPRESS_PROGRAM $KVM_IMAGE_DISK failed!"
         exit 1
     }
 
@@ -71,12 +71,12 @@ generate_onie_installer_image()
     output_file=$OUTPUT_ONIE_IMAGE
     [ -n "$1" ] && output_file=$1
     # Copy platform-specific ONIE installer config files where onie-mk-demo.sh expects them
-    rm -rf ./installer/x86_64/platforms/
-    mkdir -p ./installer/x86_64/platforms/
+    rm -rf ./installer/platforms/
+    mkdir -p ./installer/platforms/
     for VENDOR in `ls ./device`; do
-        for PLATFORM in `ls ./device/$VENDOR`; do
+        for PLATFORM in `ls ./device/$VENDOR | grep ^${TARGET_PLATFORM}`; do
             if [ -f ./device/$VENDOR/$PLATFORM/installer.conf ]; then
-                cp ./device/$VENDOR/$PLATFORM/installer.conf ./installer/x86_64/platforms/$PLATFORM
+                cp ./device/$VENDOR/$PLATFORM/installer.conf ./installer/platforms/$PLATFORM
             fi
 
         done
@@ -84,7 +84,7 @@ generate_onie_installer_image()
 
     ## Generate an ONIE installer image
     ## Note: Don't leave blank between lines. It is single line command.
-    ./onie-mk-demo.sh $TARGET_PLATFORM $TARGET_MACHINE $TARGET_PLATFORM-$TARGET_MACHINE-$ONIEIMAGE_VERSION \
+    ./onie-mk-demo.sh $CONFIGURED_ARCH $TARGET_MACHINE $TARGET_PLATFORM-$TARGET_MACHINE-$ONIEIMAGE_VERSION \
           installer platform/$TARGET_MACHINE/platform.conf $output_file OS $IMAGE_VERSION $ONIE_IMAGE_PART_SIZE \
           $ONIE_INSTALLER_PAYLOAD
 }
@@ -111,7 +111,7 @@ if [ "$IMAGE_TYPE" = "onie" ]; then
     mkdir -p `dirname $OUTPUT_ONIE_IMAGE`
     sudo rm -f $OUTPUT_ONIE_IMAGE
 
-    generate_device_list "./installer/$TARGET_PLATFORM/platforms_asic"
+    generate_device_list "./installer/platforms_asic"
 
     generate_onie_installer_image
 
@@ -125,7 +125,7 @@ elif [ "$IMAGE_TYPE" = "raw" ]; then
     mkdir -p `dirname $OUTPUT_RAW_IMAGE`
     sudo rm -f $OUTPUT_RAW_IMAGE
 
-    generate_device_list "./installer/$TARGET_PLATFORM/platforms_asic"
+    generate_device_list "./installer/platforms_asic"
 
     generate_onie_installer_image "$tmp_output_onie_image"
 
@@ -147,10 +147,10 @@ elif [ "$IMAGE_TYPE" = "raw" ]; then
         exit 1
     }
 
-    gzip $OUTPUT_RAW_IMAGE
+    $GZ_COMPRESS_PROGRAM $OUTPUT_RAW_IMAGE
 
     [ -r $OUTPUT_RAW_IMAGE.gz ] || {
-        echo "Error : gzip $OUTPUT_RAW_IMAGE failed!"
+        echo "Error : $GZ_COMPRESS_PROGRAM $OUTPUT_RAW_IMAGE failed!"
         exit 1
     }
 
@@ -159,7 +159,7 @@ elif [ "$IMAGE_TYPE" = "raw" ]; then
 
 elif [ "$IMAGE_TYPE" = "kvm" ]; then
 
-    generate_device_list "./installer/$TARGET_PLATFORM/platforms_asic"
+    generate_device_list "./installer/platforms_asic"
 
     generate_onie_installer_image
     # Generate single asic KVM image
@@ -191,6 +191,7 @@ elif [ "$IMAGE_TYPE" = "aboot" ]; then
     zip -g $ABOOT_BOOT_IMAGE .imagehash
     rm .imagehash
     echo "SWI_VERSION=42.0.0" > version
+    echo "BUILD_DATE=$(date -d "${build_date}" -u +%Y%m%dT%H%M%SZ)" >> version
     echo "SWI_MAX_HWEPOCH=2" >> version
     echo "SWI_VARIANT=US" >> version
     zip -g $OUTPUT_ABOOT_IMAGE version
@@ -199,6 +200,14 @@ elif [ "$IMAGE_TYPE" = "aboot" ]; then
 
     generate_device_list ".platforms_asic"
     zip -g $OUTPUT_ABOOT_IMAGE .platforms_asic
+
+    if [ "$ENABLE_FIPS" = "y" ]; then
+        echo "sonic_fips=1" > kernel-cmdline
+    else
+        echo "sonic_fips=0" > kernel-cmdline
+    fi
+    zip -g $OUTPUT_ABOOT_IMAGE kernel-cmdline
+    rm kernel-cmdline
 
     zip -g $OUTPUT_ABOOT_IMAGE $ABOOT_BOOT_IMAGE
     rm $ABOOT_BOOT_IMAGE

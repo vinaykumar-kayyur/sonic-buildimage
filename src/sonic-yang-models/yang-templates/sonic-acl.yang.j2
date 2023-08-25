@@ -7,7 +7,7 @@ module sonic-acl {
 
 	yang-version 1.1;
 
-	namespace "http://github.com/Azure/sonic-acl";
+	namespace "http://github.com/sonic-net/sonic-acl";
 	prefix acl;
 
 	import ietf-inet-types {
@@ -184,7 +184,7 @@ module sonic-acl {
 
 				leaf TCP_FLAGS {
 					type string {
-						pattern '0[x][0-9a-fA-F]{1,2}|0[X][0-9a-fA-F]{1,2}';
+						pattern '0[xX][0-9a-fA-F]{1,2}(/0[xX][0-9a-fA-F]{1,2})?';
 					}
 				}
 

@@ -6,6 +6,7 @@ import re
 import subprocess
 import time
 import unicodedata
+from sonic_py_common import device_info
 
 bmc_cache = {}
 cache = {}
@@ -31,7 +32,7 @@ color_map = {
 class PddfApi():
     def __init__(self):
         if not os.path.exists("/usr/share/sonic/platform"):
-            self.platform, self.hwsku = self.get_platform_and_hwsku()
+            self.platform, self.hwsku = device_info.get_platform_and_hwsku()
             os.symlink("/usr/share/sonic/device/"+self.platform, "/usr/share/sonic/platform")
 
         try:
@@ -43,29 +44,6 @@ class PddfApi():
 
         self.data_sysfs_obj = {}
         self.sysfs_obj = {}
-
-    # Returns platform and HW SKU
-    def get_platform_and_hwsku(self):
-        try:
-            proc = subprocess.Popen([SONIC_CFGGEN_PATH, '-H', '-v', PLATFORM_KEY],
-                                    stdout=subprocess.PIPE,
-                                    shell=False,
-                                    stderr=subprocess.STDOUT)
-            stdout = proc.communicate()[0]
-            proc.wait()
-            platform = stdout.rstrip('\n')
-
-            proc = subprocess.Popen([SONIC_CFGGEN_PATH, '-d', '-v', HWSKU_KEY],
-                                    stdout=subprocess.PIPE,
-                                    shell=False,
-                                    stderr=subprocess.STDOUT)
-            stdout = proc.communicate()[0]
-            proc.wait()
-            hwsku = stdout.rstrip('\n')
-        except OSError as e:
-            raise OSError("Cannot detect platform")
-
-        return (platform, hwsku)
 
     #################################################################################################################
     #   GENERIC DEFS
@@ -428,19 +406,25 @@ class PddfApi():
 
         for attr in attr_list:
             if attr_name == attr['attr_name'] or attr_name == 'all':
-                path = self.show_device_sysfs(dev, ops)+"/%d-00%x/" % (int(dev['i2c']['topo_info']['parent_bus'], 0),
-                                                                       int(dev['i2c']['topo_info']['dev_addr'], 0))
                 if 'drv_attr_name' in attr.keys():
                     real_name = attr['drv_attr_name']
                 else:
                     real_name = attr['attr_name']
 
-                if (os.path.exists(path)):
-                    full_path = glob.glob(path + 'hwmon/hwmon*/' + real_name)[0]
-                    dsysfs_path = full_path
-                    if dsysfs_path not in self.data_sysfs_obj[KEY]:
-                        self.data_sysfs_obj[KEY].append(dsysfs_path)
-                    ret.append(full_path)
+                if 'topo_info' in dev['i2c']:
+                    path = self.show_device_sysfs(dev, ops)+"/%d-00%x/" % (int(dev['i2c']['topo_info']['parent_bus'], 0),
+                            int(dev['i2c']['topo_info']['dev_addr'], 0))
+                    if (os.path.exists(path)):
+                        full_path = glob.glob(path + 'hwmon/hwmon*/' + real_name)[0]
+                elif 'path_info' in dev['i2c']:
+                    path = dev['i2c']['path_info']['sysfs_base_path']
+                    if (os.path.exists(path)):
+                        full_path = "/".join([path, real_name])
+
+                dsysfs_path = full_path
+                if dsysfs_path not in self.data_sysfs_obj[KEY]:
+                    self.data_sysfs_obj[KEY].append(dsysfs_path)
+                ret.append(full_path)
         return ret
 
     def show_attr_sysstatus_device(self, dev, ops):

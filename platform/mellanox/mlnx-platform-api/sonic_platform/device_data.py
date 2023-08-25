@@ -17,7 +17,6 @@
 
 import glob
 import os
-from sonic_py_common import device_info
 
 from . import utils
 
@@ -157,14 +156,23 @@ DEVICE_DATA = {
     },
     'x86_64-nvidia_sn2201-r0': {
         'thermal': {
+            'minimum_table': {
+                "unk_trust": {"-127:30": 13, "31:35": 14, "36:40": 15, "41:120": 16},
+                "unk_untrust": {"-127:15": 13, "16:20": 14, "21:25": 15, "26:30": 16, "31:35": 17, "36:40": 18, "41:120": 19},
+            },
             "capability": {
                 "comex_amb": False,
-                "cpu_amb": True,
-                "swb_amb": True
+                "cpu_amb": True
             }
         }
     },
     'x86_64-nvidia_sn5600-r0': {
+        'thermal': {
+            "capability": {
+                "comex_amb": False,
+                "pch_temp": True
+            }
+        }
     }
 }
 
@@ -173,6 +181,7 @@ class DeviceDataManager:
     @classmethod
     @utils.read_only_cache()
     def get_platform_name(cls):
+        from sonic_py_common import device_info
         return device_info.get_platform()
 
     @classmethod
@@ -221,6 +230,11 @@ class DeviceDataManager:
     @utils.read_only_cache()
     def get_cpu_thermal_count(cls):
         return len(glob.glob('run/hw-management/thermal/cpu_core[!_]'))
+
+    @classmethod
+    @utils.read_only_cache()
+    def get_sodimm_thermal_count(cls):
+        return len(glob.glob('/run/hw-management/thermal/sodimm*_temp_input'))
 
     @classmethod
     @utils.read_only_cache()
@@ -281,3 +295,21 @@ class DeviceDataManager:
             return None, None
 
         return thermal_data.get('cpu_threshold', (None, None))
+
+    @classmethod
+    def get_bios_component(cls):
+        from .component import ComponentBIOS, ComponentBIOSSN2201
+        if cls.get_platform_name() in ['x86_64-nvidia_sn2201-r0']:
+            # For SN2201, special chass is required for handle BIOS
+            # Currently, only fetching BIOS version is supported
+            return ComponentBIOSSN2201()
+        return ComponentBIOS()
+
+    @classmethod
+    def get_cpld_component_list(cls):
+        from .component import ComponentCPLD, ComponentCPLDSN2201
+        if cls.get_platform_name() in ['x86_64-nvidia_sn2201-r0']:
+            # For SN2201, special chass is required for handle BIOS
+            # Currently, only fetching BIOS version is supported
+            return ComponentCPLDSN2201.get_component_list()
+        return ComponentCPLD.get_component_list()
