@@ -21,7 +21,6 @@ jobs:
   steps:
   - checkout: none
   - script: |
-      set -xe
       df -h
       sudo find /nfs/dpkg_cache/ -name *.tgz -mtime +30 -type f -delete
       df -h
@@ -32,7 +31,6 @@ jobs:
   steps:
   - checkout: none
   - script: |
-      set -xe
       df -h
       sudo find /nfs/dpkg_cache/ -name *.tgz -mtime +30 -type f -delete
       df -h
@@ -43,8 +41,8 @@ jobs:
   steps:
   - checkout: none
   - script: |
-      set -xe
       df -h
       sudo find /nfs/dpkg_cache/ -name *.tgz -mtime +30 -type f -delete
       df -h
     displayName: clean dpkg cache
+
