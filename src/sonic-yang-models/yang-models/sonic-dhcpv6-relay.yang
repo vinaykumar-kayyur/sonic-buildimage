@@ -39,17 +39,22 @@ module sonic-dhcpv6-relay {
 					type inet:ipv6-address;
 				}
 
-				leaf rfc6939_support {
-					description "Set rfc6939 for the relay";
-					type string {
-						pattern "false|true";
+				choice dhcpv6_option {
+					case rfc6939_support {
+						leaf rfc6939_support {
+							description "Set rfc6939 for the relay";
+							type string {
+								pattern "false|true";
+							}
+						}
 					}
-				}
-
-				leaf interface_id {
-					description "Enable interface ID insertion in relayed messages";
-					type string {
-						pattern "false|true";
+					case interface_id {
+						leaf interface_id {
+							description "Enable interface ID insertion in relayed messages";
+							type string {
+								pattern "false|true";
+							}
+						}
 					}
 				}
 			}
