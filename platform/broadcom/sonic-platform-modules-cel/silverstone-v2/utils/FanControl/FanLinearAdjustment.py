@@ -23,7 +23,7 @@ FUNCTION_NAME = "FanControl"
 
 class FanLinearAdjustment(object):
     """
-    Make a class we can use to capture stdout and sterr in the log
+    Make a class we can use to capture stdout in the log
     """
     syslog = logging.getLogger("[" + FUNCTION_NAME + "]")
     init_fan_temperature = [0, 0]
@@ -48,7 +48,7 @@ class FanLinearAdjustment(object):
             filemode='w',
             level=log_level,
             format='[%(asctime)s] {%(pathname)s:%(lineno)d} %(levelname)s - %(message)s',
-            datefmt='%H:%M:%S'
+            datefmt='%m %d %H:%M:%S'
         )
 
         # set up logging to console
@@ -58,7 +58,6 @@ class FanLinearAdjustment(object):
             formatter = logging.Formatter('%(name)-12s: %(levelname)-8s %(message)s')
             console.setFormatter(formatter)
             logging.getLogger('').addHandler(console)
-        logging.info('SET. logfile:%s / loglevel:%d' % (log_file, log_level))
 
     def get_all_temperature(self):
         """
@@ -95,21 +94,17 @@ class FanLinearAdjustment(object):
             fan_status = fan.get_status()
             if fan_status:
                 fan_direction = fan.get_direction()
-                logging.info("fan direction: %s. INTAKE=B2F, EXHAUST=F2B" % str(fan_direction))
                 break
         all_temp = self.get_all_temperature()
         if all_temp is None:
             # According to Thermal suggestion, when the temperature can't be
             # obtained, set the fan to full speed
             self.syslog.warning("Can't get TEMP_FB_U17/TEMP_SW_U16, Will increase the fan speed to 100%%")
-            logging.error("Can't get TEMP_FB_U17/TEMP_SW_U16, Will increase the fan speed to 100%%")
             return self.duty_max
 
         # B2F=intake: U17 temperature， F2B-EXHAUST: U16 temperature
-        logging.info("[u16_temperature, u17_temperature]: %s" % all_temp)
         sensor_index = 1 if fan_direction.lower() == "intake" else 0
         sensor_temp = float(all_temp[sensor_index])
-        logging.info("Use to adjustment sensor=%s, index=%s" % (sensor_temp, sensor_index))
         update_temp_sensor = True
         diff_temp = temp_list[sensor_index] - all_temp[sensor_index]
         if diff_temp > 0:
@@ -161,7 +156,6 @@ class FanLinearAdjustment(object):
         :param now_pwm:Calculated pwm from current temperature
         :return:int.The pwm value
         """
-        logging.info("Status=%s, last_pwm=%s, now_pwm=%s" % (status, last_pwm, now_pwm))
         if status:
             return last_pwm if last_pwm >= now_pwm else now_pwm
         else:
