@@ -37,7 +37,7 @@ agentAddress {{ protocol(agentip) }}:{% if agentip|ipv6 %}[{% endif %}{{ agentip
 {% if agentip.startswith('fe80') %}
 {% set zoneid = '%' + intf %}
 {% endif %}
-agentAddress {{ protocol(agentip) }}:{% if agentip|ipv6 %}[{% endif %}{{ agentip }}{{ zoneid }}{% if agentip|ipv6 %}]{% endif %}:161
+agentAddress {{ protocol(agentip) }}:{% if agentip|ipv6 %}[{% endif %}{{ agentip }}{% if agentip|ipv6 %}]{% endif %}:161{{ zoneid }}
 {% endfor %}
 {% endif %}
 {% if LOOPBACK_INTERFACE is defined %}
@@ -50,7 +50,7 @@ agentAddress {{ protocol(agentip) }}:{% if agentip|ipv6 %}[{% endif %}{{ agentip
 {% if agentip.startswith('fe80') %}
 {% set zoneid = '%' + intf %}
 {% endif %}
-agentAddress {{ protocol(agentip) }}:{% if agentip|ipv6 %}[{% endif %}{{ agentip }}{{ zoneid }}{% if agentip|ipv6 %}]{% endif %}:161
+agentAddress {{ protocol(agentip) }}:{% if agentip|ipv6 %}[{% endif %}{{ agentip }}{% if agentip|ipv6 %}]{% endif %}:161{{ zoneid }}
 {% endif %}
 {% endfor %}
 {% endif %}
