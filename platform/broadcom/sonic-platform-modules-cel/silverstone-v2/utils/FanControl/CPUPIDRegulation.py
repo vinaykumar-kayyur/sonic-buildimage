@@ -30,9 +30,9 @@ CPU_TEMPERATURE = "cat /sys/class/thermal/thermal_zone0/temp"
 # PID Defaults Value
 PWM_LIST = [35]  # [PWMk-1]
 T_LIST = []  # [Tk-2, Tk-1, Tk]
-Kp = 2.1
+Kp = 1.8
 Ki = 0.3
-Kd = 0.5
+Kd = 0
 SET_POINT = 96
 PWM_MIN = 35
 PWM_MAX = 100
