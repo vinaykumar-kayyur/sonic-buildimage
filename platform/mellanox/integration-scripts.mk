@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2016-2022 NVIDIA CORPORATION & AFFILIATES.
+# Copyright (c) 2016-2023 NVIDIA CORPORATION & AFFILIATES.
 # Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,7 +28,11 @@ PTCH_LIST  = $(TEMP_HW_MGMT_DIR)/series
 KCFG_LIST = $(TEMP_HW_MGMT_DIR)/kconfig
 HWMGMT_NONUP_LIST = $(BUILD_WORKDIR)/$($(MLNX_HW_MANAGEMENT)_SRC_PATH)/hwmgmt_nonup_patches
 HWMGMT_USER_OUTFILE = $(BUILD_WORKDIR)/integrate-mlnx-hw-mgmt_user.out
+SDK_USER_OUTFILE = $(BUILD_WORKDIR)/integrate-mlnx-sdk_user.out
 TMPFILE_OUT := $(shell mktemp)
+SDK_TMPDIR := $(shell mktemp -d)
+SB_COM_MSG := $(shell mktemp -t sb_commit_msg_file_XXXXX.log)
+SLK_COM_MSG := $(shell mktemp -t slk_commit_msg_file_XXXXX.log)
 SB_HEAD = $(shell git rev-parse --short HEAD)
 SLK_HEAD = $(shell cd src/sonic-linux-kernel; git rev-parse --short HEAD)
 
@@ -66,7 +70,9 @@ endif
 	# Pre-processing before runing hw_mgmt script
 	integration-scripts/hwmgmt_kernel_patches.py pre \
 							--config_inclusion $(KCFG_LIST) \
-							--build_root $(BUILD_WORKDIR) $(LOG_SIMPLE)
+							--build_root $(BUILD_WORKDIR) \
+							--kernel_version $(KERNEL_VERSION) \
+							--hw_mgmt_ver ${MLNX_HW_MANAGEMENT_VERSION}  $(LOG_SIMPLE)
 
 	$(BUILD_WORKDIR)/$($(MLNX_HW_MANAGEMENT)_SRC_PATH)/hw-mgmt/recipes-kernel/linux/deploy_kernel_patches.py \
 							--dst_accepted_folder $(PTCH_DIR) \
@@ -80,10 +86,14 @@ endif
 	integration-scripts/hwmgmt_kernel_patches.py post \
 							--patches $(PTCH_DIR) \
 							--non_up_patches $(NON_UP_PTCH_DIR) \
+							--kernel_version $(KERNEL_VERSION) \
+							--hw_mgmt_ver ${MLNX_HW_MANAGEMENT_VERSION} \
 							--config_inclusion $(KCFG_LIST) \
 							--series $(PTCH_LIST) \
 							--current_non_up_patches $(HWMGMT_NONUP_LIST) \
-							--build_root $(BUILD_WORKDIR) $(LOG_SIMPLE)
+							--build_root $(BUILD_WORKDIR) \
+							--sb_msg $(SB_COM_MSG) \
+							--slk_msg $(SLK_COM_MSG) $(LOG_SIMPLE)
 	
 	# Commit the changes in linux kernel and and log the diff
 	pushd $(BUILD_WORKDIR)/src/sonic-linux-kernel
@@ -102,7 +112,7 @@ endif
 	git diff --no-color --staged --stat --output=${TMPFILE_OUT}
 	cat ${TMPFILE_OUT} | tee -a ${HWMGMT_USER_OUTFILE}
 
-	git diff --staged --quiet || git commit -m "Intgerate HW-MGMT ${MLNX_HW_MANAGEMENT_VERSION} Changes";
+	git diff --staged --quiet || git commit -m "$$(cat $(SLK_COM_MSG))";
 	popd
 
 	# Commit the changes in buildimage and log the diff
@@ -127,9 +137,59 @@ endif
 	git diff --no-color --staged --stat --output=${TMPFILE_OUT} -- $(PLATFORM_PATH)
 	cat ${TMPFILE_OUT} | tee -a ${HWMGMT_USER_OUTFILE}
 
-	git diff --staged --quiet || git commit -m "Intgerate HW-MGMT ${MLNX_HW_MANAGEMENT_VERSION} Changes";
+	git diff --staged --quiet || git commit -m "$$(cat $(SB_COM_MSG))";
 	popd
 
 	popd $(LOG_SIMPLE)
 
-SONIC_PHONY_TARGETS += integrate-mlnx-hw-mgmt
+integrate-mlnx-sdk:
+	$(FLUSH_LOG)
+	rm -rf $(MLNX_SDK_VERSION).zip sx_kernel-$(MLNX_SDK_VERSION)-$(MLNX_SDK_ISSU_VERSION).tar.gz
+
+ifeq ($(SDK_FROM_SRC),y)
+	wget $(MLNX_SDK_SOURCE_BASE_URL)/sx_kernel-$(MLNX_SDK_VERSION)-$(MLNX_SDK_ISSU_VERSION).tar.gz $(LOG_SIMPLE)
+	tar -xf sx_kernel-$(MLNX_SDK_VERSION)-$(MLNX_SDK_ISSU_VERSION).tar.gz --strip-components=1 -C $(SDK_TMPDIR) $(LOG_SIMPLE)
+else
+	# Download from upstream repository
+	wget $(MLNX_SDK_DRIVERS_GITHUB_URL)/archive/refs/heads/$(MLNX_SDK_VERSION).zip $(LOG_SIMPLE)
+	unzip $(MLNX_SDK_VERSION).zip -d $(SDK_TMPDIR) $(LOG_SIMPLE)
+	mv $(SDK_TMPDIR)/Spectrum-SDK-Drivers-$(MLNX_SDK_VERSION)/* $(SDK_TMPDIR) $(LOG_SIMPLE)
+endif
+
+	pushd $(BUILD_WORKDIR)/src/sonic-linux-kernel; git clean -f -- patch/; git stash -- patch/
+ifeq ($(CREATE_BRANCH), y)
+	git checkout -B "$(BRANCH_SONIC)_$(SLK_HEAD)_integrate_$(MLNX_SDK_VERSION)" HEAD
+	echo $(BRANCH_SONIC)_$(SLK_HEAD)_integrate_$(MLNX_SDK_VERSION) branch created in sonic-linux-kernel $(LOG_SIMPLE)
+endif
+	popd
+
+	echo "#### Integrate SDK $(MLNX_SDK_VERSION) Kernel Patches into SONiC" > ${SDK_USER_OUTFILE}
+
+	pushd $(BUILD_WORKDIR)/$(PLATFORM_PATH) $(LOG_SIMPLE)
+	
+    # Run tests
+	pushd integration-scripts/tests; pytest-3 -v; popd
+
+	integration-scripts/sdk_kernel_patches.py \
+                            --sonic_kernel_ver $(KERNEL_VERSION) \
+                            --patches $(SDK_TMPDIR) \
+                            --slk_msg $(SLK_COM_MSG) \
+                            --sdk_ver $(MLNX_SDK_VERSION) \
+                            --build_root $(BUILD_WORKDIR) $(LOG_SIMPLE)
+
+    # Commit the changes in linux kernel and and log the diff
+	pushd $(BUILD_WORKDIR)/src/sonic-linux-kernel
+	git add -- patch/
+
+	echo -en "\n###-> series file changes in sonic-linux-kernel <-###\n" >> ${SDK_USER_OUTFILE}
+	git diff --no-color --staged -- patch/series >> ${SDK_USER_OUTFILE}
+
+	echo -en "\n###-> summary of files updated in sonic-linux-kernel <-###\n" >> ${SDK_USER_OUTFILE}
+	git diff --no-color --staged --stat >> ${SDK_USER_OUTFILE}
+
+	git diff --staged --quiet || git commit -m "$$(cat $(SLK_COM_MSG))"
+	popd
+
+	popd $(LOG_SIMPLE)
+ 
+SONIC_PHONY_TARGETS += integrate-mlnx-hw-mgmt integrate-mlnx-sdk
