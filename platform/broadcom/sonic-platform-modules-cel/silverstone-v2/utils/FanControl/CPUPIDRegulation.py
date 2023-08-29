@@ -63,7 +63,7 @@ class CPUPIDRegulation(object):
             filemode='w',
             level=log_level,
             format='[%(asctime)s] {%(pathname)s:%(lineno)d} %(levelname)s - %(message)s',
-            datefmt='%H:%M:%S'
+            datefmt='%m %d %H:%M:%S'
         )
 
         # set up logging to console
@@ -73,18 +73,16 @@ class CPUPIDRegulation(object):
             formatter = logging.Formatter('%(name)-12s: %(levelname)-8s %(message)s')
             console.setFormatter(formatter)
             logging.getLogger('').addHandler(console)
-        logging.debug('SET. logfile:%s / loglevel:%d' % (log_file, log_level))
 
-    def get_cpu_temperature(self):
+    @staticmethod
+    def get_cpu_temperature():
         """
         Get CPU temperature
         """
         try:
             temp = int(os.popen(CPU_TEMPERATURE).read().strip()) / 1000
             return temp
-        except Exception as E:
-            self.syslog.warning("Can't Get CPU temperature! Cause:%s" % str(E))
-            logging.warning("Can't Get CPU temperature! Cause:%s" % str(E))
+        except Exception:
             return False
 
     def exception_data_handling(self):
@@ -133,7 +131,6 @@ class CPUPIDRegulation(object):
                                 % (cpu_temp, CPU_MAJOR_ALARM))
         if len(T_LIST) < 2:
             T_LIST.append(float(cpu_temp))
-            logging.info("Init CPU PID Control T_LIST:%s" % T_LIST)
             return PWM_LIST[0]
         else:
             T_LIST.append(float(cpu_temp))
@@ -141,14 +138,9 @@ class CPUPIDRegulation(object):
                 Ki * (T_LIST[2] - SET_POINT) + \
                 Kd * (T_LIST[2] - 2 * T_LIST[1] + T_LIST[0])
             if pwm_k < PWM_MIN:
-                logging.info("CPU PID PWM calculation value < %d, %d will be used"
-                             % (PWM_MIN, PWM_MIN))
                 pwm_k = PWM_MIN
             elif pwm_k > PWM_MAX:
-                logging.info("CPU PID PWM calculation value > %d, %d will be used"
-                             % (PWM_MAX, PWM_MAX))
                 pwm_k = PWM_MAX
             PWM_LIST[0] = pwm_k
-            logging.info("CPU PID: PWM=%d Temp list=%s" % (pwm_k, T_LIST))
             T_LIST.pop(0)
             return pwm_k
