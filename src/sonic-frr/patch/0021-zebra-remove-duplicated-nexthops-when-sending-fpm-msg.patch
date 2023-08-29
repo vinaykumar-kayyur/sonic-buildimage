@@ -1,4 +1,5 @@
 0021-zebra-remove-duplicated-nexthops-when-sending-fpm-msg
+Porting FRR PR [14096](https://github.com/FRRouting/frr/pull/14096)
 
 From: Arvindsrinivasan Lakshmi Narasimhan <arlakshm@microsoft.com>
 
