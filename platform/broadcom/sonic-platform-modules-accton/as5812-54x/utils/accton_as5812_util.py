@@ -110,6 +110,9 @@ mknod2 =[
 ]
 
 FORCE = 0
+LED_MODE_OFF = 0
+LED_MODE_AMBER = 2  # Default value for LOC LED
+LED_LOC_PATH = "/sys/class/leds/accton_as5812_54x_led::loc/brightness"
 logging.basicConfig(filename= PROJECT_NAME+'.log', filemode='w',level=logging.DEBUG)
 logging.basicConfig(level=logging.INFO)
 
@@ -380,6 +383,24 @@ def do_sonic_platform_clean():
 
     return
 
+def set_loc_led(color):
+    global FORCE
+
+    if os.path.exists(LED_LOC_PATH):
+        cmd = 'echo {} > {}'.format(color, LED_LOC_PATH)
+        try:
+            status, output = log_os_system(cmd, 1)
+            if status:
+                print(output)
+                if FORCE == 0:
+                    return status
+        except Exception as e:
+            print({}.format(e))
+    else:
+        print('{} does not exist.'.format(LED_LOC_PATH))
+
+    return
+
 def do_install():
     print("Checking system....")
     if driver_inserted() == False:
@@ -398,6 +419,8 @@ def do_install():
                 return  status
     else:
         print(PROJECT_NAME.upper()+" devices detected....")
+
+    set_loc_led(LED_MODE_OFF)
 
     do_sonic_platform_install()
 
