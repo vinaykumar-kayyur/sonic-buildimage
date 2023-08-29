@@ -67,7 +67,7 @@ class PrePddfInit(object):
         if os.path.exists(self.bmc_exist_cmd):
             # "1": "absent", "0": "present"
             sta, res = self.run_command("cat %s" % self.bmc_exist_cmd)
-            self.bmc_present = True if res == "0" else False
+            self.bmc_present = False if res == "1" else True
         self.uninstall_lpc_basecpld()
 
     def choose_pddf_device_json(self):
