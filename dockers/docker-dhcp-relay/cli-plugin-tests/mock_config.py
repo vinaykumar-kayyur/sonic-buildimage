@@ -9,7 +9,9 @@ COMMON_TEST_DATA = [
                             "fc02:2000::1",
                             "fc02:2000::2"
                         ],
-                        "dhcpv6_option|rfc6939_support": "true"
+                        "dhcpv6_option": {
+                            "rfc6939_support": "true"
+                        }
                     }
                 }
             }
@@ -25,7 +27,9 @@ COMMON_TEST_DATA = [
                             "fc02:2000::1",
                             "fc02:2000::2"
                         ],
-                        "dhcpv6_option|rfc6939_support": "true"
+                        "dhcpv6_option":: {
+                            "rfc6939_support": "true"
+                        }
                     }
                 }
             }
@@ -59,7 +63,9 @@ NEW_ADDED_TEST_DATA = [
                             "fc02:2000::1",
                             "fc02:2000::2"
                         ],
-                        "dhcpv6_option|rfc6939_support": "true"
+                        "dhcpv6_option": {
+                            "rfc6939_support": "true"
+                        }
                     }
                 }
             }
@@ -96,14 +102,18 @@ MULTI_TEST_DATA = [
                             "fc02:2000::1",
                             "fc02:2000::2"
                         ],
-                        "dhcpv6_option|rfc6939_support": "true"
+                        "dhcpv6_option": {
+                            "rfc6939_support": "true"
+                        }
                     },
                     "Vlan1001": {
                         "dhcpv6_servers": [
                             "fc02:2000::3",
                             "fc02:2000::4"
                         ],
-                        "dhcpv6_option|rfc6939_support": "true"
+                        "dhcpv6_option": {
+                            "rfc6939_support": "true"
+                        }
                     }
                 }
             }
