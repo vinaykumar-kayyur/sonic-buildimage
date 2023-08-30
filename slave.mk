@@ -451,6 +451,19 @@ else
 $(info SONiC Build System for $(CONFIGURED_PLATFORM):$(CONFIGURED_ARCH))
 endif
 
+# Definition of SONIC_RFS_TARGETS
+define rfs_get_installer_dependencies
+$(1)__$($(1)_MACHINE)__rfs.squashfs $(if $($(1)_DEPENDENT_MACHINE),$(1)__$($(1)_DEPENDENT_MACHINE)__rfs.squashfs)
+endef
+
+$(foreach installer, $(SONIC_INSTALLERS), $(eval $(installer)_RFS_DEPENDS=$(call rfs_get_installer_dependencies,$(installer))))
+SONIC_RFS_TARGETS= $(foreach installer, $(SONIC_INSTALLERS), $(call rfs_get_installer_dependencies,$(installer)))
+$(foreach rfs_target, $(SONIC_RFS_TARGETS), $(eval $(call define_rfs_target,$(rfs_target))))
+
+ifeq ($(ENABLE_RFS_SPLIT_BUILD),y)
+SONIC_TARGET_LIST += $(addprefix $(TARGET_PATH)/, $(SONIC_RFS_TARGETS))
+endif
+
 # Overwrite the buildinfo in slave container
 ifeq ($(filter clean,$(MAKECMDGOALS)),)
 $(shell DBGOPT='$(DBGOPT)' scripts/prepare_slave_container_buildinfo.sh $(SLAVE_DIR) $(CONFIGURED_ARCH) $(BLDENV))
@@ -1213,59 +1226,57 @@ $(DOCKER_LOAD_TARGETS) : $(TARGET_PATH)/%.gz-load : .platform docker-start $$(TA
 ## Installers
 ###############################################################################
 
-
-define rfs_get_installer_dependencies
-$(1)__$($(1)_MACHINE)__rfs.squashfs $(if $($(1)_DEPENDENT_MACHINE),$(1)__$($(1)_DEPENDENT_MACHINE)__rfs.squashfs)
-endef
-
-$(foreach installer, $(SONIC_INSTALLERS), $(eval $(installer)_RFS_DEPENDS=$(call rfs_get_installer_dependencies,$(installer))))
-SONIC_RFS_TARGETS= $(foreach installer, $(SONIC_INSTALLERS), $(call rfs_get_installer_dependencies,$(installer)))
-
-ifeq ($(ENABLE_RFS_SPLIT_BUILD),y)
-SONIC_TARGET_LIST += $(addprefix $(TARGET_PATH)/, $(SONIC_RFS_TARGETS))
-endif
-
 $(addprefix $(TARGET_PATH)/, $(SONIC_RFS_TARGETS)) : $(TARGET_PATH)/% : \
         .platform \
         build_debian.sh \
         $(addprefix $(IMAGE_DISTRO_DEBS_PATH)/,$(INITRAMFS_TOOLS) $(LINUX_KERNEL)) \
-        $(addsuffix -install,$(addprefix $(IMAGE_DISTRO_DEBS_PATH)/,$(DEBOOTSTRAP)))
+        $(addsuffix -install,$(addprefix $(IMAGE_DISTRO_DEBS_PATH)/,$(DEBOOTSTRAP))) \
+        $(call dpkg_depend,$(TARGET_PATH)/%.dep)
 	$(HEADER)
 
-	$(eval installer=$(word 1,$(subst __, ,$*)))
-	$(eval machine=$(word 2,$(subst __, ,$*)))
+	$(call LOAD_CACHE,$*,$@)
 
-	export debs_path="$(IMAGE_DISTRO_DEBS_PATH)"
-	export initramfs_tools="$(IMAGE_DISTRO_DEBS_PATH)/$(INITRAMFS_TOOLS)"
-	export linux_kernel="$(IMAGE_DISTRO_DEBS_PATH)/$(LINUX_KERNEL)"
-	export kversion="$(KVERSION)"
-	export image_type="$($(installer)_IMAGE_TYPE)"
-	export sonicadmin_user="$(USERNAME)"
-	export sonic_asic_platform="$(patsubst %-$(CONFIGURED_ARCH),%,$(CONFIGURED_PLATFORM))"
-	export RFS_SPLIT_FIRST_STAGE=y
+	# Skip building the target if it is already loaded from cache
+	if [ -z '$($*_CACHE_LOADED)' ] ; then
 
-	j2 -f env files/initramfs-tools/union-mount.j2 onie-image.conf > files/initramfs-tools/union-mount
-	j2 -f env files/initramfs-tools/arista-convertfs.j2 onie-image.conf > files/initramfs-tools/arista-convertfs
+		$(eval installer=$(word 1,$(subst __, ,$*)))
+		$(eval machine=$(word 2,$(subst __, ,$*)))
 
-	RFS_SQUASHFS_NAME=$* \
-	USERNAME="$(USERNAME)" \
-	PASSWORD="$(PASSWORD)" \
-	CHANGE_DEFAULT_PASSWORD="$(CHANGE_DEFAULT_PASSWORD)" \
-	TARGET_MACHINE=$(machine) \
-	IMAGE_TYPE=$($(installer)_IMAGE_TYPE) \
-	TARGET_PATH=$(TARGET_PATH) \
-	TRUSTED_GPG_URLS=$(TRUSTED_GPG_URLS) \
-	SONIC_ENABLE_SECUREBOOT_SIGNATURE="$(SONIC_ENABLE_SECUREBOOT_SIGNATURE)" \
-	SIGNING_KEY="$(SIGNING_KEY)" \
-	SIGNING_CERT="$(SIGNING_CERT)" \
-	PACKAGE_URL_PREFIX=$(PACKAGE_URL_PREFIX) \
-	DBGOPT='$(DBGOPT)' \
-	SONIC_VERSION_CACHE=$(SONIC_VERSION_CACHE) \
-	MULTIARCH_QEMU_ENVIRON=$(MULTIARCH_QEMU_ENVIRON) \
-	CROSS_BUILD_ENVIRON=$(CROSS_BUILD_ENVIRON) \
-	MASTER_KUBERNETES_VERSION=$(MASTER_KUBERNETES_VERSION) \
-	MASTER_CRI_DOCKERD=$(MASTER_CRI_DOCKERD) \
-		./build_debian.sh $(LOG)
+		export debs_path="$(IMAGE_DISTRO_DEBS_PATH)"
+		export initramfs_tools="$(IMAGE_DISTRO_DEBS_PATH)/$(INITRAMFS_TOOLS)"
+		export linux_kernel="$(IMAGE_DISTRO_DEBS_PATH)/$(LINUX_KERNEL)"
+		export kversion="$(KVERSION)"
+		export image_type="$($(installer)_IMAGE_TYPE)"
+		export sonicadmin_user="$(USERNAME)"
+		export sonic_asic_platform="$(patsubst %-$(CONFIGURED_ARCH),%,$(CONFIGURED_PLATFORM))"
+		export RFS_SPLIT_FIRST_STAGE=y
+
+		j2 -f env files/initramfs-tools/union-mount.j2 onie-image.conf > files/initramfs-tools/union-mount
+		j2 -f env files/initramfs-tools/arista-convertfs.j2 onie-image.conf > files/initramfs-tools/arista-convertfs
+
+		RFS_SQUASHFS_NAME=$* \
+		USERNAME="$(USERNAME)" \
+		PASSWORD="$(PASSWORD)" \
+		CHANGE_DEFAULT_PASSWORD="$(CHANGE_DEFAULT_PASSWORD)" \
+		TARGET_MACHINE=$(machine) \
+		IMAGE_TYPE=$($(installer)_IMAGE_TYPE) \
+		TARGET_PATH=$(TARGET_PATH) \
+		TRUSTED_GPG_URLS=$(TRUSTED_GPG_URLS) \
+		SONIC_ENABLE_SECUREBOOT_SIGNATURE="$(SONIC_ENABLE_SECUREBOOT_SIGNATURE)" \
+		SIGNING_KEY="$(SIGNING_KEY)" \
+		SIGNING_CERT="$(SIGNING_CERT)" \
+		PACKAGE_URL_PREFIX=$(PACKAGE_URL_PREFIX) \
+		DBGOPT='$(DBGOPT)' \
+		SONIC_VERSION_CACHE=$(SONIC_VERSION_CACHE) \
+		MULTIARCH_QEMU_ENVIRON=$(MULTIARCH_QEMU_ENVIRON) \
+		CROSS_BUILD_ENVIRON=$(CROSS_BUILD_ENVIRON) \
+		MASTER_KUBERNETES_VERSION=$(MASTER_KUBERNETES_VERSION) \
+		MASTER_CRI_DOCKERD=$(MASTER_CRI_DOCKERD) \
+			./build_debian.sh $(LOG)
+
+		$(call SAVE_CACHE,$*,$@)
+
+	fi
 
 	$(FOOTER)
 
