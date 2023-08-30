@@ -18,7 +18,6 @@ then
 fi
 
 REDIS_DIR=/var/run/redis$NAMESPACE_ID
-chown -R redis:redis $REDIS_DIR
 mkdir -p $REDIS_DIR/sonic-db
 mkdir -p /etc/supervisor/conf.d/
 
@@ -99,5 +98,7 @@ done
 TZ=$(cat /etc/timezone)
 rm -rf /etc/localtime
 ln -sf /usr/share/zoneinfo/$TZ /etc/localtime
+
+chown -R redis:redis $REDIS_DIR
 
 exec /usr/local/bin/supervisord
