@@ -581,24 +581,11 @@ if [ -f files/image_config/ntp/ntp-systemd-wrapper ]; then
     sudo cp ./files/image_config/ntp/ntp-systemd-wrapper $FILESYSTEM_ROOT/usr/lib/ntp/
 fi
 
-## Version file
+## Version file part 1
 sudo mkdir -p $FILESYSTEM_ROOT/etc/sonic
 if [ -f files/image_config/sonic_release ]; then
     sudo cp files/image_config/sonic_release $FILESYSTEM_ROOT/etc/sonic/
 fi
-export build_version="${SONIC_IMAGE_VERSION}"
-export debian_version="$(cat $FILESYSTEM_ROOT/etc/debian_version)"
-export kernel_version="${kversion}"
-export asic_type="${sonic_asic_platform}"
-export asic_subtype="${TARGET_MACHINE}"
-export commit_id="$(git rev-parse --short HEAD)"
-export branch="$(git rev-parse --abbrev-ref HEAD)"
-export release="$(if [ -f $FILESYSTEM_ROOT/etc/sonic/sonic_release ]; then cat $FILESYSTEM_ROOT/etc/sonic/sonic_release; fi)"
-export build_date="$(date -u)"
-export build_number="${BUILD_NUMBER:-0}"
-export built_by="$USER@$BUILD_HOSTNAME"
-export sonic_os_version="${SONIC_OS_VERSION}"
-j2 files/build_templates/sonic_version.yml.j2 | sudo tee $FILESYSTEM_ROOT/etc/sonic/sonic_version.yml
 
 # Default users info
 export password_expire="$( [[ "$CHANGE_DEFAULT_PASSWORD" == "y" ]] && echo true || echo false )"
@@ -659,6 +646,21 @@ if [[ $RFS_SPLIT_LAST_STAGE == y ]]; then
     trap_push 'sudo LANG=C chroot $FILESYSTEM_ROOT umount /proc || true'
     sudo LANG=C chroot $FILESYSTEM_ROOT mount proc /proc -t proc
 fi
+
+## Version file part 2
+export build_version="${SONIC_IMAGE_VERSION}"
+export debian_version="$(cat $FILESYSTEM_ROOT/etc/debian_version)"
+export kernel_version="${kversion}"
+export asic_type="${sonic_asic_platform}"
+export asic_subtype="${TARGET_MACHINE}"
+export commit_id="$(git rev-parse --short HEAD)"
+export branch="$(git rev-parse --abbrev-ref HEAD)"
+export release="$(if [ -f $FILESYSTEM_ROOT/etc/sonic/sonic_release ]; then cat $FILESYSTEM_ROOT/etc/sonic/sonic_release; fi)"
+export build_date="$(date -u)"
+export build_number="${BUILD_NUMBER:-0}"
+export built_by="$USER@$BUILD_HOSTNAME"
+export sonic_os_version="${SONIC_OS_VERSION}"
+j2 files/build_templates/sonic_version.yml.j2 | sudo tee $FILESYSTEM_ROOT/etc/sonic/sonic_version.yml
 
 if [ -f sonic_debian_extension.sh ]; then
     ./sonic_debian_extension.sh $FILESYSTEM_ROOT $PLATFORM_DIR $IMAGE_DISTRO
