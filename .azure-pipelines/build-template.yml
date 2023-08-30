@@ -128,7 +128,7 @@ jobs:
       fi
     displayName: 'Build sonic image'
   - template: cleanup.yml
-  - publish: $(System.DefaultWorkingDirectory)/sonic-broadcom.bin
+  - publish: $(System.DefaultWorkingDirectory)/
     artifact: sonic-buildimage.${{ parameters.platform }}
     displayName: "Archive sonic image"
   - script: |
