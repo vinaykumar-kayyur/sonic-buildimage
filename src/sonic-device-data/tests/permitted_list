@@ -341,3 +341,4 @@ sai_pfc_defaults_disable
 sai_optimized_mmu
 sai_stats_support_mask
 oversubscribe_mixed_sister_25_50_enable
+sai_default_cpu_tx_tc
