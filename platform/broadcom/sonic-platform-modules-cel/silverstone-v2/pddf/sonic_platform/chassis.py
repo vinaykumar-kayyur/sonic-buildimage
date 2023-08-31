@@ -128,7 +128,7 @@ class Chassis(PddfChassis):
         reboot_cause_description = {
             '0x11': (self.REBOOT_CAUSE_POWER_LOSS, "Power Loss"),
             '0x22': (self.REBOOT_CAUSE_NON_HARDWARE, "The last reset is soft-set CPU warm reset"),
-            '0x33': (self.REBOOT_CAUSE_NON_HARDWARE, "The last reset is CPU cold reset"),
+            '0x33': (self.REBOOT_CAUSE_HARDWARE_OTHER, "The last reset is CPU cold reset"),
             '0x44': (self.REBOOT_CAUSE_NON_HARDWARE, "The last reset is CPU warm reset"),
             '0x66': (self.REBOOT_CAUSE_WATCHDOG, "The last reset is Hardware Watchdog Reset"),
 
