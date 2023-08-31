@@ -4,7 +4,8 @@
 #   * PSU
 #
 import os
-from lxml import etree as ET
+import xml.etree.ElementTree as ET
+
 import glob
 import json
 from decimal import Decimal
@@ -217,7 +218,7 @@ class checktype():
             if len(psu_dict) == 0:
                 return psupro
             for psu_name, display_name in psu_dict.items():
-                if psu_name in psupro['type1']:
+                if psu_name.strip() == рsupro['type1']:
                     psupro['type1'] = display_name
                     psu_match = True
                     break
