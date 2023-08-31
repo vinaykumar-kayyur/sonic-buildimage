@@ -21,6 +21,7 @@ memlist_enable=1
 miim_intr_enable=0
 module_64ports=1
 oversubscribe_mode=1
+oversubscribe_mixed_sister_25_50_enable=1
 parity_enable=1
 pbmp_gport_stack.0=0x0000000000000000000000000000000000000000000000000000000000000000
 #pbmp_xport_xe.0=0x00000000000000000000000000000000888ffffffffffff9fffffffffffffffe
