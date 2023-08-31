@@ -223,8 +223,8 @@ def getplatform_config_db():
 def getplatform_name():
     if os.path.isfile('/host/machine.conf'):
         return getonieplatform('/host/machine.conf')
-    if os.path.isfile('/usr/share/sonic/hwsku/machine.conf'):
-        return getonieplatform('/usr/share/sonic/hwsku/machine.conf')
+    if os.path.isfile('/etc/sonic/machine.conf'):
+        return getonieplatform('/etc/sonic/machine.conf')
     return getplatform_config_db()
 
 
@@ -451,15 +451,8 @@ def io_wr(reg_addr, reg_data):
 
 
 def exec_os_cmd(cmd):
-    cmds = cmd.split('|')
-    procs = []
-    for i, c in enumerate(cmds):
-        stdin = None if i == 0 else procs[i-1].stdout
-        p = subprocess.Popen(shlex.split(c), stdin=stdin, stdout=subprocess.PIPE, shell=False, stderr=subprocess.STDOUT)
-        procs.append(p)
-    for proc in procs:
-        proc.wait()
-    return procs[-1].returncode, typeTostr(procs[-1].communicate()[0])
+    status, output = subprocess.getstatusoutput(cmd)
+    return status, output
 
 
 def exec_os_cmd_log(cmd):

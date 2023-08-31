@@ -389,7 +389,7 @@ static int firmware_upgrade_config_init(struct device *dev, firmware_sysfs_t *sy
     return 0;
 }
 
-static int  firmware_sysfs_probe(struct platform_device *pdev)
+static int firmware_sysfs_probe(struct platform_device *pdev)
 {
     int ret;
     firmware_sysfs_t *sysfs_info;

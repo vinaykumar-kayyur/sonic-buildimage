@@ -216,7 +216,10 @@ class interface(object):
         if psu is None:
             return -1
         psu.InputsCurrent.Value  # just for clear faults
-        if (psu.InputStatus is True) and (psu.OutputStatus is True):
+        if psu.InputStatus is True and psu.OutputStatus is True:
+            return True
+        # only has outputstatus
+        if psu.InputStatus is None and psu.OutputStatus is True:
             return True
         return False
 
@@ -606,7 +609,7 @@ class interface(object):
                     "SpeedMax": 30000               # -1
         """
         fan = self.chas.get_fan_byname(fan_name)
-        fan.get_fru_info()
+        fan.decode_eeprom_info()
         fan.get_AirFlow()
         fan.get_fan_display_name()
 
@@ -640,6 +643,7 @@ class interface(object):
         """
         fan = self.chas.get_fan_byname(fan_name)
         fan.decode_eeprom_info()
+        fan.get_fan_display_name()
         dic = collections.OrderedDict()
         dic["NAME"] = fan.productName
         if dic["NAME"] is None:
@@ -650,7 +654,9 @@ class interface(object):
         dic["HW"] = fan.hw_version
         if dic["HW"] is None:
             dic["HW"] = self.na_ret
-
+        dic["DisplayName"] = fan.fan_display_name
+        if dic["DisplayName"] is None:
+            dic["DisplayName"] = self.na_ret
         return dic
 
     def get_product_fullname(self):

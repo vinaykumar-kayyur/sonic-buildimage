@@ -63,6 +63,7 @@ module_param(g_wb_wdt_error, int, S_IRUGO | S_IWUSR);
 enum {
     HW_ALGO_TOGGLE,
     HW_ALGO_LEVEL,
+    HW_ALGO_EIGENVALUES,
 };
 
 enum {
@@ -72,7 +73,6 @@ enum {
 };
 
 typedef struct wb_wdt_priv_s {
-
     struct task_struct *thread;
     struct hrtimer hrtimer;
     ktime_t   m_kt;
@@ -89,7 +89,13 @@ typedef struct wb_wdt_priv_s {
     uint32_t    timeleft_cfg_reg;
     uint32_t    hw_margin;
     uint32_t    feed_time;
+    uint8_t     timer_accuracy_reg_flag;
+    uint32_t    timer_accuracy_reg;
+    uint8_t     timer_accuracy_reg_val;
     uint32_t    timer_accuracy;
+    uint8_t     timer_update_reg_flag;
+    uint32_t    timer_update_reg;
+    uint8_t     timer_update_reg_val;
     gpio_wdt_info_t     gpio_wdt;
     logic_wdt_info_t    logic_wdt;
     struct device *dev;
@@ -297,7 +303,7 @@ static void wdt_hwping(wb_wdt_priv_t *priv)
                 WDT_ERROR("logic toggle wdt write failed.ret = %d\n", ret);
             }
             WDT_VERBOSE("logic toggle wdt work.\n");
-        break;
+            break;
         case HW_ALGO_LEVEL:
             tmp_val = !logic_wdt->active_val;
             ret = wb_wdt_write(logic_wdt->logic_func_mode, logic_wdt->feed_dev_name,
@@ -312,6 +318,17 @@ static void wdt_hwping(wb_wdt_priv_t *priv)
                 WDT_ERROR("logic level wdt write second failed.ret = %d\n", ret);
             }
             WDT_VERBOSE("logic level wdt work.\n");
+            break;
+        case HW_ALGO_EIGENVALUES:
+            ret = wb_wdt_write(logic_wdt->logic_func_mode, logic_wdt->feed_dev_name,
+                        logic_wdt->feed_reg, &logic_wdt->active_val, ONE_BYTE);
+            if (ret < 0) {
+                WDT_ERROR("logic eigenvalues wdt write failed, path: %s, mode: %d, reg: 0x%x, val: 0x%x, ret: %d\n",
+                    logic_wdt->feed_dev_name, logic_wdt->logic_func_mode, logic_wdt->feed_reg,
+                    logic_wdt->active_val, ret);
+            }
+            WDT_VERBOSE("logic eigenvalues wdt work, path: %s, mode: %d, reg: 0x%x, val: 0x%x\n",
+                logic_wdt->feed_dev_name, logic_wdt->logic_func_mode, logic_wdt->feed_reg, logic_wdt->active_val);
             break;
         }
     }
@@ -359,6 +376,16 @@ static int thread_timer_cfg(wb_wdt_priv_t *priv, wb_wdt_device_t *wb_wdt_device)
         return -EINVAL;
     }
 
+    if (priv->timer_accuracy_reg_flag != 0) {
+        ret = wb_wdt_write(priv->priv_func_mode, priv->config_dev_name,
+                    priv->timer_accuracy_reg, &priv->timer_accuracy_reg_val, ONE_BYTE);
+        if (ret < 0) {
+            dev_err(priv->dev, "set timer_accuracy_reg error, reg_addr: 0x%x, value: 0x%x, ret: %d.\n",
+                priv->timer_accuracy_reg, priv->timer_accuracy_reg_val, ret);
+            return ret;
+        }
+    }
+
     set_time_val = hw_margin / accuracy;
     ret = wb_wdt_write(priv->priv_func_mode, priv->config_dev_name,
                 priv->timeout_cfg_reg, &set_time_val, ONE_BYTE);
@@ -366,6 +393,17 @@ static int thread_timer_cfg(wb_wdt_priv_t *priv, wb_wdt_device_t *wb_wdt_device)
         dev_err(dev, "set wdt thread timer reg error.\n");
         return ret;
     }
+
+    if (priv->timer_update_reg_flag != 0) {
+        ret = wb_wdt_write(priv->priv_func_mode, priv->config_dev_name,
+                    priv->timer_update_reg, &priv->timer_update_reg_val, ONE_BYTE);
+        if (ret < 0) {
+            dev_err(priv->dev, "set timer_update_reg error,  reg_addr: 0x%x, value: 0x%x, ret: %d.\n",
+                priv->timer_update_reg, priv->timer_update_reg_val, ret);
+            return ret;
+        }
+    }
+
     return 0;
 }
 
@@ -457,11 +495,31 @@ static int hrtimer_cfg(wb_wdt_priv_t *priv, wb_wdt_device_t *wb_wdt_device)
     hrtimer_ns = (feed_time % MS_TO_S) * MS_TO_NS;
     set_time_val = hw_margin / accuracy;
 
+    if (priv->timer_accuracy_reg_flag != 0) {
+        ret = wb_wdt_write(priv->priv_func_mode, priv->config_dev_name,
+                    priv->timer_accuracy_reg, &priv->timer_accuracy_reg_val, ONE_BYTE);
+        if (ret < 0) {
+            dev_err(priv->dev, "set timer_accuracy_reg error, reg_addr: 0x%x, value: 0x%x, ret: %d.\n",
+                priv->timer_accuracy_reg, priv->timer_accuracy_reg_val, ret);
+            return ret;
+        }
+    }
+
     ret = wb_wdt_write(priv->priv_func_mode, priv->config_dev_name,
                 priv->timeout_cfg_reg, &set_time_val, ONE_BYTE);
     if (ret < 0) {
         dev_err(dev, "set wdt time reg error.\n");
         return ret;
+    }
+
+    if (priv->timer_update_reg_flag != 0) {
+        ret = wb_wdt_write(priv->priv_func_mode, priv->config_dev_name,
+                    priv->timer_update_reg, &priv->timer_update_reg_val, ONE_BYTE);
+        if (ret < 0) {
+            dev_err(priv->dev, "set timer_update_reg error,  reg_addr: 0x%x, value: 0x%x, ret: %d.\n",
+                priv->timer_update_reg, priv->timer_update_reg_val, ret);
+            return ret;
+        }
     }
 
     priv->m_kt = ktime_set(hrtimer_s, hrtimer_ns);
@@ -529,6 +587,16 @@ static int wb_wdt_set_timeout(struct watchdog_device *wdd, unsigned int t)
         return -EINVAL;
     }
 
+    if (priv->timer_accuracy_reg_flag != 0) {
+        ret = wb_wdt_write(priv->priv_func_mode, priv->config_dev_name,
+                    priv->timer_accuracy_reg, &priv->timer_accuracy_reg_val, ONE_BYTE);
+        if (ret < 0) {
+            WDT_ERROR("set timer_accuracy_reg error, reg_addr: 0x%x, value: 0x%x, ret: %d.\n",
+                priv->timer_accuracy_reg, priv->timer_accuracy_reg_val, ret);
+            return ret;
+        }
+    }
+
     set_time_val = timeout_ms / accuracy;
     ret = wb_wdt_write(priv->priv_func_mode, priv->config_dev_name,
                 priv->timeout_cfg_reg, &set_time_val, ONE_BYTE);
@@ -536,6 +604,17 @@ static int wb_wdt_set_timeout(struct watchdog_device *wdd, unsigned int t)
         WDT_ERROR("set wdt timeout reg error, set_time_val:%u ret:%d\n", set_time_val, ret);
         return ret;
     }
+
+    if (priv->timer_update_reg_flag != 0) {
+        ret = wb_wdt_write(priv->priv_func_mode, priv->config_dev_name,
+                    priv->timer_update_reg, &priv->timer_update_reg_val, ONE_BYTE);
+        if (ret < 0) {
+            WDT_ERROR("set timer_update_reg error,  reg_addr: 0x%x, value: 0x%x, ret: %d.\n",
+                priv->timer_update_reg, priv->timer_update_reg_val, ret);
+            return ret;
+        }
+    }
+
     wdd->timeout = t;
 
     return 0;
@@ -590,12 +669,32 @@ static int watchdog_device_cfg(wb_wdt_priv_t *priv)
         return -ENXIO;
     }
 
+    if (priv->timer_accuracy_reg_flag != 0) {
+        ret = wb_wdt_write(priv->priv_func_mode, priv->config_dev_name,
+                    priv->timer_accuracy_reg, &priv->timer_accuracy_reg_val, ONE_BYTE);
+        if (ret < 0) {
+            dev_err(priv->dev, "set timer_accuracy_reg error, reg_addr: 0x%x, value: 0x%x, ret: %d.\n",
+                priv->timer_accuracy_reg, priv->timer_accuracy_reg_val, ret);
+            return ret;
+        }
+    }
+
     set_time_val = priv->hw_margin / priv->timer_accuracy;
     ret = wb_wdt_write(priv->priv_func_mode, priv->config_dev_name,
                 priv->timeout_cfg_reg, &set_time_val, ONE_BYTE);
     if (ret < 0) {
         dev_err(priv->dev, "set wdt time reg error.\n");
         return ret;
+    }
+
+    if (priv->timer_update_reg_flag != 0) {
+        ret = wb_wdt_write(priv->priv_func_mode, priv->config_dev_name,
+                    priv->timer_update_reg, &priv->timer_update_reg_val, ONE_BYTE);
+        if (ret < 0) {
+            dev_err(priv->dev, "set timer_update_reg error,  reg_addr: 0x%x, value: 0x%x, ret: %d.\n",
+                priv->timer_update_reg, priv->timer_update_reg_val, ret);
+            return ret;
+        }
     }
 
     watchdog_set_drvdata(&priv->wdd, priv);
@@ -844,6 +943,44 @@ static int wb_wdt_probe(struct platform_device *pdev)
 
         priv->timeleft_cfg_reg = priv->timeout_cfg_reg;
         of_property_read_u32(pdev->dev.of_node,"timeleft_cfg_reg", &priv->timeleft_cfg_reg);
+
+        /* timer accuracy register is optional */
+        ret = of_property_read_u8(pdev->dev.of_node,"timer_accuracy_reg_flag", &priv->timer_accuracy_reg_flag);
+        if (ret < 0) {
+            /* case: don't has timer_accuracy_reg */
+            dev_dbg(&pdev->dev, "Failed to get property in dts: timer_accuracy_reg_flag.\n");
+            priv->timer_accuracy_reg_flag = 0;
+        } else {
+            ret = of_property_read_u32(pdev->dev.of_node, "timer_accuracy_reg", &priv->timer_accuracy_reg);
+            if (ret < 0) {
+                dev_err(&pdev->dev, "Failed to get timer accuracy register address.\n");
+                return -ENXIO;
+            }
+            ret = of_property_read_u8(pdev->dev.of_node, "timer_accuracy_reg_val", &priv->timer_accuracy_reg_val);
+            if (ret < 0) {
+                dev_err(&pdev->dev, "Failed to get timer accuracy register value.\n");
+                return -ENXIO;
+            }
+        }
+
+        /* timer update register is optional */
+        ret = of_property_read_u8(pdev->dev.of_node,"timer_update_reg_flag", &priv->timer_update_reg_flag);
+        if (ret < 0) {
+            /* case: don't has timer_update_reg */
+            dev_dbg(&pdev->dev, "Failed to get property in dts: timer_update_reg_flag.\n");
+            priv->timer_update_reg_flag = 0; /* no timer update register */
+        } else {
+            ret = of_property_read_u32(pdev->dev.of_node, "timer_update_reg", &priv->timer_update_reg);
+            if (ret < 0) {
+                dev_err(&pdev->dev, "Failed to get timer update register address.\n");
+                return -ENXIO;
+            }
+            ret = of_property_read_u8(pdev->dev.of_node, "timer_update_reg_val", &priv->timer_update_reg_val);
+            if (ret < 0) {
+                dev_err(&pdev->dev, "Failed to get timer update register value.\n");
+                return -ENXIO;
+            }
+        }
     } else {
         if (pdev->dev.platform_data == NULL) {
             dev_err(&pdev->dev, "Failed to get platform data config.\n");
@@ -864,12 +1001,20 @@ static int wb_wdt_probe(struct platform_device *pdev)
         priv->feed_wdt_type = wb_wdt_device->feed_wdt_type;
         priv->sysfs_index = wb_wdt_device->sysfs_index;
         priv->timeleft_cfg_reg = wb_wdt_device->timeleft_cfg_reg;
+        priv->timer_accuracy_reg_flag = wb_wdt_device->timer_accuracy_reg_flag;
+        priv->timer_accuracy_reg = wb_wdt_device->timer_accuracy_reg;
+        priv->timer_accuracy_reg_val = wb_wdt_device->timer_accuracy_reg_val;
+        priv->timer_update_reg_flag = wb_wdt_device->timer_update_reg_flag;
+        priv->timer_update_reg = wb_wdt_device->timer_update_reg;
+        priv->timer_update_reg_val = wb_wdt_device->timer_update_reg_val;
     }
 
     if (!strcmp(algo, "toggle")) {
         priv->hw_algo = HW_ALGO_TOGGLE;
     } else if (!strcmp(algo, "level")) {
         priv->hw_algo = HW_ALGO_LEVEL;
+    } else if (!strcmp(algo, "eigenvalues")) {
+        priv->hw_algo = HW_ALGO_EIGENVALUES;
     } else {
         dev_err(&pdev->dev, "hw_algo config error.must be toggle or level.\n");
         return -EINVAL;
@@ -877,8 +1022,12 @@ static int wb_wdt_probe(struct platform_device *pdev)
 
     WDT_VERBOSE("config_dev_name:%s, config_mode:%u, priv_func_mode:%u, enable_reg:0x%x, timeout_cfg_reg:0x%x\n",
         priv->config_dev_name, priv->config_mode, priv->priv_func_mode, priv->enable_reg, priv->timeout_cfg_reg);
-    WDT_VERBOSE("timeout_cfg_reg:0x%x, enable_val:%u, disable_val:%u, enable_mask:%u, hw_margin:%u, feed_wdt_type:%u\n",
+    WDT_VERBOSE("timeout_cfg_reg:0x%x, enable_val:0x%x, disable_val:0x%x, enable_mask:0x%x, hw_margin:%u, feed_wdt_type:%u\n",
         priv->timeleft_cfg_reg, priv->enable_val, priv->disable_val, priv->enable_mask, priv->hw_margin, priv->feed_wdt_type);
+    WDT_VERBOSE("timer_accuracy_reg_flag: %d, timer_accuracy_reg: 0x%x, timer_accuracy_reg_val: 0x%x, timer_accuracy: %d\n",
+        priv->timer_accuracy_reg_flag, priv->timer_accuracy_reg, priv->timer_accuracy_reg_val, priv->timer_accuracy);
+    WDT_VERBOSE("timer_update_reg_flag: %d, timer_update_reg: 0x%x, timer_update_reg_val: 0x%x\n", priv->timer_update_reg_flag,
+        priv->timer_update_reg, priv->timer_update_reg_val);
 
     priv->dev = &pdev->dev;
     if (priv->config_mode == GPIO_FEED_WDT_MODE) {

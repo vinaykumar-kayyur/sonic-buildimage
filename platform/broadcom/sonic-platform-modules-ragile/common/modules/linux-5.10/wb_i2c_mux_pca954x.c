@@ -232,45 +232,49 @@ static int pca954x_reg_write(struct i2c_adapter *adap,
     return ret;
 }
 
- static int pca954x_reg_read(struct i2c_adapter *adap,
-                  struct i2c_client *client, u8 *val)
- {
-     int ret = -ENODEV;
-     u8 tmp_val;
+static int pca954x_reg_read(struct i2c_adapter *adap,
+                 struct i2c_client *client, u8 *val)
+{
+    int ret = -ENODEV;
+    u8 tmp_val;
 
-     if (adap->algo->master_xfer) {
-         struct i2c_msg msg;
+    if (adap->algo->master_xfer) {
+        struct i2c_msg msg;
 
-         msg.addr = client->addr;
-         msg.flags = I2C_M_RD;
-         msg.len = 1;
-         msg.buf = &tmp_val;
-         ret = __i2c_transfer(adap, &msg, 1);
+        msg.addr = client->addr;
+        msg.flags = I2C_M_RD;
+        msg.len = 1;
+        msg.buf = &tmp_val;
+        ret = __i2c_transfer(adap, &msg, 1);
 
-         if (ret >= 0 && ret != 1)
-             ret = -EREMOTEIO;
-     } else {
-         union i2c_smbus_data data;
-         ret = adap->algo->smbus_xfer(adap, client->addr,
-                          client->flags,
-                          I2C_SMBUS_READ,
-                          0, I2C_SMBUS_BYTE, &data);
+        if (ret >= 0 && ret != 1) {
+            ret = -EREMOTEIO;
+        } else {
+            *val = tmp_val;
+        }
+    } else {
+        union i2c_smbus_data data;
+        ret = adap->algo->smbus_xfer(adap, client->addr,
+                         client->flags,
+                         I2C_SMBUS_READ,
+                         0, I2C_SMBUS_BYTE, &data);
 
-         if (!ret) {
-             tmp_val = data.byte;
-         }
-     }
+        if (!ret) {
+            tmp_val = data.byte;
+            *val = tmp_val;
+        }
+    }
 
-     *val = tmp_val;
-     return ret;
- }
+    return ret;
+}
 
 static int pca954x_setmuxflag(struct i2c_client *client, int flag)
 {
+    int ret;
     struct i2c_adapter *adap = to_i2c_adapter(client->dev.parent);
 
-    pca9641_setmuxflag(adap->nr, flag);
-    return 0;
+    ret = pca9641_setmuxflag(adap->nr, flag);
+    return ret;
 }
 
 static int pca9548_gpio_init(gpio_attr_t *gpio_attr)
@@ -448,39 +452,16 @@ out:
     return rv;
 }
 
-static void pca954x_close_chan_finally(struct i2c_mux_core * muxc)
-{
-    struct pca954x *data;
-    struct i2c_adapter *adapter;
-    struct i2c_client *client;
-    int adapter_timeout;
-
-    data = i2c_mux_priv(muxc);
-    client = data->client;
-    adapter = muxc->parent;
-    /* get bus info */
-    while (i2c_parent_is_i2c_adapter(adapter)) {
-        adapter = to_i2c_adapter(adapter->dev.parent);
-    }
-    adapter_timeout = adapter->timeout;
-    adapter->timeout = msecs_to_jiffies(50);
-    pca954x_reg_write(muxc->parent, client, data->last_chan);
-    adapter->timeout = adapter_timeout;
-
-    return;
-}
-
 static int pca954x_do_file_reset(struct i2c_mux_core *muxc)
 {
     int ret, timeout, err;
     struct pca954x *data;
-    struct i2c_client *client;
     pca9548_cfg_info_t *reset_cfg;
     file_attr_t *file_attr;
     u8 val;
+    int udelay_cnt;
 
     data = i2c_mux_priv(muxc);
-    client = data->client;
     reset_cfg = &data->pca9548_cfg_info;
     file_attr = &reset_cfg->attr.file_attr;
     ret = -1;
@@ -492,7 +473,7 @@ static int pca954x_do_file_reset(struct i2c_mux_core *muxc)
         file_attr->reset_on, file_attr->reset_off);
 
     if (reset_cfg->rst_delay_b) {
-        udelay(reset_cfg->rst_delay_b);
+        usleep_range(reset_cfg->rst_delay_b, reset_cfg->rst_delay_b + 1);
     }
 
     err = pca954x_reset_file_read(file_attr->dev_name, file_attr->offset, &val, sizeof(val));
@@ -507,7 +488,7 @@ static int pca954x_do_file_reset(struct i2c_mux_core *muxc)
     }
 
     if (reset_cfg->rst_delay) {
-        udelay(reset_cfg->rst_delay);
+        usleep_range(reset_cfg->rst_delay, reset_cfg->rst_delay + 1);
     }
 
     val &= ~(file_attr->mask);
@@ -517,9 +498,10 @@ static int pca954x_do_file_reset(struct i2c_mux_core *muxc)
         goto out;
     }
 
+    udelay_cnt = 0;
     timeout = reset_cfg->rst_delay_a;
     while (timeout > 0) {
-        udelay(1);
+        usleep_range(1, 2);
         err = pca954x_reset_file_read(file_attr->dev_name, file_attr->offset, &val, sizeof(val));
         if (err < 0) {
             goto out;
@@ -527,11 +509,12 @@ static int pca954x_do_file_reset(struct i2c_mux_core *muxc)
         val &= (file_attr->mask);
         if (val == file_attr->reset_off) {
             ret = 0;
-            pca954x_close_chan_finally(muxc);
             PCA954X_DEBUG("pca954x_do_file_reset success.\n");
             break;
         }
-        if (timeout >= 1000 && (timeout % 1000 == 0)) {
+        udelay_cnt++;
+        if ((udelay_cnt % 1000) == 0) {
+            /* 1MS schedule*/
             schedule();
         }
         timeout--;
@@ -551,13 +534,12 @@ static int pca954x_do_io_reset(struct i2c_mux_core *muxc)
 {
     int ret, timeout;
     struct pca954x *data;
-    struct i2c_client *client;
     pca9548_cfg_info_t *reset_cfg;
     io_attr_t *io_attr;
     u8 val;
+    int udelay_cnt;
 
     data = i2c_mux_priv(muxc);
-    client = data->client;
     reset_cfg = &data->pca9548_cfg_info;
     io_attr = &reset_cfg->attr.io_attr;
 
@@ -567,7 +549,7 @@ static int pca954x_do_io_reset(struct i2c_mux_core *muxc)
         io_attr->io_addr, io_attr->mask, io_attr->reset_on, io_attr->reset_off);
 
     if (reset_cfg->rst_delay_b) {
-        udelay(reset_cfg->rst_delay_b);
+        usleep_range(reset_cfg->rst_delay_b, reset_cfg->rst_delay_b + 1);
     }
 
     val = inb(io_attr->io_addr);
@@ -576,7 +558,7 @@ static int pca954x_do_io_reset(struct i2c_mux_core *muxc)
     outb(val, io_attr->io_addr);
 
     if (reset_cfg->rst_delay) {
-        udelay(reset_cfg->rst_delay);
+        usleep_range(reset_cfg->rst_delay, reset_cfg->rst_delay + 1);
     }
 
     val &= ~(io_attr->mask);
@@ -584,18 +566,20 @@ static int pca954x_do_io_reset(struct i2c_mux_core *muxc)
     outb(val, io_attr->io_addr);
 
     ret = -1;
+    udelay_cnt = 0;
     timeout = reset_cfg->rst_delay_a;
     while (timeout > 0) {
-        udelay(1);
+        usleep_range(1, 2);
         val = inb(io_attr->io_addr);
         val &= (io_attr->mask);
         if (val == io_attr->reset_off) {
             ret = 0;
-            pca954x_close_chan_finally(muxc);
             PCA954X_DEBUG("pca954x_do_io_reset success.\n");
             break;
         }
-        if (timeout >= 1000 && (timeout % 1000 == 0)) {
+        udelay_cnt++;
+        if ((udelay_cnt % 1000) == 0) {
+            /* 1MS schedule*/
             schedule();
         }
         timeout--;
@@ -612,13 +596,12 @@ static int pca954x_do_gpio_reset(struct i2c_mux_core *muxc)
 {
     int ret, timeout;
     struct pca954x *data;
-    struct i2c_client *client;
     pca9548_cfg_info_t *reset_cfg;
     gpio_attr_t *gpio_attr;
     u8 val;
+    int udelay_cnt;
 
     data = i2c_mux_priv(muxc);
-    client = data->client;
     reset_cfg = &data->pca9548_cfg_info;
     gpio_attr = &reset_cfg->attr.gpio_attr;
 
@@ -628,30 +611,31 @@ static int pca954x_do_gpio_reset(struct i2c_mux_core *muxc)
     }
 
     if (reset_cfg->rst_delay_b) {
-        udelay(reset_cfg->rst_delay_b);
+        usleep_range(reset_cfg->rst_delay_b, reset_cfg->rst_delay_b + 1);
     }
 
     /* reset on */
     __gpio_set_value(gpio_attr->gpio, gpio_attr->reset_on);
 
     if (reset_cfg->rst_delay) {
-        udelay(reset_cfg->rst_delay);
+        usleep_range(reset_cfg->rst_delay, reset_cfg->rst_delay + 1);
     }
 
     /* reset off */
     __gpio_set_value(gpio_attr->gpio, gpio_attr->reset_off);
     ret = -1;
+    udelay_cnt = 0;
     timeout = reset_cfg->rst_delay_a;
     while (timeout > 0) {
-        udelay(1);
+        usleep_range(1, 2);
         val = __gpio_get_value(gpio_attr->gpio);
         if (val == gpio_attr->reset_off) {
             ret = 0;
-            pca954x_close_chan_finally(muxc);
             PCA954X_DEBUG("pca954x_do_gpio_reset success.\n");
             break;
         }
-        if (timeout >= 1000 && (timeout % 1000 == 0)) {
+        udelay_cnt++;
+        if ((udelay_cnt % 1000) == 0) {
             /* 1MS schedule*/
             schedule();
         }
@@ -670,13 +654,12 @@ static int pca954x_do_i2c_reset(struct i2c_mux_core *muxc)
 {
     int ret, timeout, err;
     struct pca954x *data;
-    struct i2c_client *client;
     pca9548_cfg_info_t *reset_cfg;
     i2c_attr_t *i2c_attr;
     u8 val;
+    int udelay_cnt;
 
     data = i2c_mux_priv(muxc);
-    client = data->client;
     reset_cfg = &data->pca9548_cfg_info;
     i2c_attr = &reset_cfg->attr.i2c_attr;
     ret = -1;
@@ -688,7 +671,7 @@ static int pca954x_do_i2c_reset(struct i2c_mux_core *muxc)
         i2c_attr->mask, i2c_attr->reset_on, i2c_attr->reset_off);
 
     if (reset_cfg->rst_delay_b) {
-        udelay(reset_cfg->rst_delay_b);
+        usleep_range(reset_cfg->rst_delay_b, reset_cfg->rst_delay_b + 1);
     }
 
     err = pca954x_reset_i2c_read(i2c_attr->i2c_bus, i2c_attr->i2c_addr,
@@ -705,7 +688,7 @@ static int pca954x_do_i2c_reset(struct i2c_mux_core *muxc)
     }
 
     if (reset_cfg->rst_delay) {
-        udelay(reset_cfg->rst_delay);
+        usleep_range(reset_cfg->rst_delay, reset_cfg->rst_delay + 1);
     }
 
     val &= ~(i2c_attr->mask);
@@ -716,9 +699,10 @@ static int pca954x_do_i2c_reset(struct i2c_mux_core *muxc)
         goto out;
     }
 
+    udelay_cnt = 0;
     timeout = reset_cfg->rst_delay_a;
     while (timeout > 0) {
-        udelay(1);
+        usleep_range(1, 2);
         err = pca954x_reset_i2c_read(i2c_attr->i2c_bus, i2c_attr->i2c_addr,
                   i2c_attr->reg_offset, &val, sizeof(val));
         if (err < 0) {
@@ -727,11 +711,12 @@ static int pca954x_do_i2c_reset(struct i2c_mux_core *muxc)
         val &= (i2c_attr->mask);
         if (val == i2c_attr->reset_off) {
             ret = 0;
-            pca954x_close_chan_finally(muxc);
             PCA954X_DEBUG("pca954x_do_i2c_reset success.\n");
             break;
         }
-        if (timeout >= 1000 && (timeout % 1000 == 0)) {
+        udelay_cnt++;
+        if ((udelay_cnt % 1000) == 0) {
+            /* 1MS schedule*/
             schedule();
         }
         timeout--;
@@ -833,7 +818,6 @@ static int pca954x_deselect_mux(struct i2c_mux_core *muxc, u32 chan)
     } else {
         ret = pca954x_reg_write(muxc->parent, client, data->last_chan);
         if (ret < 0 ) {
-
             dev_warn(&client->dev, "pca954x close channel %u failed, do reset.\n", chan);
             rv = pca954x_do_reset(muxc);
             if (rv == 0) {
@@ -842,8 +826,13 @@ static int pca954x_deselect_mux(struct i2c_mux_core *muxc, u32 chan)
         }
     }
 
-    pca954x_setmuxflag(client, 1);
-    (void)pca954x_reg_write(muxc->parent, client, data->last_chan);
+    rv = pca954x_setmuxflag(client, 1);
+    if (rv == 0) {
+        PCA954X_DEBUG("match 9641, close 9548 channel to deselect 9641.\n");
+        (void)pca954x_reg_write(muxc->parent, client, data->last_chan);
+    } else {
+        PCA954X_DEBUG("dismatch 9641, do nothing.\n");
+    }
 
     return ret;
 

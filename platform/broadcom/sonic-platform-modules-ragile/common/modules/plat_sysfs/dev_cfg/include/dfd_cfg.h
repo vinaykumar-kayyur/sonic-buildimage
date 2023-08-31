@@ -28,6 +28,7 @@
 #define INDEX_NOT_EXIST     (-1)
 #define INDEX1_MAX           (0xffff)
 #define INDEX2_MAX           (0xff)
+#define READ_TEMP_FAIL 1000000
 
 #define DFD_CFG_ITEM_ALL \
     DFD_CFG_ITEM(DFD_CFG_ITEM_NONE, "none", INDEX_NOT_EXIST, INDEX_NOT_EXIST)                       \
@@ -52,6 +53,7 @@
     DFD_CFG_ITEM(DFD_CFG_ITEM_HWMON_IN, "hwmon_in", INDEX1_MAX, INDEX2_MAX)                         \
     DFD_CFG_ITEM(DFD_CFG_ITEM_SFF_CPLD_REG, "sff_cpld_reg", INDEX1_MAX, INDEX2_MAX)                 \
     DFD_CFG_ITEM(DFD_CFG_ITEM_INFO_CTRL_END, "end_info_ctrl", INDEX_NOT_EXIST, INDEX_NOT_EXIST)     \
+    DFD_CFG_ITEM(DFD_CFG_ITEM_HWMON_POWER, "hwmon_power", INDEX1_MAX, INDEX2_MAX)                   \
 
 #ifdef DFD_CFG_ITEM
 #undef DFD_CFG_ITEM

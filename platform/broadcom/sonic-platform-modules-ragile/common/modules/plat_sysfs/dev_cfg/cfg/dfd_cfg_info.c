@@ -11,7 +11,8 @@
 
 #define DFD_HWMON_NAME                                "hwmon"
 #define DFD_GET_CPLD_VOLATGE_CODE_VALUE(value)        ((value >> 4)& 0xfff)
-#define DFD_GET_CPLD_VOLATGE_REAL_VALUE(code_val, k)  ((code_val * 16 * 33 * k) / ((65536 - 5000) * 10))
+/* ((code_val * 16 * 33 * k) / ((65536 - 5000) * 10)) = ((code_val * 33 * k) / 37835) */
+#define DFD_GET_CPLD_VOLATGE_REAL_VALUE(code_val, k)  ((code_val * 33 * k) / 37835)
 
 char *g_info_ctrl_mem_str[INFO_CTRL_MEM_END] = {
     ".mode",
@@ -160,11 +161,98 @@ static int dfd_write_info(info_src_t src, char *fpath, int32_t addr, int write_b
     return rv;
 }
 
-int dfd_info_get_int(int key, int *ret, info_num_buf_to_value_f pfun)
+static int dfd_get_info_value(info_ctrl_t *info_ctrl, int *ret, info_num_buf_to_value_f pfun)
 {
     int i, rv;
     int read_bytes, readed_bytes, int_tmp;
     uint8_t byte_tmp, val[INFO_INT_MAX_LEN + 1] = {0};
+
+    if (info_ctrl->mode == INFO_CTRL_MODE_CONS) {
+        *ret = info_ctrl->int_cons;
+        return DFD_RV_OK;
+    }
+    if (info_ctrl->mode == INFO_CTRL_MODE_TLV) {
+        return INFO_CTRL_MODE_TLV;
+    }
+
+    if (IS_INFO_FRMT_BIT(info_ctrl->frmt)) {
+        if (!INFO_BIT_OFFSET_VALID(info_ctrl->bit_offset)) {
+            DBG_DEBUG(DBG_ERROR, "info ctrl bit_offsest[%d] invalid\n",
+                info_ctrl->bit_offset);
+            return -DFD_RV_TYPE_ERR;
+        }
+        read_bytes = 1;
+    } else if (IS_INFO_FRMT_BYTE(info_ctrl->frmt) || IS_INFO_FRMT_NUM_STR(info_ctrl->frmt)
+            || IS_INFO_FRMT_NUM_BUF(info_ctrl->frmt)) {
+        if (!INFO_INT_LEN_VALAID(info_ctrl->len)) {
+            DBG_DEBUG(DBG_ERROR, "info ctrl len[%d] invalid\n", info_ctrl->len);
+            return -DFD_RV_TYPE_ERR;
+        }
+        read_bytes = info_ctrl->len;
+    } else {
+        DBG_DEBUG(DBG_ERROR, "info ctrl info format[%d] error\n", info_ctrl->frmt);
+        return -DFD_RV_TYPE_ERR;
+    }
+
+    readed_bytes = dfd_read_info(info_ctrl->src, info_ctrl->fpath, info_ctrl->addr, read_bytes, &(val[0]));
+    if (readed_bytes <= 0) {
+        DBG_DEBUG(DBG_ERROR, "read int info[src=%s frmt=%s fpath=%s addr=0x%x read_bytes=%d] fail, rv=%d\n",
+            g_info_src_str[info_ctrl->src], g_info_frmt_str[info_ctrl->frmt], info_ctrl->fpath,
+            info_ctrl->addr, read_bytes, readed_bytes);
+        return -DFD_RV_DEV_FAIL;
+    }
+
+    if (IS_INFO_FRMT_BIT(info_ctrl->frmt)) {
+        if (info_ctrl->pola == INFO_POLA_NEGA) {
+            val[0] = ~val[0];
+        }
+        byte_tmp = (val[0] >> info_ctrl->bit_offset) & (~(0xff << info_ctrl->len));
+        if (pfun) {
+            rv = pfun(&byte_tmp, sizeof(byte_tmp), &int_tmp);
+            if (rv < 0) {
+                DBG_DEBUG(DBG_ERROR, "info ctrl bit process fail, rv=%d\n", rv);
+                return rv;
+            }
+        } else {
+            int_tmp = (int)byte_tmp;
+        }
+    } else if (IS_INFO_FRMT_BYTE(info_ctrl->frmt)) {
+        int_tmp = 0;
+        for (i = 0; i < info_ctrl->len; i++) {
+            if (info_ctrl->pola == INFO_POLA_NEGA) {
+                int_tmp |=  val[info_ctrl->len - i - 1];
+            } else {
+                int_tmp |=  val[i];
+            }
+            if (i != (info_ctrl->len - 1)) {
+                int_tmp <<= 8;
+            }
+        }
+    } else if (IS_INFO_FRMT_NUM_STR(info_ctrl->frmt)) {
+        val[readed_bytes] = '\0';
+        int_tmp = simple_strtol((char *)(&(val[0])), NULL, 10);
+    } else {
+        if (pfun == NULL) {
+            DBG_DEBUG(DBG_ERROR, "info ctrl number buf process function is null\n");
+            return -DFD_RV_INDEX_INVALID;
+        }
+        rv = pfun(val, readed_bytes, &int_tmp);
+        if (rv < 0) {
+            DBG_DEBUG(DBG_ERROR, "info ctrl number buf process fail, rv=%d\n", rv);
+            return rv;
+        }
+    }
+
+    *ret = int_tmp;
+    DBG_DEBUG(DBG_VERBOSE, "read int info[src=%s frmt=%s pola=%s fpath=%s addr=0x%x len=%d bit_offset=%d] success, ret=%d\n",
+            g_info_src_str[info_ctrl->src], g_info_frmt_str[info_ctrl->frmt], g_info_pola_str[info_ctrl->pola],
+            info_ctrl->fpath, info_ctrl->addr, info_ctrl->len, info_ctrl->bit_offset, *ret);
+    return DFD_RV_OK;
+}
+
+int dfd_info_get_int(int key, int *ret, info_num_buf_to_value_f pfun)
+{
+    int rv;
     info_ctrl_t *info_ctrl;
 
     if (!DFD_CFG_ITEM_IS_INFO_CTRL(DFD_CFG_ITEM_ID(key)) || (ret == NULL)) {
@@ -178,96 +266,9 @@ int dfd_info_get_int(int key, int *ret, info_num_buf_to_value_f pfun)
         return -DFD_RV_DEV_NOTSUPPORT;
     }
 
-    if (info_ctrl->mode == INFO_CTRL_MODE_CONS) {
-        *ret = info_ctrl->int_cons;
-        return DFD_RV_OK;
-    } else if (info_ctrl->mode == INFO_CTRL_MODE_TLV) {
-        return INFO_CTRL_MODE_TLV;
-    }
-
-    if (IS_INFO_FRMT_BIT(info_ctrl->frmt)) {
-
-        if (!INFO_BIT_OFFSET_VALID(info_ctrl->bit_offset)) {
-            DBG_DEBUG(DBG_ERROR, "info ctrl[key=0x%08x] bit_offsest[%d] invalid\n",
-                key, info_ctrl->bit_offset);
-            return -DFD_RV_TYPE_ERR;
-        }
-
-        read_bytes = 1;
-    } else if (IS_INFO_FRMT_BYTE(info_ctrl->frmt) || IS_INFO_FRMT_NUM_STR(info_ctrl->frmt)
-            || IS_INFO_FRMT_NUM_BUF(info_ctrl->frmt)) {
-
-        if (!INFO_INT_LEN_VALAID(info_ctrl->len)) {
-            DBG_DEBUG(DBG_ERROR, "info ctrl[key=0x%08x] len[%d] invalid\n", key, info_ctrl->len);
-            return -DFD_RV_TYPE_ERR;
-        }
-        read_bytes = info_ctrl->len;
-    } else {
-        DBG_DEBUG(DBG_ERROR, "info ctrl[key=0x%08x] info format[%d] error\n", key, info_ctrl->frmt);
-        return -DFD_RV_TYPE_ERR;
-    }
-
-    readed_bytes = dfd_read_info(info_ctrl->src, info_ctrl->fpath, info_ctrl->addr, read_bytes, &(val[0]));
-    if (readed_bytes <= 0) {
-        DBG_DEBUG(DBG_ERROR, "read int info[key=0x%08x src=%s frmt=%s fpath=%s addr=0x%x read_bytes=%d] fail, rv=%d\n",
-            key, g_info_src_str[info_ctrl->src], g_info_frmt_str[info_ctrl->frmt], info_ctrl->fpath,
-            info_ctrl->addr, read_bytes, readed_bytes);
-        return -DFD_RV_DEV_FAIL;
-    }
-
-    if (IS_INFO_FRMT_BIT(info_ctrl->frmt)) {
-
-        if (info_ctrl->pola == INFO_POLA_NEGA) {
-            val[0] = ~val[0];
-        }
-
-        byte_tmp = (val[0] >> info_ctrl->bit_offset) & (~(0xff << info_ctrl->len));
-
-        if (pfun) {
-            rv = pfun(&byte_tmp, sizeof(byte_tmp), &int_tmp);
-            if (rv < 0) {
-                DBG_DEBUG(DBG_ERROR, "info ctrl[key=0x%08x] bit process fail, rv=%d\n", key, rv);
-                return rv;
-            }
-        } else {
-            int_tmp = (int)byte_tmp;
-        }
-    } else if (IS_INFO_FRMT_BYTE(info_ctrl->frmt)) {
-
-        int_tmp = 0;
-        for (i = 0; i < info_ctrl->len; i++) {
-            if (info_ctrl->pola == INFO_POLA_NEGA) {
-                int_tmp |=  val[info_ctrl->len - i - 1];
-            } else {
-                int_tmp |=  val[i];
-            }
-
-            if (i != (info_ctrl->len - 1)) {
-                int_tmp <<= 8;
-            }
-        }
-    } else if (IS_INFO_FRMT_NUM_STR(info_ctrl->frmt)) {
-
-        val[readed_bytes] = '\0';
-        int_tmp = simple_strtol((char *)(&(val[0])), NULL, 10);
-    } else {
-        if (pfun == NULL) {
-            DBG_DEBUG(DBG_ERROR, "info ctrl[key=0x%08x] number buf process function is null\n", key);
-            return -DFD_RV_INDEX_INVALID;
-        }
-
-        rv = pfun(val, readed_bytes, &int_tmp);
-        if (rv < 0) {
-            DBG_DEBUG(DBG_ERROR, "info ctrl[key=0x%08x] number buf process fail, rv=%d\n", key, rv);
-            return rv;
-        }
-    }
-
-    *ret = int_tmp;
-    DBG_DEBUG(DBG_VERBOSE, "read int info[key=0x%08x src=%s frmt=%s pola=%s fpath=%s addr=0x%x len=%d bit_offset=%d] success, ret=%d\n",
-            key, g_info_src_str[info_ctrl->src], g_info_frmt_str[info_ctrl->frmt], g_info_pola_str[info_ctrl->pola],
-            info_ctrl->fpath, info_ctrl->addr, info_ctrl->len, info_ctrl->bit_offset, *ret);
-    return DFD_RV_OK;
+    DBG_DEBUG(DBG_VERBOSE, "get info ctrl value, key=0x%08x\n", key);
+    rv = dfd_get_info_value(info_ctrl, ret, pfun);
+    return rv;
 }
 
 int dfd_info_get_buf(int key, uint8_t *buf, int buf_len, info_buf_to_buf_f pfun)
@@ -461,11 +462,153 @@ int dfd_info_set_int(int key, int val)
     return DFD_RV_OK;
 }
 
-static int dfd_info_get_cpld_voltage(int key, int *value)
+static int dfd_info_reg2data_linear(int key, int data, int *temp_value)
 {
-    int rv, addr_tmp;
-    int vol_ref_tmp, vol_ref;
-    int vol_curr_tmp, vol_curr;
+    s16 exponent;
+    s32 mantissa;
+    int val;
+    info_ctrl_t *info_ctrl;
+
+    info_ctrl = dfd_ko_cfg_get_item(key);
+    if (info_ctrl == NULL) {
+        DBG_DEBUG(DBG_WARN, "get info ctrl fail, key=%d\n", key);
+        return -DFD_RV_DEV_NOTSUPPORT;
+    }
+
+    switch (info_ctrl->int_extra1) {
+    case LINEAR11:
+        exponent = ((s16)data) >> 11;
+        mantissa = ((s16)((data & 0x7ff) << 5)) >> 5;
+        val = mantissa;
+        val = val * 1000L;
+        break;
+    case LINEAR16:
+        break;
+    default:
+        break;
+    }
+
+    if (DFD_CFG_ITEM_ID(key) == DFD_CFG_ITEM_HWMON_POWER) {
+        val = val * 1000L;
+    }
+
+    if (exponent >= 0) {
+        val <<= exponent;
+    } else {
+        val >>= -exponent;
+    }
+    *temp_value = val;
+
+    return DFD_RV_OK;
+}
+
+static int dfd_info_reg2data_tmp464(int data, int *temp_value)
+{
+    s16 tmp_val;
+    int val;
+
+    DBG_DEBUG(DBG_VERBOSE, "reg2data_tmp464, data=%d\n", data);
+
+    if (data >= 0) {
+        val = data*625/80;
+    } else {
+        tmp_val = ~(data & 0x7ff) + 1;
+        val = tmp_val*625/80;
+    }
+    *temp_value = val;
+
+    return DFD_RV_OK;
+}
+
+static int dfd_info_reg2data_mac_th5(int data, int *temp_value)
+{
+    int tmp_val;
+    int val;
+
+    DBG_DEBUG(DBG_VERBOSE, "reg2data_mac_th5, data=%d\n", data);
+
+    tmp_val = data >> 4;
+    val = 476359 - (((tmp_val - 2) * 317704) / 2000);
+
+    DBG_DEBUG(DBG_VERBOSE, "reg2data_mac_th5, val=%d\n", val);
+    *temp_value = val;
+
+    return DFD_RV_OK;
+}
+
+static int dfd_info_reg2data_mac_td3(int data, int *temp_value)
+{
+    int val;
+
+    if (data == 0) {
+        DBG_DEBUG(DBG_ERROR,"invalid cpld data=%d\n", data);
+        *temp_value = -READ_TEMP_FAIL;
+        return DFD_RV_OK;
+    }
+
+    DBG_DEBUG(DBG_VERBOSE, "reg2data_mac_td3, data=%d\n", data);
+    val = 434100 - (12500000 / (data * 100 - 1) *535);
+    if ((val / 1000 < -70) || (val / 1000 > 200)) {
+        DBG_DEBUG(DBG_ERROR,"out of range cpld val=%d\n", val);
+        *temp_value = -READ_TEMP_FAIL;
+        return DFD_RV_OK;
+    }
+    DBG_DEBUG(DBG_VERBOSE, "reg2data_mac_td3, val=%d\n", val);
+    *temp_value = val;
+
+    return DFD_RV_OK;
+}
+
+static int dfd_info_get_cpld_voltage(int key, uint32_t *value)
+{
+    int rv;
+    uint32_t vol_ref_tmp, vol_ref;
+    uint32_t vol_curr_tmp, vol_curr;
+    info_ctrl_t *info_ctrl;
+    info_ctrl_t info_ctrl_tmp;
+    uint32_t vol_coefficient;
+
+    info_ctrl = dfd_ko_cfg_get_item(key);
+    if (info_ctrl == NULL) {
+        DBG_DEBUG(DBG_WARN, "get info ctrl fail, key=0x%08x\n", key);
+        return -DFD_RV_DEV_NOTSUPPORT;
+    }
+
+    vol_coefficient = (uint32_t)info_ctrl->int_extra2;
+
+    rv = dfd_get_info_value(info_ctrl, &vol_curr_tmp, NULL);
+    if (rv < 0) {
+        DBG_DEBUG(DBG_ERROR, "get cpld current voltage error, addr:0x%x, rv = %d\n", info_ctrl->addr, rv);
+        return rv;
+    }
+    vol_curr_tmp = DFD_GET_CPLD_VOLATGE_CODE_VALUE(vol_curr_tmp);
+    if (info_ctrl->addr == info_ctrl->int_extra1) {
+        vol_curr = DFD_GET_CPLD_VOLATGE_REAL_VALUE(vol_curr_tmp, vol_coefficient);
+        DBG_DEBUG(DBG_VERBOSE, "current voltage is reference voltage, vol_curr_tmp: 0x%x, coefficient: %u, vol_curr: %u\n",
+            vol_curr_tmp, vol_coefficient, vol_curr);
+    } else {
+        memcpy(&info_ctrl_tmp, info_ctrl, sizeof(info_ctrl_t));
+        info_ctrl_tmp.addr = info_ctrl->int_extra1;
+        rv = dfd_get_info_value(&info_ctrl_tmp, &vol_ref_tmp, NULL);
+        if (rv < 0) {
+            DBG_DEBUG(DBG_ERROR, "get cpld reference voltage error, addr: 0x%x, rv: %d\n", info_ctrl_tmp.addr, rv);
+            return rv;
+        }
+        vol_ref = DFD_GET_CPLD_VOLATGE_CODE_VALUE(vol_ref_tmp);
+        DBG_DEBUG(DBG_VERBOSE, "vol_ref_tmp: 0x%x, vol_ref: 0x%x\n", vol_ref_tmp, vol_ref);
+        vol_curr = (vol_curr_tmp * vol_coefficient) / vol_ref;
+        DBG_DEBUG(DBG_VERBOSE, "vol_curr_tmp: 0x%x, vol_ref: 0x%x, coefficient: %u, vol_curr: %u\n",
+            vol_curr_tmp, vol_ref, vol_coefficient, vol_curr);
+    }
+    *value = vol_curr;
+    return DFD_RV_OK;
+}
+
+static int dfd_info_get_cpld_temperature(int key, int *value)
+{
+    int rv;
+    int temp_reg;
+    int temp_value;
     info_ctrl_t *info_ctrl;
 
     info_ctrl = dfd_ko_cfg_get_item(key);
@@ -474,36 +617,42 @@ static int dfd_info_get_cpld_voltage(int key, int *value)
         return -DFD_RV_DEV_NOTSUPPORT;
     }
 
-     rv = dfd_info_get_int(key, &vol_curr_tmp, NULL);
-     if(rv < 0) {
-         DBG_DEBUG(DBG_ERROR, "get cpld current voltage error, addr:0x%x, rv =%d\n", info_ctrl->addr, rv);
-         return rv;
-     }
-     vol_curr_tmp = DFD_GET_CPLD_VOLATGE_CODE_VALUE(vol_curr_tmp);
-     if(info_ctrl->addr == info_ctrl->int_extra1) {
+    rv = dfd_info_get_int(key, &temp_reg, NULL);
+    if(rv < 0) {
+        DBG_DEBUG(DBG_ERROR, "get cpld current temperature error, addr:0x%x, rv =%d\n", info_ctrl->addr, rv);
+        return rv;
+    }
+    DBG_DEBUG(DBG_VERBOSE, "get cpld temp:0x%08x, extra1 0x%x\n", temp_reg, info_ctrl->int_extra1);
 
-         vol_curr = DFD_GET_CPLD_VOLATGE_REAL_VALUE(vol_curr_tmp, info_ctrl->int_extra2);
-     } else {
+    switch (info_ctrl->int_extra1) {
+    case LINEAR11:
+        rv = dfd_info_reg2data_linear(key, temp_reg, &temp_value);
+        break;
+    case TMP464:
+        rv = dfd_info_reg2data_tmp464(temp_reg, &temp_value);
+        break;
+    case MAC_TH5:
+        rv = dfd_info_reg2data_mac_th5(temp_reg, &temp_value);
+        break;
+    case MAC_TD3:
+        rv = dfd_info_reg2data_mac_td3(temp_reg, &temp_value);
+        break;
+    default:
+        temp_value = temp_reg;
+        rv = DFD_RV_OK;
+        break;
+    }
+    
+    DBG_DEBUG(DBG_VERBOSE, "calc temp:%d \n", temp_value);
+    *value = temp_value;
 
-         addr_tmp = info_ctrl->addr;
-         info_ctrl->addr = info_ctrl->int_extra1;
-         rv = dfd_info_get_int(key, &vol_ref_tmp, NULL);
-         info_ctrl->addr = addr_tmp;
-         if(rv < 0) {
-             DBG_DEBUG(DBG_ERROR, "get cpld reference voltage error, addr:0x%x rv:%d\n", info_ctrl->addr, rv);
-             return rv;
-         }
-         vol_ref = DFD_GET_CPLD_VOLATGE_CODE_VALUE(vol_ref_tmp);
-         vol_curr = (vol_curr_tmp * info_ctrl->int_extra2) / vol_ref;
-     }
-    *value = vol_curr;
-     return DFD_RV_OK;
+    return rv;
 }
 
 static int dfd_info_get_sensor_value(int key, uint8_t *buf, int buf_len, info_hwmon_buf_f pfun)
 {
     int rv, buf_real_len;
-    int value;
+    uint32_t value;
     uint8_t buf_tmp[INFO_BUF_MAX_LEN];
     info_ctrl_t *info_ctrl;
 
@@ -514,15 +663,14 @@ static int dfd_info_get_sensor_value(int key, uint8_t *buf, int buf_len, info_hw
     }
 
     if ( DFD_CFG_ITEM_ID(key) == DFD_CFG_ITEM_HWMON_IN && info_ctrl->src == INFO_SRC_CPLD) {
-
         rv = dfd_info_get_cpld_voltage(key, &value);
         if(rv < 0) {
             DBG_DEBUG(DBG_ERROR, "get cpld voltage failed.key=0x%08x, rv:%d\n", key, rv);
             return -DFD_RV_DEV_NOTSUPPORT;
         }
-        DBG_DEBUG(DBG_VERBOSE, "get cpld voltage ok, value:%d\n", value);
+        DBG_DEBUG(DBG_VERBOSE, "get cpld voltage ok, value:%u\n", value);
         mem_clear(buf_tmp, sizeof(buf_tmp));
-        snprintf(buf_tmp, sizeof(buf_tmp), "%d\n", value);
+        snprintf(buf_tmp, sizeof(buf_tmp), "%u\n", value);
         buf_real_len = strlen(buf_tmp);
         if(buf_len <= buf_real_len) {
             DBG_DEBUG(DBG_ERROR, "length not enough.buf_len:%d,need length:%d\n", buf_len, buf_real_len);
@@ -539,6 +687,23 @@ static int dfd_info_get_sensor_value(int key, uint8_t *buf, int buf_len, info_hw
         } else {
             memcpy(buf, buf_tmp, buf_real_len);
         }
+        return buf_real_len;
+    } else if ( DFD_CFG_ITEM_ID(key) == DFD_CFG_ITEM_HWMON_TEMP && info_ctrl->src == INFO_SRC_CPLD ) {
+        rv = dfd_info_get_cpld_temperature(key, &value);
+        if(rv < 0) {
+            DBG_DEBUG(DBG_ERROR, "get cpld temperature failed.key=0x%08x, rv:%d\n", key, rv);
+            return -DFD_RV_DEV_NOTSUPPORT;
+        }
+        DBG_DEBUG(DBG_VERBOSE, "get cpld temperature ok, value:%d buf_len %d\n", value, buf_len);
+        mem_clear(buf_tmp, sizeof(buf_tmp));
+        snprintf(buf_tmp, sizeof(buf_tmp), "%d\n", value);
+        buf_real_len = strlen(buf_tmp);
+        if(buf_len <= buf_real_len) {
+            DBG_DEBUG(DBG_ERROR, "length not enough.buf_len:%d,need length:%d\n", buf_len, buf_real_len);
+            return -DFD_RV_DEV_FAIL;
+        }
+        DBG_DEBUG(DBG_VERBOSE, "buf_real_len %d\n", buf_real_len);
+        memcpy(buf, buf_tmp, buf_real_len);
         return buf_real_len;
     }
 

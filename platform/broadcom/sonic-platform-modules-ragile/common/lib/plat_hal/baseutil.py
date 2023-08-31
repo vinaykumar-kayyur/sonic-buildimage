@@ -61,8 +61,8 @@ def getplatform_config_db():
 def getplatform_name():
     if os.path.isfile('/host/machine.conf'):
         return getonieplatform('/host/machine.conf')
-    if os.path.isfile('/usr/share/sonic/hwsku/machine.conf'):
-        return getonieplatform('/usr/share/sonic/hwsku/machine.conf')
+    if os.path.isfile('/etc/sonic/machine.conf'):
+        return getonieplatform('/etc/sonic/machine.conf')
     return getplatform_config_db()
 
 

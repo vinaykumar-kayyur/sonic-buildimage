@@ -14,6 +14,8 @@
 
 extern int i2c_device_func_write(const char *path, uint32_t pos, uint8_t *val, size_t size);
 extern int pcie_device_func_write(const char *path, uint32_t offset, uint8_t *buf, size_t count);
+extern int io_device_func_write(const char *path, uint32_t pos, uint8_t *val, size_t size);
+extern int spi_device_func_write(const char *path, uint32_t offset, uint8_t *buf, size_t count);
 
 #define PCA954X_MAX_NCHANS           (8)
 #define FPGA_INTERNAL_PCA9548        (1)
@@ -25,6 +27,7 @@ extern int pcie_device_func_write(const char *path, uint32_t offset, uint8_t *bu
 #define FILE_MODE                    (2)
 #define SYMBOL_PCIE_DEV_MODE         (3)
 #define SYMBOL_IO_DEV_MODE           (4)
+#define SYMBOL_SPI_DEV_MODE          (5)
 
 int g_fpga_pca954x_debug = 0;
 int g_fpga_pca954x_error = 0;
@@ -157,6 +160,7 @@ exit:
     return -1;
 
 }
+
 static int fpga_device_write(fpga_i2c_dev_t *fpga_i2c, int pos, unsigned char *val, size_t size)
 {
     int ret;
@@ -171,11 +175,16 @@ static int fpga_device_write(fpga_i2c_dev_t *fpga_i2c, int pos, unsigned char *v
     case SYMBOL_PCIE_DEV_MODE:
         ret = pcie_device_func_write(fpga_i2c->dev_name, pos, val, size);
         break;
+    case SYMBOL_IO_DEV_MODE:
+        ret = io_device_func_write(fpga_i2c->dev_name, pos, val, size);
+        break;
+    case SYMBOL_SPI_DEV_MODE:
+        ret = spi_device_func_write(fpga_i2c->dev_name, pos, val, size);
+        break;
     default:
-        FPGA_PCA954X_ERROR("err func mode, write failed.\n");
+        FPGA_PCA954X_ERROR("err func_mode %d, write failed.\n", fpga_i2c->i2c_func_mode);
         return -EINVAL;
     }
-
     return ret;
 }
 

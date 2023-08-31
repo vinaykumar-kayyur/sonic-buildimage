@@ -229,12 +229,12 @@ static ssize_t pci_dev_read(struct file *file, char __user *buf, size_t count, l
     }
 
     if (count == 0) {
-        PCIE_DEV_DEBUG_ERROR("Invalid params, read count is 0.n");
+        PCIE_DEV_DEBUG_ERROR("Invalid params, read count is 0.\n");
         return -EINVAL;
     }
 
     if (count > sizeof(buf_tmp)) {
-        PCIE_DEV_DEBUG_VERBOSE("read conut %lu exceed max %lu.\n", count, sizeof(buf_tmp));
+        PCIE_DEV_DEBUG_VERBOSE("read count %lu exceed max %lu.\n", count, sizeof(buf_tmp));
         count = sizeof(buf_tmp);
     }
 
@@ -245,14 +245,14 @@ static ssize_t pci_dev_read(struct file *file, char __user *buf, size_t count, l
         return read_len;
     }
     if (access_ok(buf, read_len)) {
-        PCIE_DEV_DEBUG_VERBOSE("user space read, buf: %p, offset: %lld, read conut %lu.\n",
+        PCIE_DEV_DEBUG_VERBOSE("user space read, buf: %p, offset: %lld, read count %lu.\n",
             buf, *offset, count);
         if (copy_to_user(buf, buf_tmp, read_len)) {
             PCIE_DEV_DEBUG_ERROR("copy_to_user failed.\n");
             return -EFAULT;
         }
     } else {
-        PCIE_DEV_DEBUG_VERBOSE("kernel space read, buf: %p, offset: %lld, read conut %lu.\n",
+        PCIE_DEV_DEBUG_VERBOSE("kernel space read, buf: %p, offset: %lld, read count %lu.\n",
             buf, *offset, count);
         memcpy(buf, buf_tmp, read_len);
     }
@@ -325,20 +325,20 @@ static ssize_t pci_dev_write(struct file *file, const char __user *buf, size_t c
     }
 
     if (count > sizeof(buf_tmp)) {
-        PCIE_DEV_DEBUG_VERBOSE("write conut %lu exceed max %lu.\n", count, sizeof(buf_tmp));
+        PCIE_DEV_DEBUG_VERBOSE("write count %lu exceed max %lu.\n", count, sizeof(buf_tmp));
         count = sizeof(buf_tmp);
     }
 
     mem_clear(buf_tmp, sizeof(buf_tmp));
     if (access_ok(buf, count)) {
-        PCIE_DEV_DEBUG_VERBOSE("user space write, buf: %p, offset: %lld, write conut %lu.\n",
+        PCIE_DEV_DEBUG_VERBOSE("user space write, buf: %p, offset: %lld, write count %lu.\n",
             buf, *offset, count);
         if (copy_from_user(buf_tmp, buf, count)) {
             PCIE_DEV_DEBUG_ERROR("copy_from_user failed.\n");
             return -EFAULT;
         }
     } else {
-        PCIE_DEV_DEBUG_VERBOSE("kernel space write, buf: %p, offset: %lld, write conut %lu.\n",
+        PCIE_DEV_DEBUG_VERBOSE("kernel space write, buf: %p, offset: %lld, write count %lu.\n",
             buf, *offset, count);
         memcpy(buf_tmp, buf, count);
     }

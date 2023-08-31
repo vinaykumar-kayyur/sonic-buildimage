@@ -4,6 +4,7 @@
 #include <linux/of_gpio.h>
 
 #define SYSFS_NO_CFG         (0xff)
+#define INVALID_REG_ADDR     (0xffffffff)
 
 typedef struct gpio_wdt_info_s {
     int       gpio;
@@ -35,7 +36,13 @@ typedef struct wb_wdt_device_s {
     uint32_t    timeleft_cfg_reg;
     uint32_t    hw_margin;
     uint32_t    feed_time;
+    uint8_t     timer_accuracy_reg_flag;
+    uint32_t    timer_accuracy_reg;
+    uint8_t     timer_accuracy_reg_val;
     uint32_t    timer_accuracy;
+    uint8_t     timer_update_reg_flag;
+    uint32_t    timer_update_reg;
+    uint8_t     timer_update_reg_val;
     union {
         gpio_wdt_info_t gpio_wdt;
         logic_wdt_info_t logic_wdt;

@@ -700,7 +700,7 @@ devices = {
             "slot": 0,
             "type": "str",
             "warm": 0,
-        },
+        }
     ],
     "dcdc": [
         {

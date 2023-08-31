@@ -6,6 +6,7 @@
 #
 #######################################################
 from eepromutil.fru import ipmifru
+from eepromutil.cust_fru import CustFru
 from plat_hal.devicebase import devicebase
 from plat_hal.sensor import sensor
 
@@ -60,6 +61,7 @@ class psu(devicebase):
     def __init__(self, conf=None):
         self.pmbus = conf.get("pmbusloc", None)
         self.e2loc = conf.get("e2loc", None)
+        self.e2_type = conf.get('e2_type', "fru")
         self.__presentconfig = conf.get("present", None)
         self.name = conf.get("name", None)
         self.AirFlowconifg = conf.get("airflow", None)
@@ -158,14 +160,21 @@ class psu(devicebase):
 
     @property
     def InputStatus(self):
+        if self.__InputStatus_config is None:
+            return None
         if self.present is False:
             self.__InputStatus = False
         else:
             ret, val = self.get_value(self.__InputStatus_config)
             mask = self.__InputStatus_config.get("mask")
             if ret is True:
-                ttt = val & mask
-                if ttt == 0:
+                if isinstance(val, str):
+                    value = int(val, 16)
+                else:
+                    value = val
+                ttt = value & mask
+                okval = self.__InputStatus_config.get("okval", 0)
+                if ttt == okval:
                     self.__InputStatus = True
                 else:
                     self.__InputStatus = False
@@ -187,8 +196,13 @@ class psu(devicebase):
             ret, val = self.get_value(self.__TempStatus_config)
             mask = self.__TempStatus_config.get("mask")
             if ret is True:
-                ttt = val & mask
-                if ttt == 0:
+                if isinstance(val, str):
+                    value = int(val, 16)
+                else:
+                    value = val
+                ttt = value & mask
+                okval = self.__TempStatus_config.get("okval", 0)
+                if ttt == okval:
                     self.__TempStatus = True
                 else:
                     self.__TempStatus = False
@@ -210,8 +224,13 @@ class psu(devicebase):
             ret, val = self.get_value(self.__FanStatus_config)
             mask = self.__FanStatus_config.get("mask")
             if ret is True:
-                ttt = val & mask
-                if ttt == 0:
+                if isinstance(val, str):
+                    value = int(val, 16)
+                else:
+                    value = val
+                ttt = value & mask
+                okval = self.__FanStatus_config.get("okval", 0)
+                if ttt == okval:
                     self.__FanStatus = True
                 else:
                     self.__FanStatus = False
@@ -223,9 +242,8 @@ class psu(devicebase):
     def FanStatus(self, val):
         self.__FanStatus = val
 
-    @property
-    def InputsType(self):
-        psutypedecode = self.__InputsType_config.get('psutypedecode', None)
+    def get_input_type_pmbus(self):
+        psutypedecode = self.__InputsType_config.get('psutypedecode', {})
         if self.present is False:
             self.__InputsType = psutypedecode.get(0x00)
         else:
@@ -237,6 +255,30 @@ class psu(devicebase):
                 self.__InputsType = psutypedecode.get(val)
             else:
                 self.__InputsType = psutypedecode.get(0x00)
+        return self.__InputsType
+
+    def get_input_type_fru(self):
+        self.__InputsType = 'N/A'
+        if self.productPartModelName is None:
+            ret = self.get_fru_info()
+            if ret is False:
+                return self.__InputsType
+        psutypedecode = self.__InputsType_config.get('psutypedecode', {})
+        for key, value in psutypedecode.items():
+            if self.productPartModelName in value:
+                self.__InputsType = key
+        return self.__InputsType
+
+    @property
+    def InputsType(self):
+        gettype = self.__InputsType_config.get('gettype', "pmbus")
+        if gettype == "pmbus":
+            return self.get_input_type_pmbus()
+
+        if gettype == "fru":
+            return self.get_input_type_fru()
+
+        self.__InputsType = 'N/A'
         return self.__InputsType
 
     @InputsType.setter
@@ -269,14 +311,21 @@ class psu(devicebase):
 
     @property
     def OutputStatus(self):
+        if self.__OutputStatus_config is None:
+            return None
         if self.present is False:
             self.__OutputStatus = False
         else:
             ret, val = self.get_value(self.__OutputStatus_config)
             mask = self.__OutputStatus_config.get("mask")
             if ret is True:
-                ttt = val & mask
-                if ttt == 0:
+                if isinstance(val, str):
+                    value = int(val, 16)
+                else:
+                    value = val
+                ttt = value & mask
+                okval = self.__OutputStatus_config.get("okval", 0)
+                if ttt == okval:
                     self.__OutputStatus = True
                 else:
                     self.__OutputStatus = False
@@ -476,6 +525,8 @@ class psu(devicebase):
         return tmpstr
 
     def get_fan_speed_pwm(self):
+        if self.pmbus is None:
+            return None
         if self.present is False:
             return self.psu_not_present_pwm
         selfconfig = {}
@@ -496,6 +547,10 @@ class psu(devicebase):
         '''
         if self.present is False:
             return None
+
+        if self.pmbus is None:
+            return None
+
         if 0 <= pwm <= 100:
             # enable duty first
             selfconfig = {}
@@ -559,13 +614,44 @@ class psu(devicebase):
             return False
         return True
 
+    def get_custfru_info_by_decode(self):
+        try:
+            eeprom = self.get_eeprom_info(self.e2loc)
+            if eeprom is None:
+                raise Exception("%s:value is none" % self.name)
+            custfru = CustFru()
+            if isinstance(eeprom, bytes):
+                eeprom = self.byteTostr(eeprom)
+            custfru.decode(eeprom)
+            self.productManufacturer = custfru.manufacturer.strip()
+            self.productName = custfru.product_name.strip()
+            self.productPartModelName = custfru.product_name.strip()
+            self.productVersion = custfru.version.strip()
+            self.productSerialNumber = custfru.serial_number.strip().replace(chr(0), "")
+        except Exception:
+            self.productManufacturer = None
+            self.productName = None
+            self.productPartModelName = None
+            self.productVersion = None
+            self.productSerialNumber = None
+            return False
+        return True
+
     def get_fru_info(self):
         try:
             if self.present is not True:
                 raise Exception("%s: not present" % self.name)
+
             if self.get_fru_info_by_sysfs() is True:
                 return True
-            return self.get_fru_info_by_decode()
+
+            if self.e2_type == "fru":
+                return self.get_fru_info_by_decode()
+
+            if self.e2_type == "custfru":
+                return self.get_custfru_info_by_decode()
+
+            raise Exception("%s: unsupport e2_type: %s" % (self.name, self.e2_type))
         except Exception:
             self.productManufacturer = None
             self.productName = None

@@ -19,3 +19,15 @@ Description: kernel modules for platform devices such as fan, led, sfp
 Package: platform-modules-ragile-ra-b6920-4s
 Architecture: amd64
 Description: kernel modules for platform devices such as fan, led, sfp
+
+Package: platform-modules-ragile-ra-b6520-24dc8qc
+Architecture: amd64
+Description: kernel modules for platform devices such as fan, led, sfp
+
+Package: platform-modules-ragile-ra-b6930-64qc
+Architecture: amd64
+Description: kernel modules for platform devices such as fan, led, sfp
+
+Package: platform-modules-ragile-b6510-48vs8cq
+Architecture: amd64
+Description: kernel modules for platform devices such as fan, led, sfp

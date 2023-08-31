@@ -11,6 +11,7 @@ typedef struct spi_dev_device_s {
     uint32_t addr_bus_width;
     uint32_t per_rd_len;
     uint32_t per_wr_len;
+    uint32_t spi_len;
 } spi_dev_device_t;
 
 #endif

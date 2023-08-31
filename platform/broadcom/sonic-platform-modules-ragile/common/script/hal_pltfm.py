@@ -325,9 +325,9 @@ def fan_get_presence():
         print(int_case.get_fan_presence(fan_item.name))
 
 
-def fan_get_fru_info():
-    r'''fan_get_fru_info'''
-    print("=================fan_get_fru_info======================")
+def fan_get_info():
+    r'''fan_get_info'''
+    print("=================fan_get_info======================")
     fans = int_case.get_fans()
     for fan_item in fans:
         print("%s" % fan_item.name)
@@ -457,7 +457,7 @@ def run_cli_man():
                 fan_set_led: None,
                 fan_get_led: None,
                 fan_get_presence: None,
-                fan_get_fru_info: None,
+                fan_get_info: None,
                 fan_get_status: None,
                 fan_get_info_all: None
             },

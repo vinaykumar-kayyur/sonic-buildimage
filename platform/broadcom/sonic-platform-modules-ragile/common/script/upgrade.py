@@ -287,7 +287,7 @@ class BasePlatform():
                 upgradeerror("%s firmware upgrade failed, msg: %s" % (dev_name, output))
                 return False, output
             upgradedebuglog("%s firmware upgrade success" % dev_name)
-            ret, log = self.do_fw_upg_finish_cmd(dev_name, init_cmd_list)
+            ret, log = self.do_fw_upg_finish_cmd(dev_name, finish_cmd_list)
             if ret is False:
                 return False, log
             return True, "upgrade success"
@@ -316,7 +316,7 @@ class BasePlatform():
                 upgradeerror("%s test upgrade failed, msg: %s" % (dev_name, output))
                 return False, output
             upgradedebuglog("%s test upgrade success" % dev_name)
-            ret, log = self.do_fw_upg_finish_cmd(dev_name, init_cmd_list)
+            ret, log = self.do_fw_upg_finish_cmd(dev_name, finish_cmd_list)
             if ret is False:
                 return False, log
             return True, "upgrade success"

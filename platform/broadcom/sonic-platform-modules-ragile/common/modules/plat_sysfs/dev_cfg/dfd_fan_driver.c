@@ -12,6 +12,10 @@
 int g_dfd_fan_dbg_level = 0;
 module_param(g_dfd_fan_dbg_level, int, S_IRUGO | S_IWUSR);
 
+typedef enum fan_speed_format_mem_s {
+    LINEAR120 = 1,
+} fan_speed_format_mem_t;
+
 int dfd_get_fan_roll_status(unsigned int fan_index, unsigned int motor_index)
 {
     int key, ret;
@@ -46,9 +50,30 @@ int dfd_get_fan_present_status(unsigned int fan_index)
     return status;
 }
 
+static int dfd_get_fan_speed_linear120(int origin_data, int *speed)
+{
+    *speed = origin_data * 120;
+    DFD_FAN_DEBUG(DBG_VERBOSE, "get fan speed by linear120 origin_data: %d, speed: %d\n",
+        origin_data, *speed);
+    return 0;
+}
+
+static int dfd_get_fan_speed_default(int origin_data, int *speed)
+{
+    if (origin_data == 0 || origin_data == 0xffff) {
+        *speed = 0;
+    } else {
+        *speed = 15000000 / origin_data;
+    }
+    DFD_FAN_DEBUG(DBG_VERBOSE, "get fan speed by default origin_data: %d, speed: %d\n",
+        origin_data, *speed);
+    return 0;
+}
+
 ssize_t dfd_get_fan_speed(unsigned int fan_index, unsigned int motor_index,unsigned int *speed)
 {
     int key, ret, speed_tmp;
+    info_ctrl_t *info_ctrl;
 
     if (speed == NULL) {
         DFD_FAN_DEBUG(DBG_ERROR, "param error. fan index:%d, motor index:%d.\n",
@@ -62,13 +87,19 @@ ssize_t dfd_get_fan_speed(unsigned int fan_index, unsigned int motor_index,unsig
         DFD_FAN_DEBUG(DBG_ERROR, "get fan speed error, key:0x%x,ret:%d\n",key, ret);
         return ret;
     }
+    DFD_FAN_DEBUG(DBG_VERBOSE, "get fan origin data: 0x%x\n", speed_tmp);
 
-    if (speed_tmp == 0 || speed_tmp == 0xffff) {
-        *speed = 0;
-    } else {
-        *speed = 15000000 / speed_tmp;
+    info_ctrl = dfd_ko_cfg_get_item(key);
+    switch (info_ctrl->int_extra1) {
+    case LINEAR120:
+        ret = dfd_get_fan_speed_linear120(speed_tmp, speed);
+        break;
+    default:
+        ret = dfd_get_fan_speed_default(speed_tmp, speed);
+        break;
     }
-    return DFD_RV_OK;
+
+    return ret;
 }
 
 int dfd_set_fan_speed_level(unsigned int fan_index, unsigned int motor_index, int level)

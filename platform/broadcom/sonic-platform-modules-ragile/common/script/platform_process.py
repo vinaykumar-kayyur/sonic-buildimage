@@ -4,6 +4,7 @@ import subprocess
 import glob
 import time
 import click
+import shutil
 from platform_config import STARTMODULE, MAC_LED_RESET, AIRFLOW_RESULT_FILE
 from platform_config import GLOBALINITPARAM, GLOBALINITCOMMAND, GLOBALINITPARAM_PRE, GLOBALINITCOMMAND_PRE
 from platform_util import wbpciwr
@@ -347,7 +348,15 @@ def MacLedSet(data):
     wbpciwr(pcibus, slot, fn, resource, offset, val)
 
 
+def copy_machineconf():
+    try:
+        shutil.copyfile("/host/machine.conf", "/etc/sonic/machine.conf")
+        return True
+    except Exception:
+        return False
+
 def load_apps():
+    copy_machineconf()
     otherinit_pre()
     startGenerate_air_flow()
     start_tty_console()

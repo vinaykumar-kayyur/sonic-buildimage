@@ -41,6 +41,7 @@ class fan(devicebase):
             self.sn = conf.get('sn', None)
             self.present = conf.get('present', None)
             self.e2loc = conf.get('e2loc', None)
+            self.e2_type = conf.get('e2_type', "fru")
             self.SpeedMin = conf.get('SpeedMin', None)
             self.SpeedMax = conf.get('SpeedMax', None)
             self.PowerMax = conf.get('PowerMax', None)
@@ -331,10 +332,13 @@ class fan(devicebase):
 
     def decode_eeprom_info(self):
         '''get fan name, hw version, sn'''
-        ret = self.get_tlv_info()
-        if ret is True:
-            return ret
-        return self.get_fru_info()
+        if self.e2_type == "fru":
+            return self.get_fru_info()
+
+        if self.e2_type == "fantlv":
+            return self.get_tlv_info()
+
+        return False
 
     def get_AirFlow(self):
         if self.productName is None:
@@ -398,7 +402,7 @@ class fan(devicebase):
 
     def get_fan_display_name(self):
         if self.productName is None:
-            ret = self.get_fru_info()
+            ret = self.decode_eeprom_info()
             if ret is False:
                 self.fan_display_name = None
                 return False

@@ -61,11 +61,14 @@ struct i2c_dev_info {
 static int transfer_read(struct i2c_client *client, u8 *buf, loff_t regaddr, size_t count)
 {
     struct i2c_adapter *adap;
-    int i;
+    union i2c_smbus_data data;
+    int i, j;
     u8 offset_buf[MAX_BUS_WIDTH];
     struct i2c_msg msgs[2];
     int msgs_num, ret;
     struct i2c_dev_info *i2c_dev;
+    u8 offset;
+    u8 length;
 
     if (!client) {
         I2C_DEV_DEBUG_ERROR("can't get read client\n");
@@ -127,9 +130,47 @@ static int transfer_read(struct i2c_client *client, u8 *buf, loff_t regaddr, siz
             return -EINVAL;
         }
     } else {
-        I2C_DEV_DEBUG_ERROR("don't find read master_xfer\n");
-        return -EINVAL;
+        if (i2c_dev->addr_bus_width == WIDTH_1Byte) {
+            offset = regaddr & 0xFF;
+            if (i2c_check_functionality(adap, I2C_FUNC_SMBUS_READ_I2C_BLOCK)) {
+                for (j = 0; j < count; j += I2C_SMBUS_BLOCK_MAX) {
+                    if (count - j > I2C_SMBUS_BLOCK_MAX) {
+                        length = I2C_SMBUS_BLOCK_MAX;
+                    } else {
+                        length = count - j;
+                    }
+                    data.block[0] = length;
+                    ret = adap->algo->smbus_xfer(adap, client->addr,
+                                    0,
+                                    I2C_SMBUS_READ,
+                                    offset, I2C_SMBUS_I2C_BLOCK_DATA, &data);
+                    if (ret) {
+                        I2C_DEV_DEBUG_ERROR("smbus_xfer read block error, ret = %d\n", ret);
+                        return -EFAULT;
+                    }
+                    memcpy(buf + j, data.block + 1, length);
+                    offset += length;
+                }
+            } else {
+                for (j = 0; j < count; j++) {
+                    ret = adap->algo->smbus_xfer(adap, client->addr,
+                                    0,
+                                    I2C_SMBUS_READ,
+                                    offset, I2C_SMBUS_BYTE_DATA, &data);
 
+                    if (!ret) {
+                        buf[j] = data.byte;
+                    } else {
+                        I2C_DEV_DEBUG_ERROR("smbus_xfer read byte error, ret = %d\n", ret);
+                        return -EFAULT;
+                    }
+                    offset++;
+                }
+            }
+        } else {
+            I2C_DEV_DEBUG_ERROR("smbus_xfer not support addr_bus_width = %d\n", i2c_dev->addr_bus_width);
+            return -EINVAL;
+        }
     }
     return 0;
 }
@@ -400,17 +441,17 @@ static ssize_t i2c_dev_read(struct file *file, char __user *buf, size_t count, l
 
     i2c_dev = file->private_data;
     if (i2c_dev == NULL) {
-        I2C_DEV_DEBUG_ERROR("can't get read private_data.n");
+        I2C_DEV_DEBUG_ERROR("can't get read private_data.\n");
         return -EINVAL;
     }
 
     if (count == 0) {
-        I2C_DEV_DEBUG_ERROR("Invalid params, read count is 0.n");
+        I2C_DEV_DEBUG_ERROR("Invalid params, read count is 0.\n");
         return -EINVAL;
     }
 
     if (count > sizeof(val)) {
-        I2C_DEV_DEBUG_DMESG("read conut %lu exceed max %lu.\n", count, sizeof(val));
+        I2C_DEV_DEBUG_DMESG("read count %lu exceed max %lu.\n", count, sizeof(val));
         count = sizeof(val);
     }
 
@@ -423,14 +464,14 @@ static ssize_t i2c_dev_read(struct file *file, char __user *buf, size_t count, l
     }
 
     if (access_ok(buf, read_len)) {
-        I2C_DEV_DEBUG_DMESG("user space read, buf: %p, offset: %lld, read conut %lu.\n",
+        I2C_DEV_DEBUG_DMESG("user space read, buf: %p, offset: %lld, read count %lu.\n",
             buf, *offset, count);
         if (copy_to_user(buf, val, read_len)) {
             I2C_DEV_DEBUG_ERROR("copy_to_user failed.\n");
             return -EFAULT;
         }
     } else {
-        I2C_DEV_DEBUG_DMESG("kernel space read, buf: %p, offset: %lld, read conut %lu.\n",
+        I2C_DEV_DEBUG_DMESG("kernel space read, buf: %p, offset: %lld, read count %lu.\n",
             buf, *offset, count);
         memcpy(buf, val, read_len);
     }
@@ -468,20 +509,20 @@ static ssize_t i2c_dev_write(struct file *file, const char __user *buf, size_t c
     }
 
     if (count > sizeof(val)) {
-        I2C_DEV_DEBUG_DMESG("write conut %lu exceed max %lu.\n", count, sizeof(val));
+        I2C_DEV_DEBUG_DMESG("write count %lu exceed max %lu.\n", count, sizeof(val));
         count = sizeof(val);
     }
 
     mem_clear(val, sizeof(val));
     if (access_ok(buf, count)) {
-        I2C_DEV_DEBUG_DMESG("user space write, buf: %p, offset: %lld, write conut %lu.\n",
+        I2C_DEV_DEBUG_DMESG("user space write, buf: %p, offset: %lld, write count %lu.\n",
             buf, *offset, count);
         if (copy_from_user(val, buf, count)) {
             I2C_DEV_DEBUG_ERROR("copy_from_user failed.\n");
             return -EFAULT;
         }
     } else {
-        I2C_DEV_DEBUG_DMESG("kernel space write, buf: %p, offset: %lld, write conut %lu.\n",
+        I2C_DEV_DEBUG_DMESG("kernel space write, buf: %p, offset: %lld, write count %lu.\n",
             buf, *offset, count);
         memcpy(val, buf, count);
     }
@@ -598,7 +639,7 @@ int i2c_device_func_read(const char *path, uint32_t offset, uint8_t *buf, size_t
     }
 
     if (count > FPGA_MAX_LEN) {
-        I2C_DEV_DEBUG_ERROR("read conut %lu, beyond max:%d.\n", count, FPGA_MAX_LEN);
+        I2C_DEV_DEBUG_ERROR("read count %lu, beyond max:%d.\n", count, FPGA_MAX_LEN);
         return -EINVAL;
     }
 
@@ -635,7 +676,7 @@ int i2c_device_func_write(const char *path, uint32_t offset, uint8_t *buf, size_
     }
 
     if (count > FPGA_MAX_LEN) {
-        I2C_DEV_DEBUG_ERROR("write conut %lu, beyond max:%d.\n", count, FPGA_MAX_LEN);
+        I2C_DEV_DEBUG_ERROR("write count %lu, beyond max:%d.\n", count, FPGA_MAX_LEN);
         return -EINVAL;
     }
 

@@ -169,29 +169,6 @@ def removedriver(name):
     if checksignaldriver(name):
         exec_os_cmd(cmd)
 
-
-def add_5387_driver():
-    errmsg = ""
-    spi_gpio = "wb_spi_gpio"
-    ret = adddriver(spi_gpio)
-    if ret is False:
-        errmsg = "modprobe wb_spi_gpio driver failed."
-        return False, errmsg
-    spi_5387_device = "wb_spi_93xx46 spi_bus_num=0"
-    ret = adddriver(spi_5387_device)
-    if ret is False:
-        errmsg = "modprobe wb_spi_93xx46 driver failed."
-        return ret, errmsg
-    return True, ""
-
-
-def remove_5387_driver():
-    spi_5387_device = "wb_spi_93xx46"
-    removedriver(spi_5387_device)
-    spi_gpio = "wb_spi_gpio"
-    removedriver(spi_gpio)
-
-
 def deal_itmes(item_list):
     for item in item_list:
         dealtype = item.get("dealtype")
@@ -248,7 +225,6 @@ def devfileread(path, offset, length, bit_width):
             val_list.append(item)
 
         for i in range(0, length, bit_width):
-            val_str += " 0x"
             for j in range(0, bit_width):
                 val_str += "%02x" % val_list[i + bit_width - j - 1]
     except Exception as e:
@@ -337,10 +313,6 @@ class ExtraFunc(object):
     def get_bcm5387_version(params):
         version = ""
         try:
-            ret, msg = add_5387_driver()
-            if ret is False:
-                raise Exception(msg)
-
             before_deal_list = params.get("before", [])
             deal_itmes(before_deal_list)
 
@@ -356,7 +328,6 @@ class ExtraFunc(object):
         finally:
             finally_deal_list = params.get("finally", [])
             deal_itmes(finally_deal_list)
-            remove_5387_driver()
         return version
 
     @staticmethod

@@ -34,7 +34,6 @@ extern int io_device_func_read(const char *path, uint32_t pos, uint8_t *val, siz
 extern int spi_device_func_read(const char *path, uint32_t offset, uint8_t *buf, size_t count);
 extern int spi_device_func_write(const char *path, uint32_t offset, uint8_t *buf, size_t count);
 
-
 #define FPGA_I2C_STRETCH_TIMEOUT  (0x01)
 #define FPGA_I2C_DEADLOCK_FAILED  (0x02)
 #define FPGA_I2C_SLAVE_NO_RESPOND (0x03)
@@ -157,7 +156,7 @@ static int fpga_device_write(fpga_i2c_dev_t *fpga_i2c, uint32_t pos, uint8_t *va
         ret = spi_device_func_write(fpga_i2c->dev_name, pos, val, size);
         break;
     default:
-        FPGA_I2C_ERROR("err func_mode, write failed.\n");
+        FPGA_I2C_ERROR("err func_mode %d, write failed.\n", fpga_i2c->i2c_func_mode);
         return -EINVAL;
     }
     return ret;
@@ -185,7 +184,7 @@ static int fpga_device_read(fpga_i2c_dev_t *fpga_i2c, uint32_t pos, uint8_t *val
         ret = spi_device_func_read(fpga_i2c->dev_name, pos, val, size);
         break;
     default:
-        FPGA_I2C_ERROR("err func_mode, read failed.\n");
+        FPGA_I2C_ERROR("err func_mode %d, read failed.\n", fpga_i2c->i2c_func_mode);
         return -EINVAL;
     }
 
@@ -905,7 +904,7 @@ static int fpga_i2c_config_init(fpga_i2c_dev_t *fpga_i2c)
         fpga_i2c->i2c_stretch_value = fpga_i2c_bus_device->i2c_stretch_value;
         fpga_i2c->i2c_timeout = fpga_i2c_bus_device->i2c_timeout;
         fpga_i2c->i2c_func_mode = fpga_i2c_bus_device->i2c_func_mode;
-        fpga_i2c->i2c_params_check = fpga_i2c_bus_device->i2c_func_mode;
+        fpga_i2c->i2c_params_check = fpga_i2c_bus_device->i2c_params_check;
 
         reset_cfg->reset_addr = fpga_i2c_bus_device->i2c_reset_addr;
         reset_cfg->reset_on = fpga_i2c_bus_device->i2c_reset_on;

@@ -606,7 +606,6 @@ devices = {
             "desc": "Used for system power",
             "slot": 0,
             "warm": 0,
-            
         },
         {
             "name": "CONNECT_CPLD",
@@ -1219,7 +1218,7 @@ devices = {
                 },
             },
         },
-        "txdisable_val_is_on": 0,
+        "txdisable_val_is_on": 1,
         "reset_cpld": {
             "dev_id": {
                 4: {

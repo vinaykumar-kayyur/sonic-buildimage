@@ -12,6 +12,9 @@
 #include <linux/of_platform.h>
 #include <linux/slab.h>
 #include <linux/uaccess.h>
+#include <linux/fs.h>
+#include <linux/export.h>
+#include <linux/uio.h>
 
 #include "wb_spi_dev.h"
 
@@ -29,8 +32,8 @@
 #define OP_READ             (0x3)
 #define OP_WRITE            (0x2)
 
-int g_spi_dev_debug = 0;
-int g_spi_dev_error = 0;
+static int g_spi_dev_debug = 0;
+static int g_spi_dev_error = 0;
 
 module_param(g_spi_dev_debug, int, S_IRUGO | S_IWUSR);
 module_param(g_spi_dev_error, int, S_IRUGO | S_IWUSR);
@@ -55,6 +58,7 @@ struct spi_dev_info {
     uint32_t addr_bus_width;
     uint32_t per_rd_len;
     uint32_t per_wr_len;
+    uint32_t spi_len;
     struct miscdevice misc;
     struct spi_device *spi_device;
 };
@@ -196,12 +200,29 @@ static int device_read(struct spi_dev_info *spi_dev, uint32_t offset, uint8_t *b
     u32 data_width, rd_len, per_len, tmp;
     u32 max_per_len;
 
-    data_width = spi_dev->data_bus_width;
+    if (offset > spi_dev->spi_len) {
+        SPI_DEV_DEBUG("offset: 0x%x, spi len: 0x%x, count: %lu, EOF.\n",
+            offset, spi_dev->spi_len, count);
+        return 0;
+    }
 
+    data_width = spi_dev->data_bus_width;
     if (offset % data_width) {
         SPI_DEV_ERROR("data bus width:%d, offset:0x%x, read size %lu invalid.\n",
             data_width, offset, count);
         return -EINVAL;
+    }
+
+    if (count > (spi_dev->spi_len - offset)) {
+        SPI_DEV_DEBUG("read count out of range. input len:%lu, read len:%u.\n",
+            count, spi_dev->spi_len - offset);
+        count = spi_dev->spi_len - offset;
+    }
+
+    if (count == 0) {
+        SPI_DEV_DEBUG("offset: 0x%x, spi len: 0x%x, read len: %lu, EOF.\n",
+            offset, spi_dev->spi_len, count);
+        return 0;
     }
 
     max_per_len = spi_dev->per_rd_len;
@@ -228,7 +249,7 @@ static int device_read(struct spi_dev_info *spi_dev, uint32_t offset, uint8_t *b
         }
     }
 
-    return 0;
+    return count;
 }
 
 static int device_write(struct spi_dev_info *spi_dev, uint32_t offset, uint8_t *buf, size_t count)
@@ -239,13 +260,31 @@ static int device_write(struct spi_dev_info *spi_dev, uint32_t offset, uint8_t *
     u32 wr_len, per_len, tmp;
     u32 max_per_len;
 
-    data_width = spi_dev->data_bus_width;
+    if (offset > spi_dev->spi_len) {
+        SPI_DEV_DEBUG("offset: 0x%x, spi len: 0x%x, count: %lu, EOF.\n",
+            offset, spi_dev->spi_len, count);
+        return 0;
+    }
 
+    data_width = spi_dev->data_bus_width;
     if (offset % data_width) {
         SPI_DEV_ERROR("data bus width:%d, offset:0x%x, read size %lu invalid.\n",
             data_width, offset, count);
         return -EINVAL;
     }
+
+    if (count > (spi_dev->spi_len - offset)) {
+        SPI_DEV_DEBUG("read count out of range. input len:%lu, read len:%u.\n",
+            count, spi_dev->spi_len - offset);
+        count = spi_dev->spi_len - offset;
+    }
+
+    if (count == 0) {
+        SPI_DEV_DEBUG("offset: 0x%x, i2c len: 0x%x, read len: %lu, EOF.\n",
+            offset, spi_dev->spi_len, count);
+        return 0;
+    }
+
     mem_clear(val, sizeof(val));
 
     if (data_width == WIDTH_1Byte) {
@@ -270,54 +309,73 @@ static int device_write(struct spi_dev_info *spi_dev, uint32_t offset, uint8_t *
             return -EFAULT;
         }
     }
-    return 0;
+    return count;
 }
 
 static ssize_t spi_dev_read(struct file *file, char __user *buf, size_t count, loff_t *offset)
 {
     u8 val[MAX_RW_LEN];
-    int ret;
+    int ret, read_len;
     struct spi_dev_info *spi_dev;
-
-    if (count <= 0 || count > sizeof(val)) {
-        SPI_DEV_ERROR("read conut %lu , beyond max:%lu.\n", count, sizeof(val));
-        return -EINVAL;
-    }
 
     spi_dev = file->private_data;
     if (spi_dev == NULL) {
-        SPI_DEV_ERROR("can't get read private_data .\n");
+        SPI_DEV_ERROR("can't get read private_data.\n");
         return -EINVAL;
     }
 
-    ret = device_read(spi_dev, (uint32_t)*offset, val, count);
-    if (ret < 0) {
+    if (count == 0) {
+        SPI_DEV_ERROR("Invalid params, read count is 0.\n");
+        return -EINVAL;
+    }
+
+    if (count > sizeof(val)) {
+        SPI_DEV_DEBUG("read count %lu exceed max %lu.\n", count, sizeof(val));
+        count = sizeof(val);
+    }
+
+    mem_clear(val, sizeof(val));
+    read_len = device_read(spi_dev, (uint32_t)*offset, val, count);
+    if (read_len < 0) {
         SPI_DEV_ERROR("spi dev read failed, dev name:%s, offset:0x%x, len:%lu.\n",
             spi_dev->name, (uint32_t)*offset, count);
-        return -EINVAL;
+        return read_len;
     }
 
-    if (copy_to_user(buf, val, count)) {
-        SPI_DEV_ERROR("copy_to_user error \n");
-        return -EFAULT;
-    } else{
-        *offset += count;
+    if (access_ok(buf, read_len)) {
+        SPI_DEV_DEBUG("user space read, buf: %p, offset: %lld, read count %lu.\n",
+            buf, *offset, count);
+        if (copy_to_user(buf, val, read_len)) {
+            SPI_DEV_ERROR("copy_to_user failed.\n");
+            return -EFAULT;
+        }
+    } else {
+        SPI_DEV_DEBUG("kernel space read, buf: %p, offset: %lld, read count %lu.\n",
+            buf, *offset, count);
+        memcpy(buf, val, read_len);
     }
 
-    return count;
+    *offset += read_len;
+    ret = read_len;
+    return ret;
+}
+
+static ssize_t spi_dev_read_iter(struct kiocb *iocb, struct iov_iter *to)
+{
+    int ret;
+
+    SPI_DEV_DEBUG("spi_dev_read_iter, file: %p, count: %lu, offset: %lld\n",
+        iocb->ki_filp, to->count, iocb->ki_pos);
+    ret = spi_dev_read(iocb->ki_filp, to->kvec->iov_base, to->count, &iocb->ki_pos);
+    return ret;
 }
 
 static ssize_t spi_dev_write(struct file *file, const char __user *buf,
                    size_t count, loff_t *offset)
 {
     u8 val[MAX_RW_LEN];
-    int ret;
+    int write_len;
     struct spi_dev_info *spi_dev;
-
-    if (count <= 0 || count > sizeof(val)) {
-        SPI_DEV_ERROR("write conut %lu, beyond max val:%lu.\n", count, sizeof(val));
-        return -EINVAL;
-    }
 
     spi_dev = file->private_data;
     if (spi_dev == NULL) {
@@ -325,26 +383,61 @@ static ssize_t spi_dev_write(struct file *file, const char __user *buf,
         return -EINVAL;
     }
 
-    mem_clear(val, sizeof(val));
-    if (copy_from_user(val, buf, count)) {
-        SPI_DEV_ERROR("copy_from_user error.\n");
-        return -EFAULT;
-    }
-
-    ret = device_write(spi_dev, (uint32_t)*offset, val, count);
-    if (ret < 0) {
-        SPI_DEV_ERROR("spi dev write failed, dev name:%s, offset:0x%llx, len:%lu.\n",
-            spi_dev->name, *offset, count);
+    if (count == 0) {
+        SPI_DEV_ERROR("Invalid params, write count is 0.\n");
         return -EINVAL;
     }
 
-    *offset += count;
-    return count;
+    if (count > sizeof(val)) {
+        SPI_DEV_DEBUG("write count %lu exceed max %lu.\n", count, sizeof(val));
+        count = sizeof(val);
+    }
+
+    mem_clear(val, sizeof(val));
+    if (access_ok(buf, count)) {
+        SPI_DEV_DEBUG("user space write, buf: %p, offset: %lld, write count %lu.\n",
+            buf, *offset, count);
+        if (copy_from_user(val, buf, count)) {
+            SPI_DEV_ERROR("copy_from_user failed.\n");
+            return -EFAULT;
+        }
+    } else {
+        SPI_DEV_DEBUG("kernel space write, buf: %p, offset: %lld, write count %lu.\n",
+            buf, *offset, count);
+        memcpy(val, buf, count);
+    }
+
+    write_len = device_write(spi_dev, (uint32_t)*offset, val, count);
+    if (write_len < 0) {
+        SPI_DEV_ERROR("spi dev write failed, dev name:%s, offset:0x%llx, len:%lu.\n",
+            spi_dev->name, *offset, count);
+        return write_len;
+    }
+
+    *offset += write_len;
+    return write_len;
+}
+
+static ssize_t spi_dev_write_iter(struct kiocb *iocb, struct iov_iter *from)
+{
+    int ret;
+
+    SPI_DEV_DEBUG("spi_dev_write_iter, file: %p, count: %lu, offset: %lld\n",
+        iocb->ki_filp, from->count, iocb->ki_pos);
+    ret = spi_dev_write(iocb->ki_filp, from->kvec->iov_base, from->count, &iocb->ki_pos);
+    return ret;
 }
 
 static loff_t spi_dev_llseek(struct file *file, loff_t offset, int origin)
 {
     loff_t ret = 0;
+    struct spi_dev_info *spi_dev;
+
+    spi_dev = file->private_data;
+    if (spi_dev == NULL) {
+        SPI_DEV_ERROR("spi_dev is NULL, llseek failed.\n");
+        return -EINVAL;
+    }
 
     switch (origin) {
     case SEEK_SET:
@@ -353,11 +446,17 @@ static loff_t spi_dev_llseek(struct file *file, loff_t offset, int origin)
             ret = -EINVAL;
             break;
         }
+        if (offset > spi_dev->spi_len) {
+            SPI_DEV_ERROR("SEEK_SET out of range, offset:%lld, i2c_len:0x%x.\n",
+                offset, spi_dev->spi_len);
+            ret = - EINVAL;
+            break;
+        }
         file->f_pos = offset;
         ret = file->f_pos;
         break;
     case SEEK_CUR:
-        if (file->f_pos + offset < 0) {
+        if (((file->f_pos + offset) > spi_dev->spi_len) || ((file->f_pos + offset) < 0)) {
             SPI_DEV_ERROR("SEEK_CUR out of range, f_ops:%lld, offset:%lld.\n",
                  file->f_pos, offset);
         }
@@ -373,13 +472,13 @@ static loff_t spi_dev_llseek(struct file *file, loff_t offset, int origin)
 }
 
 static const struct file_operations spi_dev_fops = {
-    .owner      = THIS_MODULE,
-    .llseek     = spi_dev_llseek,
-    .read       = spi_dev_read,
-    .write      = spi_dev_write,
+    .owner          = THIS_MODULE,
+    .llseek         = spi_dev_llseek,
+    .read_iter      = spi_dev_read_iter,
+    .write_iter     = spi_dev_write_iter,
     .unlocked_ioctl = spi_dev_ioctl,
-    .open       = spi_dev_open,
-    .release    = spi_dev_release,
+    .open           = spi_dev_open,
+    .release        = spi_dev_release,
 };
 
 static struct spi_dev_info * dev_match(const char *path)
@@ -418,7 +517,7 @@ int spi_device_func_read(const char *path, uint32_t offset, uint8_t *buf, size_t
     }
 
     if (count > MAX_RW_LEN) {
-        SPI_DEV_ERROR("read conut %lu, beyond max:%d.\n", count, MAX_RW_LEN);
+        SPI_DEV_ERROR("read count %lu, beyond max:%d.\n", count, MAX_RW_LEN);
         return -EINVAL;
     }
 
@@ -455,7 +554,7 @@ int spi_device_func_write(const char *path, uint32_t offset, uint8_t *buf, size_
     }
 
     if (count > MAX_RW_LEN) {
-        SPI_DEV_ERROR("write conut %lu, beyond max:%d.\n", count, MAX_RW_LEN);
+        SPI_DEV_ERROR("write count %lu, beyond max:%d.\n", count, MAX_RW_LEN);
         return -EINVAL;
     }
 
@@ -500,6 +599,7 @@ static int spi_dev_probe(struct spi_device *spi)
         ret += of_property_read_u32(spi->dev.of_node, "addr_bus_width", &spi_dev->addr_bus_width);
         ret += of_property_read_u32(spi->dev.of_node, "per_rd_len", &spi_dev->per_rd_len);
         ret += of_property_read_u32(spi->dev.of_node, "per_wr_len", &spi_dev->per_wr_len);
+        ret += of_property_read_u32(spi->dev.of_node, "spi_len", &spi_dev->spi_len);
         if (ret != 0) {
             dev_err(&spi->dev, "dts config error.ret:%d.\n", ret);
             return -ENXIO;
@@ -515,6 +615,7 @@ static int spi_dev_probe(struct spi_device *spi)
         spi_dev->addr_bus_width = spi_dev_device->addr_bus_width;
         spi_dev->per_rd_len = spi_dev_device->per_rd_len;
         spi_dev->per_wr_len = spi_dev_device->per_wr_len;
+        spi_dev->spi_len = spi_dev_device->spi_len;
     }
 
     if ((spi_dev->per_rd_len & (spi_dev->data_bus_width - 1))
@@ -541,8 +642,8 @@ static int spi_dev_probe(struct spi_device *spi)
     }
     spi_dev_arry[misc->minor] = spi_dev;
 
-    dev_info(&spi->dev, "register %u data_bus_width %u addr_bus_witdh device %s with %u per_rd_len %u per_wr_len success.\n",
-        spi_dev->data_bus_width, spi_dev->addr_bus_width, spi_dev->name, spi_dev->per_rd_len, spi_dev->per_wr_len);
+    dev_info(&spi->dev, "register %u data_bus_width %u addr_bus_witdh 0x%x spi_len device %s with %u per_rd_len %u per_wr_len success.\n",
+        spi_dev->data_bus_width, spi_dev->addr_bus_width, spi_dev->spi_len, spi_dev->name, spi_dev->per_rd_len, spi_dev->per_wr_len);
 
     return 0;
 }

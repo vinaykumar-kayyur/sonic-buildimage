@@ -1,11 +1,7 @@
 /*
  * wb_firmware_upgrade.c
- * Original Author: support  2021-03-17
  *
  * ko for firmware device
- * History
- *  [Version]        [Author]           [Date]            [Description]
- *    v1.0          support            2021-05-07          Initial version
  */
 #include <linux/module.h>
 #include <linux/io.h>

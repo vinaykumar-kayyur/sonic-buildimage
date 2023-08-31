@@ -134,7 +134,7 @@ static int transfer_read(struct platform_i2c_dev_info *i2c_dev, u8 *buf, loff_t 
                                     I2C_SMBUS_READ,
                                     offset, I2C_SMBUS_I2C_BLOCK_DATA, &data);
                     if (ret) {
-                        I2C_DEV_DEBUG_ERROR("smbus_xfer read block error, ret = %d\r\n", ret);
+                        I2C_DEV_DEBUG_ERROR("smbus_xfer read block error, ret = %d\n", ret);
                         ret = -EFAULT;
                         goto error_exit;
                     }
@@ -151,7 +151,7 @@ static int transfer_read(struct platform_i2c_dev_info *i2c_dev, u8 *buf, loff_t 
                     if (!ret) {
                         buf[j] = data.byte;
                     } else {
-                        I2C_DEV_DEBUG_ERROR("smbus_xfer read byte error, ret = %d\r\n", ret);
+                        I2C_DEV_DEBUG_ERROR("smbus_xfer read byte error, ret = %d\n", ret);
                         ret = -EFAULT;
                         goto error_exit;
                     }
@@ -159,7 +159,7 @@ static int transfer_read(struct platform_i2c_dev_info *i2c_dev, u8 *buf, loff_t 
                 }
             }
         } else {
-            I2C_DEV_DEBUG_ERROR("smbus_xfer not support addr_bus_width = %d\r\n", i2c_dev->addr_bus_width);
+            I2C_DEV_DEBUG_ERROR("smbus_xfer not support addr_bus_width = %d\n", i2c_dev->addr_bus_width);
             ret = -EINVAL;
             goto error_exit;
         }
