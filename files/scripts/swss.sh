@@ -130,6 +130,12 @@ function clean_up_chassis_db_tables()
 
     lc=`$SONIC_DB_CLI CONFIG_DB  hget 'DEVICE_METADATA|localhost' 'hostname'`
     asic=`$SONIC_DB_CLI CONFIG_DB  hget 'DEVICE_METADATA|localhost' 'asic_name'`
+    switch_type=`$SONIC_DB_CLI CONFIG_DB  hget 'DEVICE_METADATA|localhost' 'switch_type'`
+
+    # Run clean up only in swss running for voq switches
+    if is_chassis_supervisor || [[ $switch_type != 'voq' ]]; then
+        return
+    fi
 
     # First, delete SYSTEM_NEIGH entries
     $SONIC_DB_CLI CHASSIS_APP_DB EVAL "
