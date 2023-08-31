@@ -42,7 +42,6 @@ BACKEND_ASIC_SUB_ROLE = "BackEnd"
 CHASSIS_INFO_TABLE = 'CHASSIS_INFO|chassis {}'
 CHASSIS_INFO_CARD_NUM_FIELD = 'module_num'
 CHASSIS_INFO_SERIAL_FIELD = 'serial'
-CHASSIS_INFO_SERIAL_NUM_FIELD = 'serial_num'
 CHASSIS_INFO_MODEL_FIELD = 'model'
 CHASSIS_INFO_REV_FIELD = 'revision'
 
@@ -508,7 +507,7 @@ def get_platform_info(config_db=None):
 
 def get_chassis_info():
     """
-    This function is used to get the Chassis serial / model / rev number / serial number
+    This function is used to get the Chassis serial / model / rev number
     """
 
     chassis_info_dict = {}
@@ -522,7 +521,6 @@ def get_chassis_info():
         chassis_info_dict['serial'] = db.get(db.STATE_DB, table, CHASSIS_INFO_SERIAL_FIELD)
         chassis_info_dict['model'] = db.get(db.STATE_DB, table, CHASSIS_INFO_MODEL_FIELD)
         chassis_info_dict['revision'] = db.get(db.STATE_DB, table, CHASSIS_INFO_REV_FIELD)
-        chassis_info_dict['serial_num'] = db.get(db.STATE_DB, table, CHASSIS_INFO_SERIAL_NUM_FIELD)
     except Exception:
         pass
 
