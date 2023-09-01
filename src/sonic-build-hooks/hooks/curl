@@ -8,4 +8,11 @@
 # transfer, it will retry this number of times before giving up. Transient error
 # means either: a timeout, an FTP 4xx response code or an HTTP 408, 429, 500,
 # 502, 503 or 504 response code.
-REAL_COMMAND="$REAL_COMMAND --retry 5" download_packages "$@"
+REAL_COMMAND="$REAL_COMMAND --retry 5"
+
+if [ "$SKIP_BUILD_HOOK" == y ]; then
+    $REAL_COMMAND "$@"
+    exit $?
+fi
+
+REAL_COMMAND=$REAL_COMMAND download_packages "$@"
