@@ -28,7 +28,14 @@ filegen clockstats file clockstats type day enable
 # pick a different set every time it starts up.  Please consider joining the
 # pool: <http://www.pool.ntp.org/join.html>
 {% for ntp_server in NTP_SERVER %}
-server {{ ntp_server }} iburst
+{% set ns = namespace(minpoll='') %}
+{% if NTP_SERVER[ntp_server]['minpoll'] %}
+{% set ns.minpoll = "minpoll " + NTP_SERVER[ntp_server]['minpoll'] %}
+{% endif %}
+{% if NTP_SERVER[ntp_server]['maxpoll'] %}
+{% set ns.maxpoll = "maxpoll " + NTP_SERVER[ntp_server]['maxpoll'] %}
+{% endif %}
+server {{ ntp_server }} iburst {{ ns.minpoll }} {{ns.maxpoll}}
 {% endfor %}
 
 #listen on source interface if configured, else 
