@@ -729,6 +729,22 @@ SONIC_VERSION_CACHE=${SONIC_VERSION_CACHE}  \
 	DBGOPT="${DBGOPT}" \
 	scripts/collect_host_image_version_files.sh $CONFIGURED_ARCH $IMAGE_DISTRO $TARGET_PATH $FILESYSTEM_ROOT
 
+# Install libc6-dev and python3-dev for compiling python-lzf
+sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install libc6-dev python3-dev
+
+# Install python-lzf
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install 'python-lzf==0.2.4'
+
+# Install rdbtools
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install 'rdbtools==0.1.15'
+
+# Uninstall libc6-dev and python3-dev for compiling python-lzf
+sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y remove libc6-dev 
+sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y remove python3-dev
+
+## Copy saidump.sh
+sudo cp ./files/scripts/saidump.sh $FILESYSTEM_ROOT/usr/local/bin/saidump.sh
+sudo chmod +x $FILESYSTEM_ROOT/usr/local/bin/saidump.sh
 # Remove GCC
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y remove gcc
 
