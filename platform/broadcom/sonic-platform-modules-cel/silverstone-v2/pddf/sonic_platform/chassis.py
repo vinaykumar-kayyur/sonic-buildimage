@@ -20,7 +20,7 @@ BMC_EXIST = helper.APIHelper().get_bmc_status()
 
 REBOOT_CAUSE_PATH = "/sys/devices/platform/cpld_wdt/reason"
 SET_SYS_STATUS_LED = "0x3A 0x39 0x2 0x0 {}"
-SET_LED_MODE_Manual = "0x3a 0x42 0x02 0x00"
+GET_LED_MODE = "0x3a 0x42 0x01"
 
 
 class Chassis(PddfChassis):
@@ -65,15 +65,23 @@ class Chassis(PddfChassis):
         if BMC_EXIST:
             if color == self.get_status_led():
                 return False
-            status, res = self.helper.ipmi_raw(SET_LED_MODE_Manual)
-            if status != 0:
+            status, res = self.helper.ipmi_raw(GET_LED_MODE)
+            if status != 0 or res == "01":
+                print("SYS LED takes automatic ctrl mode!")
                 return False
-
-            color_val = "0x1"
-            if color == "green":
-                color_val = "0x1"
-            elif color == "amber":
-                color_val = "0x2"
+            sys_led_color_map = {
+                'off': '00',
+                'green': '01',
+                'amber': '02',
+                'amber_blink_1hz': '03',
+                'amber_blink_4hz': '04',
+                'green_blink_1hz': '05',
+                'green_blink_4hz': '06'
+            }
+            color_val = sys_led_color_map.get(color.lower(), None)
+            if color_val is None:
+                print("SYS LED color %s not support!" % color)
+                return False
             status, res = self.helper.ipmi_raw(SET_SYS_STATUS_LED.format(color_val))
             return True if status else False
         else:
