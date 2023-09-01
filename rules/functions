@@ -142,17 +142,6 @@ $(1)_DBG_DOCKER += $(2)
 SONIC_DBG_DOCKERS += $(2)
 endef
 
-###############################################################################
-## Definition of rootfs target
-###############################################################################
-
-# call:
-#     define_rfs_target $(RFS_TARGET)
-define define_rfs_target
-$(1)_CACHE_MODE = GIT_CONTENT_SHA
-$(1)_DEP_FLAGS = $(SONIC_COMMON_FLAGS_LIST)
-$(1)_DEP_FILES = $(SONIC_COMMON_BASE_FILES_LIST) build_debian.sh onie-image.conf
-endef
 
 ###############################################################################
 ## Utility functions

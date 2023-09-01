@@ -458,7 +458,6 @@ endef
 
 $(foreach installer, $(SONIC_INSTALLERS), $(eval $(installer)_RFS_DEPENDS=$(call rfs_get_installer_dependencies,$(installer))))
 SONIC_RFS_TARGETS= $(foreach installer, $(SONIC_INSTALLERS), $(call rfs_get_installer_dependencies,$(installer)))
-$(foreach rfs_target, $(SONIC_RFS_TARGETS), $(eval $(call define_rfs_target,$(rfs_target))))
 
 ifeq ($(ENABLE_RFS_SPLIT_BUILD),y)
 SONIC_TARGET_LIST += $(addprefix $(TARGET_PATH)/, $(SONIC_RFS_TARGETS))
