@@ -12,10 +12,6 @@ except ImportError as e:
 
 BMC_EXIST = helper.APIHelper().get_bmc_status()
 Fan_Direction_Cmd = "0x3a 0x62 {}"
-Set_Pwm_Cmd = "0x3a 0x26 0x02 {} {}"
-Disable_Fcs_mode = "0x3a 0x26 0x01 0x00"
-Led_Manual_Control = "0x3a 0x42 0x02 0x00"
-Set_Led_Color = "0x3a 0x39 0x02 {} {}"
 
 
 class Fan(PddfFan):
