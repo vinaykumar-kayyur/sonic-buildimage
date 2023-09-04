@@ -19,7 +19,7 @@ filegen clockstats file clockstats type day enable
 
 {# Adding NTP servers. We need to know if we have some pools, to set proper
 config -#}
-{% set is_pools = False %}
+{% set ns = namespace(is_pools=false) %}
 {% for server in NTP_SERVER if NTP_SERVER[server].admin_state != 'disabled' and
                                NTP_SERVER[server].resolve_as and
                                NTP_SERVER[server].association_type -%}
@@ -51,7 +51,7 @@ config -#}
     must remain like that -#}
     {% set config_as = config.resolve_as -%}
     {% if config.association_type == 'pool' -%}
-        {% set is_pools = True -%}
+        {% set ns.is_pools = true -%}
         {% set config_as = server -%}
     {% else -%}
         {% set aoptions = aoptions ~ ' nopeer' -%}
@@ -84,10 +84,12 @@ LOOPBACK_INTERFACE ip when MGMT_INTERFACE is not defined, or eth0 if we don't
 have both of them (default is to listen on all ip addresses) -#}
 interface ignore wildcard
 
-{# Set interface to listen on set global variable for configured source
-interface name set global boolean to indicate if the ip of the configured source
-interface is configured if the source interface is configured but no ip on that
-interface, then listen on another interface based on existing logic. -#}
+{# Set interface to listen on:
+     * Set global variable for configured source interface name.
+     * Set global boolean to indicate if the ip of the configured source
+       interface is configured.
+     * If the source interface is configured but no ip on that
+       interface, then listen on another interface based on existing logic. -#}
 {%- macro check_ip_on_interface(interface_name, table_name) %}
     {%- set ns = namespace(valid_intf = 'false') %}
     {%- if table_name %}
@@ -143,7 +145,7 @@ interface listen 127.0.0.1
 
 {# Allow additional servers mobilization from the pool. Otherwise we don't need
 that -#}
-{% if is_pools == False -%}
+{% if ns.is_pools == false -%}
     {% set options = options ~ ' nopeer' -%}
 {% endif -%}
 {# Disable NTP server functionality. Should stay on when dhcp is enabled -#}
