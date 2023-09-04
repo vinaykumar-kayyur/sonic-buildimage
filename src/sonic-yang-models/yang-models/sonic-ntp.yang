@@ -177,8 +177,7 @@ module sonic-ntp {
                 leaf association_type {
                     type association-type;
                     default server;
-                    description "NTP remote association type. Server, pool, or
-                                 peer.";
+                    description "NTP remote association type: server or pool.";
                 }
 
                 leaf iburst {
