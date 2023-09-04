@@ -31,11 +31,11 @@
                 "NTP_KEYS_LIST": [
                     {
                         "id": 10,
-                        "value": "lumos"
+                        "value": "bHVtb3M="
                     },
                     {
                         "id": 15,
-                        "value": "bombarda"
+                        "value": "Ym9tYmFyZGE="
                     }
                 ]
             }
@@ -426,19 +426,19 @@
                     {
                         "id": 20,
                         "type": "md5",
-                        "value": "jsdf88320fsd2@@445",
+                        "value": "anNkZjg4MzIwZnNkMkBANDQ1",
                         "trusted": "no"
                     },
                     {
                         "id": 30,
                         "type": "sha1",
-                        "value": "aabbccddeeff",
+                        "value": "YWFiYmNjZGRlZWZm",
                         "trusted": "yes"
                     },
                     {
                         "id": 42,
                         "type": "md5",
-                        "value": "theanswer",
+                        "value": "dGhlYW5zd2Vy",
                         "trusted": "yes"
                     }
                 ]
