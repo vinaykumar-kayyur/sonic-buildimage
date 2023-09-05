@@ -13,7 +13,6 @@ obj-m += i2c-mux-pca9641.o
 obj-m += i2c-mux-pca954x.o
 obj-m += platform_common.o
 obj-m += rtcpcf85063.o
-obj-m += optoe.o
 obj-m += wb_at24.o
 
 all :
