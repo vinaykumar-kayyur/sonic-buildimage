@@ -4,7 +4,7 @@
 #   * PSU
 #
 import os
-from lxml import etree as ET
+import xml.etree.ElementTree as ET
 import glob
 import json
 from decimal import Decimal
