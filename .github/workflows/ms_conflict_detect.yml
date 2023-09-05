@@ -1,3 +1,7 @@
+# when detect conflicts, update ADO and send alert
+# then snapshot the commit to ms repo and create a PR in ms repo
+# then resolve the conflict in ms PR.
+# after that, rerun the github action, it will pass
 name: MSConflictDetect
 on:
   pull_request_target:
