@@ -20,6 +20,7 @@ $(SONIC_ONE_IMAGE)_LAZY_INSTALLS += $(DELL_S6000_PLATFORM_MODULE) \
                                $(DELL_S6100_PLATFORM_MODULE) \
                                $(DELL_N3248PXE_PLATFORM_MODULE) \
                                $(DELL_N3248TE_PLATFORM_MODULE) \
+                               $(DELL_E3224F_PLATFORM_MODULE) \
                                $(INGRASYS_S8900_54XC_PLATFORM_MODULE) \
                                $(INGRASYS_S8900_64XC_PLATFORM_MODULE) \
                                $(INGRASYS_S9100_PLATFORM_MODULE) \
@@ -81,7 +82,11 @@ $(SONIC_ONE_IMAGE)_LAZY_INSTALLS += $(DELL_S6000_PLATFORM_MODULE) \
                                $(NOKIA_IXR7250_PLATFORM_MODULE) \
                                $(TENCENT_TCS8400_PLATFORM_MODULE) \
                                $(TENCENT_TCS9400_PLATFORM_MODULE) \
-                               $(UFISPACE_S9300_32D_PLATFORM_MODULE)
+                               $(UFISPACE_S9300_32D_PLATFORM_MODULE) \
+                               $(UFISPACE_S9110_32X_PLATFORM_MODULE) \
+                               $(UFISPACE_S8901_54XC_PLATFORM_MODULE) \
+                               $(UFISPACE_S7801_54XS_PLATFORM_MODULE) \
+                               $(UFISPACE_S6301_56ST_PLATFORM_MODULE)
 
 $(SONIC_ONE_IMAGE)_LAZY_BUILD_INSTALLS = $(BRCM_OPENNSL_KERNEL) $(BRCM_DNX_OPENNSL_KERNEL)
 ifeq ($(INSTALL_DEBUG_TOOLS),y)
