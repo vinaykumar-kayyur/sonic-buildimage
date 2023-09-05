@@ -8,7 +8,3 @@ Standards-Version: 3.9.3
 Package: platform-modules-ragile-ra-b6010-48gt4x
 Architecture: arm64
 Description: kernel modules for platform devices such as fan, led, sfp
-
-Package: platform-modules-ragile-ra-b6010-48gt4x-r
-Architecture: arm64
-Description: kernel modules for platform devices such as fan, led, sfp
