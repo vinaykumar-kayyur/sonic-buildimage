@@ -19,8 +19,9 @@ except ImportError as e:
 BMC_EXIST = helper.APIHelper().get_bmc_status()
 
 REBOOT_CAUSE_PATH = "/sys/devices/platform/cpld_wdt/reason"
-SET_SYS_STATUS_LED = "0x3A 0x39 0x2 0x0 {}"
-GET_LED_MODE = "0x3a 0x42 0x01"
+SET_SYS_STATUS_LED = "0x3A 0x39 0x02 0x00 {}"
+SET_LED_MODE_MANUAL = "0x3a 0x42 0x02 0x00"
+SET_LED_MODE_AUTOMATIC = "0x3a 0x42 0x02 0x01"
 
 
 class Chassis(PddfChassis):
@@ -36,7 +37,6 @@ class Chassis(PddfChassis):
         for port_idx in range(1, self.platform_inventory['num_ports'] + 1):
             present = self.get_sfp(port_idx).get_presence()
             self.sfp_status_dict[port_idx] = '1' if present else '0'
-
         for index in range(self.platform_inventory['num_component']):
             component_obj = component.Component(index)
             self._component_list.append(component_obj)
@@ -62,12 +62,16 @@ class Chassis(PddfChassis):
         return self.get_system_led("SYS_LED")
 
     def set_status_led(self, color):
+        color = str(color).strip()
+        if color == "":
+            return False
         if BMC_EXIST:
             if color == self.get_status_led():
                 return False
-            status, res = self.helper.ipmi_raw(GET_LED_MODE)
-            if not status or res == "01":
-                print("SYS LED takes automatic ctrl mode!")
+            status_manual, res_manual = self.helper.ipmi_raw(SET_LED_MODE_MANUAL)
+            if not status_manual:
+                print("Set led mode to manual fail!")
+                self.helper.ipmi_raw(SET_LED_MODE_AUTOMATIC)
                 return False
             sys_led_color_map = {
                 'off': '00',
@@ -83,9 +87,14 @@ class Chassis(PddfChassis):
             color_val = sys_led_color_map.get(color.lower(), None)
             if color_val is None:
                 print("SYS LED color %s not support!" % color)
+                self.helper.ipmi_raw(SET_LED_MODE_AUTOMATIC)
                 return False
-            status, res = self.helper.ipmi_raw(SET_SYS_STATUS_LED.format(color_val))
-            return True if status else False
+            status_led, res_led = self.helper.ipmi_raw(SET_SYS_STATUS_LED.format(color_val))
+            status_auto, res_auto = self.helper.ipmi_raw(SET_LED_MODE_AUTOMATIC)
+            if not status_auto:
+                print("Set led mode to automatic fail!")
+                return False
+            return True if status_led else False
         else:
             if color == self.get_status_led():
                 return False
