@@ -24,7 +24,7 @@ jobs:
     - name: Main
       env:
         GITHUB_CONTEXT: ${{ toJson(github) }}
-        TOKEN: ${{ secrets.TOKEN }}
+        TOKEN: ${{ secrets.GH_TOKEN }}
       run: |
         set -e
 
