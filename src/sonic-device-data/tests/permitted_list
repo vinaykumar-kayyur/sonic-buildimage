@@ -342,3 +342,4 @@ sai_optimized_mmu
 svi_my_station_optimization
 warmboot_knet_shutdown_mode
 sai_stats_support_mask
+sai_default_cpu_tx_tc
