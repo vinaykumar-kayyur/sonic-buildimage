@@ -48,7 +48,7 @@ class CPUPIDRegulation(object):
     syslog = logging.getLogger("[" + FUNCTION_NAME + "]")
     init_fan_temperature = [0, 0]
 
-    def __init__(self, log_file, log_level):
+    def __init__(self):
         """Needs a logger and a logger level."""
         formatter = logging.Formatter('%(name)s %(message)s')
         sys_handler = logging.handlers.SysLogHandler(address='/dev/log')
@@ -56,23 +56,6 @@ class CPUPIDRegulation(object):
         sys_handler.ident = 'common'
         self.syslog.setLevel(logging.WARNING)
         self.syslog.addHandler(sys_handler)
-        self.platform_chassis_obj = platform.Platform().get_chassis()
-        # set up logging to file
-        logging.basicConfig(
-            filename=log_file,
-            filemode='w',
-            level=log_level,
-            format='[%(asctime)s] {%(pathname)s:%(lineno)d} %(levelname)s - %(message)s',
-            datefmt='%m %d %H:%M:%S'
-        )
-
-        # set up logging to console
-        if log_level == logging.DEBUG:
-            console = logging.StreamHandler()
-            console.setLevel(log_level)
-            formatter = logging.Formatter('%(name)-12s: %(levelname)-8s %(message)s')
-            console.setFormatter(formatter)
-            logging.getLogger('').addHandler(console)
 
     @staticmethod
     def get_cpu_temperature():

@@ -28,7 +28,7 @@ class FanLinearAdjustment(object):
     syslog = logging.getLogger("[" + FUNCTION_NAME + "]")
     init_fan_temperature = [0, 0]
 
-    def __init__(self, log_file, log_level, duty_max, fan_num, psu_num, sensor_num):
+    def __init__(self, duty_max, fan_num, psu_num, sensor_num):
         self.duty_max = duty_max
         self.fan_num = fan_num
         self.psu_num = psu_num
@@ -42,23 +42,7 @@ class FanLinearAdjustment(object):
         self.syslog.setLevel(logging.WARNING)
         self.syslog.addHandler(sys_handler)
         self.platform_chassis_obj = platform.Platform().get_chassis()
-        # set up logging to file
-        logging.basicConfig(
-            filename=log_file,
-            filemode='w',
-            level=log_level,
-            format='[%(asctime)s] {%(pathname)s:%(lineno)d} %(levelname)s - %(message)s',
-            datefmt='%m %d %H:%M:%S'
-        )
-
-        # set up logging to console
-        if log_level == logging.info:
-            console = logging.StreamHandler()
-            console.setLevel(log_level)
-            formatter = logging.Formatter('%(name)-12s: %(levelname)-8s %(message)s')
-            console.setFormatter(formatter)
-            logging.getLogger('').addHandler(console)
-
+        
     def get_all_temperature(self):
         """
         Get U16 and U17 temperature by thermal API

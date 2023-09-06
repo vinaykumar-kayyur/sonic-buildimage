@@ -45,11 +45,10 @@ class FanControl(object):
     syslog = logging.getLogger("[" + FUNCTION_NAME + "]")
     init_fan_temperature = [0, 0]
 
-    def __init__(self, log_file, log_level):
-        self.FanLinearAdjustment = FanLinearAdjustment.FanLinearAdjustment(log_file, log_level, DUTY_MAX, FAN_NUMBER,
-                                                                           PSU_NUMBER, SENSOR_NUMBER)
-        self.SwitchInternalPIDRegulation = SwitchInternalPIDRegulation.SwitchInternalPIDRegulation(log_file, log_level)
-        self.CPUPIDRegulation = CPUPIDRegulation.CPUPIDRegulation(log_file, log_level)
+    def __init__(self):
+        self.FanLinearAdjustment = FanLinearAdjustment.FanLinearAdjustment(DUTY_MAX, FAN_NUMBER, PSU_NUMBER, SENSOR_NUMBER)
+        self.SwitchInternalPIDRegulation = SwitchInternalPIDRegulation.SwitchInternalPIDRegulation()
+        self.CPUPIDRegulation = CPUPIDRegulation.CPUPIDRegulation()
         # Needs a logger and a logger level
         formatter = logging.Formatter('%(name)s %(message)s')
         sys_handler = logging.handlers.SysLogHandler(address='/dev/log')
@@ -58,22 +57,6 @@ class FanControl(object):
         self.syslog.setLevel(logging.WARNING)
         self.syslog.addHandler(sys_handler)
         self.platform_chassis_obj = platform.Platform().get_chassis()
-        # set up logging to file
-        logging.basicConfig(
-            filename=log_file,
-            filemode='w',
-            level=log_level,
-            format='[%(asctime)s] {%(pathname)s:%(lineno)d} %(levelname)s - %(message)s',
-            datefmt='%m %d %H:%M:%S'
-        )
-
-        # set up logging to console
-        if log_level == logging.DEBUG:
-            console = logging.StreamHandler()
-            console.setLevel(log_level)
-            formatter = logging.Formatter('%(name)-12s: %(levelname)-8s %(message)s')
-            console.setFormatter(formatter)
-            logging.getLogger('').addHandler(console)
 
     def get_psu_status(self, fan_duty_list):
         """
@@ -214,24 +197,7 @@ def handler(signum, frame):
     sys.exit(0)
 
 
-def main(argv):
-    log_file = '/var/log/syslog'
-    log_level = logging.INFO
-    if len(sys.argv) != 1:
-        try:
-            opts, args = getopt.getopt(argv, 'hdlt:', ['lfile='])
-        except getopt.GetoptError:
-            print('Usage: %s [-d] [-l <log_file>]' % sys.argv[0])
-            return 0
-        for opt, arg in opts:
-            if opt == '-h':
-                print('Usage: %s [-d] [-l <log_file>]' % sys.argv[0])
-                return 0
-            elif opt in ('-d', '--debug'):
-                log_level = logging.DEBUG
-            elif opt in ('-l', '--lfile'):
-                log_file = arg
-
+def main():
     signal.signal(signal.SIGINT, handler)
     signal.signal(signal.SIGTERM, handler)
     monitor = FanControl(log_file, log_level)
