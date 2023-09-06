@@ -1,15 +1,21 @@
 #!/bin/bash
+set -e
+
+function debug()
+{
+  /usr/bin/logger "$1"
+}
 
 save_saidump_by_rdb() {
-  #1. Save the Redis data.
+  debug "saidump.sh: [1] sonic-db-cli -n asic$1 SAVE."
   sudo sonic-db-cli -n asic$1 SAVE > /dev/null
-  #2. Move dump files to /var/run/redisX/
+  debug "saidump.sh: [2] Move dump.rdb to /var/run/redis$1/ in container database$1."
   docker exec database$1 sh -c "mv /var/lib/redis/dump.rdb /var/run/redis$1/"
-  #3. Run rdb command to convert the dump files into JSON files
+  debug "saidump.sh: [3] Run rdb command to convert the dump files into JSON files."
   sudo python /usr/local/bin/rdb --command json  /var/run/redis$1/dump.rdb | sudo tee /var/run/redis$1/dump.json > /dev/null
-  #4. Run saidump -r to update the JSON files' format as same as the saidump before. Then we can get the saidump result in standard output.
+  debug "saidump.sh: [4] Run saidump -r to update the JSON files' format as same as the saidump before. Then we can get the saidump's result in standard output."
   docker exec syncd$1 sh -c "saidump -r /var/run/redis$1/dump.json"
-  #5. clear
+  debug "saidump.sh: [5] Clear temporary files."
   sudo rm -f /var/run/redis$1/dump.rdb
   sudo rm -f /var/run/redis$1/dump.json
 }
