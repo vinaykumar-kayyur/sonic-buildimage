@@ -29,7 +29,7 @@
 #include <linux/mutex.h>
 #include <linux/slab.h>
 
-#define DEBUG 1
+#define DEBUG 0
 #define MAX_PSU_NUM 2
 #define MAX_FANTRAY_NUM 7
 LED_OPS_DATA sys_led_ops_data[1]={0};
