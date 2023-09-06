@@ -200,7 +200,7 @@ def handler(signum, frame):
 def main():
     signal.signal(signal.SIGINT, handler)
     signal.signal(signal.SIGTERM, handler)
-    monitor = FanControl(log_file, log_level)
+    monitor = FanControl()
     # Loop forever, doing something useful hopefully:
     while True:
         monitor.manage_fans()
