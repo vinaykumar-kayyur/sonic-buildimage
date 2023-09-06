@@ -117,7 +117,7 @@ stages:
       displayName: "Download sonic-buildimage.vs artifact"
 
     - script: |
-        sudo .azure-pipelines/build_and_install_module.sh
+        sudo src/sonic-swss-common/.azure-pipelines/build_and_install_module.sh
       displayName: "Install kernel modules"
 
     - script: |
