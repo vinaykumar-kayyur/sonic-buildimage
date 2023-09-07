@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2019-2021 NVIDIA CORPORATION & AFFILIATES.
+# Copyright (c) 2019-2023 NVIDIA CORPORATION & AFFILIATES.
 # Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -134,6 +134,8 @@ SFP_PAGE0_PATH = '0/i2c-0x50/data'
 SFP_A2H_PAGE0_PATH = '0/i2c-0x51/data'
 SFP_SDK_MODULE_SYSFS_ROOT_TEMPLATE = '/sys/module/sx_core/asic0/module{}/'
 SFP_EEPROM_ROOT_TEMPLATE = SFP_SDK_MODULE_SYSFS_ROOT_TEMPLATE + 'eeprom/pages'
+SFP_SYSFS_STATUS = 'status'
+SFP_SYSFS_STATUS_ERROR = 'statuserror'
 SFP_SYSFS_PRESENT = 'present'
 SFP_SYSFS_RESET = 'reset'
 SFP_SYSFS_POWER_MODE = 'power_mode'
@@ -198,18 +200,6 @@ def deinitialize_sdk_handle(sdk_handle):
          return False
 
 
-class SdkHandleContext(object):
-    def __init__(self):
-        self.sdk_handle = None
-
-    def __enter__(self):
-        self.sdk_handle = initialize_sdk_handle()
-        return self.sdk_handle
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        deinitialize_sdk_handle(self.sdk_handle)
-
-
 class NvidiaSFPCommon(SfpOptoeBase):
     def __init__(self, sfp_index):
         super(NvidiaSFPCommon, self).__init__()
@@ -225,26 +215,20 @@ class NvidiaSFPCommon(SfpOptoeBase):
         return SFP.shared_sdk_handle
 
     @classmethod
-    def _get_module_info(self, sdk_handle, sdk_index):
+    def _get_module_info(self, sdk_index):
         """
-        Get error code of the SFP module
+        Get oper state and error code of the SFP module
 
         Returns:
-            The error code fetch from SDK API
+            The oper state and error code fetched from sysfs
         """
-        module_id_info_list = new_sx_mgmt_module_id_info_t_arr(1)
-        module_info_list = new_sx_mgmt_phy_module_info_t_arr(1)
+        status_file_path = SFP_SDK_MODULE_SYSFS_ROOT_TEMPLATE.format(sdk_index) + SFP_SYSFS_STATUS
+        oper_state = utils.read_int_from_file(status_file_path)
 
-        module_id_info = sx_mgmt_module_id_info_t()
-        module_id_info.slot_id = 0
-        module_id_info.module_id = sdk_index
-        sx_mgmt_module_id_info_t_arr_setitem(module_id_info_list, 0, module_id_info)
+        status_error_file_path = SFP_SDK_MODULE_SYSFS_ROOT_TEMPLATE.format(sdk_index) + SFP_SYSFS_STATUS_ERROR
+        error_type = utils.read_int_from_file(status_error_file_path)
 
-        rc = sx_mgmt_phy_module_info_get(sdk_handle, module_id_info_list, 1, module_info_list)
-        assert SX_STATUS_SUCCESS == rc, "sx_mgmt_phy_module_info_get failed, error code {}".format(rc)
-
-        mod_info = sx_mgmt_phy_module_info_t_arr_getitem(module_info_list, 0)
-        return mod_info.module_state.oper_state, mod_info.module_state.error_type
+        return oper_state, error_type
 
 
 class SFP(NvidiaSFPCommon):
@@ -452,7 +436,7 @@ class SFP(NvidiaSFPCommon):
         Returns:
             The error description
         """
-        oper_status, error_code = self._get_module_info(self.sdk_handle, self.sdk_index)
+        oper_status, error_code = self._get_module_info(self.sdk_index)
         if oper_status == SX_PORT_MODULE_STATUS_INITIALIZING:
             error_description = self.SFP_STATUS_INITIALIZING
         elif oper_status == SX_PORT_MODULE_STATUS_PLUGGED:

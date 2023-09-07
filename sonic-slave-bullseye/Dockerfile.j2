@@ -116,6 +116,8 @@ RUN apt-get update && apt-get install -y \
         uuid-dev \
         jq \
         cron \
+# For sonic-swss-common
+        nlohmann-json3-dev \
 # For quagga build
         libreadline-dev \
         texlive-latex-base \
@@ -348,6 +350,7 @@ RUN apt-get update && apt-get install -y \
 # For DHCP Monitor tool
         libexplain-dev \
         libevent-dev \
+        libjsoncpp-dev \
 # For libyang
         swig \
 # For build dtb
@@ -404,6 +407,8 @@ RUN apt-get update && apt-get install -y \
         libgirepository1.0-dev \
         libsystemd-dev \
         pkg-config \
+# For sonic-swss-common build
+        libhiredis-dev \
 # For audisp-tacplus
         libauparse-dev \
         auditd \
@@ -572,10 +577,6 @@ RUN cd /usr/src/gtest && cmake . && make -C /usr/src/gtest
 
 RUN mkdir /var/run/sshd
 EXPOSE 22
-
-# Install depot-tools (for git-retry)
-RUN git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git /usr/share/depot_tools
-ENV PATH /usr/share/depot_tools:$PATH
 
 # Install dependencies for dhcp relay test
 RUN pip3 install parameterized==0.8.1
