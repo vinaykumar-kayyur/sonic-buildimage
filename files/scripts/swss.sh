@@ -167,7 +167,8 @@ function clean_up_chassis_db_tables()
     fi
 
     # Next, delete SYSTEM_INTERFACE entries
-    $SONIC_DB_CLI CHASSIS_APP_DB EVAL "
+    num_sys_intf=`$SONIC_DB_CLI CHASSIS_APP_DB EVAL "
+    local nsi = 0
     local host = string.gsub(ARGV[1], '%-', '%%-')
     local dev = ARGV[2]
     local ps = 'SYSTEM_INTERFACE*|' .. host .. '|' .. dev
@@ -175,9 +176,12 @@ function clean_up_chassis_db_tables()
     for j,key in ipairs(keylist) do
         if string.match(key, ps) ~= nil then
             redis.call('DEL', key)
+            nsi = nsi + 1
         end
     end
-    return " 0 $lc $asic
+    return nsi" 0 $lc $asic`
+
+    debug "Chassis db clean up for ${SERVICE}$DEV. Number of SYSTEM_INTERFACE entries deleted: $num_sys_intf"
 
     # Next, delete SYSTEM_LAG_MEMBER_TABLE entries
     num_lag_mem=`$SONIC_DB_CLI CHASSIS_APP_DB EVAL "
@@ -205,7 +209,8 @@ function clean_up_chassis_db_tables()
     fi
 
     # Finally, delete SYSTEM_LAG_TABLE entries and deallot LAG IDs
-    $SONIC_DB_CLI CHASSIS_APP_DB EVAL "
+    num_sys_lag=`$SONIC_DB_CLI CHASSIS_APP_DB EVAL "
+    local nsl = 0
     local host = string.gsub(ARGV[1], '%-', '%%-')
     local dev = ARGV[2]
     local ps = 'SYSTEM_LAG_TABLE*|' .. '(' .. host .. '|' .. dev ..'.*' .. ')'
@@ -217,9 +222,12 @@ function clean_up_chassis_db_tables()
             local lagid = redis.call('HGET', 'SYSTEM_LAG_ID_TABLE', lagname)
             redis.call('SREM', 'SYSTEM_LAG_ID_SET', lagid)
             redis.call('HDEL', 'SYSTEM_LAG_ID_TABLE', lagname)
+            nsl = nsl + 1
         end
     end
-    return " 0 $lc $asic
+    return nsl" 0 $lc $asic`
+
+    debug "Chassis db clean up for ${SERVICE}$DEV. Number of SYSTEM_LAG_TABLE entries deleted: $num_sys_lag"
 
 }
 
