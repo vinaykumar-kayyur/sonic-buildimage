@@ -21,7 +21,7 @@ jobs:
       env:
         GITHUB_CONTEXT: ${{ toJson(github) }}
         USER: mssonicbld
-        PAT: ${{ secrets.GH_TOKEN }}
+        PAT: ${{ secrets.TOKEN }}
         MSAZURE_TOKEN: ${{ secrets.MSAZURE_PAT }}
       run: |
         set -e
