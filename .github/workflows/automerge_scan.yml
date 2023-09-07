@@ -1,5 +1,3 @@
-# secrets to set
-# TOKEN: mssonicbld PAT to comment, close cherry pick PR and merge PR
 name: AutoMergeScan
 on:
   schedule:
@@ -16,7 +14,6 @@ jobs:
         TOKEN: ${{ secrets.TOKEN }}
       run: |
         set -e
-        gh --version
 
         echo ${TOKEN} | gh auth login --with-token
         gh pr list -R sonic-net/sonic-buildimage -A mssonicbld -L 100 -S "label:automerge" --json url,body,title,createdAt,labels,statusCheckRollup > prs.log
@@ -32,8 +29,6 @@ jobs:
         # more than 10 days, stop comment.
         # more than 28 days, comment @author PR will be closed
         # more than 30 days, close PR
-        # Submodule update HEAD PR:
-        # more than 3 days, send alert(submodule PR)
         date_3d_ago=$(date --date "3 day ago" -u +"%FT%TZ")
         date_10d_ago=$(date --date "10 day ago" -u +"%FT%TZ")
         date_28d_ago=$(date --date "28 day ago" -u +"%FT%TZ")
@@ -49,7 +44,6 @@ jobs:
           body=$(cat prs.log | jq -r ".[$i].body")
           title=$(cat prs.log | jq -r ".[$i].title")
           origin_pr_id=$(echo $title | grep -Eo "\[action\] \[PR:[0-9]*\]" | grep -Eo [0-9]* || true)
-          submodule=$(echo $title | grep -Eo "Update submodule .* to the latest HEAD automatically" | sed "s/Update submodule //" | sed "s/ to the latest HEAD automatically//")
           created_at=$(cat prs.log | jq -r ".[$i].createdAt")
           echo PR: $(($i+1))/$count, URL: $url, origin PR: $origin_pr_id, createdAt: $created_at, operate: $operate
           [[ "$url" == "" ]] && continue
