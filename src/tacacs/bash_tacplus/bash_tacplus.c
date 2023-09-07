@@ -14,8 +14,8 @@
 /* Remote user gecos prefix, which been assigned by nss_tacplus */
 #define REMOTE_USER_GECOS_PREFIX      "remote_user"
 
-/* Default value for _SC_GETPW_R_SIZE_MAX */
-#define DEFAULT_SC_GETPW_R_SIZE_MAX     1024
+/* Default value for getpwent */
+#define DEFAULT_GETPWENT_SIZE_MAX     4096
 
 /* Return value for is_local_user method */
 #define IS_LOCAL_USER              0
