@@ -46,7 +46,6 @@ jobs:
         [[ "$date_now" > "22:00:00" ]] && operate=true
 
         count=$(cat prs.log | jq 'length')
-        rm -rf submodule_prs.log cherrypick_prs.log
         for ((i=0;i<$count;i++))
         do
           url=$(cat prs.log | jq -r ".[$i].url")
@@ -58,19 +57,6 @@ jobs:
           echo PR: $(($i+1))/$count, URL: $url, origin PR: $origin_pr_id, createdAt: $created_at, operate: $operate
           [[ "$url" == "" ]] && continue
           [[ $created_at > $(date --date "1 hour ago" -u +"%FT%TZ") ]] && continue
-
-          # record failure PR and checkers.
-          if [[ $created_at < $date_3d_ago ]];then
-            if [ -z "$origin_pr_id" ];then
-              echo "" >> submodule_prs.log
-              echo $url >> submodule_prs.log
-              echo "$submodule FAILED since $created_at" >> submodule_prs.log
-            else
-              echo "" >> cherrypick_prs.log
-              echo $url >> cherrypick_prs.log
-              echo "cherry pick PR failed since $created_at" >> cherrypick_prs.log
-            fi
-          fi
 
           checks=$(cat prs.log | jq ".[$i].statusCheckRollup")
           checks_count=$(echo $checks | jq 'length')
@@ -91,11 +77,6 @@ jobs:
             success=true
             ( [[ "$conclusion" == "FAILURE" ]] || [[ "$conclusion" == "CANCELLED" ]] ) && success=false && pr_success=false
             ! $success && echo "FAIL: $name"
-
-            if [[ "$created_at" < "$date_3d_ago" ]] && ! $success;then
-              [ -z "$origin_pr_id" ] && echo "----$name" >> submodule_prs.log
-              [ -n "$origin_pr_id" ] && echo "----$name" >> cherrypick_prs.log
-            fi
           done
 
           # rerun Azure.sonic-buildimage per day
@@ -121,15 +102,4 @@ jobs:
           fi
           echo ========Finished PR========
         done
-
-        # update ADO to send alert through power automation
-        if wc -l submodule_prs.log &>/dev/null && $operate ; then
-          DISSCUSSION=$(cat submodule_prs.log | awk '{print}' ORS='<br>')
-          az boards work-item update --org https://dev.azure.com/mssonic/ --id 47 --discussion "$DISSCUSSION" --description "$DISSCUSSION"
-        fi
-
-        if wc -l cherrypick_prs.log &>/dev/null && $operate ; then
-          DISSCUSSION=$(cat cherrypick_prs.log | awk '{print}' ORS='<br>')
-          az boards work-item update --org https://dev.azure.com/mssonic/ --id 48 --discussion "$DISSCUSSION" --description "$DISSCUSSION"
-        fi
 
