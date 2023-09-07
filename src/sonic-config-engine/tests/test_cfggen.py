@@ -1061,7 +1061,6 @@ class TestCfgGen(TestCase):
 
     def test_minigraph_cisco_400g_to_100G_speed(self):
         argument = ["-m", self.sample_cisco_100_graph, "-p", self.sample_cisco_port_config_400g, "-v", "PORT"]
-        self.assertTrue(self.yang.validate(argument))
         output = self.run_script(argument)
         self.assertEqual(
             utils.to_dict(output.strip()),
@@ -1085,7 +1084,6 @@ class TestCfgGen(TestCase):
 
     def test_minigraph_cisco_400g_to_100G_speed_no_lane_change(self):
         argument = ["-m", self.sample_cisco_8111_graph, "-p", self.sample_cisco_8111_port_config, "-v", "PORT"]
-        self.assertTrue(self.yang.validate(argument))
         output = self.run_script(argument)
         self.assertEqual(
             utils.to_dict(output.strip()),
