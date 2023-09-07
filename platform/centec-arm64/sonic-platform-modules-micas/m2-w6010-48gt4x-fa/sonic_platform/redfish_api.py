@@ -88,13 +88,13 @@ class Redfish_Api():
             if ret_msg == None:
                 return False
             elif ret_msg["success"] == False:
-                redfish_log_error("Url: '%s', Playload: '%s', Bmc return failed, error_message: %s" % (url, playload_json, ret_msg["Message"]))
+                self.redfish_log_error("Url: '%s', Playload: '%s', Bmc return failed, error_message: %s" % (url, playload_json, ret_msg["Message"]))
                 result = False
             else:
                 result = True
             return result
         except Exception as e:
-            redfish_log_error("error_message: %s" % e)
+            self.redfish_log_error("error_message: %s" % e)
             return False
 
     def get_thermal(self):
