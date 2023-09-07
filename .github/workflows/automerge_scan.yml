@@ -1,6 +1,5 @@
 # secrets to set
-# GH_TOKEN: mssonicbld PAT to comment, close cherry pick PR and merge PR
-# MSSONIC_PAT: TOKEN for az boards
+# TOKEN: mssonicbld PAT to comment, close cherry pick PR and merge PR
 name: AutoMergeScan
 on:
   schedule:
@@ -14,7 +13,7 @@ jobs:
     steps:
     - name: Debug
       env:
-        TOKEN: ${{ secrets.GH_TOKEN }}
+        TOKEN: ${{ secrets.TOKEN }}
       run: |
         set -e
         gh --version
@@ -23,8 +22,6 @@ jobs:
         gh pr list -R sonic-net/sonic-buildimage -A mssonicbld -L 100 -S "label:automerge" --json url,body,title,createdAt,labels,statusCheckRollup > prs.log
         cat prs.log | jq
     - name: Main
-      env:
-        AZURE_DEVOPS_EXT_PAT: ${{ secrets.MSSONIC_PAT }}
       run: |
         set -e
 
@@ -43,7 +40,7 @@ jobs:
         date_30d_ago=$(date --date "30 day ago" -u +"%FT%TZ")
         date_now=$(date -u +"%T")
         operate=false
-        [[ "$date_now" > "22:00:00" ]] && operate=true
+        [[ "$date_now" < "02:00:00" ]] && operate=true
 
         count=$(cat prs.log | jq 'length')
         for ((i=0;i<$count;i++))
