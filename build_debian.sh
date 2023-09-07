@@ -74,13 +74,6 @@ touch $FILESYSTEM_ROOT/$PLATFORM_DIR/firsttime
 ## ensure proc is mounted
 sudo mount proc /proc -t proc || true
 
-if [[ $ENABLE_RFS_SPLIT_BUILD != y ]]; then
-    ## make / as a mountpoint in chroot env, needed by dockerd
-    pushd $FILESYSTEM_ROOT
-    sudo mount --bind . .
-    popd
-fi
-
 ## Build the host debian base system
 echo '[INFO] Build host debian base system...'
 TARGET_PATH=$TARGET_PATH scripts/build_debian_base_system.sh $CONFIGURED_ARCH $IMAGE_DISTRO $FILESYSTEM_ROOT

@@ -90,7 +90,6 @@ export BUILD_WORKDIR
 export GZ_COMPRESS_PROGRAM
 export MIRROR_SNAPSHOT
 export SONIC_OS_VERSION
-export ENABLE_RFS_SPLIT_BUILD
 
 ###############################################################################
 ## Utility rules
@@ -445,7 +444,6 @@ $(info "BUILD_MULTIASIC_KVM"             : "$(BUILD_MULTIASIC_KVM)")
 endif
 $(info "CROSS_BUILD_ENVIRON"             : "$(CROSS_BUILD_ENVIRON)")
 $(info "GZ_COMPRESS_PROGRAM"             : "$(GZ_COMPRESS_PROGRAM)")
-$(info "ENABLE_RFS_SPLIT_BUILD"          : "$(ENABLE_RFS_SPLIT_BUILD)")
 $(info )
 else
 $(info SONiC Build System for $(CONFIGURED_PLATFORM):$(CONFIGURED_ARCH))
@@ -459,9 +457,7 @@ endef
 $(foreach installer, $(SONIC_INSTALLERS), $(eval $(installer)_RFS_DEPENDS=$(call rfs_get_installer_dependencies,$(installer))))
 SONIC_RFS_TARGETS= $(foreach installer, $(SONIC_INSTALLERS), $(call rfs_get_installer_dependencies,$(installer)))
 
-ifeq ($(ENABLE_RFS_SPLIT_BUILD),y)
 SONIC_TARGET_LIST += $(addprefix $(TARGET_PATH)/, $(SONIC_RFS_TARGETS))
-endif
 
 # Overwrite the buildinfo in slave container
 ifeq ($(filter clean,$(MAKECMDGOALS)),)
@@ -1334,7 +1330,7 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
         $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_YANG_MGMT_PY3)) \
         $(addprefix $(PYTHON_WHEELS_PATH)/,$(SYSTEM_HEALTH)) \
         $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_HOST_SERVICES_PY3)) \
-        $(if $(findstring y,$(ENABLE_RFS_SPLIT_BUILD)),$$(addprefix $(TARGET_PATH)/,$$($$*_RFS_DEPENDS)))
+        $$(addprefix $(TARGET_PATH)/,$$($$*_RFS_DEPENDS))
 
 	$(HEADER)
 	# Pass initramfs and linux kernel explicitly. They are used for all platforms
@@ -1492,7 +1488,7 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 	)
 
 	export RFS_SPLIT_FIRST_STAGE=n
-	export RFS_SPLIT_LAST_STAGE="$(ENABLE_RFS_SPLIT_BUILD)"
+	export RFS_SPLIT_LAST_STAGE=y
 
 	# Build images for the MACHINE, DEPENDENT_MACHINE defined.
 	$(foreach dep_machine, $($*_MACHINE) $($*_DEPENDENT_MACHINE), \
