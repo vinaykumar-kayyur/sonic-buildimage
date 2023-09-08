@@ -53,14 +53,14 @@ vni_default = 8000
 # Defination of custom acl table types
 acl_table_type_defination = {
     'BMCDATA': {
-        "ACTIONS": "PACKET_ACTION,COUNTER",
-        "BIND_POINTS": "PORT",
-        "MATCHES": "SRC_IP,DST_IP,ETHER_TYPE,IP_TYPE,IP_PROTOCOL,IN_PORTS,L4_SRC_PORT,L4_DST_PORT,L4_SRC_PORT_RANGE,L4_DST_PORT_RANGE",
+        "ACTIONS": ["PACKET_ACTION", "COUNTER"],
+        "BIND_POINTS": ["PORT"],
+        "MATCHES": ["SRC_IP", "DST_IP", "ETHER_TYPE", "IP_TYPE", "IP_PROTOCOL", "IN_PORTS", "L4_SRC_PORT", "L4_DST_PORT", "L4_SRC_PORT_RANGE", "L4_DST_PORT_RANGE"]
     },
     'BMCDATAV6': {
-        "ACTIONS": "PACKET_ACTION,COUNTER",
-        "BIND_POINTS": "PORT",
-        "MATCHES": "SRC_IPV6,DST_IPV6,ETHER_TYPE,IP_TYPE,IP_PROTOCOL,IN_PORTS,L4_SRC_PORT,L4_DST_PORT,L4_SRC_PORT_RANGE,L4_DST_PORT_RANGE",
+        "ACTIONS": ["PACKET_ACTION", "COUNTER"],
+        "BIND_POINTS": ["PORT"],
+        "MATCHES": ["SRC_IPV6", "DST_IPV6", "ETHER_TYPE", "IP_TYPE", "IP_PROTOCOL", "IN_PORTS", "L4_SRC_PORT", "L4_DST_PORT", "L4_SRC_PORT_RANGE", "L4_DST_PORT_RANGE"]
     }
 }
 
@@ -1736,7 +1736,10 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         port_default_speed =  port_speeds_default.get(port_name, None)
         port_png_speed = port_speed_png[port_name]
 
-        # when the port speed is changes from 400g to 100g/40g 
+        # set Port Speed before lane update
+        ports.setdefault(port_name, {})['speed'] = port_png_speed
+
+        # when the port speed is changes from 400g to 100g/40g
         # update the port lanes, use the first 4 lanes of the 400G port to support 100G/40G port
         if port_default_speed == '400000' and (port_png_speed == '100000' or port_png_speed == '40000'):
             port_lanes =  ports[port_name].get('lanes', '').split(',')
@@ -1746,7 +1749,6 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
             updated_lanes = ",".join(port_lanes[:4])
             ports[port_name]['lanes'] = updated_lanes
 
-        ports.setdefault(port_name, {})['speed'] = port_speed_png[port_name]
 
     for port_name, port in list(ports.items()):
         # get port alias from port_config.ini
