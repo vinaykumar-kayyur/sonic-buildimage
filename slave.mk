@@ -1231,6 +1231,10 @@ $(DOCKER_LOAD_TARGETS) : $(TARGET_PATH)/%.gz-load : .platform docker-start $$(TA
 ###############################################################################
 
 # targets for building installers with base image
+# TODO: the following have been disabled for Bookworm for now:
+# $(KDUMP_TOOLS)
+# $(NTP)
+# $(LIBNSS_TACPLUS)
 $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
         .platform \
         onie-image.conf \
@@ -1241,16 +1245,14 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
         $$(addprefix $(IMAGE_DISTRO_DEBS_PATH)/,$$($$*_INSTALLS)) \
         $$(addprefix $(IMAGE_DISTRO_DEBS_PATH)/,$$($$*_LAZY_INSTALLS)) \
         $$(addprefix $(IMAGE_DISTRO_DEBS_PATH)/,$$($$*_LAZY_BUILD_INSTALLS)) \
-        $(addprefix $(IMAGE_DISTRO_DEBS_PATH)/,$(INITRAMFS_TOOLS) \
+        $(addprefix $(IMAGE_DISTRO_DEBS_PATH)/, \
+                $(INITRAMFS_TOOLS) \
                 $(LINUX_KERNEL) \
                 $(SONIC_DEVICE_DATA) \
                 $(IFUPDOWN2) \
-                $(KDUMP_TOOLS) \
-                $(NTP) \
                 $(LIBPAM_RADIUS) \
                 $(LIBNSS_RADIUS) \
                 $(LIBPAM_TACPLUS) \
-                $(LIBNSS_TACPLUS) \
                 $(MONIT) \
                 $(OPENSSH_SERVER) \
                 $(PYTHON_SWSSCOMMON) \
