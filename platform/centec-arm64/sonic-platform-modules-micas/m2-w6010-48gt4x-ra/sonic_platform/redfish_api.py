@@ -94,7 +94,7 @@ class Redfish_Api():
                 result = True
             return result
         except Exception as e:
-            self.redfish_log_error("error_message: %s" % e)
+            self.redfish_log_error("error_message: %s" % e) 
             return False
 
     def get_thermal(self):
