@@ -20,7 +20,7 @@ bmc_present = json_data["PLATFORM"]["bmc_present"]
 # Wait for a while to ensure that the corresponding system files are ready
 time.sleep(30)
 if bmc_present == "False":
-    FanControl.main(sys.argv[1:])
+    FanControl.main()
 
 if bmc_present == "True":
     pddf_sensor_list_refresh.main()
