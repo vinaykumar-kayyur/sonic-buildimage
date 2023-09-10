@@ -1,5 +1,4 @@
 
-
 =======
 =======
 # SONiC Configuration Database Manual
@@ -32,6 +31,7 @@ Table of Contents
          * [Device Metadata](#device-metadata)
          * [Device neighbor metada](#device-neighbor-metada)
          * [DHCP_RELAY](#dhcp_relay)
+         * [DHCP Server IPV4](#dhcp_server_ipv4)
          * [DSCP_TO_TC_MAP](#dscp_to_tc_map)
          * [FG_NHG](#fg_nhg)
          * [FG_NHG_MEMBER](#fg_nhg_member)
@@ -989,6 +989,50 @@ instance is supported in SONiC.
 
 ```
 
+### DHCP_SERVER_IPV4
+IPV4 DHPC Server related configuration are defined in **DHCP_SERVER_IPV4**, **DHCP_SERVER_IPV4_CUSTOMIZED_OPTIONS**, **DHCP_SERVER_IPV4_RANGE**, **DHCP_SERVER_IPV4_PORT** tables.
+```
+{
+    "DHCP_SERVER_IPV4": {
+        "Vlan100": {
+            "gateway": "100.1.1.1",
+            "lease_time": 3600,
+            "mode": "PORT",
+            "netmask": "255.255.255.0",
+            "customized_options": [
+                "option60"
+            ],
+            "state": "enabled"
+        }
+    },
+    "DHCP_SERVER_IPV4_CUSTOMIZED_OPTIONS": {
+        "option60": {
+            "id": 60,
+            "type": "text",
+            "value": "dummy_value"
+        }
+    },
+    "DHCP_SERVER_IPV4_RANGE": {
+        "range1": {
+            "ip_start": "100.1.1.3",
+            "ip_end": "100.1.1.5"
+        }
+    },
+    "DHCP_SERVER_IPV4_PORT": {
+        "Vlan100|PortChannel0003": {
+            "ips": [
+                "100.1.1.10"
+            ]
+        },
+        "Vlan100|PortChannel2": {
+            "ranges": [
+                "range1"
+            ]
+        }
+    }
+}
+```
+
 ### DSCP_TO_TC_MAP
 ```
 {
@@ -1623,9 +1667,9 @@ optional attributes.
             "lanes": "101,102",
             "description": "fortyGigE1/1/1",
             "mtu": "9100",
-            "mode": "routed",
             "alias": "fortyGigE1/1/1",
             "speed": "40000",
+            "mode" : "routed",
             "link_training": "off",
             "laser_freq": "191300",
             "tx_power": "-27.3"
@@ -1635,10 +1679,10 @@ optional attributes.
             "lanes": "103,104",
             "description": "fortyGigE1/1/2",
             "mtu": "9100",
-            "mode":"routed",
             "alias": "fortyGigE1/1/2",
             "admin_status": "up",
             "speed": "40000",
+            "mode" : "routed",
             "link_training": "on",
             "laser_freq": "191300",
             "tx_power": "-27.3"
@@ -1648,9 +1692,9 @@ optional attributes.
             "lanes": "87,88",
             "description": "fortyGigE1/4/16",
             "mtu": "9100",
-            "mode":"routed"
             "alias": "fortyGigE1/4/16",
             "speed": "40000",
+            "mode" : "routed",
             "laser_freq": "191300",
             "tx_power": "-27.3"
         }
@@ -1700,8 +1744,7 @@ name as object key and member list as attribute.
         "members": [
             "Ethernet54"
         ],
-        "mtu": "9100",
-        "mode":"routed"
+        "mtu": "9100"
     },
     "PortChannel0004": {
         "admin_status": "up",
@@ -1710,7 +1753,6 @@ name as object key and member list as attribute.
             "Ethernet56"
         ],
         "mtu": "9100",
-        "mode":"routed"
         "fallback": "false",
         "fast_rate": "true"
     }
