@@ -86,7 +86,7 @@ generate_onie_installer_image()
     ## Note: Don't leave blank between lines. It is single line command.
     ./onie-mk-demo.sh $CONFIGURED_ARCH $TARGET_MACHINE $TARGET_PLATFORM-$TARGET_MACHINE-$ONIEIMAGE_VERSION \
           installer platform/$TARGET_MACHINE/platform.conf $output_file OS $IMAGE_VERSION $ONIE_IMAGE_PART_SIZE \
-          $ONIE_INSTALLER_PAYLOAD
+          $ONIE_INSTALLER_PAYLOAD $SECURE_UPGRADE_SIGNING_CERT $SECURE_UPGRADE_DEV_SIGNING_KEY
 }
 
 # Generate asic-specific device list
@@ -139,7 +139,11 @@ elif [ "$IMAGE_TYPE" = "raw" ]; then
     ## Run the installer
     ## The 'build' install mode of the installer is used to generate this dump.
     sudo chmod a+x $tmp_output_onie_image
-    sudo ./$tmp_output_onie_image
+    sudo ./$tmp_output_onie_image || {
+        ## Failure during 'build' install mode of the installer results in an incomplete raw image.
+        ## Delete the incomplete raw image.
+        sudo rm -f $OUTPUT_RAW_IMAGE
+    }
     rm $tmp_output_onie_image
 
     [ -r $OUTPUT_RAW_IMAGE ] || {
@@ -147,15 +151,7 @@ elif [ "$IMAGE_TYPE" = "raw" ]; then
         exit 1
     }
 
-    $GZ_COMPRESS_PROGRAM $OUTPUT_RAW_IMAGE
-
-    [ -r $OUTPUT_RAW_IMAGE.gz ] || {
-        echo "Error : $GZ_COMPRESS_PROGRAM $OUTPUT_RAW_IMAGE failed!"
-        exit 1
-    }
-
-    mv $OUTPUT_RAW_IMAGE.gz $OUTPUT_RAW_IMAGE
-    echo "The compressed raw image is in $OUTPUT_RAW_IMAGE"
+    echo "The raw image is in $OUTPUT_RAW_IMAGE"
 
 elif [ "$IMAGE_TYPE" = "kvm" ]; then
 
