@@ -243,16 +243,9 @@ download_packages()
         return $result
     fi
 
-    # Retry if something super-weird has happened. Use --retry-connrefused
-    # option for wget/curl.
-    # --retry-connrefused - Consider "connection refused" a transient error and
-    # try again. Normally wget/curl gives up on a URL when it is unable to
-    # connect to the site because failure to connect is taken as a sign that the
-    # server is not running at all and that retries would not help. This option
-    # is for mirroring unreliable sites whose servers tend to disappear for
-    # short periods of time.
+    # Retry if something super-weird has happened
     for ((i = 1; i <= GET_RETRY_COUNT; i++)); do
-        $REAL_COMMAND --retry-connrefused "${parameters[@]}"
+        $REAL_COMMAND "${parameters[@]}"
         result=$?
         if [ $result -eq 0 ]; then
             break
