@@ -1033,7 +1033,7 @@ $(foreach IMAGE,$(DOCKER_DBG_IMAGES), $(eval $(IMAGE)_FILES_PATH := $(FILES_PATH
 
 # Targets for dowanloaded docker images
 $(addprefix $(TARGET_PATH)/,$(DOWNLOADED_DOCKER_IMAGES)) : $(TARGET_PATH)/%.gz : .platform \
-		$(RULES_PATH)/$$*.mk
+		$(call dpkg_depend,$(TARGET_PATH)/%.gz.dep)
 	rm -f $@
 	wget "$($*.gz_URL)" -O $@
 

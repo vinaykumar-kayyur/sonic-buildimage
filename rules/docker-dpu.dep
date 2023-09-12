@@ -1,0 +1,4 @@
+DEP_FILES := rules/docker-dpu.dep rules/docker-dpu.mk
+
+$(DOCKER_DPU)_CACHE_MODE  := none
+$(DOCKER_DPU)_DEP_FILES   := $(DEP_FILES)
