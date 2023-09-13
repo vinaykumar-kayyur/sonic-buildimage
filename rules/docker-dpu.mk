@@ -11,3 +11,4 @@ $(DOCKER_DPU)_RUN_OPT += --privileged -t
 $(DOCKER_DPU)_RUN_OPT += -v /etc/sonic:/etc/sonic:ro
 
 DOWNLOADED_DOCKER_IMAGES += $(DOCKER_DPU)
+SONIC_INSTALL_DOCKER_IMAGES += $(DOCKER_DPU)
