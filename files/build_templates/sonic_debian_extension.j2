@@ -750,7 +750,7 @@ sudo LANG=C DOCKER_HOST="$DOCKER_HOST" chroot $FILESYSTEM_ROOT docker tag {{imag
 # Check if manifest exists for {{imagename}} and it is a valid JSON
 sudo LANG=C DOCKER_HOST="$DOCKER_HOST" chroot $FILESYSTEM_ROOT docker inspect {{imagename}}:latest \
     | jq '.[0].Config.Labels["com.azure.sonic.manifest"]' -r > /tmp/manifest.json
-[ -z "{{docker_build_path}}" ] || jq -e . /tmp/manifest.json || {
+jq -e . /tmp/manifest.json || {
     >&2 echo "docker image {{imagename}} has no manifest or manifest is not a valid JSON"
     exit 1
 }
