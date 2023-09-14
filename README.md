@@ -355,7 +355,7 @@ on the SAI version for each SONiC release.
 
 ## SONiC Image Azure Pipelines
 
-All SONiC project build pipeline could be found at [Download Portal for SONiC Images](https://sonic-build.azurewebsites.net/ui/sonic/pipelines)
+All SONiC project build pipeline could be found at [Download Portal for SONiC Images](https://sonic-build.azurewebsites.net)
 
 ## Contribution Guide
 
