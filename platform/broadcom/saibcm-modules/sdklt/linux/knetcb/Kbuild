@@ -34,8 +34,12 @@ ccflags-y := $(KNETCB_CPPFLAGS) $(LKM_CFLAGS) \
              -I$(SDK)/bcmdrd/include \
              -I$(SDK)/bcmltd/include \
              -I$(SDK)/bcmlrd/include \
+             -I$(SDK)/bcmcnet/include \
              -I$(SDK)/linux/include \
              -I$(SDK)/linux/knetcb  \
+             -I$(SDK)/linux/knet \
+             -I$(SDK)/linux/knet/generated/include \
+             -I$(SDK)/linux/knet/generated \
              $(INCLUDES) \
              $(PSAMPLE_CFLAGS) \
 

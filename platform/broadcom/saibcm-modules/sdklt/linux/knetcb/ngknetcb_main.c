@@ -8,9 +8,9 @@
  */
 
 #include <lkm/lkm.h>
-#include "../knet/ngknet_callback.h"
+#include <ngknet_callback.h>
 #include "psample-cb.h"
-#include <bcmcnet/bcmcnet_core.h>
+#include "bcmcnet/bcmcnet_core.h"
 /*! \cond */
 MODULE_AUTHOR("Broadcom Corporation");
 MODULE_DESCRIPTION("NGKNET Callback Module");
