@@ -1,0 +1,11 @@
+[Unit]
+Description=Platform rd98dx35xx-ext Service
+After=rc-local.service
+Before=getty.target
+
+[Service]
+ExecStart=/usr/local/bin/rd98dx35xx-ext-init.sh
+StandardOutput=tty
+
+[Install]
+WantedBy=multi-user.target
