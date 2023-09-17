@@ -67,7 +67,7 @@ Description: kernel modules for platform devices such as fan, led, sfp
 
 Package: platform-modules-e3224f
 Architecture: amd64
-Depends: linux-image-5.10.0-18-2-amd64-unsigned
+Depends: linux-image-5.10.0-23-2-amd64-unsigned
 Description: kernel modules for platform devices such as fan, led, sfp
 
 Package: platform-modules-s5296f
