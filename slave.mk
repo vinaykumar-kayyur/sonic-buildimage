@@ -419,6 +419,7 @@ $(info "INCLUDE_SFLOW"                   : "$(INCLUDE_SFLOW)")
 $(info "ENABLE_SFLOW_DROPMON"            : "$(ENABLE_SFLOW_DROPMON)")
 $(info "INCLUDE_NAT"                     : "$(INCLUDE_NAT)")
 $(info "INCLUDE_DHCP_RELAY"              : "$(INCLUDE_DHCP_RELAY)")
+$(info "INCLUDE_DHCP_SERVER"             : "$(INCLUDE_DHCP_SERVER)")
 $(info "INCLUDE_P4RT"                    : "$(INCLUDE_P4RT)")
 $(info "INCLUDE_KUBERNETES"              : "$(INCLUDE_KUBERNETES)")
 $(info "INCLUDE_KUBERNETES_MASTER"       : "$(INCLUDE_KUBERNETES_MASTER)")
@@ -679,6 +680,7 @@ SONIC_TARGET_LIST += $(addprefix $(FILES_PATH)/, $(SONIC_MAKE_FILES))
 #     $(SOME_NEW_DEB)_DEPENDS = $(SOME_OTHER_DEB1) $(SOME_OTHER_DEB2) ...
 #     SONIC_MAKE_DEBS += $(SOME_NEW_DEB)
 $(addprefix $(DEBS_PATH)/, $(SONIC_MAKE_DEBS)) : $(DEBS_PATH)/% : .platform $$(addsuffix -install,$$(addprefix $(DEBS_PATH)/,$$($$*_DEPENDS))) \
+			$$(addsuffix -install,$$(addprefix $(PYTHON_WHEELS_PATH)/,$$($$*_WHEEL_DEPENDS))) \
 			$$(addprefix $(DEBS_PATH)/,$$($$*_AFTER)) \
 			$(call dpkg_depend,$(DEBS_PATH)/%.dep)
 	$(HEADER)
@@ -1294,6 +1296,7 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 	export enable_auto_tech_support="$(ENABLE_AUTO_TECH_SUPPORT)"
 	export enable_asan="$(ENABLE_ASAN)"
 	export include_macsec="$(INCLUDE_MACSEC)"
+	export include_dhcp_server="$(INCLUDE_DHCP_SERVER)"
 	export include_mgmt_framework="$(INCLUDE_MGMT_FRAMEWORK)"
 	export include_iccpd="$(INCLUDE_ICCPD)"
 	export pddf_support="$(PDDF_SUPPORT)"
@@ -1518,7 +1521,7 @@ SONIC_CLEAN_TARGETS += $(addsuffix -clean,$(addprefix $(TARGET_PATH)/, \
 		       $(SONIC_SIMPLE_DOCKER_IMAGES) \
 		       $(SONIC_INSTALLERS)))
 $(SONIC_CLEAN_TARGETS) :: $(TARGET_PATH)/%-clean : .platform
-	$(Q)rm -f $(TARGET_PATH)/$* target/versions/dockers/$(subst .gz,,$*)
+	$(Q)rm -rf $(TARGET_PATH)/$* target/versions/dockers/$(subst .gz,,$*)
 
 SONIC_CLEAN_STDEB_DEBS = $(addsuffix -clean,$(addprefix $(PYTHON_DEBS_PATH)/, \
 		     $(SONIC_PYTHON_STDEB_DEBS)))
