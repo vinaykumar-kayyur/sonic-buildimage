@@ -35,7 +35,8 @@ COPY ["dhcp-relay.programs.j2", "dhcpv4-relay.agents.j2", "dhcpv6-relay.agents.j
 COPY ["files/supervisor-proc-exit-listener", "/usr/bin"]
 COPY ["critical_processes", "/etc/supervisor"]
 COPY ["cli", "/cli/"]
-# Copy regex json and rsyslog_plugin.conf file into rsyslog.d
+# Copy conf file, regex json, and rsyslog_plugin.conf file into rsyslog.d
+COPY ["00-dhcp-relay.conf", "/etc/rsyslog.d"/]
 COPY ["*.json", "/etc/rsyslog.d/"]
 COPY ["files/rsyslog_plugin.conf.j2", "/etc/rsyslog.d/"]
 
