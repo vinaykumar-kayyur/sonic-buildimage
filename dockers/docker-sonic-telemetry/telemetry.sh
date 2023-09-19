@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
 
 EXIT_TELEMETRY_VARS_FILE_NOT_FOUND=1
+
+INCORRECT_TELEMETRY_VALUE = 2
 EXIT_TELEMETRY_SERVER_CERT_FILE_NOT_FOUND=2
 EXIT_TELEMETRY_SERVER_KEY_FILE_NOT_FOUND=3
 EXIT_TELEMETRY_CA_CERT_FILE_NOT_FOUND=4
+
 TELEMETRY_VARS_FILE=/usr/share/sonic/templates/telemetry_vars.j2
 
 if [ ! -f "$TELEMETRY_VARS_FILE" ]; then
@@ -88,10 +91,37 @@ else
 fi
 
 LOG_LEVEL=$(echo $GNMI | jq -r '.log_level')
-if [ ! -z $LOG_LEVEL ] && [ $LOG_LEVEL != "null" ] && [[ $LOG_LEVEL =~ ^[0-9]+$ ]]; then
+if [[ $LOG_LEVEL =~ ^[0-9]+$ ]]; then
     TELEMETRY_ARGS+=" -v=$LOG_LEVEL"
 else
     TELEMETRY_ARGS+=" -v=2"
 fi
+
+# Server will handle threshold connections consecutively
+THRESHOLD_CONNECTIONS=$(echo $GNMI | jq -r '.threshold')
+if [[ $THRESHOLD_CONNECTIONS =~ ^[0-9]+$ ]]; then
+    TELEMETRY_ARGS+=" --threshold $THRESHOLD_CONNECTIONS"
+else
+    if [[ $THRESHOLD_CONNECTIONS == "null" ]]; then
+        TELEMETRY_ARGS+=" --threshold 100"
+    else
+        echo "Incorrect threshold value, expecting positive integers" >&2
+        exit $INCORRECT_TELEMETRY_VALUE
+    fi
+fi
+
+# Close idle connections after certain duration (in seconds)
+IDLE_CONN_DURATION=$(echo $GNMI | jq -r '.idle_conn_duration')
+if [[ $IDLE_CONN_DURATION =~ ^[0-9]+$ ]]; then
+    TELEMETRY_ARGS+=" --idle_conn_duration $IDLE_CONN_DURATION"
+else
+    if [[ $IDLE_CONN_DURATION == "null" ]]; then
+        TELEMETRY_ARGS+=" --idle_conn_duration 5"
+    else
+        echo "Incorrect idle_conn_duration value, expecting positive integers" >&2
+        exit $INCORRECT_TELEMETRY_VALUE
+    fi
+fi
+
 
 exec /usr/sbin/telemetry ${TELEMETRY_ARGS}
