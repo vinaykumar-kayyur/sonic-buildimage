@@ -8,14 +8,14 @@
                     "server_key": "123"
                 },
                 "gnmi": {
-                    "client_auth": "true",
+                    "client_auth": "cert",
                     "log_level": "2",
                     "port": "50051"
                 }
             }
         }
     },
-    "TELEMETRY_TABLE_WITH_INCORRECT_CLIENT_AUTH": {
+    "TELEMETRY_TABLE_WITH_CORRECT_CLIENT_AUTH": {
         "sonic-telemetry:sonic-telemetry": {
             "sonic-telemetry:TELEMETRY": {
                 "certs": {
@@ -24,7 +24,7 @@
                     "server_key": "/etc/sonic/telemetry/streamingtelemetryserver.key"
                 },
                 "gnmi": {
-                    "client_auth": "up",
+                    "client_auth": "jwt",
                     "log_level": "2",
                     "port": "50051"
                 }
@@ -40,7 +40,7 @@
                     "server_key": "/etc/sonic/telemetry/streamingtelemetryserver.key"
                 },
                 "gnmi": {
-                    "client_auth": "true",
+                    "client_auth": "password",
                     "log_level": "2",
                     "port": "abc"
                 }
@@ -56,7 +56,7 @@
                     "server_key": "/etc/sonic/telemetry/streamingtelemetryserver.key"
                 },
                 "gnmi": {
-                    "client_auth": "true",
+                    "client_auth": "cert,password,jwt",
                     "log_level": "2",
                     "port": "50051"
                 }
