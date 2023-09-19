@@ -54,7 +54,7 @@ module sonic-dhcpv6-relay {
 					}
 				}
 			}
-			/* end of VLAN_LIST */
+			/* end of DHCP_RELAY_LIST */
 		}
 		/* end of container DHCP_RELAY */
 	}
