@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
 EXIT_TELEMETRY_VARS_FILE_NOT_FOUND=1
-
 INCORRECT_TELEMETRY_VALUE = 2
 EXIT_TELEMETRY_SERVER_CERT_FILE_NOT_FOUND=2
 EXIT_TELEMETRY_SERVER_KEY_FILE_NOT_FOUND=3
@@ -91,7 +90,7 @@ else
 fi
 
 LOG_LEVEL=$(echo $GNMI | jq -r '.log_level')
-if [[ $LOG_LEVEL =~ ^[0-9]+$ ]]; then
+if [ ! -z $LOG_LEVEL ] && [ $LOG_LEVEL != "null" ] && [[ $LOG_LEVEL =~ ^[0-9]+$ ]]; then
     TELEMETRY_ARGS+=" -v=$LOG_LEVEL"
 else
     TELEMETRY_ARGS+=" -v=2"
