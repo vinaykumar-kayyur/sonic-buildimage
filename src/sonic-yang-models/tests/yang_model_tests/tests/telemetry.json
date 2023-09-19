@@ -3,9 +3,8 @@
         "desc": "TABLE_WITH_INCORRECT_CERT failure.",
         "eStrKey": "Pattern"
     },
-    "TELEMETRY_TABLE_WITH_INCORRECT_CLIENT_AUTH": {
-        "desc": "TABLE_WITH_INCORRECT_CLIENT_AUTH failure",
-        "eStrKey": "InvalidValue"
+    "TELEMETRY_TABLE_WITH_CORRECT_CLIENT_AUTH": {
+        "desc": "TABLE_WITH_CORRECT_CLIENT_AUTH"
     },
     "TELEMETRY_TABLE_WITH_INCORRECT_PORT": {
         "desc": "TABLE_WITH_INCORRECT_PORT failure.",
