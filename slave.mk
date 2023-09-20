@@ -451,11 +451,29 @@ endif
 
 # Definition of SONIC_RFS_TARGETS
 define rfs_get_installer_dependencies
-$(1)__$($(1)_MACHINE)__rfs.squashfs $(if $($(1)_DEPENDENT_MACHINE),$(1)__$($(1)_DEPENDENT_MACHINE)__rfs.squashfs)
+$(call rfs_build_target_name,$(1),$($(1)_MACHINE))
 endef
 
+define rfs_build_target_name
+$(1)__$(2)__rfs.squashfs
+endef
+
+define rfs_define_target
+$(eval rfs_target=$(call rfs_build_target_name,$(1),$($(1)_MACHINE)))
+$(eval $(rfs_target)_INSTALLER=$(1))
+$(eval $(rfs_target)_MACHINE=$($(1)_MACHINE))
+$(eval SONIC_RFS_TARGETS+=$(rfs_target))
+
+$(if $($(1)_DEPENDENT_MACHINE),\
+	$(eval dependent_rfs_target=$(call rfs_build_target_name,$(1),$($(1)_DEPENDENT_MACHINE)))
+	$(eval $(dependent_rfs_target)_INSTALLER=$(1))
+	$(eval $(dependent_rfs_target)_MACHINE=$($(1)_DEPENDENT_MACHINE))
+	$(eval SONIC_RFS_TARGETS+=$(dependent_rfs_target))
+	$(eval $(rfs_target)_DEPENDENT_RFS=$(dependent_rfs_target)))
+endef
+
+$(foreach installer,$(SONIC_INSTALLERS),$(eval $(call rfs_define_target,$(installer))))
 $(foreach installer, $(SONIC_INSTALLERS), $(eval $(installer)_RFS_DEPENDS=$(call rfs_get_installer_dependencies,$(installer))))
-SONIC_RFS_TARGETS= $(foreach installer, $(SONIC_INSTALLERS), $(call rfs_get_installer_dependencies,$(installer)))
 
 SONIC_TARGET_LIST += $(addprefix $(TARGET_PATH)/, $(SONIC_RFS_TARGETS))
 
@@ -1226,6 +1244,7 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_RFS_TARGETS)) : $(TARGET_PATH)/% : \
         build_debian.sh \
         $(addprefix $(IMAGE_DISTRO_DEBS_PATH)/,$(INITRAMFS_TOOLS) $(LINUX_KERNEL)) \
         $(addsuffix -install,$(addprefix $(IMAGE_DISTRO_DEBS_PATH)/,$(DEBOOTSTRAP))) \
+        $$(addprefix $(TARGET_PATH)/,$$($$*_DEPENDENT_RFS)) \
         $(call dpkg_depend,$(TARGET_PATH)/%.dep)
 	$(HEADER)
 
@@ -1234,8 +1253,8 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_RFS_TARGETS)) : $(TARGET_PATH)/% : \
 	# Skip building the target if it is already loaded from cache
 	if [ -z '$($*_CACHE_LOADED)' ] ; then
 
-		$(eval installer=$(word 1,$(subst __, ,$*)))
-		$(eval machine=$(word 2,$(subst __, ,$*)))
+		$(eval installer=$($*_INSTALLER))
+		$(eval machine=$($*_MACHINE))
 
 		export debs_path="$(IMAGE_DISTRO_DEBS_PATH)"
 		export initramfs_tools="$(IMAGE_DISTRO_DEBS_PATH)/$(INITRAMFS_TOOLS)"
