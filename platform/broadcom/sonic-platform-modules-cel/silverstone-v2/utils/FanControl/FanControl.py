@@ -24,6 +24,7 @@ except ImportError as e:
 
 FUNCTION_NAME = "FanControl"
 ERROR_COLOR = "amber"
+NORMAL_COLOR = "green"
 DUTY_MAX = 100
 FAN_NUMBER = 7
 PSU_NUMBER = 2
@@ -36,19 +37,18 @@ Fan_Rear_MIN = 6600
 
 class FanControl(object):
     """
-        Make a class we can use to capture stdout and sterr in the log
-        """
+    Make a class we can use to capture stdout in the log
+    """
     # static temp var
     _ori_temp = 0
     _new_perc = DUTY_MAX / 2
     syslog = logging.getLogger("[" + FUNCTION_NAME + "]")
     init_fan_temperature = [0, 0]
 
-    def __init__(self, log_file, log_level):
-        self.FanLinearAdjustment = FanLinearAdjustment.FanLinearAdjustment(log_file, log_level, DUTY_MAX, FAN_NUMBER,
-                                                                           PSU_NUMBER, SENSOR_NUMBER)
-        self.SwitchInternalPIDRegulation = SwitchInternalPIDRegulation.SwitchInternalPIDRegulation(log_file, log_level)
-        self.CPUPIDRegulation = CPUPIDRegulation.CPUPIDRegulation(log_file, log_level)
+    def __init__(self):
+        self.FanLinearAdjustment = FanLinearAdjustment.FanLinearAdjustment(DUTY_MAX, FAN_NUMBER, PSU_NUMBER, SENSOR_NUMBER)
+        self.SwitchInternalPIDRegulation = SwitchInternalPIDRegulation.SwitchInternalPIDRegulation()
+        self.CPUPIDRegulation = CPUPIDRegulation.CPUPIDRegulation()
         # Needs a logger and a logger level
         formatter = logging.Formatter('%(name)s %(message)s')
         sys_handler = logging.handlers.SysLogHandler(address='/dev/log')
@@ -57,23 +57,6 @@ class FanControl(object):
         self.syslog.setLevel(logging.WARNING)
         self.syslog.addHandler(sys_handler)
         self.platform_chassis_obj = platform.Platform().get_chassis()
-        # set up logging to file
-        logging.basicConfig(
-            filename=log_file,
-            filemode='w',
-            level=log_level,
-            format='[%(asctime)s] {%(pathname)s:%(lineno)d} %(levelname)s - %(message)s',
-            datefmt='%H:%M:%S'
-        )
-
-        # set up logging to console
-        if log_level == logging.DEBUG:
-            console = logging.StreamHandler()
-            console.setLevel(log_level)
-            formatter = logging.Formatter('%(name)-12s: %(levelname)-8s %(message)s')
-            console.setFormatter(formatter)
-            logging.getLogger('').addHandler(console)
-        logging.debug('SET. logfile:%s / loglevel:%d' % (log_file, log_level))
 
     def get_psu_status(self, fan_duty_list):
         """
@@ -81,24 +64,21 @@ class FanControl(object):
         :param fan_duty_list: A list.TO app the fans target pwm
         """
         psu_presence_list = [True, True]
-        for psu_index in range(PSU_NUMBER):
-            psu_presence = self.platform_chassis_obj.get_psu(psu_index).get_presence()
-            psu_status = self.platform_chassis_obj.get_psu(psu_index).get_status()
-            if not psu_status:
-                self.syslog.warning(
-                    "psu%s was error,presence:%s, status:%s" % (psu_index + 1, str(psu_presence), str(psu_status)))
-                logging.warning(
-                    "psu%s was error,presence:%s, status:%s" % (psu_index + 1, str(psu_presence), str(psu_status)))
-            if not psu_presence:
-                psu_presence_list[psu_index] = False
-                self.syslog.warning(
-                    "psu%s was error,presence:%s, status:%s" % (psu_index + 1, str(psu_presence), str(psu_status)))
-                logging.warning(
-                    "psu%s was error,presence:%s, status:%s" % (psu_index + 1, str(psu_presence), str(psu_status)))
-            else:
-                psu_presence_list[psu_index] = True
-        if False in psu_presence_list:
-            fan_duty_list.append(DUTY_MAX)
+        try:
+            pus_info = os.popen("i2cget -y -f 100 0x0d 0x60").read().strip()
+            psus_present = bin(int(pus_info, 16))[6:8]
+            for psu_index in range(PSU_NUMBER):
+                psu_presence = True if psus_present[psu_index] == "0" else False
+                if not psu_presence:
+                    psu_presence_list[psu_index] = False
+                    self.syslog.warning(
+                        "psu%s was error,presence:%s" % (psu_index + 1, str(psu_presence)))
+                else:
+                    psu_presence_list[psu_index] = True
+            if False in psu_presence_list:
+                fan_duty_list.append(DUTY_MAX)
+        except Exception:
+            pass
 
     def get_fan_status(self):
         """
@@ -107,14 +87,15 @@ class FanControl(object):
         """
         fan_presence_list = [True, True, True, True, True, True, True]  # Default state: fans are OK
         for fan_drawer_index in range(FAN_NUMBER):
-            fan_presence = self.platform_chassis_obj.get_fan(fan_drawer_index).get_presence()
-            fan_status = self.platform_chassis_obj.get_fan(fan_drawer_index).get_status()
-            if not all([fan_presence, fan_status]):
-                fan_presence_list[fan_drawer_index] = False
-                self.syslog.warning("Fan Drawer-%s has error,presence:%s, status:%s"
-                                    % (fan_drawer_index + 1, fan_presence, fan_status))
-                logging.warning("Fan Drawer-%s has error,presence:%s, status:%s"
-                                % (fan_drawer_index + 1, fan_presence, fan_status))
+            try:
+                fan_presence = self.platform_chassis_obj.get_fan_drawer(fan_drawer_index).get_presence()
+                fan_status = self.platform_chassis_obj.get_fan_drawer(fan_drawer_index).get_status()
+                if not all([fan_presence, fan_status]):
+                    fan_presence_list[fan_drawer_index] = False
+                    self.syslog.warning("Fan Drawer-%s has error,presence:%s, status:%s"
+                                        % (fan_drawer_index + 1, fan_presence, fan_status))
+            except Exception:
+                pass
         return fan_presence_list
 
     def check_fans_presence(self):
@@ -123,11 +104,9 @@ class FanControl(object):
         """
         fans_inserted_list = self.get_fan_status()
         fans_inserted_num = fans_inserted_list.count(True)
-        if fans_inserted_num == 0:  # all fans broken, power off
+        if fans_inserted_num == 0:  # all fans broken, cpld will power off
             self.syslog.critical("No fans inserted!!! Severe overheating hazard. "
                                  "Please insert Fans immediately or power off the device")
-            logging.critical("No fans inserted!!! Severe overheating hazard. "
-                             "Please insert Fans immediately or power off the device")
 
     def set_fans_pwm_by_rpm(self, fan_duty_list):
         """
@@ -145,25 +124,21 @@ class FanControl(object):
             if fan_name.endswith("2") and (fan_speed_rpm not in range(Fan_Rear_MIN, Fan_Rear_MAX + 1)):
                 fan_rpm_error_list.append(fan_name)
         if not fan_rpm_error_list:
-            return
+            for fan_drawer_index in range(FAN_NUMBER):
+                self.platform_chassis_obj.get_fan_drawer(fan_drawer_index).set_status_led(NORMAL_COLOR)
+            return None
         if len(fan_rpm_error_list) >= 2:
             self.syslog.warning("%s rpm less than the set minimum speed. "
                                 "Will increase the fan speed to 100%%" % fan_rpm_error_list)
-            logging.warning("%s rpm less than the set minimum speed. "
-                            "Will increase the fan speed to 100%%" % fan_rpm_error_list)
             fan_duty_list.append(DUTY_MAX)
         else:
             self.syslog.warning("%s rpm less than the set minimum speed. Fans pwm isn't changed" % fan_rpm_error_list)
-            logging.warning("%s rpm less than the set minimum speed. Fans pwm isn't changed" % fan_rpm_error_list)
 
         fan_modules_index_list = list(set(int(re.findall(r"Fantray(\d)_\d", x)[0]) for x in fan_rpm_error_list))
-        for error_fan in fan_modules_index_list:
-            self.syslog.warning("Fantray%d will be set to %s " % (error_fan, ERROR_COLOR))
-            logging.warning("Fantray%d will be set to %s " % (error_fan, ERROR_COLOR))
-            self.platform_chassis_obj.get_fan(error_fan).set_status_led(ERROR_COLOR)
+        for error_fan_drawer in fan_modules_index_list:
+            self.platform_chassis_obj.get_fan_drawer(error_fan_drawer-1).set_status_led(ERROR_COLOR)
 
         self.syslog.warning("The STA front panel light will be set to %s" % ERROR_COLOR)
-        logging.warning("The STA front panel light will be set to %s " % ERROR_COLOR)
         self.platform_chassis_obj.set_status_led(ERROR_COLOR)
 
     def get_linear_pid_pwm(self, fan_duty_list):
@@ -174,8 +149,6 @@ class FanControl(object):
         linear_regulation = self.FanLinearAdjustment.linear_control()
         cpu_pid_adjustment = self.CPUPIDRegulation.pid_control()
         sw_pid_adjustment = self.SwitchInternalPIDRegulation.pid_control()
-        logging.info("linear regulation PWM:%d, cpu pid PWM:%d, sw pid PWM:%d"
-                     % (linear_regulation, cpu_pid_adjustment, sw_pid_adjustment))
         fan_duty_list.append(linear_regulation)
         fan_duty_list.append(cpu_pid_adjustment)
         fan_duty_list.append(sw_pid_adjustment)
@@ -203,16 +176,9 @@ class FanControl(object):
             self._new_perc = 35
         if self._new_perc > 100:
             self._new_perc = 100
-        fan_index = 0
+
         for fan in self.platform_chassis_obj.get_all_fans():
-            fan_index += 1
-            fan_rpm = fan.get_speed()
-            logging.info("Get before setting fan speed: %s" % fan_rpm)
-            set_stat = fan.set_speed(self._new_perc)
-            if set_stat is True:
-                logging.info('PASS. Set Fan%d duty_cycle (%d)' % (fan_index, self._new_perc))
-            else:
-                logging.error('FAIL. Set Fan%d duty_cycle (%d)' % (fan_index, self._new_perc))
+            fan.set_speed(self._new_perc)
 
 
 def handler(signum, frame):
@@ -231,31 +197,11 @@ def handler(signum, frame):
     sys.exit(0)
 
 
-def main(argv):
-    log_file = '/home/admin/%s.log' % FUNCTION_NAME
-    log_level = logging.INFO
-    if len(sys.argv) != 1:
-        try:
-            opts, args = getopt.getopt(argv, 'hdlt:', ['lfile='])
-        except getopt.GetoptError:
-            print('Usage: %s [-d] [-l <log_file>]' % sys.argv[0])
-            return 0
-        for opt, arg in opts:
-            if opt == '-h':
-                print('Usage: %s [-d] [-l <log_file>]' % sys.argv[0])
-                return 0
-            elif opt in ('-d', '--debug'):
-                log_level = logging.DEBUG
-            elif opt in ('-l', '--lfile'):
-                log_file = arg
-
+def main():
     signal.signal(signal.SIGINT, handler)
     signal.signal(signal.SIGTERM, handler)
-    monitor = FanControl(log_file, log_level)
+    monitor = FanControl()
     # Loop forever, doing something useful hopefully:
     while True:
-        start_time = time.time()
         monitor.manage_fans()
-        end_time = time.time()
-        sleep_time = 0 if end_time - start_time > 2 else end_time - start_time
-        time.sleep(sleep_time)
+        time.sleep(2)

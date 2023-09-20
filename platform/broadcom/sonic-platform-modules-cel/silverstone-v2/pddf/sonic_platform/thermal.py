@@ -48,7 +48,7 @@ class Thermal(PddfThermal):
                     return float(attr_value / 1000)
             else:
                 info = self.helper.read_txt_file(sensor_list_config.Sensor_List_Info)
-                for line in info:
+                for line in info.splitlines():
                     if "PSU%d_Temp1" % self.thermals_psu_index in line:
                         return float(line.split("|")[8])
         else:

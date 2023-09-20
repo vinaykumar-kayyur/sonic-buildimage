@@ -6,14 +6,21 @@
 # @Author : jiang tao
 
 import sys
-import os
+import time
+import json
 sys.path.append(r"/usr/local/bin")
 from FanControl import FanControl
 import pddf_sensor_list_refresh
 
-bmc_present_path = "/host/bmc_present"
-if os.popen("cat %s" % bmc_present_path).read().strip() == "False":
-    FanControl.main(sys.argv[1:])
 
-if os.popen("cat %s" % bmc_present_path).read().strip() == "True":
+pddf_device_path = '/usr/share/sonic/platform/pddf/pddf-device.json'
+with open(pddf_device_path) as f:
+    json_data = json.load(f)
+bmc_present = json_data["PLATFORM"]["bmc_present"]
+# Wait for a while to ensure that the corresponding system files are ready
+time.sleep(30)
+if bmc_present == "False":
+    FanControl.main()
+
+if bmc_present == "True":
     pddf_sensor_list_refresh.main()

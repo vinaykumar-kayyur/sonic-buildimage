@@ -5,6 +5,7 @@ import math
 import os
 import sys
 import json
+import jinja2
 import subprocess
 from collections import defaultdict
 
@@ -54,14 +55,14 @@ vni_default = 8000
 # Defination of custom acl table types
 acl_table_type_defination = {
     'BMCDATA': {
-        "ACTIONS": "PACKET_ACTION,COUNTER",
-        "BIND_POINTS": "PORT",
-        "MATCHES": "SRC_IP,DST_IP,ETHER_TYPE,IP_TYPE,IP_PROTOCOL,IN_PORTS,L4_SRC_PORT,L4_DST_PORT,L4_SRC_PORT_RANGE,L4_DST_PORT_RANGE",
+        "ACTIONS": ["PACKET_ACTION", "COUNTER"],
+        "BIND_POINTS": ["PORT"],
+        "MATCHES": ["SRC_IP", "DST_IP", "ETHER_TYPE", "IP_TYPE", "IP_PROTOCOL", "IN_PORTS", "L4_SRC_PORT", "L4_DST_PORT", "L4_SRC_PORT_RANGE", "L4_DST_PORT_RANGE"]
     },
     'BMCDATAV6': {
-        "ACTIONS": "PACKET_ACTION,COUNTER",
-        "BIND_POINTS": "PORT",
-        "MATCHES": "SRC_IPV6,DST_IPV6,ETHER_TYPE,IP_TYPE,IP_PROTOCOL,IN_PORTS,L4_SRC_PORT,L4_DST_PORT,L4_SRC_PORT_RANGE,L4_DST_PORT_RANGE",
+        "ACTIONS": ["PACKET_ACTION", "COUNTER"],
+        "BIND_POINTS": ["PORT"],
+        "MATCHES": ["SRC_IPV6", "DST_IPV6", "ETHER_TYPE", "IP_TYPE", "IP_PROTOCOL", "IN_PORTS", "L4_SRC_PORT", "L4_DST_PORT", "L4_SRC_PORT_RANGE", "L4_DST_PORT_RANGE"]
     }
 }
 
@@ -1777,6 +1778,9 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         port_default_speed =  port_speeds_default.get(port_name, None)
         port_png_speed = port_speed_png[port_name]
 
+        # set Port Speed before lane update
+        ports.setdefault(port_name, {})['speed'] = port_png_speed
+
         # when the port speed is changes from 400g to 100g/40g
         # update the port lanes, use the first 4 lanes of the 400G port to support 100G/40G port
         if port_default_speed == '400000' and (port_png_speed == '100000' or port_png_speed == '40000'):
@@ -1787,7 +1791,6 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
             updated_lanes = ",".join(port_lanes[:4])
             ports[port_name]['lanes'] = updated_lanes
 
-        ports.setdefault(port_name, {})['speed'] = port_speed_png[port_name]
 
     for port_name, port in list(ports.items()):
         # get port alias from port_config.ini
@@ -2010,6 +2013,27 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     results['DHCP_SERVER'] = dict((item, {}) for item in dhcp_servers)
     results['DHCP_RELAY'] = dhcp_relay_table
     results['NTP_SERVER'] = dict((item, {}) for item in ntp_servers)
+    # Set default DNS nameserver from dns.j2
+    results['DNS_NAMESERVER'] = {}
+    if os.environ.get("CFGGEN_UNIT_TESTING", "0") == "2":
+        dns_conf = os.path.join(os.path.dirname(__file__), "tests/", "dns.j2")
+    else:
+        dns_conf = "/usr/share/sonic/templates/dns.j2"
+    if os.path.isfile(dns_conf):
+        text = ""
+        with open(dns_conf) as template_file:
+            # Semgrep does not allow to use jinja2 directly, but we do need jinja2 for SONiC
+            environment = jinja2.Environment(trim_blocks=True) # nosemgrep
+            dns_template = environment.from_string(template_file.read())
+            text = dns_template.render(results)
+        try:
+            dns_res = json.loads(text)
+        except ValueError as e:
+            sys.exit("Error: fail to load dns configuration, %s" % str(e))
+        else:
+            dns_nameservers = dns_res.get('DNS_NAMESERVER', {})
+            for k in dns_nameservers.keys():
+                results['DNS_NAMESERVER'][str(k)] = {}
     results['TACPLUS_SERVER'] = dict((item, {'priority': '1', 'tcp_port': '49'}) for item in tacacs_servers)
     if len(acl_table_types) > 0:
         results['ACL_TABLE_TYPE'] = acl_table_types

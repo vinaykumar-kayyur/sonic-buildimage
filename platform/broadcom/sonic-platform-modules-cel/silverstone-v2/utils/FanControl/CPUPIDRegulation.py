@@ -23,15 +23,16 @@ except ImportError as e:
 FUNCTION_NAME = 'FanControl'
 DUTY_MAX = 100
 CPU_TEMP_MAX = 130
+CPU_MAJOR_ALARM = 105
 TEMP_DIFF = 15  # abs(Tk - Tk-1) limit
 CPU_TEMPERATURE = "cat /sys/class/thermal/thermal_zone0/temp"
 
 # PID Defaults Value
 PWM_LIST = [35]  # [PWMk-1]
 T_LIST = []  # [Tk-2, Tk-1, Tk]
-Kp = 2.1
+Kp = 1.8
 Ki = 0.3
-Kd = 0.5
+Kd = 0
 SET_POINT = 96
 PWM_MIN = 35
 PWM_MAX = 100
@@ -47,7 +48,7 @@ class CPUPIDRegulation(object):
     syslog = logging.getLogger("[" + FUNCTION_NAME + "]")
     init_fan_temperature = [0, 0]
 
-    def __init__(self, log_file, log_level):
+    def __init__(self):
         """Needs a logger and a logger level."""
         formatter = logging.Formatter('%(name)s %(message)s')
         sys_handler = logging.handlers.SysLogHandler(address='/dev/log')
@@ -55,35 +56,16 @@ class CPUPIDRegulation(object):
         sys_handler.ident = 'common'
         self.syslog.setLevel(logging.WARNING)
         self.syslog.addHandler(sys_handler)
-        self.platform_chassis_obj = platform.Platform().get_chassis()
-        # set up logging to file
-        logging.basicConfig(
-            filename=log_file,
-            filemode='w',
-            level=log_level,
-            format='[%(asctime)s] {%(pathname)s:%(lineno)d} %(levelname)s - %(message)s',
-            datefmt='%H:%M:%S'
-        )
 
-        # set up logging to console
-        if log_level == logging.DEBUG:
-            console = logging.StreamHandler()
-            console.setLevel(log_level)
-            formatter = logging.Formatter('%(name)-12s: %(levelname)-8s %(message)s')
-            console.setFormatter(formatter)
-            logging.getLogger('').addHandler(console)
-        logging.debug('SET. logfile:%s / loglevel:%d' % (log_file, log_level))
-
-    def get_cpu_temperature(self):
+    @staticmethod
+    def get_cpu_temperature():
         """
         Get CPU temperature
         """
         try:
             temp = int(os.popen(CPU_TEMPERATURE).read().strip()) / 1000
             return temp
-        except Exception as E:
-            self.syslog.warning("Can't Get CPU temperature! Cause:%s" % str(E))
-            logging.warning("Can't Get CPU temperature! Cause:%s" % str(E))
+        except Exception:
             return False
 
     def exception_data_handling(self):
@@ -127,9 +109,11 @@ class CPUPIDRegulation(object):
         cpu_temp = self.exception_data_handling()
         if not cpu_temp:
             return DUTY_MAX
+        if cpu_temp >= CPU_MAJOR_ALARM:
+            self.syslog.warning("High temperature warning: CPU temperature %sC, Major Alarm  %sC"
+                                % (cpu_temp, CPU_MAJOR_ALARM))
         if len(T_LIST) < 2:
             T_LIST.append(float(cpu_temp))
-            logging.info("Init CPU PID Control T_LIST:%s" % T_LIST)
             return PWM_LIST[0]
         else:
             T_LIST.append(float(cpu_temp))
@@ -137,14 +121,9 @@ class CPUPIDRegulation(object):
                 Ki * (T_LIST[2] - SET_POINT) + \
                 Kd * (T_LIST[2] - 2 * T_LIST[1] + T_LIST[0])
             if pwm_k < PWM_MIN:
-                logging.info("CPU PID PWM calculation value < %d, %d will be used"
-                             % (PWM_MIN, PWM_MIN))
                 pwm_k = PWM_MIN
             elif pwm_k > PWM_MAX:
-                logging.info("CPU PID PWM calculation value > %d, %d will be used"
-                             % (PWM_MAX, PWM_MAX))
                 pwm_k = PWM_MAX
             PWM_LIST[0] = pwm_k
-            logging.info("CPU PID: PWM=%d Temp list=%s" % (pwm_k, T_LIST))
             T_LIST.pop(0)
             return pwm_k
