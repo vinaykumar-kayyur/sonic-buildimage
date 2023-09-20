@@ -43,7 +43,6 @@ python-wheels/{{ whl }}{{' '}}
 
 # Copy files
 COPY ["files/swss_vars.j2", "/usr/share/sonic/templates/"]
-COPY ["files/00-load-omprog.conf", "/etc/rsyslog.d/"]
 
 ## Clean up
 RUN apt-get purge -y build-essential python-dev; apt-get clean -y; apt-get autoclean -y; apt-get autoremove -y
