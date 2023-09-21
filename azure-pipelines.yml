@@ -72,6 +72,7 @@ stages:
           platform_rpc: mlnx
       - name: marvell-arm64
         pool: sonicbld-arm64
+        condition: ne(variables['SKIP_MARVELL_ARM64'], 'y')
         variables:
            PLATFORM_ARCH: arm64
       - name: marvell-armhf
