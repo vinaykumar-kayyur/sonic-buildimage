@@ -350,29 +350,29 @@ int is_local_user(char *user)
     }
 
     struct passwd pwd;
-    struct passwd *pwp;
+    struct passwd *ppwd;
     char buf[DEFAULT_GETPWENT_SIZE_MAX];
     int pwdresult;
     int result = ERROR_CHECK_LOCAL_USER;
     setpwent();
     while (1) {
-        pwdresult = getpwent_r(&pwd, buf, sizeof(buf), &pwp);
+        pwdresult = getpwent_r(&pwd, buf, sizeof(buf), &ppwd);
         if (pwdresult) {
             // no more pw entry
             break;
         }
 
-        if (strcmp(pwp->pw_name, user) != 0) {
+        if (strcmp(ppwd->pw_name, user) != 0) {
             continue;
         }
 
         // compare passwd entry
-        if (strncmp(pwp->pw_gecos, REMOTE_USER_GECOS_PREFIX, strlen(REMOTE_USER_GECOS_PREFIX)) == 0) {
-            output_debug("user: %s, UID: %d, GECOS: %s is remote user.\n", user, pwp->pw_uid, pwp->pw_gecos);
+        if (strcmp(ppwd->pw_gecos, REMOTE_USER_GECOS_PREFIX) == 0) {
+            output_debug("user: %s, UID: %d, GECOS: %s is remote user.\n", user, ppwd->pw_uid, ppwd->pw_gecos);
             result = IS_REMOTE_USER;
         }
         else {
-            output_debug("user: %s, UID: %d, GECOS: %s is local user.\n", user, pwp->pw_uid, pwp->pw_gecos);
+            output_debug("user: %s, UID: %d, GECOS: %s is local user.\n", user, ppwd->pw_uid, ppwd->pw_gecos);
             result = IS_LOCAL_USER;
         }
         break;
