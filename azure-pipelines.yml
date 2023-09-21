@@ -74,11 +74,12 @@ stages:
         pool: sonicbld-arm64
         variables:
            PLATFORM_ARCH: arm64
-      - name: marvell-armhf
-        pool: sonicbld-armhf
-        timeoutInMinutes: 1200
-        variables:
-          PLATFORM_ARCH: armhf
+      - ${{ if ne(variables['SKIP_MARVELL_ARMHF'], 'y') }}:
+        - name: marvell-armhf
+          pool: sonicbld-armhf
+          timeoutInMinutes: 1200
+          variables:
+            PLATFORM_ARCH: armhf
 
 - stage: Test
   dependsOn: BuildVS
@@ -223,21 +224,22 @@ stages:
           MGMT_BRANCH: "master"
           COMMON_EXTRA_PARAMS: "--disable_loganalyzer "
 
-  - job: sonic_t0_elastictest
-    displayName: "kvmtest-t0-sonic by Elastictest"
-    pool: ubuntu-20.04
-    timeoutInMinutes: 240
-    continueOnError: false
-    steps:
-      - template: .azure-pipelines/run-test-elastictest-template.yml@sonic-mgmt
-        parameters:
-          TOPOLOGY: t0-64-32
-          MIN_WORKER: $(T0_SONIC_INSTANCE_NUM)
-          MAX_WORKER: $(T0_SONIC_INSTANCE_NUM)
-          TEST_SET: t0-sonic
-          MGMT_BRANCH: "master"
-          COMMON_EXTRA_PARAMS: "--neighbor_type=sonic "
-          VM_TYPE: vsonic
+  ${{ ne(variables['SKIP_VSONIC'], 'y') }}:
+    - job: sonic_t0_elastictest
+      displayName: "kvmtest-t0-sonic by Elastictest"
+      pool: ubuntu-20.04
+      timeoutInMinutes: 240
+      continueOnError: false
+      steps:
+        - template: .azure-pipelines/run-test-elastictest-template.yml@sonic-mgmt
+          parameters:
+            TOPOLOGY: t0-64-32
+            MIN_WORKER: $(T0_SONIC_INSTANCE_NUM)
+            MAX_WORKER: $(T0_SONIC_INSTANCE_NUM)
+            TEST_SET: t0-sonic
+            MGMT_BRANCH: "master"
+            COMMON_EXTRA_PARAMS: "--neighbor_type=sonic "
+            VM_TYPE: vsonic
 
 #  - job: wan_elastictest
 #    displayName: "kvmtest-wan by Elastictest"
