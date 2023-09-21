@@ -31,6 +31,7 @@
 /* Output syslog to mock method when build with UT */
 #if defined (BASH_PLUGIN_UT)
 #define syslog mock_syslog
+#define getpwent_r mock_getpwent_r
 #endif
 
 /* Tacacs+ log format */
