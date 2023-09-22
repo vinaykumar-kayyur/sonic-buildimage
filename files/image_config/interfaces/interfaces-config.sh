@@ -65,7 +65,31 @@ done
 # Read sysctl conf files again
 sysctl -p /etc/sysctl.d/90-dhcp6-systcl.conf
 
-systemctl restart networking
+systemctl reload-or-restart networking
+
+# Setting link parameters for mgmt
+IFACE="eth0"
+SPEED=$(sonic-cfggen -d -v MGMT_PORT.$IFACE.speed 2> /dev/null)
+DUPLEX=$(sonic-cfggen -d -v MGMT_PORT.$IFACE.duplex 2> /dev/null)
+AUTONEG=$(sonic-cfggen -d -v MGMT_PORT.$IFACE.autoneg 2> /dev/null)
+
+# Set ethtool input parameters
+if [ -n "$SPEED" ]; then
+    SPEED="speed $SPEED"
+fi
+
+if [ -n "$DUPLEX" ]; then
+    DUPLEX="duplex $DUPLEX"
+fi
+
+if [ -n "$AUTONEG" ]; then
+    AUTONEG="autoneg $AUTONEG"
+fi
+
+# Use absolute path to update port config with host tool. Especially at startup
+# when pmon is not available yet. We don't want to interrupt a user logged in
+# via ssh later.
+/sbin/ethtool -s $IFACE $SPEED $DUPLEX $AUTONEG
 
 # Clean-up created files
 rm -f /tmp/ztp_input.json /tmp/ztp_port_data.json
