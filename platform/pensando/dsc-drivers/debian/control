@@ -1,7 +1,7 @@
 Source: ionic
 Section: main
 Priority: extra
-Maintainer: Guohan Lu <gulv@microsoft.com>
+Maintainer: Shantanu Shrivastava <shanshri@amd.com>
 Build-Depends: debhelper (>= 8.0.0), bzip2
 Standards-Version: 3.9.3
 #Vcs-Git: git://git.debian.org/collab-maint/bcmsdk.git

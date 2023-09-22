@@ -244,10 +244,10 @@ cat <<EOF >> $root_mnt/$BL_CONF
 default main
 
 label main
-	kernel /$image_dir/boot/vmlinuz-5.10.0-18-2-arm64
-	initrd /$image_dir/boot/initrd.img-5.10.0-18-2-arm64
-	devicetree /$image_dir/boot/elba-asic-psci.dtb
-	append softdog.soft_panic=1 FW_NAME=mainfwa root=/dev/mmcblk0p10 rw rootwait rootfstype=ext4 loopfstype=squashfs loop=/$image_dir/fs.squashfs
+    kernel /$image_dir/boot/vmlinuz-5.10.0-18-2-arm64
+    initrd /$image_dir/boot/initrd.img-5.10.0-18-2-arm64
+    devicetree /$image_dir/boot/elba-asic-psci.dtb
+    append softdog.soft_panic=1 FW_NAME=mainfwa root=/dev/mmcblk0p10 rw rootwait rootfstype=ext4 loopfstype=squashfs loop=/$image_dir/fs.squashfs
 }
 EOF
 }
@@ -257,19 +257,19 @@ install_root_filesystem()
     echo "==> Installing root filesystem"
 
     mount /dev/mmcblk0p$root_pn $root_mnt
-	mkdir -p $root_mnt/$image_dir
+    mkdir -p $root_mnt/$image_dir
 
     # Decompress the file for the file system directly to the partition
-	if [ x"$docker_inram" = x"on" ]; then
+    if [ x"$docker_inram" = x"on" ]; then
         # when disk is small, keep dockerfs.tar.gz in disk, expand it into ramfs during initrd
         tar xfO $PKG $INSTALLER_PAYLOAD | unzip -o - -x "platform.tar.gz" -d $root_mnt/$image_dir
-	else
+    else
         tar xfO $PKG $INSTALLER_PAYLOAD | unzip -o - -x "$FILESYSTEM_DOCKERFS" "platform.tar.gz" -d $root_mnt/$image_dir
 
         TAR_EXTRA_OPTION="--numeric-owner"
         mkdir -p $root_mnt/$image_dir/$DOCKERFS_DIR
         tar xfO $PKG $INSTALLER_PAYLOAD | unzip -op - "$FILESYSTEM_DOCKERFS" | tar xz $TAR_EXTRA_OPTION -f - -C $root_mnt/$image_dir/$DOCKERFS_DIR
-	fi
+    fi
 
     create_bootloader_conf
 
