@@ -69,4 +69,6 @@ else
     ORCHAGENT_ARGS+="-m $MAC_ADDRESS"
 fi
 
+ORCHAGENT_ARGS+=" -q tcp://127.0.0.1:8100"
+
 exec /usr/bin/orchagent ${ORCHAGENT_ARGS}
