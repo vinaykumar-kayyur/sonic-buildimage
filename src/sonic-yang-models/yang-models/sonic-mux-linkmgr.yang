@@ -83,6 +83,35 @@ module sonic-mux-linkmgr {
                     description "The frequency of streaming ICMP heartbeat loss data to telemetry. ";
                 }
             }
+
+            container MUXLOGGER {
+
+                leaf log_verbosity {
+                    type enumeration {
+                        enum trace;
+                        enum debug;
+                        enum info;
+                        enum error;
+                        enum fatal;
+                    }
+
+                    description "Linkmgrd log verbosity level. ";
+                }
+            }
+
+            container SERVICE_MGMT {
+
+                leaf kill_radv {
+                    type enumeration {
+                        enum True;
+                        enum False;
+                    }
+
+                    default True;
+
+                    description "Kill radv service instead of gracefully stopping it. ";
+                }
+            }
         }
     }
 }

@@ -46,7 +46,7 @@ RUN pip3 install aiohttp \
                  azure-kusto-data \
                  azure-kusto-ingest \
                  defusedxml \
-                 celery[redis]==4.4.7 \
+                 celery[redis]==5.2.7 \
                  cffi \
                  contextlib2==0.6.0.post1 \
                  cryptography==3.3.2 \
@@ -56,7 +56,7 @@ RUN pip3 install aiohttp \
                  "future>=0.16.0" \
                  gitpython \
                  ipaddr \
-                 ipython==5.4.1 \
+                 ipython==8.12.2 \
                  ixload \
                  ixnetwork-restpy==1.0.64 \
                  ixnetwork-open-traffic-generator==0.0.79 \
@@ -220,9 +220,9 @@ RUN dpkg -i \
 debs/{{ deb }}{{' '}}
 {%- endfor %}
 
-# Install protobuf 3.21.12
+# Install protobuf 3.21.12 which is from https://deb.debian.org/debian/pool/main/p/protobuf/protobuf_3.21.12-3.dsc
 RUN mkdir -p /tmp/protobuf \
-    cd /tmp/protobuf \
+    && cd /tmp/protobuf \
     && wget https://sonicstorage.blob.core.windows.net/public/ubuntu/20.04/libprotobuf-dev_3.21.12-3_amd64.deb \
     && wget https://sonicstorage.blob.core.windows.net/public/ubuntu/20.04/libprotobuf-lite32_3.21.12-3_amd64.deb \
     && wget https://sonicstorage.blob.core.windows.net/public/ubuntu/20.04/libprotobuf32_3.21.12-3_amd64.deb \
@@ -273,7 +273,7 @@ WORKDIR /var/$user
 # Add az symlink for backwards compatibility
 RUN mkdir bin && ln -s /usr/bin/az bin/az
 
-RUN python3 -m venv env-python3
+RUN python3 -m venv --system-site-packages env-python3
 
 # Activating a virtualenv. The virtualenv automatically works for RUN, ENV and CMD.
 ENV VIRTUAL_ENV=env-python3
@@ -290,7 +290,7 @@ RUN python3 -m pip install aiohttp \
                            azure-kusto-data \
                            azure-kusto-ingest \
                            defusedxml \
-                           celery[redis]==4.4.7 \
+                           celery[redis]==5.2.7 \
                            cffi \
                            contextlib2==0.6.0.post1 \
                            cryptography==3.3.2 \
@@ -300,7 +300,7 @@ RUN python3 -m pip install aiohttp \
                            "future>=0.16.0" \
                            gitpython \
                            ipaddr \
-                           ipython==5.4.1 \
+                           ipython==8.12.2 \
                            ixload \
                            ixnetwork-restpy==1.0.64 \
                            ixnetwork-open-traffic-generator==0.0.79 \
@@ -345,6 +345,7 @@ RUN python3 -m pip install aiohttp \
                            setuptools-rust \
                            six \
                            snappi[ixnetwork,convergence]==0.7.44 \
+                           sshconf==0.2.5 \
                            tabulate \
                            textfsm==1.1.2 \
                            thrift==0.11.0 \

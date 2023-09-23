@@ -5,6 +5,7 @@ import math
 import os
 import sys
 import json
+import jinja2
 import subprocess
 from collections import defaultdict
 
@@ -54,14 +55,14 @@ vni_default = 8000
 # Defination of custom acl table types
 acl_table_type_defination = {
     'BMCDATA': {
-        "ACTIONS": "PACKET_ACTION,COUNTER",
-        "BIND_POINTS": "PORT",
-        "MATCHES": "SRC_IP,DST_IP,ETHER_TYPE,IP_TYPE,IP_PROTOCOL,IN_PORTS,L4_SRC_PORT,L4_DST_PORT,L4_SRC_PORT_RANGE,L4_DST_PORT_RANGE",
+        "ACTIONS": ["PACKET_ACTION", "COUNTER"],
+        "BIND_POINTS": ["PORT"],
+        "MATCHES": ["SRC_IP", "DST_IP", "ETHER_TYPE", "IP_TYPE", "IP_PROTOCOL", "IN_PORTS", "L4_SRC_PORT", "L4_DST_PORT", "L4_SRC_PORT_RANGE", "L4_DST_PORT_RANGE"]
     },
     'BMCDATAV6': {
-        "ACTIONS": "PACKET_ACTION,COUNTER",
-        "BIND_POINTS": "PORT",
-        "MATCHES": "SRC_IPV6,DST_IPV6,ETHER_TYPE,IP_TYPE,IP_PROTOCOL,IN_PORTS,L4_SRC_PORT,L4_DST_PORT,L4_SRC_PORT_RANGE,L4_DST_PORT_RANGE",
+        "ACTIONS": ["PACKET_ACTION", "COUNTER"],
+        "BIND_POINTS": ["PORT"],
+        "MATCHES": ["SRC_IPV6", "DST_IPV6", "ETHER_TYPE", "IP_TYPE", "IP_PROTOCOL", "IN_PORTS", "L4_SRC_PORT", "L4_DST_PORT", "L4_SRC_PORT_RANGE", "L4_DST_PORT_RANGE"]
     }
 }
 
@@ -887,6 +888,7 @@ def parse_cpg(cpg, hname, local_devices=[]):
     bgp_voq_chassis_sessions = {}
     myasn = None
     bgp_peers_with_range = {}
+    bgp_sentinel_sessions = {}
     for child in cpg:
         tag = child.tag
         if tag == str(QName(ns, "PeeringSessions")):
@@ -956,14 +958,22 @@ def parse_cpg(cpg, hname, local_devices=[]):
                             name = bgpPeer.find(str(QName(ns1, "Name"))).text
                             ip_range = bgpPeer.find(str(QName(ns1, "PeersRange"))).text
                             ip_range_group = ip_range.split(';') if ip_range and ip_range != "" else []
-                            bgp_peers_with_range[name] = {
-                                'name': name,
-                                'ip_range': ip_range_group
-                            }
-                            if bgpPeer.find(str(QName(ns, "Address"))) is not None:
-                                bgp_peers_with_range[name]['src_address'] = bgpPeer.find(str(QName(ns, "Address"))).text
-                            if bgpPeer.find(str(QName(ns1, "PeerAsn"))) is not None:
-                                bgp_peers_with_range[name]['peer_asn'] = bgpPeer.find(str(QName(ns1, "PeerAsn"))).text
+                            if name == "BGPSentinel" or name == "BGPSentinelV6":
+                                bgp_sentinel_sessions[name] = {
+                                    'name': name,
+                                    'ip_range': ip_range_group
+                                }
+                                if bgpPeer.find(str(QName(ns, "Address"))) is not None:
+                                    bgp_sentinel_sessions[name]['src_address'] = bgpPeer.find(str(QName(ns, "Address"))).text
+                            else:
+                                bgp_peers_with_range[name] = {
+                                    'name': name,
+                                    'ip_range': ip_range_group
+                                }
+                                if bgpPeer.find(str(QName(ns, "Address"))) is not None:
+                                    bgp_peers_with_range[name]['src_address'] = bgpPeer.find(str(QName(ns, "Address"))).text
+                                if bgpPeer.find(str(QName(ns1, "PeerAsn"))) is not None:
+                                    bgp_peers_with_range[name]['peer_asn'] = bgpPeer.find(str(QName(ns1, "PeerAsn"))).text
                 else:
                     for peer in bgp_sessions:
                         bgp_session = bgp_sessions[peer]
@@ -985,7 +995,7 @@ def parse_cpg(cpg, hname, local_devices=[]):
     bgp_internal_sessions = filter_bad_asn(bgp_internal_sessions)
     bgp_voq_chassis_sessions = filter_bad_asn(bgp_voq_chassis_sessions)
 
-    return bgp_sessions, bgp_internal_sessions, bgp_voq_chassis_sessions, myasn, bgp_peers_with_range, bgp_monitors
+    return bgp_sessions, bgp_internal_sessions, bgp_voq_chassis_sessions, myasn, bgp_peers_with_range, bgp_monitors, bgp_sentinel_sessions
 
 
 def parse_meta(meta, hname):
@@ -1537,7 +1547,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
             if child.tag == str(QName(ns, "DpgDec")):
                 (intfs, lo_intfs, mvrf, mgmt_intf, voq_inband_intfs, vlans, vlan_members, dhcp_relay_table, pcs, pc_members, acls, acl_table_types, vni, tunnel_intfs, dpg_ecmp_content, static_routes, tunnel_intfs_qos_remap_config) = parse_dpg(child, hostname)
             elif child.tag == str(QName(ns, "CpgDec")):
-                (bgp_sessions, bgp_internal_sessions, bgp_voq_chassis_sessions, bgp_asn, bgp_peers_with_range, bgp_monitors) = parse_cpg(child, hostname)
+                (bgp_sessions, bgp_internal_sessions, bgp_voq_chassis_sessions, bgp_asn, bgp_peers_with_range, bgp_monitors, bgp_sentinel_sessions) = parse_cpg(child, hostname)
             elif child.tag == str(QName(ns, "PngDec")):
                 (neighbors, devices, console_dev, console_port, mgmt_dev, mgmt_port, port_speed_png, console_ports, mux_cable_ports, png_ecmp_content) = parse_png(child, hostname, dpg_ecmp_content)
             elif child.tag == str(QName(ns, "UngDec")):
@@ -1553,7 +1563,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
                 (intfs, lo_intfs, mvrf, mgmt_intf, voq_inband_intfs, vlans, vlan_members, dhcp_relay_table, pcs, pc_members, acls, acl_table_types, vni, tunnel_intfs, dpg_ecmp_content, static_routes, tunnel_intfs_qos_remap_config) = parse_dpg(child, asic_name)
                 host_lo_intfs = parse_host_loopback(child, hostname)
             elif child.tag == str(QName(ns, "CpgDec")):
-                (bgp_sessions, bgp_internal_sessions, bgp_voq_chassis_sessions, bgp_asn, bgp_peers_with_range, bgp_monitors) = parse_cpg(child, asic_name, local_devices)
+                (bgp_sessions, bgp_internal_sessions, bgp_voq_chassis_sessions, bgp_asn, bgp_peers_with_range, bgp_monitors, bgp_sentinel_sessions) = parse_cpg(child, asic_name, local_devices)
             elif child.tag == str(QName(ns, "PngDec")):
                 (neighbors, devices, port_speed_png) = parse_asic_png(child, asic_name, hostname)
             elif child.tag == str(QName(ns, "MetadataDeclaration")):
@@ -1670,6 +1680,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     results['BGP_PEER_RANGE'] = bgp_peers_with_range
     results['BGP_INTERNAL_NEIGHBOR'] = bgp_internal_sessions
     results['BGP_VOQ_CHASSIS_NEIGHBOR'] = bgp_voq_chassis_sessions
+    results['BGP_SENTINELS'] = bgp_sentinel_sessions
     if mgmt_routes:
         # TODO: differentiate v4 and v6
         next(iter(mgmt_intf.values()))['forced_mgmt_routes'] = mgmt_routes
@@ -1767,6 +1778,9 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         port_default_speed =  port_speeds_default.get(port_name, None)
         port_png_speed = port_speed_png[port_name]
 
+        # set Port Speed before lane update
+        ports.setdefault(port_name, {})['speed'] = port_png_speed
+
         # when the port speed is changes from 400g to 100g/40g
         # update the port lanes, use the first 4 lanes of the 400G port to support 100G/40G port
         if port_default_speed == '400000' and (port_png_speed == '100000' or port_png_speed == '40000'):
@@ -1777,7 +1791,6 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
             updated_lanes = ",".join(port_lanes[:4])
             ports[port_name]['lanes'] = updated_lanes
 
-        ports.setdefault(port_name, {})['speed'] = port_speed_png[port_name]
 
     for port_name, port in list(ports.items()):
         # get port alias from port_config.ini
@@ -1962,6 +1975,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     if is_storage_device and 'BackEnd' in current_device['type']:
         results['BGP_MONITORS'] = {}
         results['BGP_PEER_RANGE'] = {}
+        results['BGP_SENTINELS'] = {}
 
     results['VLAN'] = vlans
     results['VLAN_MEMBER'] = vlan_members
@@ -1999,6 +2013,27 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     results['DHCP_SERVER'] = dict((item, {}) for item in dhcp_servers)
     results['DHCP_RELAY'] = dhcp_relay_table
     results['NTP_SERVER'] = dict((item, {}) for item in ntp_servers)
+    # Set default DNS nameserver from dns.j2
+    results['DNS_NAMESERVER'] = {}
+    if os.environ.get("CFGGEN_UNIT_TESTING", "0") == "2":
+        dns_conf = os.path.join(os.path.dirname(__file__), "tests/", "dns.j2")
+    else:
+        dns_conf = "/usr/share/sonic/templates/dns.j2"
+    if os.path.isfile(dns_conf):
+        text = ""
+        with open(dns_conf) as template_file:
+            # Semgrep does not allow to use jinja2 directly, but we do need jinja2 for SONiC
+            environment = jinja2.Environment(trim_blocks=True) # nosemgrep
+            dns_template = environment.from_string(template_file.read())
+            text = dns_template.render(results)
+        try:
+            dns_res = json.loads(text)
+        except ValueError as e:
+            sys.exit("Error: fail to load dns configuration, %s" % str(e))
+        else:
+            dns_nameservers = dns_res.get('DNS_NAMESERVER', {})
+            for k in dns_nameservers.keys():
+                results['DNS_NAMESERVER'][str(k)] = {}
     results['TACPLUS_SERVER'] = dict((item, {'priority': '1', 'tcp_port': '49'}) for item in tacacs_servers)
     if len(acl_table_types) > 0:
         results['ACL_TABLE_TYPE'] = acl_table_types

@@ -117,6 +117,8 @@ RUN apt-get update && apt-get install -y \
         libzmq3-dev \
         uuid-dev \
         jq \
+# For sonic-swss-common
+        nlohmann-json3-dev \
 # For quagga build
         libreadline-dev \
         texlive-latex-base \
@@ -409,6 +411,8 @@ RUN apt-get update && apt-get install -y \
         libgirepository1.0-dev \
         libsystemd-dev \
         pkg-config \
+# For sonic-swss-common build
+        libhiredis-dev \
 # For audisp-tacplus
         libauparse-dev \
         auditd
@@ -541,8 +545,9 @@ RUN pip3 install MarkupSafe==2.0.1
 RUN pip3 install Jinja2==3.0.3
 
 # For sonic-mgmt-framework
-RUN pip2 install "PyYAML==5.4.1"
-RUN pip3 install "PyYAML==5.4.1"
+# The option --no-build-isolation can be removed when upgrading PyYAML to 6.0.1
+RUN pip2 install "PyYAML==5.4.1" --no-build-isolation
+RUN pip3 install "PyYAML==5.4.1" --no-build-isolation
 
 {%- if CROSS_BUILD_ENVIRON != "y" %}
 RUN pip2 install "lxml==4.9.1"
