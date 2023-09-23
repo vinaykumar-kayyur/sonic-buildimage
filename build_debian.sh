@@ -33,7 +33,7 @@ CONFIGURED_ARCH=$([ -f .arch ] && cat .arch || echo amd64)
 ## docker engine version (with platform)
 DOCKER_VERSION=5:24.0.2-1~debian.11~$IMAGE_DISTRO
 CONTAINERD_IO_VERSION=1.6.21-1
-LINUX_KERNEL_VERSION=5.10.0-18-2
+LINUX_KERNEL_VERSION=5.10.0-23-2
 
 ## Working directory to prepare the file system
 FILESYSTEM_ROOT=./fsroot
@@ -406,6 +406,10 @@ sudo tee ${FILESYSTEM_ROOT}/etc/systemd/system/auditd.service.d/log-directory.co
 LogsDirectory=audit
 LogsDirectoryMode=0750
 EOF
+
+# latest tcpdump control resource access with AppArmor.
+# override tcpdump profile to allow tcpdump access TACACS config file.
+sudo cp files/apparmor/usr.bin.tcpdump $FILESYSTEM_ROOT/etc/apparmor.d/local/usr.bin.tcpdump
 
 if [[ $CONFIGURED_ARCH == amd64 ]]; then
 ## Pre-install the fundamental packages for amd64 (x86)
