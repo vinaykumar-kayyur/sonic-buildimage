@@ -45,6 +45,7 @@ DBG_IMAGE_MARK = dbg
 DBG_SRC_ARCHIVE_FILE = $(TARGET_PATH)/sonic_src.tar.gz
 BUILD_WORKDIR = /sonic
 DPKG_ADMINDIR_PATH = $(BUILD_WORKDIR)/dpkg
+SLAVE_DIR ?= sonic-slave-$(BLDENV)
 
 CONFIGURED_PLATFORM := $(shell [ -f .platform ] && cat .platform || echo generic)
 PLATFORM_PATH = platform/$(CONFIGURED_PLATFORM)
@@ -88,6 +89,7 @@ export BLDENV
 export BUILD_WORKDIR
 export GZ_COMPRESS_PROGRAM
 export MIRROR_SNAPSHOT
+export SONIC_OS_VERSION
 
 ###############################################################################
 ## Utility rules
@@ -351,7 +353,7 @@ endif
 export SONIC_ROUTING_STACK
 export FRR_USER_UID
 export FRR_USER_GID
-export ENABLE_FIPS_FEATURE
+export INCLUDE_FIPS
 export ENABLE_FIPS
 
 ###############################################################################
@@ -379,8 +381,9 @@ $(info "PASSWORD"                        : "$(PASSWORD)")
 $(info "CHANGE_DEFAULT_PASSWORD"         : "$(CHANGE_DEFAULT_PASSWORD)")
 $(info "SECURE_UPGRADE_MODE"             : "$(SECURE_UPGRADE_MODE)")
 $(info "SECURE_UPGRADE_DEV_SIGNING_KEY"  : "$(SECURE_UPGRADE_DEV_SIGNING_KEY)")
-$(info "SECURE_UPGRADE_DEV_SIGNING_CERT" : "$(SECURE_UPGRADE_DEV_SIGNING_CERT)")
+$(info "SECURE_UPGRADE_SIGNING_CERT" : "$(SECURE_UPGRADE_SIGNING_CERT)")
 $(info "SECURE_UPGRADE_PROD_SIGNING_TOOL": "$(SECURE_UPGRADE_PROD_SIGNING_TOOL)")
+$(info "SECURE_UPGRADE_PROD_TOOL_ARGS"   : "$(SECURE_UPGRADE_PROD_TOOL_ARGS)")
 $(info "ENABLE_DHCP_GRAPH_SERVICE"       : "$(ENABLE_DHCP_GRAPH_SERVICE)")
 $(info "SHUTDOWN_BGP_ON_START"           : "$(SHUTDOWN_BGP_ON_START)")
 $(info "ENABLE_PFCWD_ON_START"           : "$(ENABLE_PFCWD_ON_START)")
@@ -416,6 +419,7 @@ $(info "INCLUDE_SFLOW"                   : "$(INCLUDE_SFLOW)")
 $(info "ENABLE_SFLOW_DROPMON"            : "$(ENABLE_SFLOW_DROPMON)")
 $(info "INCLUDE_NAT"                     : "$(INCLUDE_NAT)")
 $(info "INCLUDE_DHCP_RELAY"              : "$(INCLUDE_DHCP_RELAY)")
+$(info "INCLUDE_DHCP_SERVER"             : "$(INCLUDE_DHCP_SERVER)")
 $(info "INCLUDE_P4RT"                    : "$(INCLUDE_P4RT)")
 $(info "INCLUDE_KUBERNETES"              : "$(INCLUDE_KUBERNETES)")
 $(info "INCLUDE_KUBERNETES_MASTER"       : "$(INCLUDE_KUBERNETES_MASTER)")
@@ -425,7 +429,7 @@ $(info "INCLUDE_TEAMD"                   : "$(INCLUDE_TEAMD)")
 $(info "INCLUDE_ROUTER_ADVERTISER"       : "$(INCLUDE_ROUTER_ADVERTISER)")
 $(info "INCLUDE_BOOTCHART                : "$(INCLUDE_BOOTCHART)")
 $(info "ENABLE_BOOTCHART                 : "$(ENABLE_BOOTCHART)")
-$(info "ENABLE_FIPS_FEATURE"             : "$(ENABLE_FIPS_FEATURE)")
+$(info "INCLUDE_FIPS"             : "$(INCLUDE_FIPS)")
 $(info "ENABLE_TRANSLIB_WRITE"           : "$(ENABLE_TRANSLIB_WRITE)")
 $(info "ENABLE_NATIVE_WRITE"             : "$(ENABLE_NATIVE_WRITE)")
 $(info "ENABLE_AUTO_TECH_SUPPORT"        : "$(ENABLE_AUTO_TECH_SUPPORT)")
@@ -453,6 +457,8 @@ include Makefile.cache
 ifeq ($(SONIC_USE_DOCKER_BUILDKIT),y)
 $(warning "Using SONIC_USE_DOCKER_BUILDKIT will produce larger installable SONiC image because of a docker bug (more details: https://github.com/moby/moby/issues/38903)")
 export DOCKER_BUILDKIT=1
+else
+export DOCKER_BUILDKIT=0
 endif
 
 
@@ -540,10 +546,25 @@ endef
 #     SOME_NEW_DEB = some_new_deb.deb
 #     $(SOME_NEW_DEB)_PATH = path/to/some_new_deb.deb
 #     SONIC_COPY_DEBS += $(SOME_NEW_DEB)
-$(addprefix $(DEBS_PATH)/, $(SONIC_COPY_DEBS)) : $(DEBS_PATH)/% : .platform
+$(addprefix $(DEBS_PATH)/, $(SONIC_COPY_DEBS)) : $(DEBS_PATH)/% : .platform \
+	$(call dpkg_depend,$(DEBS_PATH)/%.dep)
+
 	$(HEADER)
-	$(foreach deb,$* $($*_DERIVED_DEBS), \
-	    { cp $($(deb)_PATH)/$(deb) $(DEBS_PATH)/ $(LOG) || exit 1 ; } ; )
+
+	# Load the target deb from DPKG cache
+	$(call LOAD_CACHE,$*,$@)
+
+	# Skip building the target if it is already loaded from cache
+	if [ -z '$($*_CACHE_LOADED)' ] ; then
+
+		$(foreach deb,$* $($*_DERIVED_DEBS), \
+			{ cp $($(deb)_PATH)/$(deb) $(DEBS_PATH)/ $(LOG) || exit 1 ; } ; )
+
+		# Save the target deb into DPKG cache
+		$(call SAVE_CACHE,$*,$@)
+
+	fi
+
 	$(FOOTER)
 
 
@@ -577,8 +598,8 @@ $(addprefix $(DEBS_PATH)/, $(SONIC_ONLINE_DEBS)) : $(DEBS_PATH)/% : .platform \
 	# Load the target deb from DPKG cache
 	$(call LOAD_CACHE,$*,$@)
 
-	# Skip building the target if it is already loaded from cache
-	if [ -z '$($*_CACHE_LOADED)' ] ; then
+	# Skip building the target if it is already loaded from cache or exists in target/ directory
+	if [ -z '$($*_CACHE_LOADED)' ] && [ ! -e $(DEBS_PATH)/$* ] ; then
 
 		$(foreach deb,$* $($*_DERIVED_DEBS), \
 			{ SKIP_BUILD_HOOK=$($*_SKIP_VERSION) curl -L -f -o $(DEBS_PATH)/$(deb) $($(deb)_CURL_OPTIONS) $($(deb)_URL) $(LOG) || { exit 1 ; } } ; )
@@ -628,7 +649,7 @@ $(addprefix $(FILES_PATH)/, $(SONIC_MAKE_FILES)) : $(FILES_PATH)/% : .platform $
 		# Remove target to force rebuild
 		rm -f $(addprefix $(FILES_PATH)/, $*)
 		# Apply series of patches if exist
-		if [ -f $($*_SRC_PATH).patch/series ]; then pushd $($*_SRC_PATH) && quilt applied || QUILT_PATCHES=../$(notdir $($*_SRC_PATH)).patch quilt push -a; popd; fi $(LOG)
+		if [ -f $($*_SRC_PATH).patch/series ]; then pushd $($*_SRC_PATH) && ( quilt pop -a -f 1>/dev/null 2>&1 || true ) && QUILT_PATCHES=../$(notdir $($*_SRC_PATH)).patch quilt push -a; popd; fi $(LOG)
 		# Build project and take package
 		make DEST=$(shell pwd)/$(FILES_PATH) -C $($*_SRC_PATH) $(shell pwd)/$(FILES_PATH)/$* $(LOG)
 		# Clean up
@@ -659,6 +680,7 @@ SONIC_TARGET_LIST += $(addprefix $(FILES_PATH)/, $(SONIC_MAKE_FILES))
 #     $(SOME_NEW_DEB)_DEPENDS = $(SOME_OTHER_DEB1) $(SOME_OTHER_DEB2) ...
 #     SONIC_MAKE_DEBS += $(SOME_NEW_DEB)
 $(addprefix $(DEBS_PATH)/, $(SONIC_MAKE_DEBS)) : $(DEBS_PATH)/% : .platform $$(addsuffix -install,$$(addprefix $(DEBS_PATH)/,$$($$*_DEPENDS))) \
+			$$(addsuffix -install,$$(addprefix $(PYTHON_WHEELS_PATH)/,$$($$*_WHEEL_DEPENDS))) \
 			$$(addprefix $(DEBS_PATH)/,$$($$*_AFTER)) \
 			$(call dpkg_depend,$(DEBS_PATH)/%.dep)
 	$(HEADER)
@@ -672,7 +694,7 @@ $(addprefix $(DEBS_PATH)/, $(SONIC_MAKE_DEBS)) : $(DEBS_PATH)/% : .platform $$(a
 		# Remove target to force rebuild
 		rm -f $(addprefix $(DEBS_PATH)/, $* $($*_DERIVED_DEBS) $($*_EXTRA_DEBS))
 		# Apply series of patches if exist
-		if [ -f $($*_SRC_PATH).patch/series ]; then pushd $($*_SRC_PATH) && quilt applied || QUILT_PATCHES=../$(notdir $($*_SRC_PATH)).patch quilt push -a; popd; fi $(LOG)
+		if [ -f $($*_SRC_PATH).patch/series ]; then pushd $($*_SRC_PATH) && ( quilt pop -a -f 1>/dev/null 2>&1 || true ) && QUILT_PATCHES=../$(notdir $($*_SRC_PATH)).patch quilt push -a; popd; fi $(LOG)
 		# Build project and take package
 		$(SETUP_OVERLAYFS_FOR_DPKG_ADMINDIR)
 		DEB_BUILD_OPTIONS="${DEB_BUILD_OPTIONS_GENERIC}" $(ANT_DEB_CONFIG) $(CROSS_COMPILE_FLAGS) make -j$(SONIC_CONFIG_MAKE_JOBS) DEST=$(shell pwd)/$(DEBS_PATH) -C $($*_SRC_PATH) $(shell pwd)/$(DEBS_PATH)/$* $(LOG)
@@ -712,14 +734,14 @@ $(addprefix $(DEBS_PATH)/, $(SONIC_DPKG_DEBS)) : $(DEBS_PATH)/% : .platform $$(a
 		# Remove old build logs if they exist
 		rm -f $($*_SRC_PATH)/debian/*.debhelper.log
 		# Apply series of patches if exist
-		if [ -f $($*_SRC_PATH).patch/series ]; then pushd $($*_SRC_PATH) && quilt applied || QUILT_PATCHES=../$(notdir $($*_SRC_PATH)).patch quilt push -a; popd; fi $(LOG)
+		if [ -f $($*_SRC_PATH).patch/series ]; then pushd $($*_SRC_PATH) && ( quilt pop -a -f 1>/dev/null 2>&1 || true ) && QUILT_PATCHES=../$(notdir $($*_SRC_PATH)).patch quilt push -a; popd; fi $(LOG)
 		# Build project
 		pushd $($*_SRC_PATH) $(LOG_SIMPLE)
 		if [ -f ./autogen.sh ]; then ./autogen.sh $(LOG); fi
 		$(SETUP_OVERLAYFS_FOR_DPKG_ADMINDIR)
 		$(if $($*_DPKG_TARGET),
-			${$*_BUILD_ENV} DEB_BUILD_OPTIONS="${DEB_BUILD_OPTIONS_GENERIC} ${$*_DEB_BUILD_OPTIONS}" $(ANT_DEB_CONFIG) $(CROSS_COMPILE_FLAGS) dpkg-buildpackage -rfakeroot -b $(ANT_DEB_CROSS_OPT) -us -uc -tc -j$(SONIC_CONFIG_MAKE_JOBS) --as-root -T$($*_DPKG_TARGET) --admindir $$mergedir $(LOG),
-			${$*_BUILD_ENV} DEB_BUILD_OPTIONS="${DEB_BUILD_OPTIONS_GENERIC} ${$*_DEB_BUILD_OPTIONS}" $(ANT_DEB_CONFIG) $(CROSS_COMPILE_FLAGS) dpkg-buildpackage -rfakeroot -b $(ANT_DEB_CROSS_OPT) -us -uc -tc -j$(SONIC_CONFIG_MAKE_JOBS) --admindir $$mergedir $(LOG)
+			${$*_BUILD_ENV} DEB_BUILD_OPTIONS="${DEB_BUILD_OPTIONS_GENERIC} ${$*_DEB_BUILD_OPTIONS}" DEB_BUILD_PROFILES="${$*_DEB_BUILD_PROFILES}" $(ANT_DEB_CONFIG) $(CROSS_COMPILE_FLAGS) dpkg-buildpackage -rfakeroot -b $(ANT_DEB_CROSS_OPT) -us -uc -tc -j$(SONIC_CONFIG_MAKE_JOBS) --as-root -T$($*_DPKG_TARGET) --admindir $$mergedir $(LOG),
+			${$*_BUILD_ENV} DEB_BUILD_OPTIONS="${DEB_BUILD_OPTIONS_GENERIC} ${$*_DEB_BUILD_OPTIONS}" DEB_BUILD_PROFILES="${$*_DEB_BUILD_PROFILES}" $(ANT_DEB_CONFIG) $(CROSS_COMPILE_FLAGS) dpkg-buildpackage -rfakeroot -b $(ANT_DEB_CROSS_OPT) -us -uc -tc -j$(SONIC_CONFIG_MAKE_JOBS) --admindir $$mergedir $(LOG)
 		)
 		popd $(LOG_SIMPLE)
 		# Clean up
@@ -826,7 +848,7 @@ $(addprefix $(PYTHON_DEBS_PATH)/, $(SONIC_PYTHON_STDEB_DEBS)) : $(PYTHON_DEBS_PA
 	if [ -z '$($*_CACHE_LOADED)' ] ; then
 
 		# Apply series of patches if exist
-		if [ -f $($*_SRC_PATH).patch/series ]; then pushd $($*_SRC_PATH) && quilt applied || QUILT_PATCHES=../$(notdir $($*_SRC_PATH)).patch quilt push -a; popd; fi $(LOG)
+		if [ -f $($*_SRC_PATH).patch/series ]; then pushd $($*_SRC_PATH) && ( quilt pop -a -f 1>/dev/null 2>&1 || true ) && QUILT_PATCHES=../$(notdir $($*_SRC_PATH)).patch quilt push -a; popd; fi $(LOG)
 		# Build project
 		pushd $($*_SRC_PATH) $(LOG_SIMPLE)
 		rm -rf deb_dist/* $(LOG)
@@ -866,7 +888,7 @@ $(addprefix $(PYTHON_WHEELS_PATH)/, $(SONIC_PYTHON_WHEELS)) : $(PYTHON_WHEELS_PA
 
 		pushd $($*_SRC_PATH) $(LOG_SIMPLE)
 		# apply series of patches if exist
-		if [ -f ../$(notdir $($*_SRC_PATH)).patch/series ]; then quilt applied || QUILT_PATCHES=../$(notdir $($*_SRC_PATH)).patch quilt push -a; fi $(LOG)
+		if [ -f ../$(notdir $($*_SRC_PATH)).patch/series ]; then ( quilt pop -a -f 1>/dev/null 2>&1 || true ) && QUILT_PATCHES=../$(notdir $($*_SRC_PATH)).patch quilt push -a; fi $(LOG)
 ifneq ($(CROSS_BUILD_ENVIRON),y)
 		# Use pip instead of later setup.py to install dependencies into user home, but uninstall self
 		pip$($*_PYTHON_VERSION) install . && pip$($*_PYTHON_VERSION) uninstall --yes `python$($*_PYTHON_VERSION) setup.py --name`
@@ -932,7 +954,7 @@ docker-start :
 $(addprefix $(TARGET_PATH)/, $(SONIC_SIMPLE_DOCKER_IMAGES)) : $(TARGET_PATH)/%.gz : .platform docker-start $$(addsuffix -load,$$(addprefix $(TARGET_PATH)/,$$($$*.gz_LOAD_DOCKERS)))
 	$(HEADER)
 	# Apply series of patches if exist
-	if [ -f $($*.gz_PATH).patch/series ]; then pushd $($*.gz_PATH) && quilt applied || QUILT_PATCHES=../$(notdir $($*.gz_PATH)).patch quilt push -a; popd; fi $(LOG)
+	if [ -f $($*.gz_PATH).patch/series ]; then pushd $($*.gz_PATH) && ( quilt pop -a -f 1>/dev/null 2>&1 || true ) && QUILT_PATCHES=../$(notdir $($*.gz_PATH)).patch quilt push -a; popd; fi $(LOG)
 	# Prepare docker build info
 	SONIC_ENFORCE_VERSIONS=$(SONIC_ENFORCE_VERSIONS) \
 	TRUSTED_GPG_URLS=$(TRUSTED_GPG_URLS) \
@@ -1030,7 +1052,7 @@ $(addprefix $(TARGET_PATH)/, $(DOCKER_IMAGES)) : $(TARGET_PATH)/%.gz : .platform
 	if [ -z '$($*.gz_CACHE_LOADED)' ] ; then
 
 		# Apply series of patches if exist
-		if [ -f $($*.gz_PATH).patch/series ]; then pushd $($*.gz_PATH) && quilt applied || QUILT_PATCHES=../$(notdir $($*.gz_PATH)).patch quilt push -a; popd; fi $(LOG)
+		if [ -f $($*.gz_PATH).patch/series ]; then pushd $($*.gz_PATH) && ( quilt pop -a -f 1>/dev/null 2>&1 || true ) && QUILT_PATCHES=../$(notdir $($*.gz_PATH)).patch quilt push -a; popd; fi $(LOG)
 		mkdir -p $($*.gz_PATH)/debs $(LOG)
 		mkdir -p $($*.gz_PATH)/files $(LOG)
 		mkdir -p $($*.gz_PATH)/python-debs $(LOG)
@@ -1225,7 +1247,7 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
         $$(addprefix $(FILES_PATH)/,$$($$*_FILES)) \
         $(addsuffix -install,$(addprefix $(IMAGE_DISTRO_DEBS_PATH)/,$(DEBOOTSTRAP))) \
         $(if $(findstring y,$(ENABLE_ZTP)),$(addprefix $(IMAGE_DISTRO_DEBS_PATH)/,$(SONIC_ZTP))) \
-        $(if $(findstring y,$(ENABLE_FIPS_FEATURE)),$(addprefix $(IMAGE_DISTRO_DEBS_PATH)/,$(SYMCRYPT_OPENSSL))) \
+        $(if $(findstring y,$(INCLUDE_FIPS)),$(addprefix $(IMAGE_DISTRO_DEBS_PATH)/,$(SYMCRYPT_OPENSSL))) \
         $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_UTILITIES_PY3)) \
         $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PY_COMMON_PY2)) \
         $(addprefix $(PYTHON_WHEELS_PATH)/,$(SONIC_PY_COMMON_PY3)) \
@@ -1263,9 +1285,9 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 	export include_teamd="$(INCLUDE_TEAMD)"
 	export include_router_advertiser="$(INCLUDE_ROUTER_ADVERTISER)"
 	export sonic_su_dev_signing_key="$(SECURE_UPGRADE_DEV_SIGNING_KEY)"
-	export sonic_su_dev_signing_cert="$(SECURE_UPGRADE_DEV_SIGNING_CERT)"
+	export sonic_su_signing_cert="$(SECURE_UPGRADE_SIGNING_CERT)"
 	export sonic_su_mode="$(SECURE_UPGRADE_MODE)"
-	export sonic_su_prod_signing_tool="$(SECURE_UPGRADE_PROD_SIGNING_TOOL)"
+	export sonic_su_prod_signing_tool="/sonic/scripts/$(shell basename -- $(SECURE_UPGRADE_PROD_SIGNING_TOOL))"
 	export include_system_telemetry="$(INCLUDE_SYSTEM_TELEMETRY)"
 	export include_restapi="$(INCLUDE_RESTAPI)"
 	export include_nat="$(INCLUDE_NAT)"
@@ -1274,6 +1296,7 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 	export enable_auto_tech_support="$(ENABLE_AUTO_TECH_SUPPORT)"
 	export enable_asan="$(ENABLE_ASAN)"
 	export include_macsec="$(INCLUDE_MACSEC)"
+	export include_dhcp_server="$(INCLUDE_DHCP_SERVER)"
 	export include_mgmt_framework="$(INCLUDE_MGMT_FRAMEWORK)"
 	export include_iccpd="$(INCLUDE_ICCPD)"
 	export pddf_support="$(PDDF_SUPPORT)"
@@ -1339,14 +1362,6 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 				$(eval $(docker:-dbg.gz=.gz)_GLOBAL = yes)
 			)
 		fi
-		if [ -f files/build_templates/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).timer.j2 ]; then
-			j2 files/build_templates/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).timer.j2 > $($(docker:-dbg.gz=.gz)_CONTAINER_NAME).timer
-
-			# Set the flag GLOBAL_TIMER for all the global system-wide dockers timers.
-			$(if $(shell ls files/build_templates/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).timer.j2 2>/dev/null),\
-				$(eval $(docker:-dbg.gz=.gz)_GLOBAL_TIMER = yes)
-			)
-		fi
 		# Any service template, inside instance directory, will be used to generate .service and @.service file.
 		if [ -f files/build_templates/per_namespace/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service.j2 ]; then
 			export multi_instance="true"
@@ -1356,16 +1371,6 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 			)
 			export multi_instance="false"
 			j2 files/build_templates/per_namespace/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service.j2 > $($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service
-		fi
-		# Any timer template, inside instance directory, will be used to generate .timer and @.timer file.
-		if [ -f files/build_templates/per_namespace/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).timer.j2 ]; then
-			export multi_instance="true"
-			j2 files/build_templates/per_namespace/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).timer.j2 > $($(docker:-dbg.gz=.gz)_CONTAINER_NAME)@.timer
-			$(if $(shell ls files/build_templates/per_namespace/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).timer.j2 2>/dev/null),\
-				$(eval $(docker:-dbg.gz=.gz)_TEMPLATE_TIMER = yes)
-			)
-			export multi_instance="false"
-			j2 files/build_templates/per_namespace/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).timer.j2 > $($(docker:-dbg.gz=.gz)_CONTAINER_NAME).timer
 		fi
 		# Any service template, inside share_image directory, will be used to generate -chassis.service file.
 		# TODO: need better way to name the image-shared service
@@ -1403,20 +1408,7 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 			$(eval SERVICES += "$(addsuffix -chassis.service, $($(docker:-dbg.gz=.gz)_CONTAINER_NAME))")
 		)
 	)
-	# Marks template timers with an "@" according to systemd convention
-	# If the $($docker)_TEMPLATE_TIMER) variable is set, the timer will be treated as a template
-	# If the $($docker)_GLOBAL_TIMER) and $($docker)_TEMPLATE_TIMER) variables are set the timer will be added both as a global and template timer.
-	$(foreach docker, $($*_DOCKERS),\
-		$(if $($(docker:-dbg.gz=.gz)_TEMPLATE_TIMER),\
-			$(if $($(docker:-dbg.gz=.gz)_GLOBAL_TIMER),\
-				$(eval TIMERS += "$(addsuffix .timer, $($(docker:-dbg.gz=.gz)_CONTAINER_NAME))")\
-			)\
-			$(eval TIMERS += "$(addsuffix @.timer, $($(docker:-dbg.gz=.gz)_CONTAINER_NAME))"),\
-			$(eval TIMERS += "$(addsuffix .timer, $($(docker:-dbg.gz=.gz)_CONTAINER_NAME))")
-		)
-	)
 	export installer_services="$(SERVICES)"
-	export installer_timers="$(TIMERS)"
 
 	export installer_extra_files="$(foreach docker, $($*_DOCKERS), $(foreach file, $($(docker:-dbg.gz=.gz)_BASE_IMAGE_FILES), $($(docker:-dbg.gz=.gz)_PATH)/base_image_files/$(file)))"
 
@@ -1459,6 +1451,11 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 		MASTER_COREDNS_VERSION=$(MASTER_COREDNS_VERSION) \
 		MASTER_ETCD_VERSION=$(MASTER_ETCD_VERSION) \
 		MASTER_CRI_DOCKERD=$(MASTER_CRI_DOCKERD) \
+		MASTER_UI_METRIC_VERSION=$(MASTER_UI_METRIC_VERSION) \
+		MASTER_UI_DASH_VERSION=$(MASTER_UI_DASH_VERSION) \
+		MASTER_MDM_VERSION=$(MASTER_MDM_VERSION) \
+		MASTER_MDS_VERSION=$(MASTER_MDS_VERSION) \
+		MASTER_FLUENTD_VERSION=$(MASTER_FLUENTD_VERSION) \
 			./build_debian.sh $(LOG)
 
 		USERNAME="$(USERNAME)" \
@@ -1468,8 +1465,9 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 		SONIC_ENABLE_IMAGE_SIGNATURE="$(SONIC_ENABLE_IMAGE_SIGNATURE)" \
 		SECURE_UPGRADE_MODE="$(SECURE_UPGRADE_MODE)" \
 		SECURE_UPGRADE_DEV_SIGNING_KEY="$(SECURE_UPGRADE_DEV_SIGNING_KEY)" \
-		SECURE_UPGRADE_DEV_SIGNING_CERT="$(SECURE_UPGRADE_DEV_SIGNING_CERT)" \
+		SECURE_UPGRADE_SIGNING_CERT="$(SECURE_UPGRADE_SIGNING_CERT)" \
 		SECURE_UPGRADE_PROD_SIGNING_TOOL="$(SECURE_UPGRADE_PROD_SIGNING_TOOL)" \
+		SECURE_UPGRADE_PROD_TOOL_ARGS="$(SECURE_UPGRADE_PROD_TOOL_ARGS)" \
 		SIGNING_KEY="$(SIGNING_KEY)" \
 		SIGNING_CERT="$(SIGNING_CERT)" \
 		CA_CERT="$(CA_CERT)" \
@@ -1523,7 +1521,7 @@ SONIC_CLEAN_TARGETS += $(addsuffix -clean,$(addprefix $(TARGET_PATH)/, \
 		       $(SONIC_SIMPLE_DOCKER_IMAGES) \
 		       $(SONIC_INSTALLERS)))
 $(SONIC_CLEAN_TARGETS) :: $(TARGET_PATH)/%-clean : .platform
-	$(Q)rm -f $(TARGET_PATH)/$* target/versions/dockers/$(subst .gz,,$*)
+	$(Q)rm -rf $(TARGET_PATH)/$* target/versions/dockers/$(subst .gz,,$*)
 
 SONIC_CLEAN_STDEB_DEBS = $(addsuffix -clean,$(addprefix $(PYTHON_DEBS_PATH)/, \
 		     $(SONIC_PYTHON_STDEB_DEBS)))
@@ -1570,4 +1568,4 @@ jessie : $$(addprefix $(TARGET_PATH)/,$$(JESSIE_DOCKER_IMAGES)) \
 
 ## To build some commonly used libs. Some submodules depend on these libs.
 ## It is used in component pipelines. For example: swss needs libnl, libyang
-lib-packages: $(addprefix $(DEBS_PATH)/,$(LIBNL3) $(LIBYANG))
+lib-packages: $(addprefix $(DEBS_PATH)/,$(LIBNL3) $(LIBYANG) $(PROTOBUF) $(LIB_SONIC_DASH_API))

@@ -13,7 +13,7 @@ fontconfig-config==2.13.1-4.2
 fonts-dejavu-core==2.37-2
 fonts-font-awesome==5.0.10+really4.7.0~dfsg-4.1
 fonts-lato==2.0-2.1
-frr==8.2.2-sonic-0
+frr==8.5.1-sonic-0
 gettext-base==0.21-4
 gir1.2-glib-2.0==1.66.1-1+b1
 gnupg==2.2.27-2+deb11u2
@@ -36,9 +36,9 @@ libapparmor1==2.13.6-10
 libassuan0==2.5.3-7.1
 libblkid-dev==2.36.1-8+deb11u1
 libbsd-dev==0.11.3-1
-libc-ares2==1.17.1-1+deb11u1
-libc-dev-bin==2.31-13+deb11u5
-libc6-dev==2.31-13+deb11u5
+libc-ares2==1.17.1-1+deb11u3
+libc-dev-bin==2.31-13+deb11u6
+libc6-dev==2.31-13+deb11u6
 libcbor0==0.5.0+dfsg-2
 libcrypt-dev==1:4.4.18-4
 libdevmapper1.02.1==2:1.02.175-2.1
@@ -60,7 +60,7 @@ libip4tc2==1.8.7-1
 libip6tc2==1.8.7-1
 libjs-sphinxdoc==3.4.3-2
 libjs-underscore==1.9.1~dfsg-3
-libjson-c5==0.15-2
+libjson-c5==0.15-2+deb11u1
 libjudydebian1==1.0.5-5+b2
 libk5crypto3==1.18.3-6+deb11u3
 libkadm5clnt-mit12==1.18.3-6+deb11u3
@@ -80,6 +80,7 @@ libpcap0.8==1.10.0-2
 libpcre2-16-0==10.36-2+deb11u1
 libpgm-dev==5.3.128~dfsg-2
 libpng16-16==1.6.37-3
+libpopt0==1.18-2
 libpython2-stdlib==2.7.18-3
 libpython2.7-minimal==2.7.18-8
 libpython2.7-stdlib==2.7.18-8
@@ -88,14 +89,16 @@ libqt5dbus5==5.15.2+dfsg-9
 libqt5network5==5.15.2+dfsg-9
 libsaivs==1.0.0
 libsodium-dev==1.0.18-1
+libssl1.1==1.1.1n-0+deb11u5
+libsystemd0==247.3-7+deb11u2
 libteam-utils==1.30-1
 libtirpc-dev==1.3.1-1+deb11u1
 libunwind8==1.3.2-2
-libxml2==2.9.10+dfsg-6.7+deb11u3
-libxml2-dev==2.9.10+dfsg-6.7+deb11u3
+libxml2==2.9.10+dfsg-6.7+deb11u4
+libxml2-dev==2.9.10+dfsg-6.7+deb11u4
 libyang2==2.0.112-6
 libzmq3-dev==4.3.4-1
-linux-libc-dev==5.10.162-1
+linux-libc-dev==5.10.191-1
 logrotate==3.18.0-2+deb11u1
 lsof==4.93.2+dfsg-1.1
 mailcap==3.69
@@ -105,6 +108,7 @@ netbase==6.3
 openssh-client==1:8.4p1-5+deb11u1
 openssh-server==1:8.4p1-5+deb11u1
 openssh-sftp-server==1:8.4p1-5+deb11u1
+openssl==1.1.1n-0+deb11u5
 pinentry-curses==1.1.0-4
 psmisc==23.4-2
 python-ply==3.11-4

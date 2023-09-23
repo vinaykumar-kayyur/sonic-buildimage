@@ -298,7 +298,8 @@ def test_hardware_checker():
             'status': 'True',
             'speed': '60',
             'speed_target': '60',
-            'speed_tolerance': '20'
+            'speed_tolerance': '20',
+            'direction': 'intake'
         },
         'FAN_INFO|fan2': {
             'presence': 'False',
@@ -320,6 +321,14 @@ def test_hardware_checker():
             'speed': '20',
             'speed_target': '60',
             'speed_tolerance': '20'
+        },
+        'FAN_INFO|fan5': {
+            'presence': 'True',
+            'status': 'True',
+            'speed': '60',
+            'speed_target': '60',
+            'speed_tolerance': '20',
+            'direction': 'exhaust'
         }
     })
 
@@ -415,6 +424,10 @@ def test_hardware_checker():
     assert 'fan4' in checker._info
     assert checker._info['fan4'][HealthChecker.INFO_FIELD_OBJECT_STATUS] == HealthChecker.STATUS_NOT_OK
 
+    assert 'fan5' in checker._info
+    assert checker._info['fan5'][HealthChecker.INFO_FIELD_OBJECT_STATUS] == HealthChecker.STATUS_NOT_OK
+    assert checker._info['fan5'][HealthChecker.INFO_FIELD_OBJECT_MSG] == 'fan5 direction exhaust is not aligned with fan1 direction intake'
+
     assert 'PSU 1' in checker._info
     assert checker._info['PSU 1'][HealthChecker.INFO_FIELD_OBJECT_STATUS] == HealthChecker.STATUS_OK
 
@@ -431,12 +444,12 @@ def test_hardware_checker():
     assert checker._info['PSU 5'][HealthChecker.INFO_FIELD_OBJECT_STATUS] == HealthChecker.STATUS_NOT_OK
 
     assert 'PSU 6' in checker._info
-    assert checker._info['PSU 6'][HealthChecker.INFO_FIELD_OBJECT_MSG] == 'power of PSU 6 (101.0w) exceeds threshold (100.0w)'
+    assert checker._info['PSU 6'][HealthChecker.INFO_FIELD_OBJECT_MSG] == 'System power exceeds threshold (100.0w)'
     assert checker._info['PSU 6'][HealthChecker.INFO_FIELD_OBJECT_STATUS] == HealthChecker.STATUS_NOT_OK
 
     assert 'PSU 7' in checker._info
     assert checker._info['PSU 7'][HealthChecker.INFO_FIELD_OBJECT_STATUS] == HealthChecker.STATUS_NOT_OK
-    assert checker._info['PSU 7'][HealthChecker.INFO_FIELD_OBJECT_MSG] == 'power of PSU 7 exceeds threshold but power or power_critical_threshold is invalid'
+    assert checker._info['PSU 7'][HealthChecker.INFO_FIELD_OBJECT_MSG] == 'System power exceeds threshold but power_critical_threshold is invalid'
 
 
 def test_config():
@@ -648,11 +661,46 @@ mock_srv_props={
 @patch('health_checker.sysmonitor.Sysmonitor.run_systemctl_show', MagicMock(return_value=mock_srv_props['mock_bgp.service']))
 @patch('health_checker.sysmonitor.Sysmonitor.get_app_ready_status', MagicMock(return_value=('Down','-','-')))
 @patch('health_checker.sysmonitor.Sysmonitor.post_unit_status', MagicMock())
+@patch('health_checker.sysmonitor.Sysmonitor.publish_system_status', MagicMock())
 def test_check_unit_status():
     sysmon = Sysmonitor()
     sysmon.check_unit_status('mock_bgp.service')
     assert 'mock_bgp.service' in sysmon.dnsrvs_name
 
+
+@patch('health_checker.sysmonitor.Sysmonitor.get_all_service_list', MagicMock(side_effect=[
+    ['mock_snmp.service', 'mock_bgp.service', 'mock_ns.service'],
+    ['mock_snmp.service', 'mock_ns.service']
+]))
+@patch('health_checker.sysmonitor.Sysmonitor.run_systemctl_show', MagicMock(return_value=mock_srv_props['mock_bgp.service']))
+@patch('health_checker.sysmonitor.Sysmonitor.get_app_ready_status', MagicMock(return_value=('Down','-','-')))
+@patch('health_checker.sysmonitor.Sysmonitor.post_unit_status', MagicMock())
+@patch('health_checker.sysmonitor.Sysmonitor.print_console_message', MagicMock())
+def test_system_status_up_after_service_removed():
+    sysmon = Sysmonitor()
+    sysmon.publish_system_status('UP')
+
+    sysmon.check_unit_status('mock_bgp.service')
+    assert 'mock_bgp.service' in sysmon.dnsrvs_name
+    result = swsscommon.SonicV2Connector.get(MockConnector, 0, "SYSTEM_READY|SYSTEM_STATE", 'Status')
+    print("system status result before service was removed from system: {}".format(result))
+    assert result == "DOWN"
+
+    sysmon.check_unit_status('mock_bgp.service')
+    assert 'mock_bgp.service' not in sysmon.dnsrvs_name
+    result = swsscommon.SonicV2Connector.get(MockConnector, 0, "SYSTEM_READY|SYSTEM_STATE", 'Status')
+    print("system status result after service was removed from system: {}".format(result))
+    assert result == "UP"
+
+
+@patch('health_checker.sysmonitor.Sysmonitor.get_all_service_list', MagicMock(return_value=['mock_snmp.service']))
+def test_check_unit_status_timer():
+    sysmon = Sysmonitor()
+    sysmon.state_db = MagicMock()
+    sysmon.state_db.exists = MagicMock(return_value=1)
+    sysmon.state_db.delete = MagicMock()
+    sysmon.check_unit_status('mock_snmp.timer')
+    assert not sysmon.state_db.delete.called
 
 
 @patch('health_checker.sysmonitor.Sysmonitor.run_systemctl_show', MagicMock(return_value=mock_srv_props['mock_radv.service']))
@@ -714,14 +762,31 @@ def test_post_system_status():
     print("post system status result:{}".format(result))
     assert result == "UP"
 
-@patch('health_checker.sysmonitor.Sysmonitor.publish_system_status', MagicMock())
-@patch('health_checker.sysmonitor.Sysmonitor.post_system_status', test_post_system_status())
+    sysmon.post_system_status("DOWN")
+    result = swsscommon.SonicV2Connector.get(MockConnector, 0, "SYSTEM_READY|SYSTEM_STATE", 'Status')
+    print("post system status result:{}".format(result))
+    assert result == "DOWN"
+
+@patch('health_checker.sysmonitor.Sysmonitor.print_console_message', MagicMock())
+@patch('health_checker.sysmonitor.Sysmonitor.post_system_status', MagicMock())
+def test_publish_system_status_allowed_status():
+    sysmon = Sysmonitor()
+    sysmon.publish_system_status('UP')
+    sysmon.publish_system_status('DOWN')
+    
+    expected_calls = [
+        (("UP",), {}),
+        (("DOWN",), {})
+    ]
+    for call_args in sysmon.post_system_status.call_args_list:
+        assert call_args in expected_calls
+
 @patch('health_checker.sysmonitor.Sysmonitor.print_console_message', MagicMock())
 def test_publish_system_status():
     sysmon = Sysmonitor()
     sysmon.publish_system_status('UP')
     result = swsscommon.SonicV2Connector.get(MockConnector, 0, "SYSTEM_READY|SYSTEM_STATE", 'Status')
-    assert result == "UP"
+    assert result == "UP" 
 
 @patch('health_checker.sysmonitor.Sysmonitor.get_all_system_status', test_get_all_system_status_ok())
 @patch('health_checker.sysmonitor.Sysmonitor.publish_system_status', test_publish_system_status())
