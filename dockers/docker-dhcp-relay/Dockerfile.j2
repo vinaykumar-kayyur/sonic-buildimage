@@ -3,7 +3,6 @@ FROM docker-config-engine-bullseye-{{DOCKER_USERNAME}}:{{DOCKER_USERTAG}}
 
 ARG docker_container_name
 ARG image_version
-RUN [ -f /etc/rsyslog.conf ] && sed -ri "s/%syslogtag%/$docker_container_name#%syslogtag%/;" /etc/rsyslog.conf
 
 # Make apt-get non-interactive
 ENV DEBIAN_FRONTEND=noninteractive
@@ -13,6 +12,8 @@ ENV IMAGE_VERSION=$image_version
 
 # Update apt's cache of available packages
 RUN apt-get update
+
+RUN apt-get install -y libjsoncpp-dev
 
 {% if docker_dhcp_relay_debs.strip() -%}
 # Copy built Debian packages
@@ -34,5 +35,13 @@ COPY ["dhcp-relay.programs.j2", "dhcpv4-relay.agents.j2", "dhcpv6-relay.agents.j
 COPY ["files/supervisor-proc-exit-listener", "/usr/bin"]
 COPY ["critical_processes", "/etc/supervisor"]
 COPY ["cli", "/cli/"]
+# Copy regex json and rsyslog_plugin.conf file into rsyslog.d
+COPY ["*.json", "/etc/rsyslog.d/"]
+COPY ["files/rsyslog_plugin.conf.j2", "/etc/rsyslog.d/"]
+
+# Create dhcp_relay_regex.conf
+RUN j2 -f json /etc/rsyslog.d/rsyslog_plugin.conf.j2 /etc/rsyslog.d/events_info.json  > /etc/rsyslog.d/dhcp_relay_events.conf
+RUN rm -f /etc/rsyslog.d/rsyslog_plugin.conf.j2
+RUN rm -f /etc/rsyslog.d/events_info.json
 
 ENTRYPOINT ["/usr/bin/docker_init.sh"]

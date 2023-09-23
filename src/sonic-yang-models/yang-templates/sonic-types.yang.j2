@@ -2,7 +2,7 @@ module sonic-types {
 
     yang-version 1.1;
 
-    namespace "http://github.com/Azure/sonic-head";
+    namespace "http://github.com/sonic-net/sonic-head";
     prefix sonic-types;
 
     description "SONiC type for yang Models of SONiC OS";
@@ -88,6 +88,7 @@ module sonic-types {
             enum L2;
             enum L3;
             enum L3V6;
+            enum L3V4V6;
             enum MIRROR;
             enum MIRRORV6;
             enum MIRROR_DSCP;
@@ -277,6 +278,73 @@ module sonic-types {
                 error-app-tag tc-invalid;
             }
         }
+    }
+
+    typedef process_name {
+        type string {
+            pattern '[a-zA-Z0-9]{1}([-a-zA-Z0-9_]{0,31})' {
+                error-message "Invalid process_name.";
+                error-app-tag invalid-process-name;
+            }
+            length 1..32 {
+                error-message "Invalid length for process_name.";
+                error-app-tag invalid-process-name-length;
+            }
+        }
+    }
+
+    typedef ctr_name {
+        type string {
+            pattern '[a-zA-Z0-9]{1}([-a-zA-Z0-9_]{0,31})' {
+                error-message "Invalid ctr_name.";
+                error-app-tag invalid-ctr-name;
+            }
+            length 1..32 {
+                error-message "Invalid length for ctr_name.";
+                error-app-tag invalid-ctr-name-length;
+            }
+        }
+    }
+
+    typedef hash-field {
+        description "Represents native hash field";
+        type enumeration {
+            enum IN_PORT;
+            enum DST_MAC;
+            enum SRC_MAC;
+            enum ETHERTYPE;
+            enum VLAN_ID;
+            enum IP_PROTOCOL;
+            enum DST_IP;
+            enum SRC_IP;
+            enum L4_DST_PORT;
+            enum L4_SRC_PORT;
+            enum INNER_DST_MAC;
+            enum INNER_SRC_MAC;
+            enum INNER_ETHERTYPE;
+            enum INNER_IP_PROTOCOL;
+            enum INNER_DST_IP;
+            enum INNER_DST_IPV4;
+            enum INNER_DST_IPV6;
+            enum INNER_SRC_IP;
+            enum INNER_SRC_IPV4;
+            enum INNER_SRC_IPV6;
+            enum INNER_L4_DST_PORT;
+            enum INNER_L4_SRC_PORT;
+        }
+    }
+
+    typedef timezone-name-type {
+        type string;
+        description
+            "A time zone name as used by the Time Zone Database,
+            sometimes referred to as the 'Olson Database'.
+
+            The exact set of valid values is an implementation-specific
+            matter.  Client discovery of the exact set of time zone names
+            for a particular server is out of scope.";
+        reference
+            "BCP 175: Procedures for Maintaining the Time Zone Database";
     }
 
     {% if yang_model_type == "cvl" %}

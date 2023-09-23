@@ -6,7 +6,7 @@ import subprocess
 
 import yaml
 from natsort import natsorted
-
+from sonic_py_common.general import getstatusoutput_noshell_pipe
 from swsscommon.swsscommon import ConfigDBConnector, SonicV2Connector
 
 USR_SHARE_SONIC_PATH = "/usr/share/sonic"
@@ -19,6 +19,12 @@ SONIC_VERSION_YAML_PATH = "/etc/sonic/sonic_version.yml"
 # Port configuration file names
 PORT_CONFIG_FILE = "port_config.ini"
 PLATFORM_JSON_FILE = "platform.json"
+
+# Fabric port configuration file names
+FABRIC_MONITOR_CONFIG_FILE = "fabric_monitor_config.json"
+
+# Fabric port configuration file names
+FABRIC_PORT_CONFIG_FILE = "fabric_port_config.ini"
 
 # HwSKU configuration file name
 HWSKU_JSON_FILE = 'hwsku.json'
@@ -245,6 +251,113 @@ def get_path_to_hwsku_dir():
     return hwsku_path
 
 
+def get_path_to_fabric_monitor_config_file(hwsku=None, asic=None):
+    """
+    Retrieves the path to the device's fabric monitor configuration file
+
+    Args:
+        hwsku: a string, it is allowed to be passed in args because when loading the
+              initial configuration on the device, the HwSKU is not yet present in ConfigDB.
+        asic: a string , asic argument should be passed on multi-ASIC devices only,
+              it should be omitted on single-ASIC platforms.
+
+    Returns:
+        A string containing the path the the device's fabric monitor configuration file
+    """
+
+    """
+    This platform check is performed to make sure we return a None
+    in case of unit-tests within sonic-cfggen where platform is not expected to be
+    present because tests are not run on actual Hardware/Container.
+    TODO: refactor sonic-cfggen such that we can remove this check
+    """
+
+    platform = get_platform()
+    if not platform:
+        return None
+
+    if hwsku:
+        try:
+           platform_path = get_path_to_platform_dir()
+        except OSError:
+           return None
+        hwsku_path = os.path.join(platform_path, hwsku)
+    else:
+        (platform_path, hwsku_path) = get_paths_to_platform_and_hwsku_dirs()
+
+    fabric_monitor_config_candidates = []
+
+    # Check for 'hwsku.json' file presence first
+    hwsku_json_file = os.path.join(hwsku_path, HWSKU_JSON_FILE)
+
+    # Check for 'fabric_monitor_config.json' file presence
+    fabric_monitor_config_candidates.append(os.path.join(hwsku_path, FABRIC_MONITOR_CONFIG_FILE))
+
+    for candidate in fabric_monitor_config_candidates:
+        if os.path.isfile(candidate):
+            return candidate
+
+    return None
+
+
+def get_path_to_fabric_port_config_file(hwsku=None, asic=None):
+    """
+    Retrieves the path to the device's fabric port configuration file
+
+    Args:
+        hwsku: a string, it is allowed to be passed in args because when loading the
+              initial configuration on the device, the HwSKU is not yet present in ConfigDB.
+        asic: a string , asic argument should be passed on multi-ASIC devices only,
+              it should be omitted on single-ASIC platforms.
+
+    Returns:
+        A string containing the path the the device's fabric port configuration file
+    """
+
+    """
+    This platform check is performed to make sure we return a None
+    in case of unit-tests within sonic-cfggen where platform is not expected to be
+    present because tests are not run on actual Hardware/Container.
+    TODO: refactor sonic-cfggen such that we can remove this check
+    """
+
+    platform = get_platform()
+    if not platform:
+        return None
+
+    if hwsku:
+        try:
+           platform_path = get_path_to_platform_dir()
+        except OSError:
+           return None
+        hwsku_path = os.path.join(platform_path, hwsku)
+    else:
+        (platform_path, hwsku_path) = get_paths_to_platform_and_hwsku_dirs()
+
+    fabric_port_config_candidates = []
+
+    # Check for 'hwsku.json' file presence first
+    hwsku_json_file = os.path.join(hwsku_path, HWSKU_JSON_FILE)
+
+    # if 'hwsku.json' file is available, Check for 'platform.json' file presence,
+    # if 'platform.json' is available, APPEND it. Otherwise, SKIP it.
+
+    # Check for 'fabric_port_config.ini' file presence in a few locations
+    if asic:
+        # Check if there is a file that is specific for the asic.
+        fabric_port_config_candidates.append(os.path.join(hwsku_path, asic, FABRIC_PORT_CONFIG_FILE))
+        # Check if there is a file for the hardware type.
+        fabric_port_config_candidates.append(os.path.join(hwsku_path, FABRIC_PORT_CONFIG_FILE))
+    else:
+        fabric_port_config_candidates.append(os.path.join(hwsku_path, FABRIC_PORT_CONFIG_FILE))
+
+    for candidate in fabric_port_config_candidates:
+        if os.path.isfile(candidate):
+            return candidate
+
+    return None
+
+
 def get_paths_to_platform_and_hwsku_dirs():
     """
     Retreives the paths to the device's platform and hardware SKU data
@@ -345,7 +458,7 @@ def get_sonic_version_info():
         if yaml.__version__ >= "5.1":
             sonic_ver_info = yaml.full_load(stream)
         else:
-            sonic_ver_info = yaml.load(stream)
+            sonic_ver_info = yaml.safe_load(stream)
 
     return sonic_ver_info
 
@@ -469,16 +582,39 @@ def is_supervisor():
                     return True
         return False
 
+# Check if this platform has macsec capability.
+def is_macsec_supported():
+    supported = 0
+    platform_env_conf_file_path = get_platform_env_conf_file_path()
+
+    # platform_env.conf file not present for platform
+    if platform_env_conf_file_path is None:
+        return supported
+
+    # Else open the file check for keyword - macsec_enabled -
+    with open(platform_env_conf_file_path) as platform_env_conf_file:
+        for line in platform_env_conf_file:
+            tokens = line.split('=')
+            if len(tokens) < 2:
+               continue
+            if tokens[0].lower() == 'macsec_enabled':
+                supported = tokens[1].strip()
+                break
+    return int(supported)
+
+
 def get_device_runtime_metadata():
     chassis_metadata = {}
     if is_chassis():
-        chassis_metadata = {'CHASSIS_METADATA': {'module_type' : 'supervisor' if is_supervisor() else 'linecard', 
+        chassis_metadata = {'CHASSIS_METADATA': {'module_type' : 'supervisor' if is_supervisor() else 'linecard',
                                                 'chassis_type': 'voq' if is_voq_chassis() else 'packet'}}
 
     port_metadata = {'ETHERNET_PORTS_PRESENT': True if get_path_to_port_config_file(hwsku=None, asic="0" if is_multi_npu() else None) else False}
+    macsec_support_metadata = {'MACSEC_SUPPORTED': True if is_macsec_supported() else False}
     runtime_metadata = {}
     runtime_metadata.update(chassis_metadata)
     runtime_metadata.update(port_metadata)
+    runtime_metadata.update(macsec_support_metadata)
     return {'DEVICE_RUNTIME_METADATA': runtime_metadata }
 
 def get_npu_id_from_name(npu_name):
@@ -531,7 +667,27 @@ def _valid_mac_address(mac):
     return bool(re.match("^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$", mac))
 
 
+def run_command(cmd):
+    proc = subprocess.Popen(cmd, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    (out, err) = proc.communicate()
+    return (out, err)
+
+
+def run_command_pipe(cmd0, cmd1, cmd2):
+    exitcodes, out = getstatusoutput_noshell_pipe(cmd0, cmd1, cmd2)
+    if exitcodes == [0, 0, 0]:
+        err = None
+    else:
+        err = out
+    return (out, err)
+
+
 def get_system_mac(namespace=None):
+    hw_mac_entry_outputs = []
+    syseeprom_cmd = ["sudo", "decode-syseeprom", "-m"]
+    iplink_cmd0 = ["ip", 'link', 'show', 'eth0']
+    iplink_cmd1 = ['grep', 'ether']
+    iplink_cmd2 = ['awk', '{print $2}']
     version_info = get_sonic_version_info()
 
     if (version_info['asic_type'] == 'mellanox'):
@@ -548,36 +704,54 @@ def get_system_mac(namespace=None):
             if _valid_mac_address(mac):
                 return mac
 
-        hw_mac_entry_cmds = [ "sudo decode-syseeprom -m" ]
+        (mac, err) = run_command(syseeprom_cmd)
+        hw_mac_entry_outputs.append((mac, err))
     elif (version_info['asic_type'] == 'marvell'):
         # Try valid mac in eeprom, else fetch it from eth0
         platform = get_platform()
         machine_key = "onie_machine"
         machine_vars = get_machine_info()
+        (mac, err) = run_command(syseeprom_cmd)
+        hw_mac_entry_outputs.append((mac, err))
         if machine_vars is not None and machine_key in machine_vars:
             hwsku = machine_vars[machine_key]
-            profile_cmd = 'cat ' + HOST_DEVICE_PATH + '/' + platform + '/' + hwsku + '/profile.ini | grep switchMacAddress | cut -f2 -d='
+            profile_file = HOST_DEVICE_PATH + '/' + platform + '/' + hwsku + '/profile.ini'
+            if os.path.exists(profile_file):
+                profile_cmd0 = ['cat', profile_file]
+                profile_cmd1 = ['grep', 'switchMacAddress']
+                profile_cmd2 = ['cut', '-f2', '-d', '=']
+                (mac, err) = run_command_pipe(profile_cmd0, profile_cmd1, profile_cmd2)
+                hw_mac_entry_outputs.append((mac, err))
         else:
-            profile_cmd = "false"
-        hw_mac_entry_cmds = ["sudo decode-syseeprom -m", profile_cmd, "ip link show eth0 | grep ether | awk '{print $2}'"]
+            profile_cmd = ["false"]
+            (mac, err) = run_command(profile_cmd)
+            hw_mac_entry_outputs.append((mac, err))
+        (mac, err) = run_command_pipe(iplink_cmd0, iplink_cmd1, iplink_cmd2)
+        hw_mac_entry_outputs.append((mac, err))
     elif (version_info['asic_type'] == 'cisco-8000'):
         # Try to get valid MAC from profile.ini first, else fetch it from syseeprom or eth0
         platform = get_platform()
         if namespace is not None:
-            profile_cmd = 'cat ' + HOST_DEVICE_PATH + '/' + platform + '/profile.ini | grep ' + namespace + 'switchMacAddress | cut -f2 -d='
+            profile_cmd0 = ['cat', HOST_DEVICE_PATH + '/' + platform + '/profile.ini']
+            profile_cmd1 = ['grep', str(namespace)+'switchMacAddress']
+            profile_cmd2 = ['cut', '-f2', '-d', '=']
+            (mac, err) = run_command_pipe(profile_cmd0, profile_cmd1, profile_cmd2)
         else:
-            profile_cmd = "false"
-        hw_mac_entry_cmds = [profile_cmd, "sudo decode-syseeprom -m", "ip link show eth0 | grep ether | awk '{print $2}'"]
+            profile_cmd = ["false"]
+            (mac, err) = run_command(profile_cmd)
+        hw_mac_entry_outputs.append((mac, err))
+        (mac, err) = run_command(syseeprom_cmd)
+        hw_mac_entry_outputs.append((mac, err))
+        (mac, err) = run_command_pipe(iplink_cmd0, iplink_cmd1, iplink_cmd2)
+        hw_mac_entry_outputs.append((mac, err))
     else:
-        mac_address_cmd = "cat /sys/class/net/eth0/address"
+        mac_address_cmd = ["cat", "/sys/class/net/eth0/address"]
         if namespace is not None:
-            mac_address_cmd = "sudo ip netns exec {} {}".format(namespace, mac_address_cmd)
+            mac_address_cmd = ['sudo', 'ip', 'netns', 'exec', str(namespace)] + mac_address_cmd
+        (mac, err) = run_command(mac_address_cmd)
+        hw_mac_entry_outputs.append((mac, err))
 
-        hw_mac_entry_cmds = [mac_address_cmd]
-
-    for get_mac_cmd in hw_mac_entry_cmds:
-        proc = subprocess.Popen(get_mac_cmd, shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        (mac, err) = proc.communicate()
+    for (mac, err) in hw_mac_entry_outputs:
         if err:
             continue
         mac = mac.strip()
@@ -589,9 +763,10 @@ def get_system_mac(namespace=None):
 
     # Align last byte of MAC if necessary
     if version_info and version_info['asic_type'] == 'centec':
-        last_byte = mac[-2:]
-        aligned_last_byte = format(int(int(last_byte, 16) + 1), '02x')
-        mac = mac[:-2] + aligned_last_byte
+        mac_tmp = mac.replace(':','')
+        mac_tmp = "{:012x}".format(int(mac_tmp, 16) + 1)
+        mac_tmp = re.sub("(.{2})", "\\1:", mac_tmp, 0, re.DOTALL)
+        mac = mac_tmp[:-1]
     return mac
 
 
@@ -602,17 +777,14 @@ def get_system_routing_stack():
     Returns:
         A string containing the name of the routing stack in use on the device
     """
-    command = "sudo docker ps | grep bgp | awk '{print$2}' | cut -d'-' -f3 | cut -d':' -f1"
+    cmd0 = ['sudo', 'docker', 'ps']
+    cmd1 = ['grep', 'bgp']
+    cmd2 = ['awk', '{print$2}']
+    cmd3 = ['cut', '-d', '-', '-f3']
+    cmd4 = ['cut', '-d', ':', '-f1']
 
     try:
-        proc = subprocess.Popen(command,
-                                stdout=subprocess.PIPE,
-                                shell=True,
-                                universal_newlines=True,
-                                stderr=subprocess.STDOUT)
-        stdout = proc.communicate()[0]
-        proc.wait()
-        result = stdout.rstrip('\n')
+        _, result = getstatusoutput_noshell_pipe(cmd0, cmd1, cmd2, cmd3, cmd4)
     except OSError as e:
         raise OSError("Cannot detect routing stack")
 
@@ -643,14 +815,26 @@ def is_warm_restart_enabled(container_name):
 
 # Check if System fast reboot is enabled.
 def is_fast_reboot_enabled():
-    fb_system_state = 0
-    cmd = 'sonic-db-cli STATE_DB get "FAST_REBOOT|system"'
-    proc = subprocess.Popen(cmd, shell=True, universal_newlines=True, stdout=subprocess.PIPE)
-    (stdout, stderr) = proc.communicate()
+    state_db = SonicV2Connector(host='127.0.0.1')
+    state_db.connect(state_db.STATE_DB, False)
 
-    if proc.returncode != 0:
-        log.log_error("Error running command '{}'".format(cmd))
-    elif stdout:
-        fb_system_state = stdout.rstrip('\n')
+    TABLE_NAME_SEPARATOR = '|'
+    prefix = 'FAST_RESTART_ENABLE_TABLE' + TABLE_NAME_SEPARATOR
 
-    return fb_system_state
+    # Get the system warm reboot enable state
+    _hash = '{}{}'.format(prefix, 'system')
+    fb_system_state = state_db.get(state_db.STATE_DB, _hash, "enable")
+    fb_enable_state = True if fb_system_state == "true" else False
+
+    state_db.close(state_db.STATE_DB)
+    return fb_enable_state
+
+
+def is_frontend_port_present_in_host():
+    if is_supervisor():
+        return False
+    if is_multi_npu():
+        namespace_id = os.getenv("NAMESPACE_ID")
+        if not namespace_id:
+            return False
+    return True

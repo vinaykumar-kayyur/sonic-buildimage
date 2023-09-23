@@ -1,12 +1,12 @@
 module sonic-peer-switch {
     yang-version 1.1;
-    namespace "http://github.com/Azure/sonic-peer-switch";
+    namespace "http://github.com/sonic-net/sonic-peer-switch";
     prefix peer_switch;
 
     import ietf-inet-types {
         prefix inet;
     }
-    
+
     import sonic-types {
         prefix stypes;
     }
@@ -31,7 +31,7 @@ module sonic-peer-switch {
                 max-elements 1;
 
                 key "peer_switch";
-                
+
                 leaf peer_switch {
                     type stypes:hostname;
 

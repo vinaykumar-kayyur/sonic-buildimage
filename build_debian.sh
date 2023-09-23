@@ -31,9 +31,9 @@ set -x -e
 CONFIGURED_ARCH=$([ -f .arch ] && cat .arch || echo amd64)
 
 ## docker engine version (with platform)
-DOCKER_VERSION=5:20.10.14~3-0~debian-$IMAGE_DISTRO
-CONTAINERD_IO_VERSION=1.5.11-1
-LINUX_KERNEL_VERSION=5.10.0-12-2
+DOCKER_VERSION=5:24.0.2-1~debian.11~$IMAGE_DISTRO
+CONTAINERD_IO_VERSION=1.6.21-1
+LINUX_KERNEL_VERSION=5.10.0-23-2
 
 ## Working directory to prepare the file system
 FILESYSTEM_ROOT=./fsroot
@@ -81,7 +81,10 @@ echo '[INFO] Build host debian base system...'
 TARGET_PATH=$TARGET_PATH scripts/build_debian_base_system.sh $CONFIGURED_ARCH $IMAGE_DISTRO $FILESYSTEM_ROOT
 
 # Prepare buildinfo
-sudo scripts/prepare_debian_image_buildinfo.sh $CONFIGURED_ARCH $IMAGE_DISTRO $FILESYSTEM_ROOT $http_proxy
+sudo SONIC_VERSION_CACHE=${SONIC_VERSION_CACHE} \
+	DBGOPT="${DBGOPT}" \
+	scripts/prepare_debian_image_buildinfo.sh $CONFIGURED_ARCH $IMAGE_DISTRO $FILESYSTEM_ROOT $http_proxy
+
 
 sudo chown root:root $FILESYSTEM_ROOT
 
@@ -108,8 +111,9 @@ sudo LANG=C chroot $FILESYSTEM_ROOT mount
 [ -d $TRUSTED_GPG_DIR ] && [ ! -z "$(ls $TRUSTED_GPG_DIR)" ] && sudo cp $TRUSTED_GPG_DIR/* ${FILESYSTEM_ROOT}/etc/apt/trusted.gpg.d/
 
 ## Pointing apt to public apt mirrors and getting latest packages, needed for latest security updates
+scripts/build_mirror_config.sh files/apt $CONFIGURED_ARCH $IMAGE_DISTRO
 sudo cp files/apt/sources.list.$CONFIGURED_ARCH $FILESYSTEM_ROOT/etc/apt/sources.list
-sudo cp files/apt/apt.conf.d/{81norecommends,apt-{clean,gzip-indexes,no-languages},no-check-valid-until} $FILESYSTEM_ROOT/etc/apt/apt.conf.d/
+sudo cp files/apt/apt.conf.d/{81norecommends,apt-{clean,gzip-indexes,no-languages},no-check-valid-until,apt-multiple-retries} $FILESYSTEM_ROOT/etc/apt/apt.conf.d/
 
 ## Note: set lang to prevent locale warnings in your chroot
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y update
@@ -119,6 +123,8 @@ echo '[INFO] Install and setup eatmydata'
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install eatmydata
 sudo LANG=C chroot $FILESYSTEM_ROOT ln -s /usr/bin/eatmydata /usr/local/bin/dpkg
 echo 'Dir::Bin::dpkg "/usr/local/bin/dpkg";' | sudo tee $FILESYSTEM_ROOT/etc/apt/apt.conf.d/00image-install-eatmydata > /dev/null
+## Note: dpkg hook conflict with eatmydata
+sudo LANG=C chroot $FILESYSTEM_ROOT rm /usr/local/sbin/dpkg -f
 
 echo '[INFO] Install packages for building image'
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install makedev psmisc
@@ -134,6 +140,12 @@ if [[ $CONFIGURED_ARCH == armhf || $CONFIGURED_ARCH == arm64 ]]; then
 else
     sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c 'cd /dev && MAKEDEV generic'
 fi
+
+## docker and mkinitramfs on target system will use pigz/unpigz automatically
+if [[ $GZ_COMPRESS_PROGRAM == pigz ]]; then
+    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install pigz
+fi
+
 ## Install initramfs-tools and linux kernel
 ## Note: initramfs-tools recommends depending on busybox, and we really want busybox for
 ## 1. commands such as touch
@@ -155,7 +167,8 @@ if [[ $CONFIGURED_ARCH == amd64 ]]; then
 fi
 
 ## Sign the Linux kernel
-if [ "$SONIC_ENABLE_SECUREBOOT_SIGNATURE" = "y" ]; then
+# note: when flag SONIC_ENABLE_SECUREBOOT_SIGNATURE is enabled the Secure Upgrade flags should be disabled (no_sign) to avoid conflict between the features.
+if [ "$SONIC_ENABLE_SECUREBOOT_SIGNATURE" = "y" ] && [ "$SECURE_UPGRADE_MODE" != 'dev' ] && [ "$SECURE_UPGRADE_MODE" != "prod" ]; then
     if [ ! -f $SIGNING_KEY ]; then
        echo "Error: SONiC linux kernel signing key missing"
        exit 1
@@ -261,6 +274,7 @@ install_kubernetes () {
     ## Check out the sources list update matches current Debian version
     sudo cp files/image_config/kubernetes/kubernetes.list $FILESYSTEM_ROOT/etc/apt/sources.list.d/
     sudo LANG=C chroot $FILESYSTEM_ROOT apt-get update
+    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install kubernetes-cni=${KUBERNETES_CNI_VERSION}
     sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install kubelet=${ver}
     sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install kubectl=${ver}
     sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install kubeadm=${ver}
@@ -271,7 +285,6 @@ then
     ## Install Kubernetes
     echo '[INFO] Install kubernetes'
     install_kubernetes ${KUBERNETES_VERSION}
-    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install kubernetes-cni=${KUBERNETES_CNI_VERSION}
 else
     echo '[INFO] Skipping Install kubernetes'
 fi
@@ -281,22 +294,13 @@ then
     ## Install Kubernetes master
     echo '[INFO] Install kubernetes master'
     install_kubernetes ${MASTER_KUBERNETES_VERSION}
-    
-    sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT curl -fsSL \
-        https://packages.microsoft.com/keys/microsoft.asc | \
-        sudo LANG=C chroot $FILESYSTEM_ROOT apt-key add -
-    sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT curl -fsSL \
-        https://packages.microsoft.com/keys/msopentech.asc | \
-        sudo LANG=C chroot $FILESYSTEM_ROOT apt-key add -
-    echo "deb [arch=amd64] https://packages.microsoft.com/repos/azurecore-debian $IMAGE_DISTRO main" | \
-        sudo tee $FILESYSTEM_ROOT/etc/apt/sources.list.d/azure.list
+
     sudo LANG=C chroot $FILESYSTEM_ROOT apt-get update
-    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install hyperv-daemons gnupg xmlstarlet
-    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install metricsext2
+    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install hyperv-daemons gnupg xmlstarlet parted
     sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y remove gnupg
     sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT curl -o /tmp/cri-dockerd.deb -fsSL \
         https://github.com/Mirantis/cri-dockerd/releases/download/v${MASTER_CRI_DOCKERD}/cri-dockerd_${MASTER_CRI_DOCKERD}.3-0.debian-${IMAGE_DISTRO}_amd64.deb
-    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install -f /tmp/cri-dockerd.deb 
+    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install -f /tmp/cri-dockerd.deb
     sudo LANG=C chroot $FILESYSTEM_ROOT rm -f /tmp/cri-dockerd.deb
 else
     echo '[INFO] Skipping Install kubernetes master'
@@ -386,7 +390,10 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     gpg                     \
     jq                      \
     auditd                  \
-    linux-perf
+    linux-perf              \
+    resolvconf              \
+	lsof                    \
+	sysstat
 
 # default rsyslog version is 8.2110.0 which has a bug on log rate limit,
 # use backport version
@@ -399,6 +406,10 @@ sudo tee ${FILESYSTEM_ROOT}/etc/systemd/system/auditd.service.d/log-directory.co
 LogsDirectory=audit
 LogsDirectoryMode=0750
 EOF
+
+# latest tcpdump control resource access with AppArmor.
+# override tcpdump profile to allow tcpdump access TACACS config file.
+sudo cp files/apparmor/usr.bin.tcpdump $FILESYSTEM_ROOT/etc/apparmor.d/local/usr.bin.tcpdump
 
 if [[ $CONFIGURED_ARCH == amd64 ]]; then
 ## Pre-install the fundamental packages for amd64 (x86)
@@ -432,6 +443,14 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     systemd-sysv \
     ntp
 
+# Workaround for issue: The udev rule may fail to be executed because the
+#                       daemon-reload command is executed in parallel
+# Github issue: https://github.com/systemd/systemd/issues/24668
+# Github PR: https://github.com/systemd/systemd/pull/24673
+# This workaround should be removed after a upstream already contains the fixes
+sudo patch $FILESYSTEM_ROOT/lib/systemd/system/systemd-udevd.service \
+    files/image_config/systemd/systemd-udevd/fix-udev-rule-may-fail-if-daemon-reload-command-runs.patch
+
 if [[ $TARGET_BOOTLOADER == grub ]]; then
     if [[ $CONFIGURED_ARCH == amd64 ]]; then
         GRUB_PKG=grub-pc-bin
@@ -439,10 +458,10 @@ if [[ $TARGET_BOOTLOADER == grub ]]; then
         GRUB_PKG=grub-efi-arm64-bin
     fi
 
-    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y download \
+    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get install -d -o dir::cache=/var/cache/apt \
         $GRUB_PKG
 
-    sudo mv $FILESYSTEM_ROOT/grub*.deb $FILESYSTEM_ROOT/$PLATFORM_DIR/grub
+    sudo cp $FILESYSTEM_ROOT/var/cache/apt/archives/grub*.deb $FILESYSTEM_ROOT/$PLATFORM_DIR/grub
 fi
 
 ## Disable kexec supported reboot which was installed by default
@@ -467,16 +486,12 @@ rm /files/etc/ssh/sshd_config/ClientAliveInterval
 rm /files/etc/ssh/sshd_config/ClientAliveCountMax
 touch /files/etc/ssh/sshd_config/EmptyLineHack
 rename /files/etc/ssh/sshd_config/EmptyLineHack ""
-set /files/etc/ssh/sshd_config/ClientAliveInterval 300
-set /files/etc/ssh/sshd_config/ClientAliveCountMax 1
+set /files/etc/ssh/sshd_config/ClientAliveInterval 900
+set /files/etc/ssh/sshd_config/ClientAliveCountMax 0
 ins #comment before /files/etc/ssh/sshd_config/ClientAliveInterval
-set /files/etc/ssh/sshd_config/#comment[following-sibling::*[1][self::ClientAliveInterval]] "Close inactive client sessions after 5 minutes"
-rm /files/etc/ssh/sshd_config/MaxAuthTries
-set /files/etc/ssh/sshd_config/MaxAuthTries 3
+set /files/etc/ssh/sshd_config/#comment[following-sibling::*[1][self::ClientAliveInterval]] "Close inactive client sessions after 15 minutes"
 rm /files/etc/ssh/sshd_config/LogLevel
 set /files/etc/ssh/sshd_config/LogLevel VERBOSE
-rm /files/etc/ssh/sshd_config/Banner
-set /files/etc/ssh/sshd_config/Banner /etc/issue
 save
 quit
 EOF
@@ -521,10 +536,13 @@ sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install 'setup
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install 'wheel==0.35.1'
 
 # docker Python API package is needed by Ansible docker module as well as some SONiC applications
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install 'docker==5.0.3'
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install 'docker==6.1.1'
 
 # Install scapy
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install 'scapy==2.4.4'
+
+# The option --no-build-isolation can be removed when upgrading PyYAML to 6.0.1
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install 'PyYAML==5.4.1' --no-build-isolation
 
 ## Note: keep pip installed for maintainance purpose
 
@@ -573,7 +591,16 @@ export release="$(if [ -f $FILESYSTEM_ROOT/etc/sonic/sonic_release ]; then cat $
 export build_date="$(date -u)"
 export build_number="${BUILD_NUMBER:-0}"
 export built_by="$USER@$BUILD_HOSTNAME"
+export sonic_os_version="${SONIC_OS_VERSION}"
 j2 files/build_templates/sonic_version.yml.j2 | sudo tee $FILESYSTEM_ROOT/etc/sonic/sonic_version.yml
+
+# Default users info
+export password_expire="$( [[ "$CHANGE_DEFAULT_PASSWORD" == "y" ]] && echo true || echo false )"
+export username="${USERNAME}"
+export password="$(sudo grep ^${USERNAME} $FILESYSTEM_ROOT/etc/shadow | cut -d: -f2)"
+j2 files/build_templates/default_users.json.j2 | sudo tee $FILESYSTEM_ROOT/etc/sonic/default_users.json
+sudo LANG=c chroot $FILESYSTEM_ROOT chmod 600 /etc/sonic/default_users.json
+sudo LANG=c chroot $FILESYSTEM_ROOT chown root:shadow /etc/sonic/default_users.json
 
 ## Copy over clean-up script
 sudo cp ./files/scripts/core_cleanup.py $FILESYSTEM_ROOT/usr/bin/core_cleanup.py
@@ -621,6 +648,70 @@ then
 
 fi
 
+## Set FIPS runtime default option
+sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "mkdir -p /etc/fips"
+sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "echo 0 > /etc/fips/fips_enable"
+
+# #################
+#   secure boot
+# #################
+if [[ $SECURE_UPGRADE_MODE == 'dev' || $SECURE_UPGRADE_MODE == "prod" && $SONIC_ENABLE_SECUREBOOT_SIGNATURE != 'y' ]]; then
+    # note: SONIC_ENABLE_SECUREBOOT_SIGNATURE is a feature that signing just kernel,
+    # SECURE_UPGRADE_MODE is signing all the boot component including kernel.
+    # its required to do not enable both features together to avoid conflicts.
+    echo "Secure Boot support build stage: Starting .."
+
+    # debian secure boot dependecies
+    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install      \
+        shim-unsigned \
+        grub-efi
+
+    if [ ! -f $SECURE_UPGRADE_SIGNING_CERT ]; then
+        echo "Error: SONiC SECURE_UPGRADE_SIGNING_CERT=$SECURE_UPGRADE_SIGNING_CERT key missing"
+        exit 1
+    fi
+
+    if [[ $SECURE_UPGRADE_MODE == 'dev' ]]; then
+        # development signing & verification
+
+        if [ ! -f $SECURE_UPGRADE_DEV_SIGNING_KEY ]; then
+            echo "Error: SONiC SECURE_UPGRADE_DEV_SIGNING_KEY=$SECURE_UPGRADE_DEV_SIGNING_KEY key missing"
+            exit 1
+        fi
+
+        sudo ./scripts/signing_secure_boot_dev.sh -a $CONFIGURED_ARCH \
+                                                  -r $FILESYSTEM_ROOT \
+                                                  -l $LINUX_KERNEL_VERSION \
+                                                  -c $SECURE_UPGRADE_SIGNING_CERT \
+                                                  -p $SECURE_UPGRADE_DEV_SIGNING_KEY
+    elif [[ $SECURE_UPGRADE_MODE == "prod" ]]; then
+        #  Here Vendor signing should be implemented
+        OUTPUT_SEC_BOOT_DIR=$FILESYSTEM_ROOT/boot
+
+        if [ ! -f $sonic_su_prod_signing_tool ]; then
+            echo "Error: SONiC sonic_su_prod_signing_tool=$sonic_su_prod_signing_tool script missing"
+            exit 1
+        fi
+
+        sudo $sonic_su_prod_signing_tool -a $CONFIGURED_ARCH \
+                                         -r $FILESYSTEM_ROOT \
+                                         -l $LINUX_KERNEL_VERSION \
+                                         -o $OUTPUT_SEC_BOOT_DIR \
+                                         $SECURE_UPGRADE_PROD_TOOL_ARGS
+
+        # verifying all EFI files and kernel modules in $OUTPUT_SEC_BOOT_DIR
+        sudo ./scripts/secure_boot_signature_verification.sh -e $OUTPUT_SEC_BOOT_DIR \
+                                                             -c $SECURE_UPGRADE_SIGNING_CERT \
+                                                             -k $FILESYSTEM_ROOT
+
+        # verifying vmlinuz file.
+        sudo ./scripts/secure_boot_signature_verification.sh -e $FILESYSTEM_ROOT/boot/vmlinuz-${LINUX_KERNEL_VERSION}-${CONFIGURED_ARCH} \
+                                                             -c $SECURE_UPGRADE_SIGNING_CERT \
+                                                             -k $FILESYSTEM_ROOT
+    fi
+    echo "Secure Boot support build stage: END."
+fi
+
 ## Update initramfs
 sudo chroot $FILESYSTEM_ROOT update-initramfs -u
 ## Convert initrd image to u-boot format
@@ -638,7 +729,9 @@ if [[ $TARGET_BOOTLOADER == uboot ]]; then
 fi
 
 # Collect host image version files before cleanup
-scripts/collect_host_image_version_files.sh $TARGET_PATH $FILESYSTEM_ROOT
+SONIC_VERSION_CACHE=${SONIC_VERSION_CACHE}  \
+	DBGOPT="${DBGOPT}" \
+	scripts/collect_host_image_version_files.sh $CONFIGURED_ARCH $IMAGE_DISTRO $TARGET_PATH $FILESYSTEM_ROOT
 
 # Remove GCC
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y remove gcc
@@ -672,13 +765,31 @@ sudo LANG=C chroot $FILESYSTEM_ROOT umount /proc || true
 ## Prepare empty directory to trigger mount move in initramfs-tools/mount_loop_root, implemented by patching
 sudo mkdir $FILESYSTEM_ROOT/host
 
+
+if [[ "$CHANGE_DEFAULT_PASSWORD" == "y" ]]; then
+    ## Expire default password for exitsing users that can do login
+    default_users=$(cat $FILESYSTEM_ROOT/etc/passwd | grep "/home"|  grep ":/bin/bash\|:/bin/sh" | awk -F ":" '{print $1}' 2> /dev/null)
+    for user in $default_users
+    do
+        sudo LANG=C chroot $FILESYSTEM_ROOT passwd -e ${user}
+    done
+fi
+
 ## Compress most file system into squashfs file
 sudo rm -f $ONIE_INSTALLER_PAYLOAD $FILESYSTEM_SQUASHFS
 ## Output the file system total size for diag purpose
 ## Note: -x to skip directories on different file systems, such as /proc
 sudo du -hsx $FILESYSTEM_ROOT
 sudo mkdir -p $FILESYSTEM_ROOT/var/lib/docker
+
+## Clear DNS configuration inherited from the build server
+sudo rm -f $FILESYSTEM_ROOT/etc/resolvconf/resolv.conf.d/original
+sudo cp files/image_config/resolv-config/resolv.conf.head $FILESYSTEM_ROOT/etc/resolvconf/resolv.conf.d/head
+
 sudo mksquashfs $FILESYSTEM_ROOT $FILESYSTEM_SQUASHFS -comp zstd -b 1M -e boot -e var/lib/docker -e $PLATFORM_DIR
+
+## Reduce /boot permission
+sudo chmod -R go-wx $FILESYSTEM_ROOT/boot
 
 # Ensure admin gid is 1000
 gid_user=$(sudo LANG=C chroot $FILESYSTEM_ROOT id -g $USERNAME) || gid_user="none"
@@ -696,8 +807,8 @@ if [[ $MULTIARCH_QEMU_ENVIRON == y || $CROSS_BUILD_ENVIRON == y ]]; then
 fi
 
 ## Compress docker files
-pushd $FILESYSTEM_ROOT && sudo tar czf $OLDPWD/$FILESYSTEM_DOCKERFS -C ${DOCKERFS_PATH}var/lib/docker .; popd
+pushd $FILESYSTEM_ROOT && sudo tar -I $GZ_COMPRESS_PROGRAM -cf $OLDPWD/$FILESYSTEM_DOCKERFS -C ${DOCKERFS_PATH}var/lib/docker .; popd
 
 ## Compress together with /boot, /var/lib/docker and $PLATFORM_DIR as an installer payload zip file
-pushd $FILESYSTEM_ROOT && sudo tar czf platform.tar.gz -C $PLATFORM_DIR . && sudo zip -n .gz $OLDPWD/$ONIE_INSTALLER_PAYLOAD -r boot/ platform.tar.gz; popd
+pushd $FILESYSTEM_ROOT && sudo tar -I $GZ_COMPRESS_PROGRAM -cf platform.tar.gz -C $PLATFORM_DIR . && sudo zip -n .gz $OLDPWD/$ONIE_INSTALLER_PAYLOAD -r boot/ platform.tar.gz; popd
 sudo zip -g -n .squashfs:.gz $ONIE_INSTALLER_PAYLOAD $FILESYSTEM_SQUASHFS $FILESYSTEM_DOCKERFS

@@ -1,5 +1,5 @@
 module sonic-system-aaa {
-    namespace "http://github.com/Azure/sonic-system-aaa";
+    namespace "http://github.com/sonic-net/sonic-system-aaa";
     prefix ssys;
     yang-version 1.1;
 
@@ -50,7 +50,7 @@ module sonic-system-aaa {
                     description "Allow AAA fallback";
                     default False;
                 }
-                
+
                 leaf debug {
                     type stypes:boolean_type;
                     description "Enable/disable AAA debugging";

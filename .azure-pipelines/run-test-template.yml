@@ -22,9 +22,14 @@ parameters:
   - sonic-6asic-vs.img.gz
 
 steps:
+- template: cleanup.yml
 - checkout: self
   clean: true
   displayName: 'checkout sonic-mgmt repo'
+
+- script: |
+    sudo rm -rf ../target
+  displayName: "Cleanup"
 
 - task: DownloadPipelineArtifact@2
   inputs:

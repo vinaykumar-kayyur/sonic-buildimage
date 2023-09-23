@@ -56,10 +56,10 @@ generate_kvm_image()
         exit 1
     }
 
-    gzip $KVM_IMAGE_DISK
+    $GZ_COMPRESS_PROGRAM $KVM_IMAGE_DISK
 
     [ -r $KVM_IMAGE_DISK.gz ] || {
-        echo "Error : gzip $KVM_IMAGE_DISK failed!"
+        echo "Error : $GZ_COMPRESS_PROGRAM $KVM_IMAGE_DISK failed!"
         exit 1
     }
 
@@ -71,12 +71,12 @@ generate_onie_installer_image()
     output_file=$OUTPUT_ONIE_IMAGE
     [ -n "$1" ] && output_file=$1
     # Copy platform-specific ONIE installer config files where onie-mk-demo.sh expects them
-    rm -rf ./installer/${TARGET_PLATFORM}/platforms/
-    mkdir -p ./installer/${TARGET_PLATFORM}/platforms/
+    rm -rf ./installer/platforms/
+    mkdir -p ./installer/platforms/
     for VENDOR in `ls ./device`; do
         for PLATFORM in `ls ./device/$VENDOR | grep ^${TARGET_PLATFORM}`; do
             if [ -f ./device/$VENDOR/$PLATFORM/installer.conf ]; then
-                cp ./device/$VENDOR/$PLATFORM/installer.conf ./installer/${TARGET_PLATFORM}/platforms/$PLATFORM
+                cp ./device/$VENDOR/$PLATFORM/installer.conf ./installer/platforms/$PLATFORM
             fi
 
         done
@@ -86,7 +86,7 @@ generate_onie_installer_image()
     ## Note: Don't leave blank between lines. It is single line command.
     ./onie-mk-demo.sh $CONFIGURED_ARCH $TARGET_MACHINE $TARGET_PLATFORM-$TARGET_MACHINE-$ONIEIMAGE_VERSION \
           installer platform/$TARGET_MACHINE/platform.conf $output_file OS $IMAGE_VERSION $ONIE_IMAGE_PART_SIZE \
-          $ONIE_INSTALLER_PAYLOAD
+          $ONIE_INSTALLER_PAYLOAD $SECURE_UPGRADE_SIGNING_CERT $SECURE_UPGRADE_DEV_SIGNING_KEY
 }
 
 # Generate asic-specific device list
@@ -139,7 +139,11 @@ elif [ "$IMAGE_TYPE" = "raw" ]; then
     ## Run the installer
     ## The 'build' install mode of the installer is used to generate this dump.
     sudo chmod a+x $tmp_output_onie_image
-    sudo ./$tmp_output_onie_image
+    sudo ./$tmp_output_onie_image || {
+        ## Failure during 'build' install mode of the installer results in an incomplete raw image.
+        ## Delete the incomplete raw image.
+        sudo rm -f $OUTPUT_RAW_IMAGE
+    }
     rm $tmp_output_onie_image
 
     [ -r $OUTPUT_RAW_IMAGE ] || {
@@ -147,15 +151,7 @@ elif [ "$IMAGE_TYPE" = "raw" ]; then
         exit 1
     }
 
-    gzip $OUTPUT_RAW_IMAGE
-
-    [ -r $OUTPUT_RAW_IMAGE.gz ] || {
-        echo "Error : gzip $OUTPUT_RAW_IMAGE failed!"
-        exit 1
-    }
-
-    mv $OUTPUT_RAW_IMAGE.gz $OUTPUT_RAW_IMAGE
-    echo "The compressed raw image is in $OUTPUT_RAW_IMAGE"
+    echo "The raw image is in $OUTPUT_RAW_IMAGE"
 
 elif [ "$IMAGE_TYPE" = "kvm" ]; then
 
@@ -202,12 +198,12 @@ elif [ "$IMAGE_TYPE" = "aboot" ]; then
     zip -g $OUTPUT_ABOOT_IMAGE .platforms_asic
 
     if [ "$ENABLE_FIPS" = "y" ]; then
-        echo "sonic_fips=1" > kernel-cmdline
+        echo "sonic_fips=1" >> kernel-cmdline-append
     else
-        echo "sonic_fips=0" > kernel-cmdline
+        echo "sonic_fips=0" >> kernel-cmdline-append
     fi
-    zip -g $OUTPUT_ABOOT_IMAGE kernel-cmdline
-    rm kernel-cmdline
+    zip -g $OUTPUT_ABOOT_IMAGE kernel-cmdline-append
+    rm kernel-cmdline-append
 
     zip -g $OUTPUT_ABOOT_IMAGE $ABOOT_BOOT_IMAGE
     rm $ABOOT_BOOT_IMAGE
