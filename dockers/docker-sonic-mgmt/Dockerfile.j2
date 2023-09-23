@@ -210,6 +210,13 @@ RUN dpkg -i \
 debs/{{ deb }}{{' '}}
 {%- endfor %}
 
+# Install GNMI client
+RUN mkdir -p /tmp/gnmi \
+    && cd /tmp/gnmi \
+    && wget "https://sonic-build.azurewebsites.net/api/sonic/artifacts?branchName=master&definitionId=142&artifactName=sonic-buildimage.vs&target=target/debs/bullseye/sonic-gnmi_0.1_amd64.deb" -O sonic-gnmi_0.1_amd64.deb \
+    && dpkg --force-depends --path-exclude "*telemetry" --install sonic-gnmi_0.1_amd64.deb \
+    && rm -rf /tmp/gnmi
+
 # Install protobuf 3.21.12
 RUN mkdir -p /tmp/protobuf \
     && cd /tmp/protobuf \
