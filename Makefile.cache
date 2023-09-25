@@ -360,10 +360,9 @@ endef
 RFS_DEP_FILES := $(wildcard \
 	$(addprefix scripts/, build_debian_base_system.sh prepare_debian_image_buildinfo.sh build_mirror_config.sh) \
 	$(wildcard files/initramfs-tools/*) \
-	$(addprefix files/image_config/, kdump/vmcore-sysctl.conf ntp/ntp-apparmor sonic_release ntp/ntp ntp/ntp-systemd-wrapper \
-		systemd/systemd-udevd/fix-udev-rule-may-fail-if-daemon-reload-command-runs.patch) \
-	$(addprefix files/sshd/, host-ssh-keygen.sh override.conf) \
-	$(addprefix files/dhcp/, rfc3442-classless-routes sethostname sethostname6 graphserviceurl snmpcommunity vrf) \
+	$(shell git ls-files files/image_config) \
+	$(wildcard files/sshd/*) \
+	$(wildcard files/dhcp/*) \
 	src/sonic-build-hooks/buildinfo/trusted.gpg.d \
 	platform/$(CONFIGURED_PLATFORM)/modules  \
 	files/docker/docker.service.conf \
