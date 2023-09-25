@@ -173,7 +173,7 @@ endef
 # Args:
 #  $(1)   => target name
 define GET_MOD_DEP_SHA
-	$(eval $(1)_MOD_DEP_PKGS := $(foreach dfile,$($(1)_DEPENDS) $($(1)_RDEPENDS) $($(1)_WHEEL_DEPENDS) $($(1)_FILES)\
+	$(eval $(1)_MOD_DEP_PKGS := $(foreach dfile,$($(1)_DEPENDS) $($(1)_RDEPENDS) $($(1)_WHEEL_DEPENDS) \
                             $($(1)_PYTHON_DEBS) $($(1)_PYTHON_WHEELS) \
                             $($(1)_DBG_DEPENDS) $($(1)_DBG_IMAGE_PACKAGES) $($(1)_LOAD_DOCKERS),\
                             $(if $($(dfile)_MAIN_DEB),$($(dfile)_MAIN_DEB),$(dfile))) )
