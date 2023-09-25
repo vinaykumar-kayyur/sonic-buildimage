@@ -120,7 +120,7 @@ class HardwareChecker(HealthChecker):
                     try:
                         speed = float(speed)
                         speed_target = float(speed_target)
-                        if bool(is_under_speed) or bool(is_over_speed):
+                        if 'true' in {is_under_speed.lower(), is_over_speed.lower()}:
                             self.set_object_not_ok('Fan', name,
                                                    '{} speed is out of range, speed={}, target={}'.format(
                                                        name,
