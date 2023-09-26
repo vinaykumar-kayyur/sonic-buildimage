@@ -479,7 +479,6 @@ def get_platform_info(config_db=None):
     if hw_info_dict:
         return hw_info_dict
 
-    from .multi_asic import get_num_asics
     from .multi_asic import get_asic_presence_list
 
     version_info = get_sonic_version_info()
