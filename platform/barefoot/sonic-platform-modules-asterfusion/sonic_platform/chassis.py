@@ -160,13 +160,13 @@ class Chassis(ChassisBase):
         #
         self._change_event_dict = {}
         self._change_event_dict.setdefault(
-            "fan", dict.fromkeys(map(str, range(len(self._fan_list))), "0")
+            "fan", dict.fromkeys(range(len(self._fan_list)), "0")
         )
         self._change_event_dict.setdefault(
-            "psu", dict.fromkeys(map(str, range(len(self._psu_list))), "0")
+            "psu", dict.fromkeys(range(len(self._psu_list)), "0")
         )
         self._change_event_dict.setdefault(
-            "sfp", dict.fromkeys(map(str, range(len(self._sfp_list))), "0")
+            "sfp", dict.fromkeys(range(len(self._sfp_list)), "0")
         )
 
     ###################
@@ -603,24 +603,21 @@ class Chassis(ChassisBase):
             try:
                 # Walk throught all fans and get current fan presence
                 for index, fan in enumerate(self._fan_list):
-                    fan_index = str(index)
                     presence = fan.get_presence()
-                    if str(int(presence)) != change_event_dict["fan"][fan_index]:
-                        change_event_dict["fan"][fan_index] = str(int(presence))
+                    if str(int(presence)) != change_event_dict["fan"][index]:
+                        change_event_dict["fan"][index] = str(int(presence))
                         detected = True
                 # Walk throught all psus and get current psu presence
                 for index, psu in enumerate(self._psu_list):
-                    psu_index = str(index)
                     presence = psu.get_presence()
-                    if str(int(presence)) != change_event_dict["psu"][psu_index]:
-                        change_event_dict["psu"][psu_index] = str(int(presence))
+                    if str(int(presence)) != change_event_dict["psu"][index]:
+                        change_event_dict["psu"][index] = str(int(presence))
                         detected = True
                 # Walk throught all sfps and get current sfp presence
                 for index, sfp in enumerate(self._sfp_list):
-                    sfp_index = str(index)
                     presence = sfp.get_presence()
-                    if str(int(presence)) != change_event_dict["sfp"][sfp_index]:
-                        change_event_dict["sfp"][sfp_index] = str(int(presence))
+                    if str(int(presence)) != change_event_dict["sfp"][index]:
+                        change_event_dict["sfp"][index] = str(int(presence))
                         detected = True
             except Exception as err:
                 succeeded = False
@@ -630,7 +627,7 @@ class Chassis(ChassisBase):
             # Four conditions(OR gate) are concerned here:
             # 1) When succeeded is False. In other words, this method cannot run well. So we shouldn`t let the loop go on.
             if succeeded:  # If call successful, update the change-event-dict
-                self._change_event_dict = change_event_dict
+                self._change_event_dict = copy.deepcopy(change_event_dict)
             else:  # Otherwise break the loop immediately
                 break
             # 2) When a change event is detected. Always break the loop as long as a change event is detected.
@@ -644,4 +641,4 @@ class Chassis(ChassisBase):
             if timeout > 0 and time.time() - start > timeout / 1000:
                 break
             time.sleep(1)
-        return succeeded, self._change_event_dict
+        return succeeded, change_event_dict
