@@ -4,5 +4,11 @@
             "sub_role": "FrontkEnd"
         }
     },
+    "constants": {
+        "bgp": {
+            "internal_community": "12345:556",
+	    "internal_community_match_tag": "101"
+        }
+    },
     "loopback0_ipv4": "10.10.10.10/32"
 }
