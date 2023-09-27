@@ -24,8 +24,8 @@ save_saidump_by_rdb() {
   debug "saidump.sh: [4] Run saidump -r to update the JSON files' format as same as the saidump before. Then we can get the saidump's result in standard output."
   docker exec syncd$DEV sh -c "saidump -r /var/run/redis$DEV/dump.json -m 100"
   debug "saidump.sh: [5] Clear temporary files."
-  sudo rm -f /var/run/redis$DEV/dump.rdb
-  sudo rm -f /var/run/redis$DEV/dump.json
+  rm -f /var/run/redis$DEV/dump.rdb
+  rm -f /var/run/redis$DEV/dump.json
 }
 
 NUM_ASICS=`python -c 'from sonic_py_common.multi_asic import get_num_asics; print(get_num_asics())'`
