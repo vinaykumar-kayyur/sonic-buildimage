@@ -9,11 +9,7 @@ export module_out_put_dir
 
 platform_common-objs := platform_common_module.o dfd_tlveeprom.o
 obj-m += wb_platform.o
-obj-m += i2c-mux-pca9641.o
-obj-m += i2c-mux-pca954x.o
 obj-m += platform_common.o
-obj-m += rtcpcf85063.o
-obj-m += wb_at24.o
 
 all :
 	$(MAKE) -C $(KERNEL_SRC)/build M=$(PWD) modules
