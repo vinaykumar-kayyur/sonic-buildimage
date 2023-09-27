@@ -16,7 +16,7 @@ route-map FROM_BGP_INTERNAL_PEER_V4 permit 100
 !
 route-map TO_BGP_INTERNAL_PEER_V4 permit 1
   match ip address prefix-list PL_LoopbackV4
-  set community {{ constants.bgp.internal_community }} additive
+  set community {{ constants.bgp.internal_community }}
 !
 route-map TO_BGP_INTERNAL_PEER_V4 permit 100
 !
@@ -34,7 +34,7 @@ route-map FROM_BGP_INTERNAL_PEER_V6 permit 100
 !
 route-map TO_BGP_INTERNAL_PEER_V6 permit 1
   match ipv6 address prefix-list PL_LoopbackV6
-  set community {{ constants.bgp.internal_community }} additive
+  set community {{ constants.bgp.internal_community }}
 !
 route-map TO_BGP_INTERNAL_PEER_V6 permit 100
 !
@@ -42,7 +42,7 @@ route-map TO_BGP_INTERNAL_PEER_V6 permit 100
 route-map FROM_BGP_INTERNAL_PEER_V4 permit 2
  set originator-id {{ get_ipv4_loopback_address(CONFIG_DB__LOOPBACK_INTERFACE, "Loopback4096") | ip }}
 !
-route-map FROM_BGP_INTERNAL_PEER_V6 permit 2
+route-map FROM_BGP_INTERNAL_PEER_V6 permit 3
  set originator-id {{ get_ipv4_loopback_address(CONFIG_DB__LOOPBACK_INTERFACE, "Loopback4096") | ip }}
 {% endif %}
 !
