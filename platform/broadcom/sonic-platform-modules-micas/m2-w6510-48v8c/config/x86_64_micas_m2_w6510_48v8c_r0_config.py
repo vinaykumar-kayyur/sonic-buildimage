@@ -990,12 +990,12 @@ UPGRADE_SUMMARY = {
 
         "TEST": {
             "cpld": [
-                {"chain": 1, "file": "/etc/.upgrade_test/cpld_test_header.vme", "display_name": "CPLD"},
+                #{"chain": 1, "file": "/etc/.upgrade_test/cpld_test_header.vme", "display_name": "CPLD"},
             ],
             "fpga": [
                 {
                     "chain": 3,
-                    "file": "/etc/.upgrade_test/fpga_test_header.bin",
+                    "file": "/etc/.upgrade_test/fpga_test_header",
                     "display_name": "FPGA",
                 },
             ],
