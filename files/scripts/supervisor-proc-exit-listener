@@ -73,6 +73,23 @@ def get_group_and_process_list(process_file):
     return group_list, process_list
 
 
+def is_warm_reboot():
+    """
+    Checks if a warm reboot is going on
+    """
+    try:
+        state_db_connector = swsscommon.DBConnector(swsscommon.STATE_DB, 0)
+        tbl = swsscommon.Table(state_db_connector, 'WARM_RESTART_ENABLE_TABLE')
+
+        (status, value) = tbl.hget('system', 'enable')
+        if status and value == 'true':
+            return True
+    except RuntimeError as e:
+        syslog.syslog(syslog.LOG_ERR, "Check warm reboot status failed: {}".format(e))
+
+    return False
+
+
 def generate_alerting_message(process_name, status, dead_minutes):
     """
     @summary: If a critical process was not running, this function will determine it resides in host
@@ -86,8 +103,16 @@ def generate_alerting_message(process_name, status, dead_minutes):
     else:
         namespace = namespace_prefix + namespace_id
 
-    syslog.syslog(syslog.LOG_ERR, "Process '{}' is {} in namespace '{}' ({} minutes)."
-                  .format(process_name, status, namespace, dead_minutes))
+    message = "Process '{}' is {} in namespace '{}' ({} minutes).".format(
+                                                                    process_name,
+                                                                    status,
+                                                                    namespace,
+                                                                    dead_minutes)
+    if is_warm_reboot():
+        syslog.syslog(syslog.LOG_INFO, "Warm rebooting, {}".format(message))
+        return
+
+    syslog.syslog(syslog.LOG_ERR, message)
 
 
 def get_autorestart_state(container_name, use_unix_socket_path):
