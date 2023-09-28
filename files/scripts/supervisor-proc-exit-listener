@@ -78,15 +78,13 @@ def is_warm_reboot():
     Checks if a warm reboot is going on
     """
     try:
-        state_db_connector = swsscommon.DBConnector(swsscommon.STATE_DB, 0)
+        state_db_connector = swsscommon.DBConnector("STATE_DB", 0)
         tbl = swsscommon.Table(state_db_connector, 'WARM_RESTART_ENABLE_TABLE')
-
         (status, value) = tbl.hget('system', 'enable')
         if status and value == 'true':
             return True
     except RuntimeError as e:
         syslog.syslog(syslog.LOG_ERR, "Check warm reboot status failed: {}".format(e))
-
     return False
 
 
