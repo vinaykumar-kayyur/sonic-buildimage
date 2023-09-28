@@ -409,6 +409,7 @@
         <code key="CSU550AP-3-501" value="PA550II-R"/>
         <code key="DPS-550AB-40 A" value="PA550II-R"/>
         <code key="GW-CRPS550N2RC" value="PA550II-R"/>
+        <code key="U1D-D10800-DRB" value="PD800I-F"/>
     </psutype>
     <fan_display_name>
         <code key="M1HFAN III-F" value="M1HFAN III-F"/>

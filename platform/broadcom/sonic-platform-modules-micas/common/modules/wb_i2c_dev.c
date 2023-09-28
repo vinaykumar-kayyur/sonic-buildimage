@@ -61,11 +61,14 @@ struct i2c_dev_info {
 static int transfer_read(struct i2c_client *client, u8 *buf, loff_t regaddr, size_t count)
 {
     struct i2c_adapter *adap;
-    int i;
+    union i2c_smbus_data data;
+    int i, j;
     u8 offset_buf[MAX_BUS_WIDTH];
     struct i2c_msg msgs[2];
     int msgs_num, ret;
     struct i2c_dev_info *i2c_dev;
+    u8 offset;
+    u8 length;
 
     if (!client) {
         I2C_DEV_DEBUG_ERROR("can't get read client\n");
@@ -127,9 +130,47 @@ static int transfer_read(struct i2c_client *client, u8 *buf, loff_t regaddr, siz
             return -EINVAL;
         }
     } else {
-        I2C_DEV_DEBUG_ERROR("don't find read master_xfer\n");
-        return -EINVAL;
+        if (i2c_dev->addr_bus_width == WIDTH_1Byte) {
+            offset = regaddr & 0xFF;
+            if (i2c_check_functionality(adap, I2C_FUNC_SMBUS_READ_I2C_BLOCK)) {
+                for (j = 0; j < count; j += I2C_SMBUS_BLOCK_MAX) {
+                    if (count - j > I2C_SMBUS_BLOCK_MAX) {
+                        length = I2C_SMBUS_BLOCK_MAX;
+                    } else {
+                        length = count - j;
+                    }
+                    data.block[0] = length;
+                    ret = adap->algo->smbus_xfer(adap, client->addr,
+                                    0,
+                                    I2C_SMBUS_READ,
+                                    offset, I2C_SMBUS_I2C_BLOCK_DATA, &data);
+                    if (ret) {
+                        I2C_DEV_DEBUG_ERROR("smbus_xfer read block error, ret = %d\n", ret);
+                        return -EFAULT;
+                    }
+                    memcpy(buf + j, data.block + 1, length);
+                    offset += length;
+                }
+            } else {
+                for (j = 0; j < count; j++) {
+                    ret = adap->algo->smbus_xfer(adap, client->addr,
+                                    0,
+                                    I2C_SMBUS_READ,
+                                    offset, I2C_SMBUS_BYTE_DATA, &data);
 
+                    if (!ret) {
+                        buf[j] = data.byte;
+                    } else {
+                        I2C_DEV_DEBUG_ERROR("smbus_xfer read byte error, ret = %d\n", ret);
+                        return -EFAULT;
+                    }
+                    offset++;
+                }
+            }
+        } else {
+            I2C_DEV_DEBUG_ERROR("smbus_xfer not support addr_bus_width = %d\n", i2c_dev->addr_bus_width);
+            return -EINVAL;
+        }
     }
     return 0;
 }

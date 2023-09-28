@@ -3,6 +3,7 @@
 import click
 
 from eepromutil.fru import ipmifru
+from eepromutil.cust_fru import CustFru
 from eepromutil.fantlv import fan_tlv
 import eepromutil.onietlv as ot
 from platform_config import PLATFORM_E2_CONF
@@ -238,6 +239,15 @@ def fru_eeprom_show(eeprom, e2_decode=None):
         print(str(e))
 
 
+def custfru_eeprom_show(eeprom, e2_decode=None):
+    try:
+        custfru = CustFru()
+        custfru.decode(eeprom)
+        print(custfru)
+    except Exception as e:
+        print(str(e))
+
+
 def eeprom_parase(eeprom_conf):
     name = eeprom_conf.get("name")
     e2_type = eeprom_conf.get("e2_type")
@@ -256,6 +266,8 @@ def eeprom_parase(eeprom_conf):
         fru_eeprom_show(binval, e2_decode)
     elif e2_type == "fantlv":
         fantlv_eeprom_show(binval, e2_decode)
+    elif e2_type == "custfru":
+        custfru_eeprom_show(binval, e2_decode)
     else:
         print("Unknow eeprom type: %s" % e2_type)
     return
@@ -363,45 +375,40 @@ def decode_eeprom_info(e2_type, e2_path, e2_size):
 def main():
     '''platform eeprom display script'''
 
+
 # fan eeprom info display
-
-
 @main.command()
 @click.argument('fan_index', required=True)
 def fan(fan_index):
     '''fan_index(1, 2, 3...)/all'''
     get_fans_eeprom_info(fan_index)
 
+
 # psu eeprom info display
-
-
 @main.command()
 @click.argument('psu_index', required=True)
 def psu(psu_index):
     '''psu_index(1, 2, 3...)/all'''
     get_psus_eeprom_info(psu_index)
 
+
 # slot eeprom info display
-
-
 @main.command()
 @click.argument('slot_index', required=True)
 def slot(slot_index):
     '''slot_index(1, 2, 3...)/all'''
     get_slots_eeprom_info(slot_index)
 
+
 # syseeprom info display
-
-
 @main.command()
 @click.argument('syseeprom_index', required=True)
 def syseeprom(syseeprom_index):
     '''syseeprom_index(1, 2, 3...)/all'''
     get_syseeprom_info(syseeprom_index)
 
+
 # fru eeprom info decode
-
-
 @main.command()
 @click.argument('e2_path', required=True)
 @click.argument('e2_size', required=False, default="256")
@@ -409,9 +416,8 @@ def fru(e2_path, e2_size):
     '''e2_path'''
     decode_eeprom_info("fru", e2_path, e2_size)
 
+
 # fantlv eeprom info decode
-
-
 @main.command()
 @click.argument('e2_path', required=True)
 @click.argument('e2_size', required=False, default="256")
@@ -419,9 +425,8 @@ def fantlv(e2_path, e2_size):
     '''e2_path'''
     decode_eeprom_info("fantlv", e2_path, e2_size)
 
+
 # onie_tlv eeprom info decode
-
-
 @main.command()
 @click.argument('e2_path', required=True)
 @click.argument('e2_size', required=False, default="256")

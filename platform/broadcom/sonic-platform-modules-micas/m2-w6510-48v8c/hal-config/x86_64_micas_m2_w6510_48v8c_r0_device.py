@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 psu_fan_airflow = {
-    "intake": ['CSU550AP-3-500', 'DPS-550AB-39 A', 'GW-CRPS550N2C', 'CSU550AP-3-300', 'DPS-550AB-39 B', 'CSU550AP-3'],
+    "intake": ['CSU550AP-3-500', 'DPS-550AB-39 A', 'GW-CRPS550N2C', 'CSU550AP-3-300', 'DPS-550AB-39 B', 'CSU550AP-3', 'U1D-D10800-DRB'],
     "exhaust": ['CSU550AP-3-501', 'DPS-550AB-40 A', 'GW-CRPS550N2RC']
 }
 
@@ -12,7 +12,8 @@ fanairflow = {
 
 psu_display_name = {
     "PA550II-F": ['CSU550AP-3-500', 'DPS-550AB-39 A', 'GW-CRPS550N2C', 'CSU550AP-3-300', 'DPS-550AB-39 B', 'CSU550AP-3'],
-    "PA550II-R": ['CSU550AP-3-501', 'DPS-550AB-40 A', 'GW-CRPS550N2RC']
+    "PA550II-R": ['CSU550AP-3-501', 'DPS-550AB-40 A', 'GW-CRPS550N2RC'],
+    "PD800I-F": ['U1D-D10800-DRB']
 }
 
 psutypedecode = {
@@ -66,6 +67,33 @@ class threshold:
     FRONT_FAN_SPEED_MAX = 24000
     REAR_FAN_SPEED_MAX = 22500
     FAN_SPEED_MIN = 5000
+    
+
+    ASPOWER_DC_PSU_TEMP_MIN = -10 * 1000
+    ASPOWER_DC_PSU_TEMP_MAX = 55 * 1000
+
+    ASPOWER_DC_PSU_FAN_SPEED_MIN = 800
+    ASPOWER_DC_PSU_FAN_SPEED_MAX = 24000
+
+    ASPOWER_DC_PSU_OUTPUT_VOLTAGE_MIN = 11.4 * 1000
+    ASPOWER_DC_PSU_OUTPUT_VOLTAGE_MAX = 12.6 * 1000
+
+    ASPOWER_DC_PSU_DC_INPUT_VOLTAGE_MIN = 36 * 1000
+    ASPOWER_DC_PSU_DC_INPUT_VOLTAGE_MAX = 72 * 1000
+
+    ASPOWER_DC_ERR_VALUE = -9999999
+
+    ASPOWER_DC_PSU_OUTPUT_POWER_MIN = 5 * 1000 * 1000
+    ASPOWER_DC_PSU_OUTPUT_POWER_MAX = 800 * 1000 * 1000
+
+    ASPOWER_DC_PSU_INPUT_POWER_MIN = 5 * 1000 * 1000
+    ASPOWER_DC_PSU_INPUT_POWER_MAX = 880 * 1000 * 1000
+
+    ASPOWER_DC_PSU_OUTPUT_CURRENT_MIN = 0.5 * 1000
+    ASPOWER_DC_PSU_OUTPUT_CURRENT_MAX = 66 * 1000
+
+    ASPOWER_DC_PSU_INPUT_CURRENT_MIN = 1 * 1000
+    ASPOWER_DC_PSU_INPUT_CURRENT_MAX = 28 * 1000
 
 
 class Description:
@@ -88,21 +116,34 @@ devices = {
             "pmbusloc": {"bus": 24, "addr": 0x58, "way": "i2c"},
             "present": {"loc": "/sys/wb_plat/psu/psu1/present", "way": "sysfs", "mask": 0x01, "okval": 1},
             "name": "PSU1",
+            "get_threshold_by_model": 1,
             "psu_display_name": psu_display_name,
             "airflow": psu_fan_airflow,
             "TempStatus": {"bus": 24, "addr": 0x58, "offset": 0x79, "way": "i2cword", "mask": 0x0004},
             "Temperature": {
                 "value": {"loc": "/sys/bus/i2c/devices/i2c-24/24-0058/hwmon/hwmon*/temp1_input", "way": "sysfs"},
-                "Min": threshold.PSU_TEMP_MIN,
-                "Max": threshold.PSU_TEMP_MAX,
+                "Min": {
+                    "U1D-D10800-DRB": threshold.ASPOWER_DC_PSU_TEMP_MIN,
+                    "other": threshold.PSU_TEMP_MIN,
+                },
+                "Max": {
+                    "U1D-D10800-DRB": threshold.ASPOWER_DC_PSU_TEMP_MAX,
+                    "other": threshold.PSU_TEMP_MAX,
+                },
                 "Unit": Unit.Temperature,
                 "format": "float(float(%s)/1000)"
             },
             "FanStatus": {"bus": 24, "addr": 0x58, "offset": 0x79, "way": "i2cword", "mask": 0x0400},
             "FanSpeed": {
                 "value": {"loc": "/sys/bus/i2c/devices/i2c-24/24-0058/hwmon/hwmon*/fan1_input", "way": "sysfs"},
-                "Min": threshold.PSU_FAN_SPEED_MIN,
-                "Max": threshold.PSU_FAN_SPEED_MAX,
+                "Min": {
+                    "U1D-D10800-DRB": threshold.ASPOWER_DC_PSU_FAN_SPEED_MIN,
+                    "other": threshold.PSU_FAN_SPEED_MIN,
+                },
+                "Max": {
+                    "U1D-D10800-DRB": threshold.ASPOWER_DC_PSU_FAN_SPEED_MAX,
+                    "other": threshold.PSU_FAN_SPEED_MAX,
+                },
                 "Unit": Unit.Speed
             },
             "psu_fan_tolerance": 40,
@@ -119,52 +160,94 @@ devices = {
                 },
                 'DC': {
                     "value": {"loc": "/sys/bus/i2c/devices/i2c-24/24-0058/hwmon/hwmon*/in1_input", "way": "sysfs"},
-                    "Min": threshold.PSU_DC_INPUT_VOLTAGE_MIN,
-                    "Max": threshold.PSU_DC_INPUT_VOLTAGE_MAX,
+                    "Min": {
+                        "U1D-D10800-DRB": threshold.ASPOWER_DC_PSU_DC_INPUT_VOLTAGE_MIN,
+                        "other": threshold.PSU_DC_INPUT_VOLTAGE_MIN,
+                    },
+                    "Max": {
+                        "U1D-D10800-DRB": threshold.ASPOWER_DC_PSU_DC_INPUT_VOLTAGE_MAX,
+                        "other": threshold.PSU_DC_INPUT_VOLTAGE_MAX,
+                    },
                     "Unit": Unit.Voltage,
                     "format": "float(float(%s)/1000)"
                 },
                 'other': {
                     "value": {"loc": "/sys/bus/i2c/devices/i2c-24/24-0058/hwmon/hwmon*/in1_input", "way": "sysfs"},
-                    "Min": threshold.ERR_VALUE,
-                    "Max": threshold.ERR_VALUE,
+                    "Min": {
+                        "U1D-D10800-DRB": threshold.ASPOWER_DC_PSU_DC_INPUT_VOLTAGE_MIN,
+                        "other": threshold.ERR_VALUE,
+                    },
+                    "Max": {
+                        "U1D-D10800-DRB": threshold.ASPOWER_DC_PSU_DC_INPUT_VOLTAGE_MAX,
+                        "other": threshold.ERR_VALUE,
+                    },
                     "Unit": Unit.Voltage,
                     "format": "float(float(%s)/1000)"
                 }
             },
             "InputsCurrent": {
                 "value": {"loc": "/sys/bus/i2c/devices/i2c-24/24-0058/hwmon/hwmon*/curr1_input", "way": "sysfs"},
-                "Min": threshold.PSU_INPUT_CURRENT_MIN,
-                "Max": threshold.PSU_INPUT_CURRENT_MAX,
+                "Min": {
+                    "U1D-D10800-DRB": threshold.ASPOWER_DC_PSU_INPUT_CURRENT_MIN,
+                    "other": threshold.PSU_INPUT_CURRENT_MIN,
+                },
+                "Max": {
+                    "U1D-D10800-DRB": threshold.ASPOWER_DC_PSU_INPUT_CURRENT_MAX,
+                    "other": threshold.PSU_INPUT_CURRENT_MAX,
+                },
                 "Unit": Unit.Current,
                 "format": "float(float(%s)/1000)"
             },
             "InputsPower": {
                 "value": {"loc": "/sys/bus/i2c/devices/i2c-24/24-0058/hwmon/hwmon*/power1_input", "way": "sysfs"},
-                "Min": threshold.PSU_INPUT_POWER_MIN,
-                "Max": threshold.PSU_INPUT_POWER_MAX,
+                "Min": {
+                    "U1D-D10800-DRB": threshold.ASPOWER_DC_PSU_INPUT_POWER_MIN,
+                    "other": threshold.PSU_INPUT_POWER_MIN,
+                },
+                "Max": {
+                    "U1D-D10800-DRB": threshold.ASPOWER_DC_PSU_INPUT_POWER_MAX,
+                    "other": threshold.PSU_INPUT_POWER_MAX,
+                },
                 "Unit": Unit.Power,
                 "format": "float(float(%s)/1000000)"
             },
             "OutputsStatus": {"bus": 24, "addr": 0x58, "offset": 0x79, "way": "i2cword", "mask": 0x8800},
             "OutputsVoltage": {
                 "value": {"loc": "/sys/bus/i2c/devices/i2c-24/24-0058/hwmon/hwmon*/in2_input", "way": "sysfs"},
-                "Min": threshold.PSU_OUTPUT_VOLTAGE_MIN,
-                "Max": threshold.PSU_OUTPUT_VOLTAGE_MAX,
+                "Min": {
+                    "U1D-D10800-DRB": threshold.ASPOWER_DC_PSU_OUTPUT_VOLTAGE_MIN,
+                    "other": threshold.PSU_OUTPUT_VOLTAGE_MIN,
+                },
+                "Max": {
+                    "U1D-D10800-DRB": threshold.ASPOWER_DC_PSU_OUTPUT_VOLTAGE_MAX,
+                    "other": threshold.PSU_OUTPUT_VOLTAGE_MAX,
+                },
                 "Unit": Unit.Voltage,
                 "format": "float(float(%s)/1000)"
             },
             "OutputsCurrent": {
                 "value": {"loc": "/sys/bus/i2c/devices/i2c-24/24-0058/hwmon/hwmon*/curr2_input", "way": "sysfs"},
-                "Min": threshold.PSU_OUTPUT_CURRENT_MIN,
-                "Max": threshold.PSU_OUTPUT_CURRENT_MAX,
+                "Min": {
+                    "U1D-D10800-DRB": threshold.ASPOWER_DC_PSU_OUTPUT_CURRENT_MIN,
+                    "other": threshold.PSU_OUTPUT_CURRENT_MIN,
+                },
+                "Max": {
+                    "U1D-D10800-DRB": threshold.ASPOWER_DC_PSU_OUTPUT_CURRENT_MAX,
+                    "other": threshold.PSU_OUTPUT_CURRENT_MAX,
+                },
                 "Unit": Unit.Current,
                 "format": "float(float(%s)/1000)"
             },
             "OutputsPower": {
                 "value": {"loc": "/sys/bus/i2c/devices/i2c-24/24-0058/hwmon/hwmon*/power2_input", "way": "sysfs"},
-                "Min": threshold.PSU_OUTPUT_POWER_MIN,
-                "Max": threshold.PSU_OUTPUT_POWER_MAX,
+                "Min": {
+                    "U1D-D10800-DRB": threshold.ASPOWER_DC_PSU_OUTPUT_POWER_MIN,
+                    "other": threshold.PSU_OUTPUT_POWER_MIN,
+                },
+                "Max": {
+                    "U1D-D10800-DRB": threshold.ASPOWER_DC_PSU_OUTPUT_POWER_MAX,
+                    "other": threshold.PSU_OUTPUT_POWER_MAX,
+                },
                 "Unit": Unit.Power,
                 "format": "float(float(%s)/1000000)"
             },
@@ -174,21 +257,34 @@ devices = {
             "pmbusloc": {"bus": 25, "addr": 0x58, "way": "i2c"},
             "present": {"loc": "/sys/wb_plat/psu/psu2/present", "way": "sysfs", "mask": 0x01, "okval": 1},
             "name": "PSU2",
+            "get_threshold_by_model": 1,
             "psu_display_name": psu_display_name,
             "airflow": psu_fan_airflow,
             "TempStatus": {"bus": 25, "addr": 0x58, "offset": 0x79, "way": "i2cword", "mask": 0x0004},
             "Temperature": {
                 "value": {"loc": "/sys/bus/i2c/devices/i2c-25/25-0058/hwmon/hwmon*/temp1_input", "way": "sysfs"},
-                "Min": threshold.PSU_TEMP_MIN,
-                "Max": threshold.PSU_TEMP_MAX,
+                "Min": {
+                    "U1D-D10800-DRB": threshold.ASPOWER_DC_PSU_TEMP_MIN,
+                    "other": threshold.PSU_TEMP_MIN,
+                },
+                "Max": {
+                    "U1D-D10800-DRB": threshold.ASPOWER_DC_PSU_TEMP_MAX,
+                    "other": threshold.PSU_TEMP_MAX,
+                },
                 "Unit": Unit.Temperature,
                 "format": "float(float(%s)/1000)"
             },
             "FanStatus": {"bus": 25, "addr": 0x58, "offset": 0x79, "way": "i2cword", "mask": 0x0400},
             "FanSpeed": {
                 "value": {"loc": "/sys/bus/i2c/devices/i2c-25/25-0058/hwmon/hwmon*/fan1_input", "way": "sysfs"},
-                "Min": threshold.PSU_FAN_SPEED_MIN,
-                "Max": threshold.PSU_FAN_SPEED_MAX,
+                "Min": {
+                    "U1D-D10800-DRB": threshold.ASPOWER_DC_PSU_FAN_SPEED_MIN,
+                    "other": threshold.PSU_FAN_SPEED_MIN,
+                },
+                "Max": {
+                    "U1D-D10800-DRB": threshold.ASPOWER_DC_PSU_FAN_SPEED_MAX,
+                    "other": threshold.PSU_FAN_SPEED_MAX,
+                },
                 "Unit": Unit.Speed
             },
             "psu_fan_tolerance": 40,
@@ -205,52 +301,94 @@ devices = {
                 },
                 'DC': {
                     "value": {"loc": "/sys/bus/i2c/devices/i2c-25/25-0058/hwmon/hwmon*/in1_input", "way": "sysfs"},
-                    "Min": threshold.PSU_DC_INPUT_VOLTAGE_MIN,
-                    "Max": threshold.PSU_DC_INPUT_VOLTAGE_MAX,
+                    "Min": {
+                        "U1D-D10800-DRB": threshold.ASPOWER_DC_PSU_DC_INPUT_VOLTAGE_MIN,
+                        "other": threshold.PSU_DC_INPUT_VOLTAGE_MIN,
+                    },
+                    "Max": {
+                        "U1D-D10800-DRB": threshold.ASPOWER_DC_PSU_DC_INPUT_VOLTAGE_MAX,
+                        "other": threshold.PSU_DC_INPUT_VOLTAGE_MAX,
+                    },
                     "Unit": Unit.Voltage,
                     "format": "float(float(%s)/1000)"
                 },
                 'other': {
                     "value": {"loc": "/sys/bus/i2c/devices/i2c-25/25-0058/hwmon/hwmon*/in1_input", "way": "sysfs"},
-                    "Min": threshold.ERR_VALUE,
-                    "Max": threshold.ERR_VALUE,
+                    "Min": {
+                        "U1D-D10800-DRB": threshold.ASPOWER_DC_PSU_DC_INPUT_VOLTAGE_MIN,
+                        "other": threshold.ERR_VALUE,
+                    },
+                    "Max": {
+                        "U1D-D10800-DRB": threshold.ASPOWER_DC_PSU_DC_INPUT_VOLTAGE_MAX,
+                        "other": threshold.ERR_VALUE,
+                    },
                     "Unit": Unit.Voltage,
                     "format": "float(float(%s)/1000)"
                 }
             },
             "InputsCurrent": {
                 "value": {"loc": "/sys/bus/i2c/devices/i2c-25/25-0058/hwmon/hwmon*/curr1_input", "way": "sysfs"},
-                "Min": threshold.PSU_INPUT_CURRENT_MIN,
-                "Max": threshold.PSU_INPUT_CURRENT_MAX,
+                "Min": {
+                    "U1D-D10800-DRB": threshold.ASPOWER_DC_PSU_INPUT_CURRENT_MIN,
+                    "other": threshold.PSU_INPUT_CURRENT_MIN,
+                },
+                "Max": {
+                    "U1D-D10800-DRB": threshold.ASPOWER_DC_PSU_INPUT_CURRENT_MAX,
+                    "other": threshold.PSU_INPUT_CURRENT_MAX,
+                },
                 "Unit": Unit.Current,
                 "format": "float(float(%s)/1000)"
             },
             "InputsPower": {
                 "value": {"loc": "/sys/bus/i2c/devices/i2c-25/25-0058/hwmon/hwmon*/power1_input", "way": "sysfs"},
-                "Min": threshold.PSU_INPUT_POWER_MIN,
-                "Max": threshold.PSU_INPUT_POWER_MAX,
+                "Min": {
+                    "U1D-D10800-DRB": threshold.ASPOWER_DC_PSU_INPUT_POWER_MIN,
+                    "other": threshold.PSU_INPUT_POWER_MIN,
+                },
+                "Max": {
+                    "U1D-D10800-DRB": threshold.ASPOWER_DC_PSU_INPUT_POWER_MAX,
+                    "other": threshold.PSU_INPUT_POWER_MAX,
+                },
                 "Unit": Unit.Power,
                 "format": "float(float(%s)/1000000)"
             },
             "OutputsStatus": {"bus": 25, "addr": 0x58, "offset": 0x79, "way": "i2cword", "mask": 0x8800},
             "OutputsVoltage": {
                 "value": {"loc": "/sys/bus/i2c/devices/i2c-25/25-0058/hwmon/hwmon*/in2_input", "way": "sysfs"},
-                "Min": threshold.PSU_OUTPUT_VOLTAGE_MIN,
-                "Max": threshold.PSU_OUTPUT_VOLTAGE_MAX,
+                "Min": {
+                    "U1D-D10800-DRB": threshold.ASPOWER_DC_PSU_OUTPUT_VOLTAGE_MIN,
+                    "other": threshold.PSU_OUTPUT_VOLTAGE_MIN,
+                },
+                "Max": {
+                    "U1D-D10800-DRB": threshold.ASPOWER_DC_PSU_OUTPUT_VOLTAGE_MAX,
+                    "other": threshold.PSU_OUTPUT_VOLTAGE_MAX,
+                },
                 "Unit": Unit.Voltage,
                 "format": "float(float(%s)/1000)"
             },
             "OutputsCurrent": {
                 "value": {"loc": "/sys/bus/i2c/devices/i2c-25/25-0058/hwmon/hwmon*/curr2_input", "way": "sysfs"},
-                "Min": threshold.PSU_OUTPUT_CURRENT_MIN,
-                "Max": threshold.PSU_OUTPUT_CURRENT_MAX,
+                "Min": {
+                    "U1D-D10800-DRB": threshold.ASPOWER_DC_PSU_OUTPUT_CURRENT_MIN,
+                    "other": threshold.PSU_OUTPUT_CURRENT_MIN,
+                },
+                "Max": {
+                    "U1D-D10800-DRB": threshold.ASPOWER_DC_PSU_OUTPUT_CURRENT_MAX,
+                    "other": threshold.PSU_OUTPUT_CURRENT_MAX,
+                },
                 "Unit": Unit.Current,
                 "format": "float(float(%s)/1000)"
             },
             "OutputsPower": {
                 "value": {"loc": "/sys/bus/i2c/devices/i2c-25/25-0058/hwmon/hwmon*/power2_input", "way": "sysfs"},
-                "Min": threshold.PSU_OUTPUT_POWER_MIN,
-                "Max": threshold.PSU_OUTPUT_POWER_MAX,
+                "Min": {
+                    "U1D-D10800-DRB": threshold.ASPOWER_DC_PSU_OUTPUT_POWER_MIN,
+                    "other": threshold.PSU_OUTPUT_POWER_MIN,
+                },
+                "Max": {
+                    "U1D-D10800-DRB": threshold.ASPOWER_DC_PSU_OUTPUT_POWER_MAX,
+                    "other": threshold.PSU_OUTPUT_POWER_MAX,
+                },
                 "Unit": Unit.Power,
                 "format": "float(float(%s)/1000000)"
             },
@@ -1218,7 +1356,7 @@ devices = {
                 },
             },
         },
-        "txdisable_val_is_on": 0,
+        "txdisable_val_is_on": 1,
         "reset_cpld": {
             "dev_id": {
                 4: {

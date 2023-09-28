@@ -75,6 +75,12 @@ typedef int (* dfd_utest_proc_fun)(int argc, char* argv[]);
     DFD_UTEST_ITEM(DFD_UTEST_ITEM_I2C_GEN_WR, i2c_gen_wr, "i2c_gen_wr [i2c_bus] [slave_addr] [addr_bitwidth] [offset] [data_bitwidth] [data0]... [dataN]", "i2c_gen_wr [i2c_bus] [slave_addr] [addr_bitwidth] [offset] [data_bitwidth] [data0]... [dataN]")    \
     DFD_UTEST_ITEM(DFD_UTEST_ITEM_MSR_RD, msr_rd, "msr_rd [cpu_index] [offset] [width]", "msr_rd [cpu_index] [offset] [width]")    \
     DFD_UTEST_ITEM(DFD_UTEST_ITEM_SYSFS_DATA_WR, sysfs_data_wr, "sysfs_data_wr [sysfs_loc] [offset] [data0] ... [dataN]", "sysfs_data_wr [sysfs_loc] [offset] [data0] ... [dataN]]")   \
+    DFD_UTEST_ITEM(DFD_UTEST_ITEM_PHYDEV_LIST, phydev_list, "phydev_list", "phydev_list")   \
+    DFD_UTEST_ITEM(DFD_UTEST_ITEM_PHYDEV_RD, phydev_rd, "phydev_rd phy_index reg_addr", "phydev_rd phy_index reg_addr")   \
+    DFD_UTEST_ITEM(DFD_UTEST_ITEM_PHYDEV_WR, phydev_wr, "phydev_wr phy_index reg_addr reg_data", "phydev_wr phy_index reg_addr reg_data")   \
+    DFD_UTEST_ITEM(DFD_UTEST_ITEM_MDIODEV_LIST, mdiodev_list, "mdiodev_list", "mdiodev_list")   \
+    DFD_UTEST_ITEM(DFD_UTEST_ITEM_MDIODEV_RD, mdiodev_rd, "mdiodev_rd mdio_index phyaddr reg_addr", "mdiodev_rd mdio_index phyaddr reg_addr")   \
+    DFD_UTEST_ITEM(DFD_UTEST_ITEM_MDIODEV_WR, mdiodev_wr, "mdiodev_wr mdio_index phyaddr reg_addr reg_data", "mdiodev_wr mdio_index phyaddr reg_addr reg_data")   \
 
 #ifdef DFD_UTEST_ITEM
 #undef DFD_UTEST_ITEM

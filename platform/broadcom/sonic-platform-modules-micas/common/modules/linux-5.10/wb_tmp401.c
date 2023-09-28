@@ -42,6 +42,7 @@
 #include <linux/err.h>
 #include <linux/mutex.h>
 #include <linux/sysfs.h>
+#include <linux/delay.h>
 
 /* Addresses to scan */
 /* static const unsigned short normal_i2c[] = { 0x48, 0x49, 0x4a, 0x4c, 0x4d,
@@ -53,14 +54,15 @@ enum chips { tmp401, tmp411, tmp431, tmp432, tmp435, tmp461 };
  * The TMP401 registers, note some registers have different addresses for
  * reading and writing
  */
-#define TMP401_STATUS				0x02
-#define TMP401_CONFIG_READ			0x03
-#define TMP401_CONFIG_WRITE			0x09
-#define TMP401_CONVERSION_RATE_READ		0x04
-#define TMP401_CONVERSION_RATE_WRITE		0x0A
-#define TMP401_TEMP_CRIT_HYST			0x21
-#define TMP401_MANUFACTURER_ID_REG		0xFE
-#define TMP401_DEVICE_ID_REG			0xFF
+#define TMP401_STATUS                   (0x02)
+#define TMP401_CONFIG_READ              (0x03)
+#define TMP401_CONFIG_WRITE             (0x09)
+#define TMP401_CONVERSION_RATE_READ     (0x04)
+#define TMP401_CONVERSION_RATE_WRITE    (0x0A)
+#define TMP401_TEMP_CRIT_HYST           (0x21)
+#define TMP401_MANUFACTURER_ID_REG      (0xFE)
+#define TMP401_DEVICE_ID_REG            (0xFF)
+#define TMP401_DEVICE_CAR_REG           (0x22) /* Consecutive Alert Register */
 
 static const u8 TMP401_TEMP_MSB_READ[7][2] = {
 	{ 0x00, 0x01 },	/* temp */
@@ -117,30 +119,52 @@ static const u8 TMP432_STATUS_REG[] = {
 	0x1b, 0x36, 0x35, 0x37 };
 
 /* Flags */
-#define TMP401_CONFIG_RANGE			BIT(2)
-#define TMP401_CONFIG_SHUTDOWN			BIT(6)
-#define TMP401_STATUS_LOCAL_CRIT		BIT(0)
-#define TMP401_STATUS_REMOTE_CRIT		BIT(1)
-#define TMP401_STATUS_REMOTE_OPEN		BIT(2)
-#define TMP401_STATUS_REMOTE_LOW		BIT(3)
-#define TMP401_STATUS_REMOTE_HIGH		BIT(4)
-#define TMP401_STATUS_LOCAL_LOW			BIT(5)
-#define TMP401_STATUS_LOCAL_HIGH		BIT(6)
+#define TMP401_CONFIG_RANGE             BIT(2)
+#define TMP401_CONFIG_SHUTDOWN          BIT(6)
+#define TMP401_STATUS_LOCAL_CRIT        BIT(0)
+#define TMP401_STATUS_REMOTE_CRIT       BIT(1)
+#define TMP401_STATUS_REMOTE_OPEN       BIT(2)
+#define TMP401_STATUS_REMOTE_LOW        BIT(3)
+#define TMP401_STATUS_REMOTE_HIGH       BIT(4)
+#define TMP401_STATUS_LOCAL_LOW         BIT(5)
+#define TMP401_STATUS_LOCAL_HIGH        BIT(6)
 
 /* On TMP432, each status has its own register */
-#define TMP432_STATUS_LOCAL			BIT(0)
-#define TMP432_STATUS_REMOTE1			BIT(1)
-#define TMP432_STATUS_REMOTE2			BIT(2)
+#define TMP432_STATUS_LOCAL             BIT(0)
+#define TMP432_STATUS_REMOTE1           BIT(1)
+#define TMP432_STATUS_REMOTE2           BIT(2)
 
 /* Manufacturer / Device ID's */
-#define TMP401_MANUFACTURER_ID			0x55
-#define TMP401_DEVICE_ID			0x11
-#define TMP411A_DEVICE_ID			0x12
-#define TMP411B_DEVICE_ID			0x13
-#define TMP411C_DEVICE_ID			0x10
-#define TMP431_DEVICE_ID			0x31
-#define TMP432_DEVICE_ID			0x32
-#define TMP435_DEVICE_ID			0x35
+#define TMP401_MANUFACTURER_ID      (0x55)
+#define TMP401_DEVICE_ID            (0x11)
+#define TMP411A_DEVICE_ID           (0x12)
+#define TMP411B_DEVICE_ID           (0x13)
+#define TMP411C_DEVICE_ID           (0x10)
+#define TMP431_DEVICE_ID            (0x31)
+#define TMP432_DEVICE_ID            (0x32)
+#define TMP435_DEVICE_ID            (0x35)
+
+/* Timeout function bit */
+#define TIMEOUT_STATE_BIT                  (7)   /* 1:enable 0:disable */
+#define TIMEOUT_STATE_EN                   (1)   /* 1:enable  */
+#define TIMEOUT_STATE_IEN                  (0)   /* 0:disable */
+#define TIMEOUT_STATE_NA                   "NA"
+#define TMP401_TEMP_INVALID_RETRY_TIMES    (3)
+
+/* input temp threshold check */
+typedef struct tmp401_temp_threshold_s {
+    int chip_type;
+    int temp_max;
+    int temp_min;
+} tmp401_temp_threshold_t;
+
+static tmp401_temp_threshold_t g_tmp401_input_threshold_info[] = {
+    {
+        .chip_type = tmp411,
+        .temp_max = 127000,
+        .temp_min = -55000,
+    },
+};
 
 /*
  * Driver data (common to all clients)
@@ -309,18 +333,61 @@ abort:
 	return ret;
 }
 
-static ssize_t show_temp(struct device *dev,
-			 struct device_attribute *devattr, char *buf)
+static int tmp401_input_temp_check(struct tmp401_data *data, int input_val)
 {
-	int nr = to_sensor_dev_attr_2(devattr)->nr;
-	int index = to_sensor_dev_attr_2(devattr)->index;
-	struct tmp401_data *data = tmp401_update_device(dev);
+    int i, size;
 
-	if (IS_ERR(data))
-		return PTR_ERR(data);
+    size = ARRAY_SIZE(g_tmp401_input_threshold_info);
 
-	return sprintf(buf, "%d\n",
-		tmp401_register_to_temp(data->temp[nr][index], data->config));
+    for (i = 0; i < size; i++) {
+        if (g_tmp401_input_threshold_info[i].chip_type == data->kind) {
+            if ((input_val > g_tmp401_input_threshold_info[i].temp_max)
+                    || (input_val < g_tmp401_input_threshold_info[i].temp_min)) {
+                dev_dbg(&data->client->dev, "input temp: %d not in range[%d, %d]\n",
+                    input_val, g_tmp401_input_threshold_info[i].temp_min,
+                    g_tmp401_input_threshold_info[i].temp_max);
+                return -EINVAL;
+            }
+            dev_dbg(&data->client->dev, "input temp: %d in range[%d, %d]", input_val,
+                g_tmp401_input_threshold_info[i].temp_min, g_tmp401_input_threshold_info[i].temp_max);
+            return 0;
+        }
+    }
+    return 0;
+}
+
+static ssize_t show_temp(struct device *dev, struct device_attribute *devattr, char *buf)
+{
+    int nr, index, i, value, ret;
+    struct tmp401_data *data;
+    struct i2c_client *client;
+
+    data = dev_get_drvdata(dev);
+    client = data->client;
+
+    nr = to_sensor_dev_attr_2(devattr)->nr;
+    index = to_sensor_dev_attr_2(devattr)->index;
+
+    for (i = 0; i < TMP401_TEMP_INVALID_RETRY_TIMES; i++) {
+        data = tmp401_update_device(dev);
+        if (IS_ERR(data)) {
+            return PTR_ERR(data);
+        }
+        value = tmp401_register_to_temp(data->temp[nr][index], data->config);
+        if (nr != 0) {  /* not input temp, return value */
+            return sprintf(buf, "%d\n", value);
+        }
+        /* nr == 0 is temp input, do input_temp_check */
+        ret = tmp401_input_temp_check(data, value);
+        if (ret == 0) { /* input temp check ok */
+           return sprintf(buf, "%d\n", value);
+        }
+        if ((i + 1) < TMP401_TEMP_INVALID_RETRY_TIMES) {
+            msleep(data->update_interval);
+        }
+    }
+    dev_info(&client->dev, "temp%d_input value: %d invalid\n", index + 1, value);
+    return -EINVAL;
 }
 
 static ssize_t show_temp_crit_hyst(struct device *dev,
@@ -488,6 +555,140 @@ static ssize_t set_update_interval(struct device *dev,
 	return count;
 }
 
+/*
+ * Enable/disable the state of the timeout function
+ * @dev: device info
+ * @state: 1:enable 0:disable
+ */
+static int timeout_cfg(struct device *dev, int state)
+{
+    int rv, chip_type;
+    u8 reg_value;
+    struct tmp401_data *data;
+    struct i2c_client *client;
+
+    data = dev_get_drvdata(dev);
+    client = data->client;
+
+    /* get chip type */
+    chip_type = data->kind;
+    dev_dbg(&client->dev, "set timeout. chip:%d, state:%d\n", chip_type, state);
+
+    /* chip type check */
+    if(chip_type != tmp401 && chip_type != tmp411)  {
+        dev_info(&client->dev,
+            "Chip type: %d, not support timeout config.!\n", chip_type);
+        return -EPERM;
+    }
+
+    /* parameter check */
+    if(state != TIMEOUT_STATE_EN && state != TIMEOUT_STATE_IEN) {
+        dev_err(&client->dev,
+            "Parameter check error. state: %d not supported.!\n", state);
+        return -EINVAL;
+    }
+
+    mutex_lock(&data->update_lock);
+    /* read the Consecutive alert register */
+    reg_value = i2c_smbus_read_byte_data(client, TMP401_DEVICE_CAR_REG);
+    if (reg_value < 0) {
+        dev_err(&client->dev, "Failed to read. reg:0x%0x, value:%d\n", TMP401_DEVICE_CAR_REG, reg_value);
+        mutex_unlock(&data->update_lock);
+        return -EIO;
+    }
+    dev_dbg(&client->dev, "get register value. reg:0x%0x, value:0x%0x\n", TMP401_DEVICE_CAR_REG, reg_value);
+
+    /* same value case, do not write */
+    if((u8)state == (reg_value >> TIMEOUT_STATE_BIT)) {
+        mutex_unlock(&data->update_lock);
+        dev_info(&client->dev, "timeout config has been set and the current state is %d.\n", state);
+        return 0;
+    }
+
+    /* calculate the register value */
+    reg_value = (reg_value & ~(1 << TIMEOUT_STATE_BIT)) | (state << TIMEOUT_STATE_BIT);
+
+    /* set the Consecutive alert register */
+    dev_dbg(&client->dev, "set register value. reg:0x%0x, value:0x%0x\n", TMP401_DEVICE_CAR_REG, reg_value);
+    rv = i2c_smbus_write_byte_data(client, TMP401_DEVICE_CAR_REG, reg_value);
+    if (rv < 0) {
+        dev_err(&client->dev,
+            "set the register Error. reg:0x%0x, value:%d\n", TMP401_DEVICE_CAR_REG, reg_value);
+        mutex_unlock(&data->update_lock);
+        return -EIO;
+    }
+    mutex_unlock(&data->update_lock);
+
+    dev_info(&client->dev, "set bus timeout success. reg:0x%0x, value:0x%0x\n", TMP401_DEVICE_CAR_REG, reg_value);
+
+    return 0;
+}
+
+static ssize_t set_timeout_en(struct device *dev,
+                   struct device_attribute *attr,
+                   const char *buf, size_t count)
+{
+    int val, err;
+    struct i2c_client *client;
+    struct tmp401_data *data;
+
+    data = dev_get_drvdata(dev);
+    client = data->client;
+
+    err = kstrtoint(buf, 0, &val);
+    if (err) {
+        dev_err(&client->dev,
+            "kstrtoint error: %d.\n", err);
+        return err;
+    }
+
+    err = timeout_cfg(dev, val);
+    if(err < 0) {
+        dev_err(&client->dev,
+            "set bus timeout error: %d. value:%d!\n", err, val);
+        return err;
+    }
+
+    return count;
+}
+
+static ssize_t show_timeout_en(struct device *dev,
+    struct device_attribute *devattr, char *buf)
+{
+    int chip_type;
+    u8 reg_value;
+    struct tmp401_data *data;
+    struct i2c_client *client;
+
+    data = dev_get_drvdata(dev);
+    client = data->client;
+
+    /* get chip type */
+    chip_type = data->kind;
+    dev_dbg(&client->dev, "get timeout. chip:%d\n", chip_type);
+
+    /* chip type check */
+    if(chip_type != tmp401 && chip_type != tmp411)  {
+        dev_info(&client->dev,
+            "Chip type: %d, not support timeout config.!\n", chip_type);
+        /* not support, return NA */
+        return (ssize_t)snprintf(buf, PAGE_SIZE, "%s\n", TIMEOUT_STATE_NA);
+    }
+
+    /* read the Consecutive alert register */
+    reg_value = i2c_smbus_read_byte_data(client, TMP401_DEVICE_CAR_REG);
+    if (reg_value < 0) {
+        dev_err(&client->dev, "Failed to read. reg:0x%0x, value:%d\n", TMP401_DEVICE_CAR_REG, reg_value);
+        return -EIO;
+    }
+    dev_dbg(&client->dev, "get register value. reg:0x%0x, value:0x%0x\n", TMP401_DEVICE_CAR_REG, reg_value);
+
+    /* decode the register value */
+    reg_value = reg_value >> TIMEOUT_STATE_BIT;
+
+    return (ssize_t)snprintf(buf, PAGE_SIZE, "%d\n", reg_value);
+}
+
 static SENSOR_DEVICE_ATTR_2(temp1_input, S_IRUGO, show_temp, NULL, 0, 0);
 static SENSOR_DEVICE_ATTR_2(temp1_min, S_IWUSR | S_IRUGO, show_temp,
 			    store_temp, 1, 0);
@@ -523,6 +724,7 @@ static SENSOR_DEVICE_ATTR_2(temp2_crit_alarm, S_IRUGO, show_status, NULL,
 
 static DEVICE_ATTR(update_interval, S_IRUGO | S_IWUSR, show_update_interval,
 		   set_update_interval);
+static DEVICE_ATTR(timeout_en, S_IRUGO | S_IWUSR, show_timeout_en, set_timeout_en);
 
 static struct attribute *tmp401_attributes[] = {
 	&sensor_dev_attr_temp1_input.dev_attr.attr,
@@ -545,6 +747,7 @@ static struct attribute *tmp401_attributes[] = {
 	&sensor_dev_attr_temp2_crit_alarm.dev_attr.attr,
 
 	&dev_attr_update_interval.attr,
+	&dev_attr_timeout_en.attr,
 
 	NULL
 };
@@ -774,6 +977,15 @@ static int tmp401_probe(struct i2c_client *client,
 							   data, data->groups);
 	if (IS_ERR(hwmon_dev))
 		return PTR_ERR(hwmon_dev);
+
+    /* disable the timeout function */
+    status = timeout_cfg(hwmon_dev, TIMEOUT_STATE_IEN);
+    if((status < 0) && (status != -EPERM)) {
+        dev_err(dev,
+            "set bus timeout error when probing: %d.!\n", status);
+        /* here, no need call devm_hwmon_device_unregister, device managed. */
+        return status;
+    }
 
 	dev_info(dev, "Detected TI %s chip\n", names[data->kind]);
 

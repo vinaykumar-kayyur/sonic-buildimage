@@ -462,6 +462,103 @@ int dfd_info_set_int(int key, int val)
     return DFD_RV_OK;
 }
 
+static int dfd_info_reg2data_linear(int key, int data, int *temp_value)
+{
+    s16 exponent;
+    s32 mantissa;
+    int val;
+    info_ctrl_t *info_ctrl;
+
+    info_ctrl = dfd_ko_cfg_get_item(key);
+    if (info_ctrl == NULL) {
+        DBG_DEBUG(DBG_WARN, "get info ctrl fail, key=%d\n", key);
+        return -DFD_RV_DEV_NOTSUPPORT;
+    }
+
+    switch (info_ctrl->int_extra1) {
+    case LINEAR11:
+        exponent = ((s16)data) >> 11;
+        mantissa = ((s16)((data & 0x7ff) << 5)) >> 5;
+        val = mantissa;
+        val = val * 1000L;
+        break;
+    case LINEAR16:
+        break;
+    default:
+        break;
+    }
+
+    if (DFD_CFG_ITEM_ID(key) == DFD_CFG_ITEM_HWMON_POWER) {
+        val = val * 1000L;
+    }
+
+    if (exponent >= 0) {
+        val <<= exponent;
+    } else {
+        val >>= -exponent;
+    }
+    *temp_value = val;
+
+    return DFD_RV_OK;
+}
+
+static int dfd_info_reg2data_tmp464(int data, int *temp_value)
+{
+    s16 tmp_val;
+    int val;
+
+    DBG_DEBUG(DBG_VERBOSE, "reg2data_tmp464, data=%d\n", data);
+
+    if (data >= 0) {
+        val = data*625/80;
+    } else {
+        tmp_val = ~(data & 0x7ff) + 1;
+        val = tmp_val*625/80;
+    }
+    *temp_value = val;
+
+    return DFD_RV_OK;
+}
+
+static int dfd_info_reg2data_mac_th5(int data, int *temp_value)
+{
+    int tmp_val;
+    int val;
+
+    DBG_DEBUG(DBG_VERBOSE, "reg2data_mac_th5, data=%d\n", data);
+
+    tmp_val = data >> 4;
+    val = 476359 - (((tmp_val - 2) * 317704) / 2000);
+
+    DBG_DEBUG(DBG_VERBOSE, "reg2data_mac_th5, val=%d\n", val);
+    *temp_value = val;
+
+    return DFD_RV_OK;
+}
+
+static int dfd_info_reg2data_mac_td3(int data, int *temp_value)
+{
+    int val;
+
+    if (data == 0) {
+        DBG_DEBUG(DBG_ERROR,"invalid cpld data=%d\n", data);
+        *temp_value = -READ_TEMP_FAIL;
+        return DFD_RV_OK;
+    }
+
+    DBG_DEBUG(DBG_VERBOSE, "reg2data_mac_td3, data=%d\n", data);
+    val = 434100 - (12500000 / (data * 100 - 1) *535);
+    if ((val / 1000 < -70) || (val / 1000 > 200)) {
+        DBG_DEBUG(DBG_ERROR,"out of range cpld val=%d\n", val);
+        *temp_value = -READ_TEMP_FAIL;
+        return DFD_RV_OK;
+    }
+    DBG_DEBUG(DBG_VERBOSE, "reg2data_mac_td3, val=%d\n", val);
+    *temp_value = val;
+
+    return DFD_RV_OK;
+}
+
 static int dfd_info_get_cpld_voltage(int key, uint32_t *value)
 {
     int rv;
@@ -507,6 +604,51 @@ static int dfd_info_get_cpld_voltage(int key, uint32_t *value)
     return DFD_RV_OK;
 }
 
+static int dfd_info_get_cpld_temperature(int key, int *value)
+{
+    int rv;
+    int temp_reg;
+    int temp_value;
+    info_ctrl_t *info_ctrl;
+
+    info_ctrl = dfd_ko_cfg_get_item(key);
+    if (info_ctrl == NULL) {
+        DBG_DEBUG(DBG_WARN, "get info ctrl fail, key=0x%08x\n", key);
+        return -DFD_RV_DEV_NOTSUPPORT;
+    }
+
+    rv = dfd_info_get_int(key, &temp_reg, NULL);
+    if(rv < 0) {
+        DBG_DEBUG(DBG_ERROR, "get cpld current temperature error, addr:0x%x, rv =%d\n", info_ctrl->addr, rv);
+        return rv;
+    }
+    DBG_DEBUG(DBG_VERBOSE, "get cpld temp:0x%08x, extra1 0x%x\n", temp_reg, info_ctrl->int_extra1);
+
+    switch (info_ctrl->int_extra1) {
+    case LINEAR11:
+        rv = dfd_info_reg2data_linear(key, temp_reg, &temp_value);
+        break;
+    case TMP464:
+        rv = dfd_info_reg2data_tmp464(temp_reg, &temp_value);
+        break;
+    case MAC_TH5:
+        rv = dfd_info_reg2data_mac_th5(temp_reg, &temp_value);
+        break;
+    case MAC_TD3:
+        rv = dfd_info_reg2data_mac_td3(temp_reg, &temp_value);
+        break;
+    default:
+        temp_value = temp_reg;
+        rv = DFD_RV_OK;
+        break;
+    }
+    
+    DBG_DEBUG(DBG_VERBOSE, "calc temp:%d \n", temp_value);
+    *value = temp_value;
+
+    return rv;
+}
+
 static int dfd_info_get_sensor_value(int key, uint8_t *buf, int buf_len, info_hwmon_buf_f pfun)
 {
     int rv, buf_real_len;
@@ -545,6 +687,23 @@ static int dfd_info_get_sensor_value(int key, uint8_t *buf, int buf_len, info_hw
         } else {
             memcpy(buf, buf_tmp, buf_real_len);
         }
+        return buf_real_len;
+    } else if ( DFD_CFG_ITEM_ID(key) == DFD_CFG_ITEM_HWMON_TEMP && info_ctrl->src == INFO_SRC_CPLD ) {
+        rv = dfd_info_get_cpld_temperature(key, &value);
+        if(rv < 0) {
+            DBG_DEBUG(DBG_ERROR, "get cpld temperature failed.key=0x%08x, rv:%d\n", key, rv);
+            return -DFD_RV_DEV_NOTSUPPORT;
+        }
+        DBG_DEBUG(DBG_VERBOSE, "get cpld temperature ok, value:%d buf_len %d\n", value, buf_len);
+        mem_clear(buf_tmp, sizeof(buf_tmp));
+        snprintf(buf_tmp, sizeof(buf_tmp), "%d\n", value);
+        buf_real_len = strlen(buf_tmp);
+        if(buf_len <= buf_real_len) {
+            DBG_DEBUG(DBG_ERROR, "length not enough.buf_len:%d,need length:%d\n", buf_len, buf_real_len);
+            return -DFD_RV_DEV_FAIL;
+        }
+        DBG_DEBUG(DBG_VERBOSE, "buf_real_len %d\n", buf_real_len);
+        memcpy(buf, buf_tmp, buf_real_len);
         return buf_real_len;
     }
 

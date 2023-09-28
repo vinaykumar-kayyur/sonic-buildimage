@@ -215,6 +215,9 @@ class devicebase(object):
             if ret:
                 return False, ("cmd write exec %s failed, log: %s" % (cmd, log))
             return True, log
+        if way == 'config':
+            value = config.get("value")
+            return True, value
         raise Exception("cannot found way deal")
 
     def devfile_read(self, loc, offset, length):

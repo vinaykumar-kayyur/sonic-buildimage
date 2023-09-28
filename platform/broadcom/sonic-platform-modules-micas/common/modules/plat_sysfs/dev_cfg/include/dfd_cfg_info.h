@@ -90,6 +90,14 @@ typedef enum info_ctrl_mem_s {
     INFO_CTRL_MEM_END
 } info_ctrl_mem_t;
 
+typedef enum sensor_format_mem_s {
+    LINEAR11 = 1,
+    LINEAR16,
+    TMP464,
+    MAC_TH5,
+    MAC_TD3
+} sensor_format_mem_t;
+
 typedef int (*info_hwmon_buf_f)(uint8_t *buf, int buf_len, uint8_t *buf_new, int *buf_len_new, info_ctrl_t *info_ctrl);
 
 extern char *g_info_ctrl_mem_str[INFO_CTRL_MEM_END];

@@ -13,6 +13,9 @@
 #include <asm/delay.h>
 #include <linux/miscdevice.h>
 
+#define I2C_GPIO_DEV_NAME_LEN (16)
+static char i2c_gpio_dev_name[I2C_GPIO_DEV_NAME_LEN] = {0};
+
 static int gpio_sda = 17;
 module_param(gpio_sda, int, S_IRUGO | S_IWUSR);
 
@@ -21,6 +24,13 @@ module_param(gpio_scl, int, S_IRUGO | S_IWUSR);
 
 static int gpio_udelay = 2;
 module_param(gpio_udelay, int, S_IRUGO | S_IWUSR);
+
+static int bus_num = -1;
+module_param(bus_num, int, S_IRUGO | S_IWUSR);
+
+static char *gpio_chip_name = NULL;
+module_param(gpio_chip_name, charp, 0644);
+MODULE_PARM_DESC(str_var, "A string variable for GPIO controller");
 
 static int g_wb_i2c_gpio_device_debug = 0;
 static int g_wb_i2c_gpio_device_error = 0;
@@ -44,7 +54,7 @@ module_param(g_wb_i2c_gpio_device_error, int, S_IRUGO | S_IWUSR);
 static struct i2c_gpio_platform_data i2c_pdata = {
     .udelay = 2,
     .scl_is_output_only = 0,
-    .sda_is_open_drain  = 0,
+    .sda_is_open_drain = 0,
     .scl_is_open_drain = 0,
 };
 
@@ -70,10 +80,11 @@ static struct platform_device wb_i2c_gpio_device = {
 static struct gpiod_lookup_table wb_i2c_gpio_table = {
     .dev_id = "wb-i2c-gpio",
     .table = {
-        GPIO_LOOKUP_IDX("wb_gpio_d1500", 17, NULL, 0,
+        GPIO_LOOKUP("wb_gpio_d1500", 17, "sda",
                 GPIO_ACTIVE_HIGH | GPIO_OPEN_DRAIN),
-        GPIO_LOOKUP_IDX("wb_gpio_d1500", 1, NULL, 1,
+        GPIO_LOOKUP("wb_gpio_d1500", 1, "scl",
                 GPIO_ACTIVE_HIGH | GPIO_OPEN_DRAIN),
+        { },
     },
 };
 
@@ -85,6 +96,18 @@ static int __init wb_i2c_gpio_device_init(void)
     wb_i2c_gpio_table.table[0].chip_hwnum = gpio_sda;
     wb_i2c_gpio_table.table[1].chip_hwnum = gpio_scl;
     i2c_pdata.udelay = gpio_udelay;
+
+    if (gpio_chip_name) {
+        wb_i2c_gpio_table.table[0].key = gpio_chip_name;
+        wb_i2c_gpio_table.table[1].key = gpio_chip_name;
+    }
+
+    if (bus_num >= 0) {
+        wb_i2c_gpio_device.id = bus_num;
+        snprintf(i2c_gpio_dev_name, I2C_GPIO_DEV_NAME_LEN, "wb-i2c-gpio.%d", bus_num);
+        wb_i2c_gpio_table.dev_id = i2c_gpio_dev_name;
+    }
+
     gpiod_add_lookup_table(&wb_i2c_gpio_table);
 
     err = platform_device_register(&wb_i2c_gpio_device);

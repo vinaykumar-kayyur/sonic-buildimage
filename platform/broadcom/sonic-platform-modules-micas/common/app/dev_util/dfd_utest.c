@@ -31,6 +31,27 @@
 #define WIDTH_4Byte                       (4)
 #define DFD_UTEST_MAX_BIT_WIDTH           (4)
 
+struct phydev_user_info {
+    int phy_index;
+    uint32_t regnum;
+    uint32_t regval;
+};
+
+#define CMD_PHY_LIST                        _IOR('P', 0, struct phydev_user_info)
+#define CMD_PHY_READ                        _IOR('P', 1, struct phydev_user_info)
+#define CMD_PHY_WRITE                       _IOR('P', 2, struct phydev_user_info)
+
+struct mdio_dev_user_info {
+    int mdio_index;
+    int phyaddr;
+    uint32_t regnum;
+    uint32_t regval;
+};
+
+#define CMD_MDIO_LIST                        _IOR('M', 0, struct mdio_dev_user_info)
+#define CMD_MDIO_READ                        _IOR('M', 1, struct mdio_dev_user_info)
+#define CMD_MDIO_WRITE                       _IOR('M', 2, struct mdio_dev_user_info)
+
 #ifdef DFD_UTEST_ITEM
 #undef DFD_UTEST_ITEM
 #endif
@@ -1756,6 +1777,304 @@ fail:
     close(fd);
 exit:
     return DFD_RV_MODE_NOTSUPPORT;
+}
+
+static void phy_help(char *name)
+{
+    fprintf(stderr,
+            "Usage: %s  phy_index(dec) regnum(hex) [regval(hex)]                    \n"
+            "  phy_index     phydev index                                           \n"
+            "  regnum        phydev register address                                \n"
+            "  regval        phydev register value                                  \n",
+            name);
+    return;
+}
+
+static void mdio_help(char *name)
+{
+    fprintf(stderr,
+            "Usage: %s  mdio_index(dec) phyaddr(hex) regnum(hex) [regval(hex)]      \n"
+            "  mdio_index    mdiodev index                                          \n"
+            "  phyaddr       phydev address                                         \n"
+            "  regnum        phydev register address                                \n"
+            "  regval        phydev register value                                  \n",
+            name);
+    return;
+}
+
+static int phydev_arg_parse(int argc, char* argv[], int *phy_index, uint32_t *regnum, uint32_t *regval,
+               int num_arg)
+{
+
+    unsigned long index, regaddr, value;
+    char *end;
+
+    if (argc != num_arg) {
+        return -EINVAL;
+    }
+
+    index = strtoul(argv[2], &end, 0);
+    if (*end) {
+        fprintf(stderr, "Error: index invalid!\n");
+        return -EINVAL;
+    }
+
+    regaddr = strtoul(argv[3], &end, 0);
+    if (*end || regaddr > 0xffff) {
+        fprintf(stderr, "Error: regaddr invalid!\n");
+        return -EINVAL;
+    }
+
+    if (argc > 4) {
+        value = strtoul(argv[4], &end, 0);
+        if (*end || value > 0xffff) {
+            fprintf(stderr, "Error: reg data invalid!\n");
+            return -EINVAL;
+        }
+
+        *regval = (uint32_t)value;
+    }
+
+    *phy_index     =  (uint32_t)index;
+    *regnum        =  (uint32_t)regaddr;
+
+    return 0;
+}
+
+static int mdiodev_arg_parse(int argc, char* argv[], int *mdio_index, int *phyaddr, uint32_t *regnum,
+               uint32_t *regval, int num_arg)
+{
+
+    unsigned long index, addr, regaddr, value;
+    char *end;
+
+    if (argc != num_arg) {
+        return -EINVAL;
+    }
+
+    index = strtoul(argv[2], &end, 0);
+    if (*end) {
+        fprintf(stderr, "Error: index invalid!\n");
+        return -EINVAL;
+    }
+
+    addr = strtoul(argv[3], &end, 0);
+    if (*end || addr > 0x1f) {
+        fprintf(stderr, "Error: phyaddr invalid!\n");
+        return -EINVAL;
+    }
+
+    regaddr = strtoul(argv[4], &end, 0);
+    if (*end || regaddr > 0xffff) {
+        fprintf(stderr, "Error: regaddr invalid!\n");
+        return -EINVAL;
+    }
+
+    if (argc > 5) {
+        value = strtoul(argv[5], &end, 0);
+        if (*end || value > 0xffff) {
+            fprintf(stderr, "Error: reg data invalid!\n");
+            return -EINVAL;
+        }
+
+        *regval = (uint32_t)value;
+    }
+
+    *mdio_index    =  (uint32_t)index;
+    *phyaddr       =  (int)addr;
+    *regnum        =  (uint32_t)regaddr;
+
+    return 0;
+}
+
+int dfd_utest_phydev_list(int argc, char* argv[])
+{
+    int fd;
+
+    if (argc != 2) {
+        printf("Input invalid.\n");
+        dfd_utest_printf_single_help(DFD_UTEST_ITEM_PHYDEV_LIST);
+        return DFD_RV_MODE_NOTSUPPORT;
+    }
+
+    argv = argv;
+    fd = open("/dev/dram_test", O_RDWR, S_IRWXU | S_IRWXG | S_IRWXO);
+    if (fd < 0) {
+        fprintf(stderr, "Error: Could not open file "
+                "/dev/dram: %s\n", strerror(errno));
+        return -1;
+    }
+
+    (void)ioctl(fd, CMD_PHY_LIST, NULL);
+
+    close(fd);
+
+    return 0;
+}
+
+int dfd_utest_phydev_rd(int argc, char* argv[])
+{
+    struct phydev_user_info phy_info;
+    int fd;
+    long int ret;
+
+    ret = phydev_arg_parse(argc, argv, &phy_info.phy_index, &phy_info.regnum, &phy_info.regval, 4);
+    if (ret < 0) {
+        phy_help("phydev_rd");
+        return -1;
+    }
+
+    fd = open("/dev/dram_test", O_RDWR, S_IRWXU | S_IRWXG | S_IRWXO);
+    if (fd < 0) {
+        fprintf(stderr, "Error: Could not open file "
+                "/dev/dram: %s\n", strerror(errno));
+        return -1;
+    }
+
+    ret = ioctl(fd, CMD_PHY_READ, &phy_info);
+    if (ret < 0) {
+        fprintf(stderr, "Error: phy read error : %s\n", strerror(errno));
+        close(fd);
+        return  -1;
+    }
+
+    close(fd);
+
+    printf("Read success --- phydev%d regnum: 0x%x, value: 0x%x\n",phy_info.phy_index,
+        phy_info.regnum, phy_info.regval);
+
+    return 0;
+}
+
+int dfd_utest_phydev_wr(int argc, char* argv[])
+{
+    struct phydev_user_info  phy_info;
+    int fd;
+    long int ret;
+
+    ret = phydev_arg_parse(argc, argv, &phy_info.phy_index, &phy_info.regnum, &phy_info.regval, 5);
+    if (ret < 0) {
+        phy_help("phydev_wr");
+        return -1;
+    }
+
+    fd = open("/dev/dram_test", O_RDWR, S_IRWXU | S_IRWXG | S_IRWXO);
+    if (fd < 0) {
+        fprintf(stderr, "Error: Could not open file "
+                "/dev/dram: %s\n", strerror(errno));
+        return -1;
+    }
+
+    ret = ioctl(fd, CMD_PHY_WRITE, &phy_info);
+    if (ret < 0) {
+        fprintf(stderr, "Error: phy write error : %s\n", strerror(errno));
+        close(fd);
+        return  -1;
+    }
+
+    close(fd);
+
+    printf("write success --- phydev%d regnum: 0x%x, value: 0x%x\n",phy_info.phy_index,
+        phy_info.regnum, phy_info.regval);
+
+    return 0;
+}
+
+int dfd_utest_mdiodev_list(int argc, char* argv[])
+{
+    int fd;
+
+    if (argc != 2) {
+        printf("Input invalid.\n");
+        dfd_utest_printf_single_help(DFD_UTEST_ITEM_MDIODEV_LIST);
+        return DFD_RV_MODE_NOTSUPPORT;
+    }
+
+    argv = argv;
+    fd = open("/dev/dram_test", O_RDWR, S_IRWXU | S_IRWXG | S_IRWXO);
+    if (fd < 0) {
+        fprintf(stderr, "Error: Could not open file "
+                "/dev/dram: %s\n", strerror(errno));
+        return -1;
+    }
+
+    (void)ioctl(fd, CMD_MDIO_LIST, NULL);
+
+    close(fd);
+
+    return 0;
+}
+
+int dfd_utest_mdiodev_rd(int argc, char* argv[])
+{
+    struct mdio_dev_user_info mdio_info;
+    int fd;
+    long int ret;
+
+    ret = mdiodev_arg_parse(argc, argv, &mdio_info.mdio_index, &mdio_info.phyaddr,
+              &mdio_info.regnum, &mdio_info.regval, 5);
+    if (ret < 0) {
+        mdio_help("mdiodev_rd");
+        return -1;
+    }
+
+    fd = open("/dev/dram_test", O_RDWR, S_IRWXU | S_IRWXG | S_IRWXO);
+    if (fd < 0) {
+        fprintf(stderr, "Error: Could not open file "
+                "/dev/dram: %s\n", strerror(errno));
+        return -1;
+    }
+
+    ret = ioctl(fd, CMD_MDIO_READ, &mdio_info);
+    if (ret < 0) {
+        fprintf(stderr, "Error: mdio read error : %s\n", strerror(errno));
+        close(fd);
+        return  -1;
+    }
+
+    close(fd);
+
+    printf("Read success\n mdio_index  phyaddr     regnum      value\n");
+    printf("  %-10d  %#-10x  %#-10x  %#-10x\n", mdio_info.mdio_index, mdio_info.phyaddr,
+        mdio_info.regnum, mdio_info.regval);
+
+    return 0;
+}
+
+int dfd_utest_mdiodev_wr(int argc, char* argv[])
+{
+    struct mdio_dev_user_info mdio_info;
+    int fd;
+    long int ret;
+
+    ret = mdiodev_arg_parse(argc, argv, &mdio_info.mdio_index, &mdio_info.phyaddr,
+              &mdio_info.regnum, &mdio_info.regval, 6);
+    if (ret < 0) {
+        mdio_help("mdiodev_wr");
+        return -1;
+    }
+
+    fd = open("/dev/dram_test", O_RDWR, S_IRWXU | S_IRWXG | S_IRWXO);
+    if (fd < 0) {
+        fprintf(stderr, "Error: Could not open file "
+                "/dev/dram: %s\n", strerror(errno));
+        return -1;
+    }
+
+    ret = ioctl(fd, CMD_MDIO_WRITE, &mdio_info);
+    if (ret < 0) {
+        fprintf(stderr, "Error: mdio write error : %s\n", strerror(errno));
+        close(fd);
+        return  -1;
+    }
+
+    close(fd);
+
+    printf("write success\n mdio_index  phyaddr     regnum      value\n");
+    printf("  %-10d  %#-10x  %#-10x  %#-10x\n", mdio_info.mdio_index, mdio_info.phyaddr,
+        mdio_info.regnum, mdio_info.regval);
+
+    return 0;
 }
 
 dfd_utest_proc_fun dfd_utest_get_proc_func(char *type_str)

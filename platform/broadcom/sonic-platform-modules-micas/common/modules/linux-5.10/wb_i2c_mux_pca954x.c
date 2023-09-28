@@ -833,7 +833,7 @@ static int pca954x_deselect_mux(struct i2c_mux_core *muxc, u32 chan)
     } else {
         PCA954X_DEBUG("dismatch 9641, do nothing.\n");
     }
-    
+
     return ret;
 
 }

@@ -127,13 +127,13 @@ class Psu(PsuBase):
             e.g. 12.1
         """
         self.psu_status_dict_update()
-        if self.psu_status_dict["InputStatus"] is False:
+        if self.psu_status_dict["OutputStatus"] is False:
             value = 0
         else:
             self.psu_power_dict_update()
             value = self.psu_power_dict["Outputs"]["Voltage"]["Value"]
             if value is None:
-                value = 0
+                return None
         return round(float(value), 1)
 
     def get_current(self):
@@ -145,13 +145,13 @@ class Psu(PsuBase):
             e.g. 15.4
         """
         self.psu_status_dict_update()
-        if self.psu_status_dict["InputStatus"] is False:
+        if self.psu_status_dict["OutputStatus"] is False:
             value = 0
         else:
             self.psu_power_dict_update()
             value = self.psu_power_dict["Outputs"]["Current"]["Value"]
             if value is None:
-                value = 0
+                return None
         return round(float(value), 1)
 
     def get_power(self):
@@ -163,13 +163,13 @@ class Psu(PsuBase):
             e.g. 302.6
         """
         self.psu_status_dict_update()
-        if self.psu_status_dict["InputStatus"] is False:
+        if self.psu_status_dict["OutputStatus"] is False:
             value = 0
         else:
             self.psu_power_dict_update()
             value = self.psu_power_dict["Outputs"]["Power"]["Value"]
             if value is None:
-                value = 0
+                return None
         return round(float(value), 1)
 
     def get_powergood_status(self):
@@ -219,7 +219,7 @@ class Psu(PsuBase):
         self.psu_status_dict_update()
         value = self.psu_status_dict["Temperature"]["Value"]
         if value is None:
-            value = 0
+            return None
         return round(float(value), 1)
 
     def get_temperature_high_threshold(self):
@@ -233,7 +233,7 @@ class Psu(PsuBase):
         self.psu_status_dict_update()
         value = self.psu_status_dict["Temperature"]["Max"]
         if value is None:
-            value = 0
+            return None
         return round(float(value), 1)
 
     def get_voltage_high_threshold(self):
@@ -247,7 +247,7 @@ class Psu(PsuBase):
         self.psu_power_dict_update()
         value = self.psu_power_dict["Outputs"]["Voltage"]["HighAlarm"]
         if value is None:
-            value = 0
+            return None
         return round(float(value), 1)
 
     def get_voltage_low_threshold(self):
@@ -261,7 +261,7 @@ class Psu(PsuBase):
         self.psu_power_dict_update()
         value = self.psu_power_dict["Outputs"]["Voltage"]["LowAlarm"]
         if value is None:
-            value = 0
+            return None
         return round(float(value), 1)
 
     def get_input_voltage(self):
@@ -278,7 +278,7 @@ class Psu(PsuBase):
             self.psu_power_dict_update()
             value = self.psu_power_dict["Inputs"]["Voltage"]["Value"]
             if value is None:
-                value = 0
+                return None
         return round(float(value), 1)
 
     def get_input_current(self):
@@ -295,7 +295,7 @@ class Psu(PsuBase):
             self.psu_power_dict_update()
             value = self.psu_power_dict["Inputs"]["Current"]["Value"]
             if value is None:
-                value = 0
+                return None
         return round(float(value), 1)
 
     def get_input_power(self):
@@ -312,7 +312,7 @@ class Psu(PsuBase):
             self.psu_power_dict_update()
             value = self.psu_power_dict["Inputs"]["Power"]["Value"]
             if value is None:
-                value = 0
+                return None
         return round(float(value), 1)
 
     def get_revision(self):

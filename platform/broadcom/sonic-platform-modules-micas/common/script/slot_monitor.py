@@ -5,11 +5,14 @@ import syslog
 import traceback
 import operator
 import click
-from platform_config import SLOT_MONITOR_PARAM, MONITOR_DEV_STATUS_DECODE
+import os
+from platform_config import SLOT_MONITOR_PARAM
 from platform_util import io_rd, io_wr, wbi2cget, wbi2cset
 
 
 SLOTMONITORDEBUG = 0
+SLOTMONITOR_DEBUG_FILE = "/etc/.slotmonitor_debug_flag"
+
 
 CONTEXT_SETTINGS = {"help_option_names": ['-h', '--help']}
 
@@ -27,6 +30,14 @@ class AliasedGroup(click.Group):
             return click.Group.get_command(self, ctx, matches[0])
         ctx.fail('Too many matches: %s' % ', '.join(sorted(matches)))
         return None
+
+
+def debug_init():
+    global SLOTMONITORDEBUG
+    if os.path.exists(SLOTMONITOR_DEBUG_FILE):
+        SLOTMONITORDEBUG = 1
+    else:
+        SLOTMONITORDEBUG = 0
 
 
 def slotwarninglog(s):
@@ -66,9 +77,8 @@ class SlotMonitor():
 
     def checkslot(self, ret):
         slots_conf = SLOT_MONITOR_PARAM.get('slots', None)
-        slotpresent = MONITOR_DEV_STATUS_DECODE.get('slotpresent', None)
 
-        if slots_conf is None or slotpresent is None:
+        if slots_conf is None:
             return False
         for item_slot in slots_conf:
             totalerr = 0
@@ -102,8 +112,7 @@ class SlotMonitor():
                     ret.append(ret_t)
                     continue
                 val_t = (int(retval, 16) & (1 << presentbit)) >> presentbit
-                slotdebuglog("%s present:%s" % (item_slot.get('name'), slotpresent.get(val_t)))
-                if val_t != slotpresent.get('okval'):
+                if val_t != presentattr.get('okval'):
                     ret_t["status"] = "ABSENT"
                 else:
                     ret_t["status"] = "PRESENT"
@@ -112,6 +121,7 @@ class SlotMonitor():
                 totalerr -= 1
                 sloterror("checkslot error")
                 sloterror(str(e))
+            slotdebuglog("%s status: %s" % (ret_t["id"], ret_t["status"]))
             ret.append(ret_t)
         return True
 
@@ -210,6 +220,7 @@ def run(interval, slotMonitor):
     # slotMonitor.devattrinit()
     while True:
         try:
+            debug_init()
             doSlotMonitor(slotMonitor)
         except Exception as e:
             traceback.print_exc()

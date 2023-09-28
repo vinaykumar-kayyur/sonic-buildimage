@@ -84,9 +84,6 @@ class Sfp(SfpOptoeBase):
     def read_eeprom(self, offset, num_bytes):
         return self._sfp_api.read_eeprom(offset, num_bytes)
 
-    def write_eeprom(self, offset, num_bytes, write_buffer):
-        return self._sfp_api.write_eeprom(offset, num_bytes, write_buffer)
-
     def get_presence(self):
         return self._sfp_api.get_presence()
 
@@ -94,12 +91,30 @@ class Sfp(SfpOptoeBase):
         # temporary solution for a sonic202111 bug
         transceiver_info = super().get_transceiver_info()
         try:
-            if transceiver_info is not None and transceiver_info["vendor_rev"] is not None:
+            if transceiver_info == None:
+                return None
+            if transceiver_info['cable_type'] == None:
+                transceiver_info['cable_type'] = 'N/A'
+            if transceiver_info["vendor_rev"] is not None:
                 transceiver_info["hardware_rev"] = transceiver_info["vendor_rev"]
         except BaseException:
             print(traceback.format_exc())
             return None
         return transceiver_info
+
+    def get_reset_status(self):
+        if self.get_presence() is False:
+            return False
+
+        if self.sfp_type is None:
+            self.refresh_xcvr_api()
+
+        if self.sfp_type == 'SFP':
+            self._sfplog(LOG_ERROR_LEVEL, 'SFP does not support reset')
+            return False
+
+        ret = self._sfp_api.get_reset_status()
+        return ret
 
     def reset(self):
         if self.get_presence() is False:
@@ -127,13 +142,11 @@ class Sfp(SfpOptoeBase):
         if self.sfp_type is None:
             self.refresh_xcvr_api()
 
-        if self.sfp_type == 'SFP':
+        if self.sfp_type == 'QSFP' or self.sfp_type == 'QSFP-DD':
+            return SfpOptoeBase.get_lpmode(self)
+
             self._sfplog(LOG_WARNING_LEVEL, 'SFP does not support lpmode')
             return False
-
-        # implement in future
-
-        return False
 
     def set_lpmode(self, lpmode):
         if self.get_presence() is False:
@@ -142,14 +155,60 @@ class Sfp(SfpOptoeBase):
         if self.sfp_type is None or self._xcvr_api is None:
             self.refresh_xcvr_api()
 
-        if self.sfp_type == 'QSFP-DD':
+        if self.sfp_type == 'QSFP-DD' or self.sfp_type == 'QSFP':
             return SfpOptoeBase.set_lpmode(self, lpmode)
-        if self.sfp_type == 'QSFP':
-            if lpmode:
-                return self._xcvr_api.set_power_override(True, lpmode)
-            return self._xcvr_api.set_power_override(False, lpmode)
+
         self._sfplog(LOG_WARNING_LEVEL, 'SFP does not support lpmode')
         return False
+
+    def get_tx_disable(self):
+        if self.get_presence() is False:
+            return False
+
+        if self.sfp_type is None:
+            self.refresh_xcvr_api()
+
+        if self.sfp_type == 'SFP':
+            return self._sfp_api.get_tx_disable()
+
+        return SfpOptoeBase.get_tx_disable(self)
+
+    def get_tx_disable_channel(self):
+        if self.get_presence() is False:
+            return False
+
+        if self.sfp_type is None:
+            self.refresh_xcvr_api()
+
+        if self.sfp_type == 'SFP':
+            return self._sfp_api.get_tx_disable_channel()
+
+        return SfpOptoeBase.get_tx_disable_channel(self)
+
+    def tx_disable(self, tx_disable):
+        if self.get_presence() is False:
+            return False
+
+        if self.sfp_type is None:
+            self.refresh_xcvr_api()
+
+        if self.sfp_type == 'SFP':
+            return self._sfp_api.set_tx_disable(tx_disable)
+
+        return SfpOptoeBase.tx_disable(self, tx_disable)
+
+    def tx_disable_channel(self, channel, disable):
+        if self.get_presence() is False:
+            return False
+
+        if self.sfp_type is None:
+            self.refresh_xcvr_api()
+
+        if self.sfp_type == 'SFP':
+            self._sfplog(LOG_WARNING_LEVEL, 'SFP does not support tx disable channel')
+            return False
+
+        return SfpOptoeBase.tx_disable_channel(self, channel, disable)
 
     def set_optoe_write_max(self, write_max):
         """
@@ -293,6 +352,13 @@ class SfpV1(SfpCust):
         super()._init_config(index)
         # init presence path
         sfp_config = baseutil.get_config().get("sfps", None)
+
+        eeprom_path_config = sfp_config.get("eeprom_path", None)
+        eeprom_path_key = sfp_config.get("eeprom_path_key")[self._port_id - 1]
+        self.eeprom_path = None if eeprom_path_config is None else eeprom_path_config % (
+            eeprom_path_key, eeprom_path_key)
+        self._sfplog(LOG_DEBUG_LEVEL, "Done init eeprom path: %s" % self.eeprom_path)
+
         self.presence_cpld = sfp_config.get("presence_cpld", None)
         self.presence_val_is_present = sfp_config.get("presence_val_is_present", 0)
         self._sfplog(LOG_DEBUG_LEVEL, "Done init presence path")
@@ -301,6 +367,11 @@ class SfpV1(SfpCust):
         self.reset_cpld = sfp_config.get("reset_cpld", None)
         self.reset_val_is_reset = sfp_config.get("reset_val_is_reset", 0)
         self._sfplog(LOG_DEBUG_LEVEL, "Done init cpld path")
+
+        # init tx_disable path
+        self.txdis_cpld = sfp_config.get("txdis_cpld", None)
+        self.txdisable_val_is_on = sfp_config.get("txdisable_val_is_on", 0)
+        self._sfplog(LOG_DEBUG_LEVEL, "Done init cpld tx_disable path")
 
     def get_presence(self):
         if self.presence_cpld is None:
@@ -316,6 +387,59 @@ class SfpV1(SfpCust):
         except BaseException:
             self._sfplog(LOG_ERROR_LEVEL, traceback.format_exc())
             return False
+
+    def get_reset_status(self):
+        if self.reset_cpld is None:
+            self._sfplog(LOG_ERROR_LEVEL, "reset_cpld is None!")
+            return False
+        try:
+            dev_id, offset, offset_bit = self._get_sfp_cpld_info(self.reset_cpld)
+            ret, info = platform_reg_read(0, dev_id, offset, 1)
+            if (ret is False
+                    or info is None):
+                self._sfplog(LOG_ERROR_LEVEL, "platform_reg_read error!")
+                return False
+
+            return (info[0] & (1 << offset_bit) == self.reset_val_is_reset)
+        except BaseException:
+            self._sfplog(LOG_ERROR_LEVEL, traceback.format_exc())
+            return False
+
+    def get_tx_disable(self):
+        if self.reset_cpld is None:
+            self._sfplog(LOG_ERROR_LEVEL, "txdis_cpld is None!")
+            return None
+
+        try:
+            tx_disable_list = []
+            dev_id, offset, offset_bit = self._get_sfp_cpld_info(self.txdis_cpld)
+            ret, info = platform_reg_read(0, dev_id, offset, 1)
+            if (ret is False
+                    or info is None):
+                self._sfplog(LOG_ERROR_LEVEL, "platform_reg_read error!")
+                return None
+            if self.txdisable_val_is_on == 1:
+                tx_disable_list.append(info[0] & (1 << offset_bit) != 0)
+            else:
+                tx_disable_list.append(info[0] & (1 << offset_bit) == 0)
+        except BaseException:
+            self._sfplog(LOG_ERROR_LEVEL, traceback.format_exc())
+            return None
+
+        return tx_disable_list
+
+    def get_tx_disable_channel(self):
+        tx_disable_list = []
+        tx_disable_list = self.get_tx_disable()
+        if tx_disable_list is None:
+            return 0
+
+        tx_disabled = 0
+        for i in range(len(tx_disable_list)):
+            if tx_disable_list[i]:
+                tx_disabled |= 1 << i
+
+        return tx_disabled
 
     def read_eeprom(self, offset, num_bytes):
         try:
@@ -338,26 +462,6 @@ class SfpV1(SfpCust):
             self._sfplog(LOG_ERROR_LEVEL, traceback.format_exc())
         return None
 
-    def write_eeprom(self, offset, num_bytes, write_buffer):
-        try:
-            for i in range(self.eeprom_retry_times):
-                # TODO: write_buffer is bytearray, need to convert to int array
-                val_list = []
-                if isinstance(write_buffer, list):
-                    val_list = write_buffer
-                else:
-                    val_list.append(write_buffer)
-                ret, info = platform_sfp_write(self._port_id, offset, val_list)
-                if (ret is False
-                        or info is None):
-                    time.sleep(self.eeprom_retry_break_sec)
-                    continue
-                return True
-        except BaseException:
-            self._sfplog(LOG_ERROR_LEVEL, traceback.format_exc())
-
-        return False
-
     def set_optoe_type(self, optoe_type):
         ret, info = platform_get_optoe_type(self._port_id)
         if ret is True and info != optoe_type:
@@ -374,6 +478,11 @@ class SfpV1(SfpCust):
             val = []
             dev_id, offset, offset_bit = self._get_sfp_cpld_info(self.reset_cpld)
             ret, info = platform_reg_read(0, dev_id, offset, 1)
+            if (ret is False
+                    or info is None):
+                self._sfplog(LOG_ERROR_LEVEL, "platform_reg_read error!")
+                return False
+
             if self.reset_val_is_reset == 0:
                 if reset:
                     val.append(info[0] & (~(1 << offset_bit)))
@@ -396,10 +505,45 @@ class SfpV1(SfpCust):
 
         return True
 
+    def set_tx_disable(self, tx_disable):
+        if self.txdis_cpld is None:
+            self._sfplog(LOG_ERROR_LEVEL, "txdis_cpld is None!")
+            return False
+        try:
+            val = []
+            dev_id, offset, offset_bit = self._get_sfp_cpld_info(self.txdis_cpld)
+            ret, info = platform_reg_read(0, dev_id, offset, 1)
+            if (ret is False
+                    or info is None):
+                self._sfplog(LOG_ERROR_LEVEL, "platform_reg_read error!")
+                return False
+
+            if self.txdisable_val_is_on == 0:
+                if tx_disable:
+                    val.append(info[0] & (~(1 << offset_bit)))
+                else:
+                    val.append(info[0] | (1 << offset_bit))
+            else:
+                if tx_disable:
+                    val.append(info[0] | (1 << offset_bit))
+                else:
+                    val.append(info[0] & (~(1 << offset_bit)))
+
+            ret, info = platform_reg_write(0, dev_id, offset, val)
+            if ret is False:
+                self._sfplog(LOG_ERROR_LEVEL, "platform_reg_write error!")
+                return False
+
+        except BaseException:
+            self._sfplog(LOG_ERROR_LEVEL, traceback.format_exc())
+            return False
+
+        return True
+
     def _get_sfp_cpld_info(self, cpld_config):
         dev_id = 0
         offset = 0
-
+        offset_bit = 0
         for dev_id_temp in cpld_config["dev_id"]:
             for offset_temp in cpld_config["dev_id"][dev_id_temp]["offset"]:
                 port_range_str = cpld_config["dev_id"][dev_id_temp]["offset"][offset_temp]
