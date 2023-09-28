@@ -111,6 +111,7 @@ class TestCfgGenCaseInsensitive(TestCase):
                        'dhcpv6_servers': ['fc02:2000::1', 'fc02:2000::2'],
                        'vlanid': '1000',
                        'mac': '00:aa:bb:cc:dd:ee',
+                       'Subnets': '192.168.0.0/27'
                        },
                    'Vlan2000': {
                        'alias': 'ab2',

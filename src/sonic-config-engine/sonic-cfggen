@@ -25,6 +25,7 @@ import netaddr
 import os
 import sys
 import yaml
+import ipaddress
 
 from collections import OrderedDict
 from config_samples import generate_sample_config, get_available_config
@@ -82,6 +83,28 @@ def is_ipv6(value):
         except:
             return False
     return addr.version == 6
+
+def getGatewayAddrIPv4(value):
+        subnets = value.split(';')
+        for subnet in subnets:
+                if PY3x:
+                    network_def = ipaddress.ip_network(subnet, strict=False)
+                else:
+                    network_def = ipaddress.ip_network(unicode(subnet), strict=False)
+                if is_ipv4(network_def[1]):
+                    return str(network_def[1])
+        return ""
+ 
+def getGatewayAddrIPv6(value):
+        subnets = value.split(';')
+        for subnet in subnets:
+                if PY3x:
+                    network_def = ipaddress.ip_network(subnet, strict=False)
+                else:
+                    network_def = ipaddress.ip_network(unicode(subnet), strict=False)
+                if is_ipv6(network_def[1]):
+                    return str(network_def[1])
+        return ""
 
 def prefix_attr(attr, value):
     if not value:
@@ -247,6 +270,8 @@ def _get_jinja2_env(paths):
     env.filters['unique_name'] = unique_name
     env.filters['pfx_filter'] = pfx_filter
     env.filters['ip_network'] = ip_network
+    env.filters['getGatewayAddrIPv4'] = getGatewayAddrIPv4
+    env.filters['getGatewayAddrIPv6'] = getGatewayAddrIPv6
     for attr in ['ip', 'network', 'prefixlen', 'netmask', 'broadcast']:
         env.filters[attr] = partial(prefix_attr, attr)
 

@@ -14,6 +14,7 @@ command=/usr/sbin/dhcrelay -d -m discard -a %%h:%%p %%P --name-alias-map-file /t
 {% if 'subtype' in DEVICE_METADATA['localhost'] and DEVICE_METADATA['localhost']['subtype'] == 'DualToR' %} -U Loopback0 -dt{% endif -%}
 {#- si option to use intf addr in relay #}
 {% if DEVICE_METADATA['localhost']['deployment_id'] == '8' %} -si{% endif -%}
+{% if VLAN[vlan_name]['Subnets']|length > 0 and VLAN[vlan_name]['Subnets']|getGatewayAddrIPv4|length > 0 %} -g {{ VLAN[vlan_name]['Subnets']|getGatewayAddrIPv4 }}{% endif -%}
 {#- We treat all other interfaces as upstream interfaces (-iu), as we only want to listen for replies #}
 {% for (name, prefix) in VLAN_INTERFACE|pfx_filter %}
 {% if prefix | ipv4 and name != vlan_name %} -iu {{ name }}{% endif -%}

@@ -680,6 +680,10 @@ def parse_dpg(dpg, hname):
             if vlanmac is not None and vlanmac.text is not None:
                 vlan_attributes['mac'] = vlanmac.text
 
+            vintf_node = vintf.find(str(QName(ns, "Subnets")))
+            if vintf_node is not None and vintf_node.text is not None:
+                vlan_attributes['Subnets'] = vintf_node.text
+
             sonic_vlan_name = "Vlan%s" % vlanid
             if sonic_vlan_name != vintfname:
                 vlan_attributes['alias'] = vintfname

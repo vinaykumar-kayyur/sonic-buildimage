@@ -260,11 +260,11 @@ class TestCfgGen(TestCase):
         self.assertEqual(
             utils.to_dict(output.strip()),
             utils.to_dict(
-                "{'Vlan1000': {'alias': 'ab1', 'dhcp_servers': ['192.0.0.1', '192.0.0.2'], 'vlanid': '1000'}, "
-                "'Vlan1001': {'alias': 'ab4', 'dhcp_servers': ['192.0.0.1', '192.0.0.2'], 'vlanid': '1001'},"
-                "'Vlan2001': {'alias': 'ab3', 'dhcp_servers': ['192.0.0.1', '192.0.0.2'], 'vlanid': '2001'},"
-                "'Vlan2000': {'alias': 'ab2', 'dhcp_servers': ['192.0.0.1', '192.0.0.2'], 'vlanid': '2000'},"
-                "'Vlan2020': {'alias': 'kk1', 'dhcp_servers': ['192.0.0.1', '192.0.0.2'], 'vlanid': '2020'}}"
+                "{'Vlan1000': {'alias': 'ab1', 'dhcp_servers': ['192.0.0.1', '192.0.0.2'], 'vlanid': '1000', 'Subnets': '192.168.0.0/27'}, "
+                "'Vlan1001': {'alias': 'ab4', 'dhcp_servers': ['192.0.0.1', '192.0.0.2'], 'vlanid': '1001', 'Subnets': '192.168.0.32/27'},"
+                "'Vlan2001': {'alias': 'ab3', 'dhcp_servers': ['192.0.0.1', '192.0.0.2'], 'vlanid': '2001', 'Subnets': '192.168.0.240/27'},"
+                "'Vlan2000': {'alias': 'ab2', 'dhcp_servers': ['192.0.0.1', '192.0.0.2'], 'vlanid': '2000', 'Subnets': '192.168.0.240/27'},"
+                "'Vlan2020': {'alias': 'kk1', 'dhcp_servers': ['192.0.0.1', '192.0.0.2'], 'vlanid': '2020', 'Subnets': '192.168.0.0/28'}}"
             )
         )
 
