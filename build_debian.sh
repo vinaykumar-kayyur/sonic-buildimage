@@ -734,10 +734,6 @@ SONIC_VERSION_CACHE=${SONIC_VERSION_CACHE}  \
 	DBGOPT="${DBGOPT}" \
 	scripts/collect_host_image_version_files.sh $CONFIGURED_ARCH $IMAGE_DISTRO $TARGET_PATH $FILESYSTEM_ROOT
 
-## Copy saidump.sh
-sudo cp ./files/scripts/saidump.sh $FILESYSTEM_ROOT/usr/local/bin/saidump.sh
-sudo chmod +x $FILESYSTEM_ROOT/usr/local/bin/saidump.sh
-
 # Remove GCC
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y remove gcc
 
