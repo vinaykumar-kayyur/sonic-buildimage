@@ -29,7 +29,7 @@
                         "name": "PortChannel0001",
                         "fast_rate": "false",
                         "fallback" : "false",
-                        "mode" :  "trunk"
+                        "mode" :  "routed"
                     }
                 ]
             }
@@ -60,7 +60,7 @@
                         "min_links": "1024",
                         "mtu": "9100",
                         "name": "PortChannel0001",
-                        "mode": "trunk"
+                        "mode": "routed"
                     }
                 ]
             }
@@ -352,7 +352,7 @@
                         "min_links": "1",
                         "mtu": "9100",
                         "name": "PortChannel0001",
-                        "mode":"trunk"
+                        "mode":"routed"
                     }
                 ]
             },
@@ -398,7 +398,7 @@
                         "min_links": "1",
                         "mtu": "9100",
                         "name": "PortChannel0001",
-                        "mode": "trunk"
+                        "mode": "routed"
                     }
                 ]
             },
@@ -443,7 +443,7 @@
                         "min_links": "1",
                         "mtu": "9100",
                         "name": "PortChannel0001",
-                        "mode": "trunk"
+                        "mode": "routed"
                     }
                 ]
             },
@@ -482,7 +482,7 @@
                         "min_links": "1",
                         "mtu": "9100",
                         "name": "PortChannel0001",
-                        "mode": "trunk"
+                        "mode": "routed"
                     }
                 ]
             },
@@ -521,7 +521,7 @@
                         "min_links": "1",
                         "mtu": "9100",
                         "name": "PortChannel0001",
-                        "mode": "trunk"
+                        "mode": "routed"
                     }
                 ]
             },

@@ -89,7 +89,7 @@
                 "tpid": "0x8100",
                 "mtu": "9100",
                 "lacp_key": "auto",
-                "mode":"routed"
+                "mode":"trunk"
             },
             "PortChannel0004": {
                 "admin_status": "up",
@@ -105,7 +105,7 @@
                 "tpid": "0x9200",
                 "mtu": "9100",
                 "lacp_key": "auto",
-                "mode":"routed"
+                "mode":"trunk"
             },
             "PortChannel42": {
                 "admin_status": "up",
