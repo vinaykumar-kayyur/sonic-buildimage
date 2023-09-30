@@ -335,7 +335,7 @@ class TestCfgGen(TestCase):
         output = self.run_script(argument)
         self.assertEqual(
             utils.to_dict(output.strip()),
-            utils.to_dict("{'PortChannel1': {'admin_status': 'up', 'min_links': '1', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'trunk', 'lacp_key': 'auto'}}")
+            utils.to_dict("{'PortChannel1': {'admin_status': 'up', 'min_links': '1', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'routed', 'lacp_key': 'auto'}}")
         )
 
     def test_minigraph_portchannel_with_more_member(self):
@@ -343,7 +343,7 @@ class TestCfgGen(TestCase):
         output = self.run_script(argument)
         self.assertEqual(
             utils.to_dict(output.strip()),
-            utils.to_dict("{'PortChannel01': {'admin_status': 'up', 'min_links': '3', 'mtu': '9100','tpid': '0x8100','mode': 'trunk',  'lacp_key': 'auto'}}"))
+            utils.to_dict("{'PortChannel01': {'admin_status': 'up', 'min_links': '3', 'mtu': '9100','tpid': '0x8100','mode': 'routed',  'lacp_key': 'auto'}}"))
 
     def test_minigraph_portchannel_members(self):
         argument = ['-m', self.sample_graph_pc_test, '-p', self.port_config, '-v', "PORTCHANNEL_MEMBER.keys()|list"]
@@ -391,7 +391,7 @@ class TestCfgGen(TestCase):
         output = self.run_script(argument)
         self.assertEqual(
             utils.to_dict(output.strip()),
-            utils.to_dict("{'lanes': '101,102,103,104', 'fec': 'rs', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100','mode': 'trunk', 'alias': 'fortyGigE0/124', 'admin_status': 'up', 'speed': '100000', 'description': 'ARISTA04T1:Ethernet1/1'}")
+            utils.to_dict("{'lanes': '101,102,103,104', 'fec': 'rs', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100','mode': 'routed', 'alias': 'fortyGigE0/124', 'admin_status': 'up', 'speed': '100000', 'description': 'ARISTA04T1:Ethernet1/1'}")
         )
 
     def test_minigraph_port_fec_disabled(self):
@@ -400,7 +400,7 @@ class TestCfgGen(TestCase):
         output = self.run_script(argument)
         self.assertEqual(
             utils.to_dict(output.strip()),
-            utils.to_dict("{'lanes': '25,26,27,28', 'description': 'Servers0:eth0', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100','mode': 'trunk', 'alias': 'fortyGigE0/4', 'admin_status': 'up', 'speed': '100000', 'autoneg': 'on', 'fec': 'none'}")
+            utils.to_dict("{'lanes': '25,26,27,28', 'description': 'Servers0:eth0', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100','mode': 'routed', 'alias': 'fortyGigE0/4', 'admin_status': 'up', 'speed': '100000', 'autoneg': 'on', 'fec': 'none'}")
         )
 
     def test_minigraph_port_autonegotiation(self):
