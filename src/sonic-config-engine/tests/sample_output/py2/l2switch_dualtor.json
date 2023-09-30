@@ -13,13 +13,15 @@
             "index": "1",
             "speed": "50000",
             "admin_status": "up",
-            "mux_cable": "true"
+            "mux_cable": "true",
+            "mode": "trunk"
         },
         "Ethernet2": {
             "lanes": "3,4",
             "alias": "Ethernet1/3",
             "index": "1",
-            "speed": "50000"
+            "speed": "50000",
+            "mode": "trunk"
         },
         "Ethernet4": {
             "lanes": "5,6",
@@ -27,13 +29,15 @@
             "index": "2",
             "speed": "50000",
             "admin_status": "up",
-            "mux_cable": "true"
+            "mux_cable": "true",
+            "mode": "trunk"
         },
         "Ethernet6": {
             "lanes": "7,8",
             "alias": "Ethernet2/3",
             "index": "2",
-            "speed": "50000"
+            "speed": "50000",
+            "mode": "trunk"
         },
         "Ethernet8": {
             "lanes": "9,10",
@@ -41,13 +45,15 @@
             "index": "3",
             "speed": "50000",
             "admin_status": "up",
-            "mux_cable": "true"
+            "mux_cable": "true",
+            "mode": "trunk"
         },
         "Ethernet10": {
             "lanes": "11,12",
             "alias": "Ethernet3/3",
             "index": "3",
-            "speed": "50000"
+            "speed": "50000",
+            "mode": "trunk"
         },
         "Ethernet12": {
             "lanes": "13,14",
@@ -55,13 +61,15 @@
             "index": "4",
             "speed": "50000",
             "admin_status": "up",
-            "mux_cable": "true"
+            "mux_cable": "true",
+            "mode": "trunk"
         },
         "Ethernet14": {
             "lanes": "15,16",
             "alias": "Ethernet4/3",
             "index": "4",
-            "speed": "50000"
+            "speed": "50000",
+            "mode": "trunk"
         },
         "Ethernet16": {
             "lanes": "21,22",
@@ -69,13 +77,15 @@
             "index": "5",
             "speed": "50000",
             "admin_status": "up",
-            "mux_cable": "true"
+            "mux_cable": "true",
+            "mode": "trunk"
         },
         "Ethernet18": {
             "lanes": "23,24",
             "alias": "Ethernet5/3",
             "index": "5",
-            "speed": "50000"
+            "speed": "50000",
+            "mode": "trunk"
         },
         "Ethernet20": {
             "lanes": "17,18",
@@ -83,41 +93,47 @@
             "index": "6",
             "speed": "50000",
             "admin_status": "up",
-            "mux_cable": "true"
+            "mux_cable": "true",
+            "mode": "trunk"
         },
         "Ethernet22": {
             "lanes": "19,20",
             "alias": "Ethernet6/3",
             "index": "6",
-            "speed": "50000"
+            "speed": "50000",
+            "mode": "trunk"
         },
         "Ethernet24": {
             "lanes": "25,26,27,28",
             "alias": "Ethernet7/1",
             "index": "7",
             "speed": "100000",
-            "admin_status": "up"
+            "admin_status": "up",
+            "mode": "trunk"
         },
         "Ethernet28": {
             "lanes": "29,30,31,32",
             "alias": "Ethernet8/1",
             "index": "8",
             "speed": "100000",
-            "admin_status": "up"
+            "admin_status": "up",
+            "mode": "trunk"
         },
         "Ethernet32": {
             "lanes": "37,38,39,40",
             "alias": "Ethernet9/1",
             "index": "9",
             "speed": "100000",
-            "admin_status": "up"
+            "admin_status": "up",
+            "mode": "trunk"
         },
         "Ethernet36": {
             "lanes": "33,34,35,36",
             "alias": "Ethernet10/1",
             "index": "10",
             "speed": "100000",
-            "admin_status": "up"
+            "admin_status": "up",
+            "mode": "trunk"
         },
         "Ethernet40": {
             "lanes": "41,42",
@@ -125,13 +141,15 @@
             "index": "11",
             "speed": "50000",
             "admin_status": "up",
-            "mux_cable": "true"
+            "mux_cable": "true",
+            "mode": "trunk"
         },
         "Ethernet42": {
             "lanes": "43,44",
             "alias": "Ethernet11/3",
             "index": "11",
-            "speed": "50000"
+            "speed": "50000",
+            "mode": "trunk"
         },
         "Ethernet44": {
             "lanes": "45,46",
@@ -139,13 +157,15 @@
             "index": "12",
             "speed": "50000",
             "admin_status": "up",
-            "mux_cable": "true"
+            "mux_cable": "true",
+            "mode": "trunk"
         },
         "Ethernet46": {
             "lanes": "47,48",
             "alias": "Ethernet12/3",
             "index": "12",
-            "speed": "50000"
+            "speed": "50000",
+            "mode": "trunk"
         },
         "Ethernet48": {
             "lanes": "53,54",
@@ -153,13 +173,15 @@
             "index": "13",
             "speed": "50000",
             "admin_status": "up",
-            "mux_cable": "true"
+            "mux_cable": "true",
+            "mode": "trunk"
         },
         "Ethernet50": {
             "lanes": "55,56",
             "alias": "Ethernet13/3",
             "index": "13",
-            "speed": "50000"
+            "speed": "50000",
+            "mode": "trunk"
         },
         "Ethernet52": {
             "lanes": "49,50",
@@ -167,13 +189,15 @@
             "index": "14",
             "speed": "50000",
             "admin_status": "up",
-            "mux_cable": "true"
+            "mux_cable": "true",
+            "mode": "trunk"
         },
         "Ethernet54": {
             "lanes": "51,52",
             "alias": "Ethernet14/3",
             "index": "14",
-            "speed": "50000"
+            "speed": "50000",
+            "mode": "trunk"
         },
         "Ethernet56": {
             "lanes": "57,58",
@@ -181,13 +205,15 @@
             "index": "15",
             "speed": "50000",
             "admin_status": "up",
-            "mux_cable": "true"
+            "mux_cable": "true",
+            "mode": "trunk"
         },
         "Ethernet58": {
             "lanes": "59,60",
             "alias": "Ethernet15/3",
             "index": "15",
-            "speed": "50000"
+            "speed": "50000",
+            "mode": "trunk"
         },
         "Ethernet60": {
             "lanes": "61,62",
@@ -195,13 +221,15 @@
             "index": "16",
             "speed": "50000",
             "admin_status": "up",
-            "mux_cable": "true"
+            "mux_cable": "true",
+            "mode": "trunk"
         },
         "Ethernet62": {
             "lanes": "63,64",
             "alias": "Ethernet16/3",
             "index": "16",
-            "speed": "50000"
+            "speed": "50000",
+            "mode": "trunk"
         },
         "Ethernet64": {
             "lanes": "69,70",
@@ -209,13 +237,15 @@
             "index": "17",
             "speed": "50000",
             "admin_status": "up",
-            "mux_cable": "true"
+            "mux_cable": "true",
+            "mode": "trunk"
         },
         "Ethernet66": {
             "lanes": "71,72",
             "alias": "Ethernet17/3",
             "index": "17",
-            "speed": "50000"
+            "speed": "50000",
+            "mode": "trunk"
         },
         "Ethernet68": {
             "lanes": "65,66",
@@ -223,13 +253,15 @@
             "index": "18",
             "speed": "50000",
             "admin_status": "up",
-            "mux_cable": "true"
+            "mux_cable": "true",
+            "mode": "trunk"
         },
         "Ethernet70": {
             "lanes": "67,68",
             "alias": "Ethernet18/3",
             "index": "18",
-            "speed": "50000"
+            "speed": "50000",
+            "mode": "trunk"
         },
         "Ethernet72": {
             "lanes": "73,74",
@@ -237,13 +269,15 @@
             "index": "19",
             "speed": "50000",
             "admin_status": "up",
-            "mux_cable": "true"
+            "mux_cable": "true",
+            "mode": "trunk"
         },
         "Ethernet74": {
             "lanes": "75,76",
             "alias": "Ethernet19/3",
             "index": "19",
-            "speed": "50000"
+            "speed": "50000",
+            "mode": "trunk"
         },
         "Ethernet76": {
             "lanes": "77,78",
@@ -251,13 +285,15 @@
             "index": "20",
             "speed": "50000",
             "admin_status": "up",
-            "mux_cable": "true"
+            "mux_cable": "true",
+            "mode": "trunk"
         },
         "Ethernet78": {
             "lanes": "79,80",
             "alias": "Ethernet20/3",
             "index": "20",
-            "speed": "50000"
+            "speed": "50000",
+            "mode": "trunk"
         },
         "Ethernet80": {
             "lanes": "85,86",
@@ -265,13 +301,15 @@
             "index": "21",
             "speed": "50000",
             "admin_status": "up",
-            "mux_cable": "true"
+            "mux_cable": "true",
+            "mode": "trunk"
         },
         "Ethernet82": {
             "lanes": "87,88",
             "alias": "Ethernet21/3",
             "index": "21",
-            "speed": "50000"
+            "speed": "50000",
+            "mode": "trunk"
         },
         "Ethernet84": {
             "lanes": "81,82",
@@ -279,41 +317,47 @@
             "index": "22",
             "speed": "50000",
             "admin_status": "up",
-            "mux_cable": "true"
+            "mux_cable": "true",
+            "mode": "trunk"
         },
         "Ethernet86": {
             "lanes": "83,84",
             "alias": "Ethernet22/3",
             "index": "22",
-            "speed": "50000"
+            "speed": "50000",
+            "mode": "trunk"
         },
         "Ethernet88": {
             "lanes": "89,90,91,92",
             "alias": "Ethernet23/1",
             "index": "23",
             "speed": "100000",
-            "admin_status": "up"
+            "admin_status": "up",
+            "mode": "trunk"
         },
         "Ethernet92": {
             "lanes": "93,94,95,96",
             "alias": "Ethernet24/1",
             "index": "24",
             "speed": "100000",
-            "admin_status": "up"
+            "admin_status": "up",
+            "mode": "trunk"
         },
         "Ethernet96": {
             "lanes": "101,102,103,104",
             "alias": "Ethernet25/1",
             "index": "25",
             "speed": "100000",
-            "admin_status": "up"
+            "admin_status": "up",
+            "mode": "trunk"
         },
         "Ethernet100": {
             "lanes": "97,98,99,100",
             "alias": "Ethernet26/1",
             "index": "26",
             "speed": "100000",
-            "admin_status": "up"
+            "admin_status": "up",
+            "mode": "trunk"
         },
         "Ethernet104": {
             "lanes": "105,106",
@@ -321,13 +365,15 @@
             "index": "27",
             "speed": "50000",
             "admin_status": "up",
-            "mux_cable": "true"
+            "mux_cable": "true",
+            "mode": "trunk"
         },
         "Ethernet106": {
             "lanes": "107,108",
             "alias": "Ethernet27/3",
             "index": "27",
-            "speed": "50000"
+            "speed": "50000",
+            "mode": "trunk"
         },
         "Ethernet108": {
             "lanes": "109,110",
@@ -335,13 +381,15 @@
             "index": "28",
             "speed": "50000",
             "admin_status": "up",
-            "mux_cable": "true"
+            "mux_cable": "true",
+            "mode": "trunk"
         },
         "Ethernet110": {
             "lanes": "111,112",
             "alias": "Ethernet28/3",
             "index": "28",
-            "speed": "50000"
+            "speed": "50000",
+            "mode": "trunk"
         },
         "Ethernet112": {
             "lanes": "117,118",
@@ -349,13 +397,15 @@
             "index": "29",
             "speed": "50000",
             "admin_status": "up",
-            "mux_cable": "true"
+            "mux_cable": "true",
+            "mode": "trunk"
         },
         "Ethernet114": {
             "lanes": "119,120",
             "alias": "Ethernet29/3",
             "index": "29",
-            "speed": "50000"
+            "speed": "50000",
+            "mode": "trunk"
         },
         "Ethernet116": {
             "lanes": "113,114",
@@ -363,13 +413,15 @@
             "index": "30",
             "speed": "50000",
             "admin_status": "up",
-            "mux_cable": "true"
+            "mux_cable": "true",
+            "mode": "trunk"
         },
         "Ethernet118": {
             "lanes": "115,116",
             "alias": "Ethernet30/3",
             "index": "30",
-            "speed": "50000"
+            "speed": "50000",
+            "mode": "trunk"
         },
         "Ethernet120": {
             "lanes": "121,122",
@@ -377,13 +429,15 @@
             "index": "31",
             "speed": "50000",
             "admin_status": "up",
-            "mux_cable": "true"
+            "mux_cable": "true",
+            "mode": "trunk"
         },
         "Ethernet122": {
             "lanes": "123,124",
             "alias": "Ethernet31/3",
             "index": "31",
-            "speed": "50000"
+            "speed": "50000",
+            "mode": "trunk"
         },
         "Ethernet124": {
             "lanes": "125,126",
@@ -391,13 +445,15 @@
             "index": "32",
             "speed": "50000",
             "admin_status": "up",
-            "mux_cable": "true"
+            "mux_cable": "true",
+            "mode": "trunk"
         },
         "Ethernet126": {
             "lanes": "127,128",
             "alias": "Ethernet32/3",
             "index": "32",
-            "speed": "50000"
+            "speed": "50000",
+            "mode": "trunk"
         }
     },
     "VLAN": {
