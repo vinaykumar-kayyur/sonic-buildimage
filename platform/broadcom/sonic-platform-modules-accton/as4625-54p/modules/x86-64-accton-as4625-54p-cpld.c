@@ -73,6 +73,7 @@ enum as4625_cpld_sysfs_attributes {
 	PCB_VERSION,
 	POWER_ENABLE_MAINBOARD,
 	POWER_ENABLE_POE,
+	SYSTEM_THERMAL_SHUTDOWN,
 	ACCESS,
 	/* transceiver attributes */
 	TRANSCEIVER_PRESENT_ATTR_ID(49),
@@ -132,6 +133,7 @@ static SENSOR_DEVICE_ATTR(pcb_id, S_IRUGO, show_version, NULL, PCB_ID);
 static SENSOR_DEVICE_ATTR(pcb_version, S_IRUGO, show_version, NULL, PCB_VERSION);
 static SENSOR_DEVICE_ATTR(pwr_enable_mb, S_IRUGO | S_IWUSR, show_status, set_control, POWER_ENABLE_MAINBOARD);
 static SENSOR_DEVICE_ATTR(pwr_enable_poe, S_IRUGO | S_IWUSR, show_status, set_control, POWER_ENABLE_POE);
+static SENSOR_DEVICE_ATTR(thermal_shutdown, S_IRUGO | S_IWUSR, show_status, set_control, SYSTEM_THERMAL_SHUTDOWN);
 static SENSOR_DEVICE_ATTR(access, S_IWUSR, NULL, access, ACCESS);
 
 /* transceiver attributes */
@@ -149,6 +151,7 @@ static struct attribute *as4625_cpld1_attributes[] = {
     &sensor_dev_attr_pcb_version.dev_attr.attr,
     &sensor_dev_attr_pwr_enable_mb.dev_attr.attr,
     &sensor_dev_attr_pwr_enable_poe.dev_attr.attr,
+    &sensor_dev_attr_thermal_shutdown.dev_attr.attr,
     &sensor_dev_attr_access.dev_attr.attr,
 	/* transceiver attributes */
 	DECLARE_SFP_TRANSCEIVER_ATTR(49),
@@ -200,6 +203,10 @@ static ssize_t show_status(struct device *dev, struct device_attribute *da,
 		reg  = 0x21;
 		mask = 0x1;
 		break;
+	case SYSTEM_THERMAL_SHUTDOWN:
+		reg  = 0x27;
+		mask = 0x1;
+		break;
 	default:
 		return 0;
 	}
@@ -245,6 +252,10 @@ static ssize_t set_control(struct device *dev, struct device_attribute *da,
 		break;
 	case POWER_ENABLE_POE:
 		reg  = 0x21;
+		mask = 0x1;
+		break;
+	case SYSTEM_THERMAL_SHUTDOWN:
+		reg  = 0x27;
 		mask = 0x1;
 		break;
 	default:

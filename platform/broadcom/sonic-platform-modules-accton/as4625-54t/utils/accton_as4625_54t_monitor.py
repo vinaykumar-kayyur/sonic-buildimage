@@ -269,6 +269,12 @@ class device_monitor(object):
         if self.shutdown is True:
             # critical case*/
             logging.critical(
+                'Alarm-Critical for temperature critical is detected, trigger thermal shutdown')
+            path = I2C_PATH.format('0', '64') + 'thermal_shutdown'
+            time.sleep(2)
+            self._api_helper.write_txt_file(path, 1)
+
+            logging.critical(
                 'Alarm-Critical for temperature critical is detected, shutdown DUT')
             path = I2C_PATH.format('0', '64') + 'pwr_enable_mb'
             time.sleep(2)
