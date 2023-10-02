@@ -1082,7 +1082,6 @@ class TestCfgGen(TestCase):
         )
 
 
-
     def test_minigraph_cisco_400g_to_100G_speed_no_lane_change(self):
         argument = ["-m", self.sample_cisco_8111_graph, "-p", self.sample_cisco_8111_port_config, "-v", "PORT"]
         output = self.run_script(argument)
