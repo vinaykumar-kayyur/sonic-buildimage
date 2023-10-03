@@ -363,8 +363,8 @@ RFS_DEP_FILES := $(wildcard \
 	$(shell git ls-files files/image_config) \
 	$(shell git ls-files files/apparmor) \
 	$(shell git ls-files files/apt) \
-	$(wildcard files/sshd/*) \
-	$(wildcard files/dhcp/*) \
+	$(shell git ls-files files/sshd) \
+	$(shell git ls-files files/dhcp) \
 	src/sonic-build-hooks/buildinfo/trusted.gpg.d \
 	platform/$(CONFIGURED_PLATFORM)/modules  \
 	files/docker/docker.service.conf \
