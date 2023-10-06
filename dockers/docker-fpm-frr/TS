@@ -18,6 +18,10 @@ function check_not_installed()
   config=$(vtysh -c "show run")
   for route_map_name in $(echo "$config" | sed -ne 's/  neighbor \S* route-map \(\S*\) out/\1/p' | egrep 'V4|V6' | uniq);
   do
+    is_internal_route_map $route_map_name
+    if [[ $? -eq 1 ]]; then
+        continue
+    fi
     echo "$config" | egrep -q "^route-map $route_map_name permit 20$"
     c=$((c+$?))
     echo "$config" | egrep -q "^route-map $route_map_name permit 30$"
@@ -35,6 +39,10 @@ function check_installed()
   config=$(vtysh -c "show run")
   for route_map_name in $(echo "$config" | sed -ne 's/  neighbor \S* route-map \(\S*\) out/\1/p' | egrep 'V4|V6' | uniq);
   do
+    is_internal_route_map $route_map_name
+    if [[ $? -eq 1 ]]; then
+        continue
+    fi
     echo "$config" | egrep -q "^route-map $route_map_name permit 20$"
     c=$((c+$?))
     e=$((e+1))
@@ -54,6 +62,10 @@ function find_num_routemap()
   config=$(vtysh -c "show run")
   for route_map_name in $(echo "$config" | sed -ne 's/  neighbor \S* route-map \(\S*\) out/\1/p' | egrep 'V4|V6' | uniq);
   do
+    is_internal_route_map $route_map_name
+    if [[ $? -eq 1 ]]; then
+        continue
+    fi
     c=$((c+1))
   done
   return $c
