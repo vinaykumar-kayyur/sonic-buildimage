@@ -101,16 +101,8 @@ def generate_alerting_message(process_name, status, dead_minutes):
     else:
         namespace = namespace_prefix + namespace_id
 
-    message = "Process '{}' is {} in namespace '{}' ({} minutes).".format(
-                                                                    process_name,
-                                                                    status,
-                                                                    namespace,
-                                                                    dead_minutes)
-    if is_warm_reboot():
-        syslog.syslog(syslog.LOG_INFO, "Warm rebooting, {}".format(message))
-        return
-
-    syslog.syslog(syslog.LOG_ERR, message)
+    syslog.syslog(syslog.LOG_ERR, "Process '{}' is {} in namespace '{}' ({} minutes)."
+                  .format(process_name, status, namespace, dead_minutes))
 
 
 def get_autorestart_state(container_name, use_unix_socket_path):
@@ -235,6 +227,10 @@ def main(argv):
             epoch_time = time.time()
             elapsed_secs = epoch_time - process_heart_beat_info[process]["last_heart_beat"]
             if elapsed_secs >= ALERTING_INTERVAL_SECS:
+                if is_warm_reboot() and process == "orchagent":
+                    # Orchagent will set to frozen during warm reboot.
+                    continue
+
                 elapsed_mins = elapsed_secs // 60
                 generate_alerting_message(process, "stuck", elapsed_mins)
 
