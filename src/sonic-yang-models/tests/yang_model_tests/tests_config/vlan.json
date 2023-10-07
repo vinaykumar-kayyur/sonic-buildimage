@@ -89,8 +89,8 @@
                         "description": "Ethernet0",
                         "mtu": 9000,
                         "name": "Ethernet0",
-                        "speed": 25000,
-                        "mode":"trunk"
+                        "speed": 25000
+                        
                     }
                 ]
             }
@@ -147,8 +147,7 @@
                         "description": "Ethernet0",
                         "mtu": 9000,
                         "name": "Ethernet0",
-                        "speed": 25000,
-                        "mode":"trunk"
+                        "speed": 25000
                     }
                 ]
             }
@@ -187,8 +186,7 @@
                         "description": "Ethernet0",
                         "mtu": 9000,
                         "name": "Ethernet0",
-                        "speed": 25000,
-                        "mode":"trunk"
+                        "speed": 25000
                     },
                     {
                         "admin_status": "up",
@@ -196,8 +194,8 @@
                         "description": "Ethernet1",
                         "mtu": 9000,
                         "name": "Ethernet1",
-                        "speed": 25000,
-                        "mode":"trunk"
+                        "speed": 25000
+                       
                     }
                 ]
             }
@@ -326,8 +324,7 @@
                         "mtu": 9000,
                         "lanes": "1",
                         "name": "Ethernet0",
-                        "speed": 25000,
-                        "mode":"trunk"
+                        "speed": 25000
                     }
                 ]
             }
@@ -692,8 +689,7 @@
                         "mtu": 9000,
                         "lanes": "1",
                         "name": "Ethernet0",
-                        "speed": 25000,
-                        "mode":"trunk"
+                        "speed": 25000
                     }
                 ]
             }
