@@ -297,7 +297,7 @@ then
     install_kubernetes ${MASTER_KUBERNETES_VERSION}
 
     sudo LANG=C chroot $FILESYSTEM_ROOT apt-get update
-    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install hyperv-daemons gnupg xmlstarlet parted
+    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install hyperv-daemons gnupg xmlstarlet parted netcat
     sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y remove gnupg
     sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT curl -o /tmp/cri-dockerd.deb -fsSL \
         https://github.com/Mirantis/cri-dockerd/releases/download/v${MASTER_CRI_DOCKERD}/cri-dockerd_${MASTER_CRI_DOCKERD}.3-0.debian-${IMAGE_DISTRO}_amd64.deb
@@ -760,8 +760,7 @@ sudo LANG=C chroot $FILESYSTEM_ROOT fuser -vm /proc
 ## Kill the processes
 sudo LANG=C chroot $FILESYSTEM_ROOT fuser -km /proc || true
 ## Wait fuser fully kill the processes
-sleep 15
-sudo LANG=C chroot $FILESYSTEM_ROOT umount /proc || true
+sudo timeout 15s bash -c 'until LANG=C chroot $0 umount /proc; do sleep 1; done' $FILESYSTEM_ROOT || true
 
 ## Prepare empty directory to trigger mount move in initramfs-tools/mount_loop_root, implemented by patching
 sudo mkdir $FILESYSTEM_ROOT/host
