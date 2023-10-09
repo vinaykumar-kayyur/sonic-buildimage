@@ -764,12 +764,6 @@ fi
 {% endfor %}
 
 if [[ $CONFIGURED_PLATFORM == pensando ]]; then
-#we need to start pciemgrd process soon at the bootup for pci txn to be up.
-#if we don't start pciemgrd early pcie timeout happens and server reboots.
-#pciemgrd runs as part of dpu docker. So load this at build time itself.
-sudo LANG=C DOCKER_HOST="$DOCKER_HOST" chroot $FILESYSTEM_ROOT docker load -i boot/dpu_sw.tar
-sudo LANG=C chroot $FILESYSTEM_ROOT rm -f boot/dpu_sw.tar
-
 #Disable rc.local
 sudo LANG=C chroot $FILESYSTEM_ROOT chmod -x /etc/rc.local
 fi

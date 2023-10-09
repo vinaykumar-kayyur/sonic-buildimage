@@ -1,5 +1,9 @@
 #!/bin/bash
+
+# {C} Copyright 2023 AMD Systems Inc. All rights reserved
+
 # This script starts/stops dpu sw
+
 
 ### BEGIN INIT INFO
 # Provides:          load-dpu
@@ -14,20 +18,26 @@
 ACTIVE_FILE="/boot/active.txt"
 NIC_MOUNT=""
 LOG_FILE="/tmp/active_nic"
+TAG="latest"
+HOST_DIR=/host/dpu
 
 function start_dpu()
 {
-    mkdir -p /host/dpu/update
-    mkdir -p /host/dpu/sysconfig/config0
-    mkdir -p /host/dpu/sysconfig/config1
-    mkdir -p  /host/dpu/obfl
-    mkdir -p /host/dpu/data
-    mkdir -p /host/dpu/tmpfsshare
-    mkdir -p /host/dpu/runfs
-    mkdir -p /host/dpu/logfs
-    mount -t tmpfs -o size=20M,mode=1777  tmpfs /host/dpu/tmpfsshare
-    mount -t tmpfs -o size=20M,mode=0755  runs /host/dpu/runfs
-    mount -t tmpfs -o size=20M,mode=0755  logfs /host/dpu/logfs
+    modprobe ionic_mnic
+    modprobe mnet_uio_pdrv_genirq
+    modprobe mdev
+
+    mkdir -p $HOST_DIR/update
+    mkdir -p $HOST_DIR/sysconfig/config0
+    mkdir -p $HOST_DIR/sysconfig/config1
+    mkdir -p $HOST_DIR/obfl
+    mkdir -p $HOST_DIR/data
+    mkdir -p $HOST_DIR/tmpfsshare
+    mkdir -p $HOST_DIR/runfs
+    mkdir -p $HOST_DIR/logfs
+    mount -t tmpfs -o size=20M,mode=1777  tmpfs $HOST_DIR/tmpfsshare
+    mount -t tmpfs -o size=20M,mode=0755  runs $HOST_DIR/runfs
+    mount -t tmpfs -o size=20M,mode=0755  logfs $HOST_DIR/logfs
 
     if [ -f "$ACTIVE_FILE" ]; then
         ACTIVE_CONTENTS=$(cat "$ACTIVE_FILE")
@@ -41,9 +51,11 @@ function start_dpu()
         echo "/boot/active.txt not present" > $LOG_FILE
     fi
     echo "Active Nic: $ACTIVE_NIC" >> $LOG_FILE
-    echo "NIC_MOUNT: $NIC_MOUNT" >> $LOG_FILE 
+    echo "NIC_MOUNT: $NIC_MOUNT" >> $LOG_FILE
 
-    docker run -v /host/dpu/update:/update -v /host/dpu/sysconfig/config0:/sysconfig/config0 -v /host/dpu/sysconfig/config1:/sysconfig/config1 -v /host/dpu/obfl:/obfl  -v /host/dpu/data:/data -v /host/dpu/tmpfsshare:/tmp -v /host/dpu/runfs:/run -v /host/dpu/logfs:/var/log -v /sys:/sys $NIC_MOUNT --net=host --privileged dpu:v1
+    docker ps -a --format "{{.ID}}\t{{.Image}}" | grep "docker-dpu:latest" | awk '{print $1}' | xargs -I {} docker rm {}
+
+    docker run -v $HOST_DIR/update:/update -v $HOST_DIR/sysconfig/config0:/sysconfig/config0 -v $HOST_DIR/sysconfig/config1:/sysconfig/config1 -v $HOST_DIR/obfl:/obfl  -v $HOST_DIR/data:/data -v $HOST_DIR/tmpfsshare:/tmp -v $HOST_DIR/runfs:/run -v $HOST_DIR/logfs:/var/log -v /sys:/sys $NIC_MOUNT --net=host --name=docker-dpu --privileged docker-dpu:$TAG
 }
 
 case "$1" in
