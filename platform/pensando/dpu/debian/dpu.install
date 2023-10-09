@@ -1,2 +1,1 @@
 systemd/dpu.service lib/systemd/system
-image/dpu_sw.tar /boot/

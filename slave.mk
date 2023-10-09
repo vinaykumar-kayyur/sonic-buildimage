@@ -1086,6 +1086,24 @@ $(foreach IMAGE,$(DOCKER_IMAGES), $(eval $(IMAGE)_FILES_PATH := $(FILES_PATH)))
 $(foreach IMAGE,$(DOCKER_DBG_IMAGES), $(eval $(IMAGE)_DEBS_PATH := $(DEBS_PATH)))
 $(foreach IMAGE,$(DOCKER_DBG_IMAGES), $(eval $(IMAGE)_FILES_PATH := $(FILES_PATH)))
 
+# Targets for downloaded docker images
+$(addprefix $(TARGET_PATH)/,$(DOWNLOADED_DOCKER_IMAGES)) : $(TARGET_PATH)/%.gz : .platform \
+		$$(%.gz_DEP_FILES)
+	$(HEADER)
+
+	cp files/$(DOWNLOADED_DOCKER_IMAGES) target/$(DOWNLOADED_DOCKER_IMAGES)
+
+	$(FOOTER)
+
+DOCKER_LOAD_DOWNLOADED_TARGETS = $(addsuffix -load,$(addprefix $(TARGET_PATH)/, \
+		      $(DOWNLOADED_DOCKER_IMAGES)))
+
+$(DOCKER_LOAD_DOWNLOADED_TARGETS) : $(TARGET_PATH)/%.gz-load : .platform docker-start $$(TARGET_PATH)/$$*.gz
+	$(HEADER)
+	$(call docker-image-load,$*)
+	$(FOOTER)
+
+
 # Targets for building docker images
 $(addprefix $(TARGET_PATH)/, $(DOCKER_IMAGES)) : $(TARGET_PATH)/%.gz : .platform docker-start \
 		$$(addprefix $$($$*.gz_DEBS_PATH)/,$$($$*.gz_DEPENDS)) \

@@ -1,0 +1,7 @@
+# DOWNLOADED_DOCKER_IMAGES
+FROM docker-dpu-base
+
+RUN echo "docker-dpu-base"
+
+ENTRYPOINT ["/nic/tools/sysinit.sh", "classic", "hw", "30"]
+
