@@ -158,6 +158,10 @@ module sonic-vlan {
 						(contains(../ip-prefix, '.') and current()='IPv4')";
 					type stypes:ip-family;
 				}
+
+				leaf secondary	{
+					type boolean;
+				}
 			}
 			/* end of VLAN_INTERFACE_LIST */
 		}
