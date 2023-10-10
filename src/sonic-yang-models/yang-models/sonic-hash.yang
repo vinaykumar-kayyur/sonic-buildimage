@@ -57,6 +57,16 @@ module sonic-hash {
                     type hash:hash-field;
                 }
 
+                leaf ecmp_hash_algorithm {
+                    description "Hash algorithm for hashing packets going through ECMP";
+                    type stypes:hash-algorithm;
+                }
+
+                leaf lag_hash_algorithm {
+                    description "Hash algorithm for hashing packets going through LAG";
+                    type stypes:hash-algorithm;
+                }
+
             }
             /* end of container GLOBAL */
         }
