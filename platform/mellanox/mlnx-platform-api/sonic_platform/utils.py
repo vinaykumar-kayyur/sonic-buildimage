@@ -289,6 +289,30 @@ def wait_until(predict, timeout, interval=1, *args, **kwargs):
     return False
 
 
+def wait_until_conditions(conditions, timeout, interval=1):
+    """
+    Wait until all the conditions become true
+    Args:
+        conditions (list): a list of callable which generate True|False
+        timeout (int): wait time in seconds
+        interval (int, optional):  interval to check the predict. Defaults to 1.
+
+    Returns:
+        bool: True if wait success else False
+    """
+    while timeout > 0:
+        pending_conditions = []
+        for condition in conditions:
+            if not condition():
+                pending_conditions.append(condition)
+        if not pending_conditions:
+            return True
+        conditions = pending_conditions
+        time.sleep(interval)
+        timeout -= interval
+    return False
+
+
 class DbUtils:
     lock = threading.Lock()
     db_instances = threading.local()
