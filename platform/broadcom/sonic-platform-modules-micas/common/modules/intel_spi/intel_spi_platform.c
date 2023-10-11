@@ -47,7 +47,7 @@ MODULE_PARM_DESC(writeable, "Enable write access to BIOS (default=0)");
         } \
     } while (0)
 
-static void intel_spi_enable_bios_write(struct pci_dev *pci_dev, struct intel_spi_boardinfo *info, int *writeable_flag)
+static void intel_spi_enable_bios_write(struct pci_dev *pci_dev, struct intel_spi_boardinfo *info)
 {
     u8 bios_cntl, value, want, new;
 
@@ -84,7 +84,7 @@ static void intel_spi_enable_bios_write(struct pci_dev *pci_dev, struct intel_sp
             INTEL_SPI_PLATFORM_VERBOSE("Warning: Setting Bios Control at 0x%x from 0x%02x to 0x%02x failed.\n"
                 "New value is 0x%02x.\n", BIOS_CNTL, value, want, new);
         } else {
-            *writeable_flag = !!(new & BIOS_CNTL_WN);
+            info->writeable = !!(new & BIOS_CNTL_WN);
         }
         INTEL_SPI_PLATFORM_VERBOSE("Bios Control is 0x%x\n", new);
     } else {
@@ -101,7 +101,6 @@ static int intel_spi_platform_probe(struct platform_device *pdev)
 	struct resource *mem;
     struct pci_dev *pci_dev = NULL;
     u32 rcba;
-    int writeable_flag = 0;
 
 	info = dev_get_platdata(&pdev->dev);
 	if (!info)
@@ -117,7 +116,7 @@ static int intel_spi_platform_probe(struct platform_device *pdev)
     case INTEL_SPI_LPT:
         pci_read_config_dword(pci_dev, RCBABASE, &rcba);
         if (rcba & 1) {
-            intel_spi_enable_bios_write(pci_dev, info, &writeable_flag);
+            intel_spi_enable_bios_write(pci_dev, info);
         }
         break;
     default:
@@ -125,7 +124,7 @@ static int intel_spi_platform_probe(struct platform_device *pdev)
         break;
     }
     INTEL_SPI_PLATFORM_VERBOSE("intel spi boardinfo writeable is %sabled\n",
-            writeable_flag ? "en" : "dis");
+            info->writeable ? "en" : "dis");
 
 	mem = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	ispi = intel_spi_probe(&pdev->dev, mem, info);
