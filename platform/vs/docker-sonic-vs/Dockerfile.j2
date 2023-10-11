@@ -60,6 +60,8 @@ RUN apt-get install -y net-tools \
                        gir1.2-glib-2.0 \
                        libdbus-1-3 \
                        libgirepository-1.0-1 \
+                       libsystemd0 \
+                       lcov
                        {%- if ENABLE_ASAN == "y" %}
                        libasan6 \
                        {%- endif %}
