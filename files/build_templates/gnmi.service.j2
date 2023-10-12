@@ -1,5 +1,5 @@
 [Unit]
-Description=Telemetry container
+Description=GNMI container
 Requires=database.service
 After=database.service swss.service syncd.service
 Before=ntp-config.service
@@ -10,7 +10,7 @@ StartLimitBurst=3
 
 [Service]
 User={{ sonicadmin_user }}
-ExecStartPre=/usr/local/bin/telemetry.sh start
-ExecStart=/usr/local/bin/telemetry.sh wait
-ExecStop=/usr/local/bin/telemetry.sh stop
+ExecStartPre=/usr/local/bin/gnmi.sh start
+ExecStart=/usr/local/bin/gnmi.sh wait
+ExecStop=/usr/local/bin/gnmi.sh stop
 RestartSec=30

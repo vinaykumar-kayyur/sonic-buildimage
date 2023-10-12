@@ -694,7 +694,12 @@ kill() {
 
 DOCKERNAME={{docker_container_name}}
 OP=$1
-DEV=$2 # namespace/device number to operate on
+{%- if docker_container_name == "gnmi" %}
+    DOCKERNAME=$2 # Support gnmi and telemetry container
+    DEV=$3 # namespace/device number to operate on
+{%- else %}
+    DEV=$2 # namespace/device number to operate on
+{%- endif %}
 {%- if docker_container_name == "database" %}
 if [ "$DEV" == "chassisdb" ]; then
       DATABASE_TYPE="chassisdb"

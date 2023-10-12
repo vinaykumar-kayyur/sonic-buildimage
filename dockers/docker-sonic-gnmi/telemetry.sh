@@ -70,12 +70,6 @@ else
     TELEMETRY_ARGS+=" -v=2"
 fi
 
-# Enable ZMQ for SmartSwitch
-LOCALHOST_SUBTYPE=`sonic-db-cli CONFIG_DB hget localhost "subtype"`
-if [[ x"${LOCALHOST_SUBTYPE}" == x"SmartSwitch" ]]; then
-    TELEMETRY_ARGS+=" -zmq_address=tcp://127.0.0.1:8100"
-fi
-
 # Server will handle threshold connections consecutively
 THRESHOLD_CONNECTIONS=$(echo $GNMI | jq -r '.threshold')
 if [[ $THRESHOLD_CONNECTIONS =~ ^[0-9]+$ ]]; then
@@ -101,6 +95,6 @@ else
         exit $INCORRECT_TELEMETRY_VALUE
     fi
 fi
-
+TELEMETRY_ARGS+=" -gnmi_native_write=false"
 
 exec /usr/sbin/telemetry ${TELEMETRY_ARGS}
