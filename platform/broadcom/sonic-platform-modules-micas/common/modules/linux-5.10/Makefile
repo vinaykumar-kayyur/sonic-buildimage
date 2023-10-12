@@ -24,6 +24,7 @@ obj-m += wb_isl68137.o
 obj-m += wb_tps53622.o
 obj-m += wb_ucd9000.o
 obj-m += wb_xdpe12284.o
+obj-m += wb_xdpe132g5c_pmbus.o
 obj-m += wb_i2c_ismt.o
 
 all:

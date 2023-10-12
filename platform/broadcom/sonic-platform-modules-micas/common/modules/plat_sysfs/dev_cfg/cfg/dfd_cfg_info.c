@@ -10,9 +10,21 @@
 #include "../../dev_sysfs/include/sysfs_common.h"
 
 #define DFD_HWMON_NAME                                "hwmon"
+/* CPLD_VOLATGE_VALUE_MODE1 */
 #define DFD_GET_CPLD_VOLATGE_CODE_VALUE(value)        ((value >> 4)& 0xfff)
 /* ((code_val * 16 * 33 * k) / ((65536 - 5000) * 10)) = ((code_val * 33 * k) / 37835) */
 #define DFD_GET_CPLD_VOLATGE_REAL_VALUE(code_val, k)  ((code_val * 33 * k) / 37835)
+
+ 
+/* CPLD_VOLATGE_VALUE_MODE2 */
+/* high 8 bit + low 4 bit(bit0-bit3) */
+#define DFD_GET_CPLD_VOLATGE_CODE_VALUE2(value)        (((value & 0xff00) >> 4) + (value & 0xf))
+#define DFD_GET_CPLD_VOLATGE_REAL_VALUE2(code_val, k)  ((code_val * 33 * k) / 40950)
+
+typedef enum cpld_volatge_value_s {
+    CPLD_VOLATGE_VALUE_MODE1,
+    CPLD_VOLATGE_VALUE_MODE2,
+} cpld_volatge_value_t;
 
 char *g_info_ctrl_mem_str[INFO_CTRL_MEM_END] = {
     ".mode",
@@ -27,6 +39,7 @@ char *g_info_ctrl_mem_str[INFO_CTRL_MEM_END] = {
     ".str_cons",
     ".int_extra1",
     ".int_extra2",
+    ".int_extra3",
 };
 
 char *g_info_ctrl_mode_str[INFO_CTRL_MODE_END] = {
@@ -581,24 +594,30 @@ static int dfd_info_get_cpld_voltage(int key, uint32_t *value)
         DBG_DEBUG(DBG_ERROR, "get cpld current voltage error, addr:0x%x, rv = %d\n", info_ctrl->addr, rv);
         return rv;
     }
-    vol_curr_tmp = DFD_GET_CPLD_VOLATGE_CODE_VALUE(vol_curr_tmp);
-    if (info_ctrl->addr == info_ctrl->int_extra1) {
-        vol_curr = DFD_GET_CPLD_VOLATGE_REAL_VALUE(vol_curr_tmp, vol_coefficient);
-        DBG_DEBUG(DBG_VERBOSE, "current voltage is reference voltage, vol_curr_tmp: 0x%x, coefficient: %u, vol_curr: %u\n",
-            vol_curr_tmp, vol_coefficient, vol_curr);
+    if (info_ctrl->int_extra3 == CPLD_VOLATGE_VALUE_MODE2) {
+        vol_curr_tmp = DFD_GET_CPLD_VOLATGE_CODE_VALUE2(vol_curr_tmp);
+        vol_curr = DFD_GET_CPLD_VOLATGE_REAL_VALUE2(vol_curr_tmp, vol_coefficient);
+        DBG_DEBUG(DBG_VERBOSE, "vol_curr_tmp = 0x%x, vol_curr = 0x%x, is same.\n", vol_curr_tmp, vol_curr);
     } else {
-        memcpy(&info_ctrl_tmp, info_ctrl, sizeof(info_ctrl_t));
-        info_ctrl_tmp.addr = info_ctrl->int_extra1;
-        rv = dfd_get_info_value(&info_ctrl_tmp, &vol_ref_tmp, NULL);
-        if (rv < 0) {
-            DBG_DEBUG(DBG_ERROR, "get cpld reference voltage error, addr: 0x%x, rv: %d\n", info_ctrl_tmp.addr, rv);
-            return rv;
-        }
-        vol_ref = DFD_GET_CPLD_VOLATGE_CODE_VALUE(vol_ref_tmp);
-        DBG_DEBUG(DBG_VERBOSE, "vol_ref_tmp: 0x%x, vol_ref: 0x%x\n", vol_ref_tmp, vol_ref);
-        vol_curr = (vol_curr_tmp * vol_coefficient) / vol_ref;
-        DBG_DEBUG(DBG_VERBOSE, "vol_curr_tmp: 0x%x, vol_ref: 0x%x, coefficient: %u, vol_curr: %u\n",
+        vol_curr_tmp = DFD_GET_CPLD_VOLATGE_CODE_VALUE(vol_curr_tmp);
+        if (info_ctrl->addr == info_ctrl->int_extra1) {
+            vol_curr = DFD_GET_CPLD_VOLATGE_REAL_VALUE(vol_curr_tmp, vol_coefficient);
+            DBG_DEBUG(DBG_VERBOSE, "current voltage is reference voltage, vol_curr_tmp: 0x%x, coefficient: %u, vol_curr: %u\n",
+             vol_curr_tmp, vol_coefficient, vol_curr);
+        } else {
+            memcpy(&info_ctrl_tmp, info_ctrl, sizeof(info_ctrl_t));
+            info_ctrl_tmp.addr = info_ctrl->int_extra1;
+            rv = dfd_get_info_value(&info_ctrl_tmp, &vol_ref_tmp, NULL);
+            if (rv < 0) {
+                DBG_DEBUG(DBG_ERROR, "get cpld reference voltage error, addr: 0x%x, rv: %d\n", info_ctrl_tmp.addr, rv);
+                return rv;
+            }
+            vol_ref = DFD_GET_CPLD_VOLATGE_CODE_VALUE(vol_ref_tmp);
+            DBG_DEBUG(DBG_VERBOSE, "vol_ref_tmp: 0x%x, vol_ref: 0x%x\n", vol_ref_tmp, vol_ref);
+            vol_curr = (vol_curr_tmp * vol_coefficient) / vol_ref;
+            DBG_DEBUG(DBG_VERBOSE, "vol_curr_tmp: 0x%x, vol_ref: 0x%x, coefficient: %u, vol_curr: %u\n",
             vol_curr_tmp, vol_ref, vol_coefficient, vol_curr);
+         }
     }
     *value = vol_curr;
     return DFD_RV_OK;

@@ -13,6 +13,7 @@ PLAT_SYSFS_DIR = $(PWD)/plat_sysfs
 INTEL_SPI = $(PWD)/intel_spi
 PHY = $(PWD)/phy
 PINCTRL = $(PWD)/pinctrl
+SDHCI = $(PWD)/sdhci
 
 export PLAT_SYSFS_DIR
 
@@ -49,6 +50,7 @@ all :
 	$(MAKE) -C $(INTEL_SPI)
 	$(MAKE) -C $(PHY)
 	$(MAKE) -C $(PINCTRL)
+	$(MAKE) -C $(SDHCI)
 	$(MAKE) -C $(KERNEL_SRC)/build M=$(PWD) modules
 	@if [ ! -d $(module_out_put_dir) ]; then mkdir -p $(module_out_put_dir) ;fi
 	cp -p  $(PWD)/*.ko $(module_out_put_dir)

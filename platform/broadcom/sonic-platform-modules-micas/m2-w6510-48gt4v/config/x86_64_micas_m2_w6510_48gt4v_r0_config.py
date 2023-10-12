@@ -12,6 +12,7 @@ STARTMODULE = {
     "sff_temp_polling": 1,
     "generate_airflow": 1,
     "set_eth_mac": 1,
+    "drv_update": 1,
 }
 
 MANUINFO_CONF = {
@@ -743,3 +744,14 @@ SET_MAC_CONF = [
         }
     }
 ]
+
+DRVIER_UPDATE_CONF = {
+    "reboot_flag": 1,
+    "drv_list": [
+        {
+            "source": "extra/sdhci_pci.ko",
+            "target": "kernel/drivers/mmc/host/sdhci-pci.ko",
+            "judge_flag": "/sys/module/sdhci_pci/parameters/wb_sdhci_pci"
+        },
+    ]
+}
