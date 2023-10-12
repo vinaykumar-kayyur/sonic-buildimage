@@ -367,8 +367,8 @@ int is_local_user(char *user)
             continue;
         }
 
-        // compare passwd entry
-        if (strcmp(ppwd->pw_gecos, REMOTE_USER_GECOS_PREFIX) == 0) {
+        // compare passwd entry, for remote user pw_gecos will start as 'remote_user'
+        if (strncmp(ppwd->pw_gecos, REMOTE_USER_GECOS_PREFIX, strlen(REMOTE_USER_GECOS_PREFIX)) == 0) {
             output_debug("user: %s, UID: %d, GECOS: %s is remote user.\n", user, ppwd->pw_uid, ppwd->pw_gecos);
             result = IS_REMOTE_USER;
         }
