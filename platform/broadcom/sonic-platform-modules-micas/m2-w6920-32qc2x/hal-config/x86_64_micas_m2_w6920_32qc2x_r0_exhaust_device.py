@@ -1,13 +1,13 @@
 # coding:utf-8
 
 psu_fan_airflow = {
-    "F2B": ['GW-CRPS1300D', 'DPS-1300AB-6 F', 'DPS-1300AB-6 S'],
-    "B2F": ['GW-CRPS1300D3R', 'DPS-1300AB-11 C']
+    "intake": ['GW-CRPS1300D', 'DPS-1300AB-6 F', 'DPS-1300AB-6 S'],
+    "exhaust": ['GW-CRPS1300D3R', 'DPS-1300AB-11 C']
 }
 
 fanairflow = {
-    "F2B": ['M1HFAN IV-F'],
-    "B2F": ['M1HFAN IV-R']
+    "intake": ['M1HFAN IV-F'],
+    "exhaust": ['M1HFAN IV-R']
 }
 
 psu_display_name = {
@@ -76,7 +76,7 @@ devices = {
         {
             "name": "ONIE_E2",
             "e2loc": {"loc": "/sys/bus/i2c/devices/2-0056/eeprom", "way": "sysfs"},
-            "airflow": "B2F"
+            "airflow": "exhaust"
         },
     ],
     "psus": [
@@ -662,7 +662,7 @@ devices = {
             "name": "CPU_CPLD",
             "cpld_id": "CPLD1",
             "VersionFile": {"loc": "/dev/cpld0", "offset": 0, "len": 4, "way": "devfile_ascii"},
-            "desc": "Used for SFP+ modules",
+            "desc": "Used for system power",
             "slot": 0,
             "warm": 0,
         },
@@ -670,7 +670,7 @@ devices = {
             "name": "CTRL_CPLD",
             "cpld_id": "CPLD2",
             "VersionFile": {"loc": "/dev/cpld1", "offset": 0, "len": 4, "way": "devfile_ascii"},
-            "desc": "Used for SFP+ modules",
+            "desc": "Used for base functions",
             "slot": 0,
             "warm": 0,
         },
@@ -678,7 +678,7 @@ devices = {
             "name": "MAC_CPLDA",
             "cpld_id": "CPLD3",
             "VersionFile": {"loc": "/dev/cpld2", "offset": 0, "len": 4, "way": "devfile_ascii"},
-            "desc": "Used for system LEDs and FANs",
+            "desc": "Used for SFP+ modules",
             "slot": 0,
             "warm": 0,
         },
@@ -686,7 +686,7 @@ devices = {
             "name": "MAC_CPLDB",
             "cpld_id": "CPLD4",
             "VersionFile": {"loc": "/dev/cpld3", "offset": 0, "len": 4, "way": "devfile_ascii"},
-            "desc": "Used for system power",
+            "desc": "Used for SFP+ modules",
             "slot": 0,
             "warm": 0,
         },
@@ -694,13 +694,22 @@ devices = {
             "name": "FAN_CPLD",
             "cpld_id": "CPLD5",
             "VersionFile": {"loc": "/dev/cpld4", "offset": 0, "len": 4, "way": "devfile_ascii"},
-            "desc": "Used for system power",
+            "desc": "Used for fan modules",
             "slot": 0,
             "warm": 0,
         },
         {
-            "name": "BIOS",
+            "name": "MAC_FPGA",
             "cpld_id": "CPLD6",
+            "VersionFile": {"loc": "/dev/fpga0", "offset": 0, "len": 4, "way": "devfile_ascii"},
+            "desc": "Used for base functions",
+            "slot": 0,
+            "format": "little_endian",
+            "warm": 1,
+        },
+        {
+            "name": "BIOS",
+            "cpld_id": "CPLD7",
             "VersionFile": {"cmd": "dmidecode -s bios-version", "way": "cmd"},
             "desc": "Performs initialization of hardware components during booting",
             "slot": 0,
@@ -714,7 +723,7 @@ devices = {
             "dcdc_id": "DCDC1",
             "Min": 11400,
             "value": {
-                "loc": "/sys/bus/i2c/devices/2-005b/hwmon/hwmon*/in1_input",
+                "loc": "/sys/bus/i2c/devices/60-005b/hwmon/hwmon*/in1_input",
                 "way": "sysfs",
             },
             "read_times": 5,
@@ -728,7 +737,7 @@ devices = {
             "dcdc_id": "DCDC2",
             "Min": 950,
             "value": {
-                "loc": "/sys/bus/i2c/devices/2-005b/hwmon/hwmon*/in2_input",
+                "loc": "/sys/bus/i2c/devices/60-005b/hwmon/hwmon*/in2_input",
                 "way": "sysfs",
             },
             "read_times": 5,
@@ -742,7 +751,7 @@ devices = {
             "dcdc_id": "DCDC3",
             "Min": 1710,
             "value": {
-                "loc": "/sys/bus/i2c/devices/2-005b/hwmon/hwmon*/in3_input",
+                "loc": "/sys/bus/i2c/devices/60-005b/hwmon/hwmon*/in3_input",
                 "way": "sysfs",
             },
             "read_times": 5,
@@ -756,7 +765,7 @@ devices = {
             "dcdc_id": "DCDC4",
             "Min": 1130,
             "value": {
-                "loc": "/sys/bus/i2c/devices/2-005b/hwmon/hwmon*/in4_input",
+                "loc": "/sys/bus/i2c/devices/60-005b/hwmon/hwmon*/in4_input",
                 "way": "sysfs",
             },
             "read_times": 5,
@@ -770,7 +779,7 @@ devices = {
             "dcdc_id": "DCDC5",
             "Min": 3135,
             "value": {
-                "loc": "/sys/bus/i2c/devices/2-005b/hwmon/hwmon*/in5_input",
+                "loc": "/sys/bus/i2c/devices/60-005b/hwmon/hwmon*/in5_input",
                 "way": "sysfs",
             },
             "read_times": 5,
@@ -784,7 +793,7 @@ devices = {
             "dcdc_id": "DCDC6",
             "Min": 3135,
             "value": {
-                "loc": "/sys/bus/i2c/devices/2-005b/hwmon/hwmon*/in6_input",
+                "loc": "/sys/bus/i2c/devices/60-005b/hwmon/hwmon*/in6_input",
                 "way": "sysfs",
             },
             "read_times": 5,
@@ -798,7 +807,7 @@ devices = {
             "dcdc_id": "DCDC7",
             "Min": 1710,
             "value": {
-                "loc": "/sys/bus/i2c/devices/2-005b/hwmon/hwmon*/in7_input",
+                "loc": "/sys/bus/i2c/devices/60-005b/hwmon/hwmon*/in7_input",
                 "way": "sysfs",
             },
             "read_times": 5,
@@ -812,7 +821,7 @@ devices = {
             "dcdc_id": "DCDC8",
             "Min": 1130,
             "value": {
-                "loc": "/sys/bus/i2c/devices/2-005b/hwmon/hwmon*/in8_input",
+                "loc": "/sys/bus/i2c/devices/60-005b/hwmon/hwmon*/in8_input",
                 "way": "sysfs",
             },
             "read_times": 5,
@@ -826,7 +835,7 @@ devices = {
             "dcdc_id": "DCDC9",
             "Min": 1130,
             "value": {
-                "loc": "/sys/bus/i2c/devices/2-005b/hwmon/hwmon*/in9_input",
+                "loc": "/sys/bus/i2c/devices/60-005b/hwmon/hwmon*/in9_input",
                 "way": "sysfs",
             },
             "read_times": 5,
@@ -840,7 +849,7 @@ devices = {
             "dcdc_id": "DCDC10",
             "Min": 3135,
             "value": {
-                "loc": "/sys/bus/i2c/devices/2-005b/hwmon/hwmon*/in10_input",
+                "loc": "/sys/bus/i2c/devices/60-005b/hwmon/hwmon*/in10_input",
                 "way": "sysfs",
             },
             "read_times": 5,
@@ -854,7 +863,7 @@ devices = {
             "dcdc_id": "DCDC11",
             "Min": 3135,
             "value": {
-                "loc": "/sys/bus/i2c/devices/2-005b/hwmon/hwmon*/in11_input",
+                "loc": "/sys/bus/i2c/devices/60-005b/hwmon/hwmon*/in11_input",
                 "way": "sysfs",
             },
             "read_times": 5,
@@ -868,7 +877,7 @@ devices = {
             "dcdc_id": "DCDC12",
             "Min": 4500,
             "value": {
-                "loc": "/sys/bus/i2c/devices/2-005b/hwmon/hwmon*/in13_input",
+                "loc": "/sys/bus/i2c/devices/60-005b/hwmon/hwmon*/in13_input",
                 "way": "sysfs",
             },
             "read_times": 5,
@@ -882,7 +891,7 @@ devices = {
             "dcdc_id": "DCDC13",
             "Min": 700,
             "value": {
-                "loc": "/sys/bus/i2c/devices/2-005b/hwmon/hwmon*/in14_input",
+                "loc": "/sys/bus/i2c/devices/60-005b/hwmon/hwmon*/in14_input",
                 "way": "sysfs",
             },
             "read_times": 5,
@@ -896,7 +905,7 @@ devices = {
             "dcdc_id": "DCDC14",
             "Min": 760,
             "value": {
-                "loc": "/sys/bus/i2c/devices/2-005b/hwmon/hwmon*/in15_input",
+                "loc": "/sys/bus/i2c/devices/60-005b/hwmon/hwmon*/in15_input",
                 "way": "sysfs",
             },
             "read_times": 5,
@@ -910,7 +919,7 @@ devices = {
             "dcdc_id": "DCDC15",
             "Min": 760,
             "value": {
-                "loc": "/sys/bus/i2c/devices/2-005b/hwmon/hwmon*/in16_input",
+                "loc": "/sys/bus/i2c/devices/60-005b/hwmon/hwmon*/in16_input",
                 "way": "sysfs",
             },
             "read_times": 5,

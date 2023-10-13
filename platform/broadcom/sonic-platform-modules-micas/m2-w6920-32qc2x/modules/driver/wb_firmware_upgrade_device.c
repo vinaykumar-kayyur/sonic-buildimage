@@ -322,6 +322,14 @@ static struct platform_device firmware_upgrade_device[] = {
             .release = firmware_device_release,
         },
     },
+    {
+        .name   = "firmware_sysfs",
+        .id = 10,
+        .dev    = {
+            .platform_data  = &firmware_upgrade_device_data7,
+            .release = firmware_device_release,
+        },
+    },
  };
 
  static int __init firmware_upgrade_device_init(void)
