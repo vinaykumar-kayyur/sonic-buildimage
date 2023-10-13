@@ -7,6 +7,7 @@ import ssl
 import subprocess
 import syslog
 
+
 class Redfish_Api():
     BmcBaseUrl = 'http://240.1.1.1:8080'
     ThermalUrl = '/redfish/v1/Chassis/1/Thermal'
