@@ -1,6 +1,6 @@
 [Unit]
-Description=Accton MiniPack Platform Monitoring service
-Before=pmon.service
+Description=Accton MiniPack Platform initialization service
+Before=pmon.service determine-reboot-cause.service
 After=sysinit.target
 DefaultDependencies=no
 
