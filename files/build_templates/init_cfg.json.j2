@@ -76,7 +76,7 @@
             "check_up_status" : "false",
 {%- endif %}
 {%- if include_kubernetes == "y" %}
-{%- if feature in ["lldp", "pmon", "radv", "eventd", "snmp", "telemetry"] %}
+{%- if feature in ["lldp", "pmon", "radv", "eventd", "snmp", "telemetry", "gnmi"] %}
             "set_owner": "kube", {% else %}
             "set_owner": "local", {% endif %} {% endif %}
             "high_mem_alert": "disabled"
