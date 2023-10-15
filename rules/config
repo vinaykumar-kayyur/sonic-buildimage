@@ -134,9 +134,6 @@ INCLUDE_ICCPD = n
 # INCLUDE_SFLOW - build docker-sflow for sFlow support
 INCLUDE_SFLOW = y
 
-# ENABLE_SFLOW_DROPMON - support of drop packets monitoring feature for sFlow deamon
-ENABLE_SFLOW_DROPMON = n
-
 # INCLUDE_MGMT_FRAMEWORK - build docker-sonic-mgmt-framework for CLI and REST server support
 INCLUDE_MGMT_FRAMEWORK = y
 
@@ -153,8 +150,11 @@ INCLUDE_NAT = y
 # INCLUDE_DHCP_RELAY - build and install dhcp-relay package
 INCLUDE_DHCP_RELAY = y
 
+# INCLUDE_DHCP_SERVER - build and install dhcp-server package
+INCLUDE_DHCP_SERVER = n
+
 # INCLUDE_P4RT - build docker-p4rt for P4RT support
-INCLUDE_P4RT = y
+INCLUDE_P4RT = n
 
 # ENABLE_AUTO_TECH_SUPPORT - Enable the configuration for event-driven techsupport & coredump mgmt feature
 ENABLE_AUTO_TECH_SUPPORT = y
