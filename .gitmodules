@@ -114,3 +114,6 @@
 [submodule "src/sonic-gnmi"]
 	path = src/sonic-gnmi
 	url = https://github.com/sonic-net/sonic-gnmi.git
+[submodule "platform/marvell-arm64/mrvl-prestera"]
+	path = platform/marvell-arm64/mrvl-prestera
+	url = https://github.com/Marvell-switching/mrvl-prestera.git
