@@ -19,7 +19,7 @@ import time
 from unittest import mock
 
 from sonic_platform import utils
-from sonic_platform.thermal_updater import Timer, ThermalUpdater
+from sonic_platform.thermal_updater import ThermalUpdater
 from sonic_platform.thermal_updater import ASIC_DEFAULT_TEMP_WARNNING_THRESHOLD, \
                                            ASIC_DEFAULT_TEMP_CRITICAL_THRESHOLD
 
@@ -47,25 +47,6 @@ mock_tc_config = """
 
 
 class TestThermalUpdater:
-    def test_timer(self):
-        timer = Timer()
-        timer.start()
-        mock_cb_1000_run_now = mock.MagicMock()
-        mock_cb_1000_run_future = mock.MagicMock()
-        mock_cb_1_run_future_once = mock.MagicMock()
-        mock_cb_1_run_future_repeat = mock.MagicMock()
-        timer.schedule(1000, cb=mock_cb_1000_run_now, repeat=False, run_now=True)
-        timer.schedule(1000, cb=mock_cb_1000_run_future, repeat=False, run_now=False)
-        timer.schedule(1, cb=mock_cb_1_run_future_once, repeat=False, run_now=False)
-        timer.schedule(1, cb=mock_cb_1_run_future_repeat, repeat=True, run_now=False)
-        time.sleep(3)
-        timer.stop()
-
-        mock_cb_1000_run_now.assert_called_once()
-        mock_cb_1000_run_future.assert_not_called()
-        mock_cb_1_run_future_once.assert_called_once()
-        assert mock_cb_1_run_future_repeat.call_count > 1
-
     def test_load_tc_config_non_exists(self):
         updater = ThermalUpdater(None)
         updater.load_tc_config()
@@ -115,14 +96,14 @@ class TestThermalUpdater:
         updater = ThermalUpdater(None)
         updater.set_thermal_data = mock.MagicMock()
         assert updater.get_asic_temp() == 1000
-        assert updater.get_asic_temp_waning_threashold() == 1000
+        assert updater.get_asic_temp_warning_threashold() == 1000
         assert updater.get_asic_temp_critical_threashold() == 1000
         updater.update_asic()
         assert updater.set_thermal_data.call_count == 3
 
         mock_read.return_value = None
         assert updater.get_asic_temp() == ASIC_DEFAULT_TEMP_WARNNING_THRESHOLD
-        assert updater.get_asic_temp_waning_threashold() == ASIC_DEFAULT_TEMP_WARNNING_THRESHOLD
+        assert updater.get_asic_temp_warning_threashold() == ASIC_DEFAULT_TEMP_WARNNING_THRESHOLD
         assert updater.get_asic_temp_critical_threashold() == ASIC_DEFAULT_TEMP_CRITICAL_THRESHOLD
 
     def test_update_module(self):

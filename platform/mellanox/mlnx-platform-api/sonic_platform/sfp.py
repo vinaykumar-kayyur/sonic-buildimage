@@ -412,11 +412,6 @@ class SFP(NvidiaSFPCommon):
             error_description = "Unknow SFP module status ({})".format(oper_status)
         return error_description
 
-    def get_error(self):
-        status_file_path = SFP_SDK_MODULE_SYSFS_ROOT_TEMPLATE.format(sdk_index) + SFP_SYSFS_STATUS
-        oper_state = utils.read_int_from_file(status_file_path)
-        return 1 if oper_state == SX_PORT_MODULE_STATUS_PLUGGED_WITH_ERROR else 0
-
     def _get_eeprom_path(self):
         return SFP_EEPROM_ROOT_TEMPLATE.format(self.sdk_index)
 
