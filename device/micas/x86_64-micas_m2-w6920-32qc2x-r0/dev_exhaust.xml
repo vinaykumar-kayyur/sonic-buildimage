@@ -79,118 +79,118 @@
         </temp>
     </temps>
     <psus>
-        <custpsu id="psu1" >
+        <psu id="psu1" >
             <property name="present" location="/sys/wb_plat/psu/psu1/present" type="4" decode="psucheck"  default="1"/>
             <property name="status"  location="/sys/wb_plat/psu/psu1/output"  type="4" decode="psustatus" default="1"/>
-            <property name="psu" e2type="custfru"  location="/sys/bus/i2c/devices/59-0050/eeprom"/>
-        </custpsu>
-        <custpsu id="psu2" >
+            <property name="psu" e2type="fru"  location="/sys/bus/i2c/devices/59-0050/eeprom"/>
+        </psu>
+        <psu id="psu2" >
             <property name="present" location="/sys/wb_plat/psu/psu2/present" type="4" decode="psucheck"  default="1"/>
             <property name="status"  location="/sys/wb_plat/psu/psu2/output"  type="4" decode="psustatus" default="1"/>
-            <property name="psu" e2type="custfru"  location="/sys/bus/i2c/devices/58-0050/eeprom"/>
-        </custpsu> 
-    </psus> 
+            <property name="psu" e2type="fru"  location="/sys/bus/i2c/devices/58-0050/eeprom"/>
+        </psu>
+    </psus>
     <dcdcs>
         <dcdc id="MAC_VCC12V_CON" >
-            <property name="dcdc_input" location="/sys/bus/i2c/devices/2-005b/hwmon/hwmon*/in1_input" type="6" />
+            <property name="dcdc_input" location="/sys/bus/i2c/devices/60-005b/hwmon/hwmon*/in1_input" type="6" />
             <property name="dcdc_max"   gettype="config" value="12.600" />
             <property name="dcdc_min"   gettype="config" value="11.400" />
             <property name="dcdc_unit"   gettype="config" value="V" />
         </dcdc>
 
         <dcdc id="MAC_VDD1.0V_FPGA" >
-            <property name="dcdc_input" location="/sys/bus/i2c/devices/2-005b/hwmon/hwmon*/in2_input" type="6" />
+            <property name="dcdc_input" location="/sys/bus/i2c/devices/60-005b/hwmon/hwmon*/in2_input" type="6" />
             <property name="dcdc_max"   gettype="config" value="1.050" />
             <property name="dcdc_min"   gettype="config" value="0.950" />
             <property name="dcdc_unit"   gettype="config" value="V" />
         </dcdc>
 
         <dcdc id="MAC_VDD1.8V_FPGA" >
-            <property name="dcdc_input" location="/sys/bus/i2c/devices/2-005b/hwmon/hwmon*/in3_input" type="6" />
+            <property name="dcdc_input" location="/sys/bus/i2c/devices/60-005b/hwmon/hwmon*/in3_input" type="6" />
             <property name="dcdc_max"   gettype="config" value="1.890" />
             <property name="dcdc_min"   gettype="config" value="1.710" />
             <property name="dcdc_unit"   gettype="config" value="V" />
         </dcdc>
 
         <dcdc id="MAC_VDD1.2V_FPGA" >
-            <property name="dcdc_input" location="/sys/bus/i2c/devices/2-005b/hwmon/hwmon*/in4_input" type="6" />
+            <property name="dcdc_input" location="/sys/bus/i2c/devices/60-005b/hwmon/hwmon*/in4_input" type="6" />
             <property name="dcdc_max"   gettype="config" value="1.280" />
             <property name="dcdc_min"   gettype="config" value="1.130" />
             <property name="dcdc_unit"   gettype="config" value="V" />
         </dcdc>
 
         <dcdc id="MAC_VDD3.3V" >
-            <property name="dcdc_input" location="/sys/bus/i2c/devices/2-005b/hwmon/hwmon*/in5_input" type="6" />
+            <property name="dcdc_input" location="/sys/bus/i2c/devices/60-005b/hwmon/hwmon*/in5_input" type="6" />
             <property name="dcdc_max"   gettype="config" value="3.465" />
             <property name="dcdc_min"   gettype="config" value="3.135" />
             <property name="dcdc_unit"   gettype="config" value="V" />
         </dcdc>
 
         <dcdc id="MAC_DVDD3.3V_1.8V" >
-            <property name="dcdc_input" location="/sys/bus/i2c/devices/2-005b/hwmon/hwmon*/in6_input" type="6" />
+            <property name="dcdc_input" location="/sys/bus/i2c/devices/60-005b/hwmon/hwmon*/in6_input" type="6" />
             <property name="dcdc_max"   gettype="config" value="3.465" />
             <property name="dcdc_min"   gettype="config" value="3.135" />
             <property name="dcdc_unit"   gettype="config" value="V" />
         </dcdc>
 
         <dcdc id="MAC_AVDD1.8V" >
-            <property name="dcdc_input" location="/sys/bus/i2c/devices/2-005b/hwmon/hwmon*/in7_input" type="6" />
+            <property name="dcdc_input" location="/sys/bus/i2c/devices/60-005b/hwmon/hwmon*/in7_input" type="6" />
             <property name="dcdc_max"   gettype="config" value="1.890" />
             <property name="dcdc_min"   gettype="config" value="1.710" />
             <property name="dcdc_unit"   gettype="config" value="V" />
         </dcdc>
 
         <dcdc id="MAC_DVDD1.2V" >
-            <property name="dcdc_input" location="/sys/bus/i2c/devices/2-005b/hwmon/hwmon*/in8_input" type="6" />
+            <property name="dcdc_input" location="/sys/bus/i2c/devices/60-005b/hwmon/hwmon*/in8_input" type="6" />
             <property name="dcdc_max"   gettype="config" value="1.280" />
             <property name="dcdc_min"   gettype="config" value="1.130" />
             <property name="dcdc_unit"   gettype="config" value="V" />
         </dcdc>
 
         <dcdc id="MAC_AVDD1.2V" >
-            <property name="dcdc_input" location="/sys/bus/i2c/devices/2-005b/hwmon/hwmon*/in9_input" type="6" />
+            <property name="dcdc_input" location="/sys/bus/i2c/devices/60-005b/hwmon/hwmon*/in9_input" type="6" />
             <property name="dcdc_max"   gettype="config" value="1.280" />
             <property name="dcdc_min"   gettype="config" value="1.130" />
             <property name="dcdc_unit"   gettype="config" value="V" />
         </dcdc>
 
         <dcdc id="MAC_VDD3.3V_SFP+" >
-            <property name="dcdc_input" location="/sys/bus/i2c/devices/2-005b/hwmon/hwmon*/in10_input" type="6" />
+            <property name="dcdc_input" location="/sys/bus/i2c/devices/60-005b/hwmon/hwmon*/in10_input" type="6" />
             <property name="dcdc_max"   gettype="config" value="3.465" />
             <property name="dcdc_min"   gettype="config" value="3.135" />
             <property name="dcdc_unit"   gettype="config" value="V" />
         </dcdc>
 
         <dcdc id="MAC_VDD3.3V_CLK" >
-            <property name="dcdc_input" location="/sys/bus/i2c/devices/2-005b/hwmon/hwmon*/in11_input" type="6" />
+            <property name="dcdc_input" location="/sys/bus/i2c/devices/60-005b/hwmon/hwmon*/in11_input" type="6" />
             <property name="dcdc_max"   gettype="config" value="3.465" />
             <property name="dcdc_min"   gettype="config" value="3.135" />
             <property name="dcdc_unit"   gettype="config" value="V" />
         </dcdc>
 
         <dcdc id="MAC_VDD5V_VR" >
-            <property name="dcdc_input" location="/sys/bus/i2c/devices/2-005b/hwmon/hwmon*/in13_input" type="6" />
+            <property name="dcdc_input" location="/sys/bus/i2c/devices/60-005b/hwmon/hwmon*/in13_input" type="6" />
             <property name="dcdc_max"   gettype="config" value="5.500" />
             <property name="dcdc_min"   gettype="config" value="4.500" />
             <property name="dcdc_unit"   gettype="config" value="V" />
         </dcdc>
 
         <dcdc id="MAC_VDD_CORE" >
-            <property name="dcdc_input" location="/sys/bus/i2c/devices/2-005b/hwmon/hwmon*/in14_input" type="6" />
+            <property name="dcdc_input" location="/sys/bus/i2c/devices/60-005b/hwmon/hwmon*/in14_input" type="6" />
             <property name="dcdc_max"   gettype="config" value="0.980" />
             <property name="dcdc_min"   gettype="config" value="0.700" />
             <property name="dcdc_unit"   gettype="config" value="V" />
         </dcdc>
 
         <dcdc id="MAC_VDD_ANALOG" >
-            <property name="dcdc_input" location="/sys/bus/i2c/devices/2-005b/hwmon/hwmon*/in15_input" type="6" />
+            <property name="dcdc_input" location="/sys/bus/i2c/devices/60-005b/hwmon/hwmon*/in15_input" type="6" />
             <property name="dcdc_max"   gettype="config" value="0.920" />
             <property name="dcdc_min"   gettype="config" value="0.760" />
             <property name="dcdc_unit"   gettype="config" value="V" />
         </dcdc>
 
         <dcdc id="MAC_VDD_ANALOG1" >
-            <property name="dcdc_input" location="/sys/bus/i2c/devices/2-005b/hwmon/hwmon*/in16_input" type="6" />
+            <property name="dcdc_input" location="/sys/bus/i2c/devices/60-005b/hwmon/hwmon*/in16_input" type="6" />
             <property name="dcdc_max"   gettype="config" value="0.920" />
             <property name="dcdc_min"   gettype="config" value="0.760" />
             <property name="dcdc_unit"   gettype="config" value="V" />
@@ -425,6 +425,7 @@
     <psutype>
         <code key="GW-CRPS1300D" value="PA1300I-F"/>
         <code key="DPS-1300AB-6 F" value="PA1300I-F"/>
+        <code key="DPS-1300AB-6 S" value="PA1300I-F"/>
         <code key="GW-CRPS1300D3R" value="PA1300I-R"/>
         <code key="DPS-1300AB-11 C" value="PA1300I-R"/>
     </psutype>
