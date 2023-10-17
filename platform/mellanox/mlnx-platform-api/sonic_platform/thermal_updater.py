@@ -18,12 +18,29 @@
 from . import utils
 from sonic_py_common import logger
 
+import sys
 import time
+
+sys.path.append('/run/hw-management/bin')
+
+try:
+    import hw_management_independent_mode_update
+except ImportError:
+    # For unit test only
+    from unittest import mock
+    hw_management_independent_mode_update = mock.MagicMock()
+    hw_management_independent_mode_update.thermal_data_set_asic = mock.MagicMock()
+    hw_management_independent_mode_update.thermal_data_set_module = mock.MagicMock()
+    hw_management_independent_mode_update.thermal_data_clean_asic = mock.MagicMock()
+    hw_management_independent_mode_update.thermal_data_clean_module = mock.MagicMock()
+
 
 SFP_TEMPERATURE_SCALE = 1000
 ASIC_TEMPERATURE_SCALE = 125
 ASIC_DEFAULT_TEMP_WARNNING_THRESHOLD = 105000
 ASIC_DEFAULT_TEMP_CRITICAL_THRESHOLD = 120000
+
+ERROR_READ_THERMAL_DATA = -254
 
 TC_CONFIG_FILE = '/run/hw-management/config/tc_config.json'
 logger = logger.Logger('thermal-updater')
@@ -62,6 +79,7 @@ class ThermalUpdater:
         self._timer.schedule(sfp_poll_interval, self.update_module)
 
     def start(self):
+        self.clean_thermal_data()
         if not self.wait_all_sfp_ready():
             logger.log_error('Failed to wait for all SFP ready, will put hw-management-tc to suspend')
             self.control_tc(True)
@@ -77,6 +95,14 @@ class ThermalUpdater:
     def control_tc(self, suspend):
         logger.log_notice(f'Set hw-management-tc to {"suspend" if suspend else "resume"}')
         utils.write_file('/run/hw-management/config/suspend', 1 if suspend else 0)
+
+    def clean_thermal_data(self):
+        hw_management_independent_mode_update.thermal_data_clean_asic(0)
+        for sfp in self._sfp_list:
+            hw_management_independent_mode_update.thermal_data_clean_module(
+                0,
+                sfp.sdk_index + 1
+            )
 
     def wait_all_sfp_ready(self):
         logger.log_notice('Waiting for all SFP modules ready...')
@@ -99,7 +125,7 @@ class ThermalUpdater:
 
     def get_asic_temp(self):
         temperature = utils.read_int_from_file('/sys/module/sx_core/asic0/temperature/input', default=None)
-        return temperature * ASIC_TEMPERATURE_SCALE if temperature is not None else ASIC_DEFAULT_TEMP_WARNNING_THRESHOLD
+        return temperature * ASIC_TEMPERATURE_SCALE if temperature is not None else None
 
     def get_asic_temp_warning_threashold(self):
         emergency = utils.read_int_from_file('/sys/module/sx_core/asic0/temperature/emergency', default=None, log_func=None)
@@ -121,33 +147,32 @@ class ThermalUpdater:
                 else:
                     warning_thresh = sfp.get_temperature_warning_threashold()
                     critical_thresh = sfp.get_temperature_critical_threashold()
+                    temperature = ERROR_READ_THERMAL_DATA if temperature is None else int(temperature * SFP_TEMPERATURE_SCALE)
+                    warning_thresh = ERROR_READ_THERMAL_DATA if warning_thresh is None else int(warning_thresh * SFP_TEMPERATURE_SCALE)
+                    critical_thresh = ERROR_READ_THERMAL_DATA if critical_thresh is None else int(critical_thresh * SFP_TEMPERATURE_SCALE)
 
-                self.set_thermal_data(sfp.sdk_index + 1, 'input', int(temperature * SFP_TEMPERATURE_SCALE))
-                self.set_thermal_data(sfp.sdk_index + 1, 'emergency', int(warning_thresh * SFP_TEMPERATURE_SCALE))
-                self.set_thermal_data(sfp.sdk_index + 1, 'crit', int(critical_thresh * SFP_TEMPERATURE_SCALE))
+                hw_management_independent_mode_update.thermal_data_set_module(
+                    0, # ASIC index always 0 for now
+                    sfp.sdk_index + 1,
+                    temperature,
+                    warning_thresh,
+                    critical_thresh
+                )
             else:
                 if pre_presence != presence:
-                    self.remove_thermal_data(sfp.sdk_index + 1, 'input')
-                    self.remove_thermal_data(sfp.sdk_index + 1, 'emergency')
-                    self.remove_thermal_data(sfp.sdk_index + 1, 'crit')
+                    hw_management_independent_mode_update.thermal_data_clean_module(0, sfp.sdk_index + 1)
 
             if pre_presence != presence:
                 self._sfp_status[sfp.sdk_index] = presence
         except Exception as e:
             logger.log_error('Failed to update module {sfp.sdk_index} thermal data - {e}')
-            self.set_thermal_data(sfp.sdk_index + 1, 'input', 'invalid')
-
-    def set_thermal_data(self, index, type, value):
-        if index == 0:
-            print(f'set ASIC {type} {value}')
-        else:
-            print(f'set module {index} {type} {value}')
-
-    def remove_thermal_data(self, index, type):
-        if index == 0:
-            print(f'remove ASIC {type}')
-        else:
-            print(f'remove module {index} {type}')
+            hw_management_independent_mode_update.thermal_data_set_module(
+                0, # ASIC index always 0 for now
+                sfp.sdk_index + 1,
+                ERROR_READ_THERMAL_DATA,
+                ERROR_READ_THERMAL_DATA,
+                ERROR_READ_THERMAL_DATA
+            )
 
     def update_module(self):
         for sfp in self._sfp_list:
@@ -155,9 +180,26 @@ class ThermalUpdater:
 
     def update_asic(self):
         try:
-            self.set_thermal_data(0, 'input', self.get_asic_temp())
-            self.set_thermal_data(0, 'emergency', self.get_asic_temp_warning_threashold())
-            self.set_thermal_data(0, 'crit', self.get_asic_temp_critical_threashold())
+            asic_temp = self.get_asic_temp()
+            if asic_temp:
+                hw_management_independent_mode_update.thermal_data_set_asic(
+                    0, # ASIC index always 0 for now
+                    self.get_asic_temp(),
+                    self.get_asic_temp_warning_threashold(),
+                    self.get_asic_temp_critical_threashold()
+                )
+            else:
+                hw_management_independent_mode_update.thermal_data_set_asic(
+                    0, # ASIC index always 0 for now
+                    ERROR_READ_THERMAL_DATA,
+                    self.get_asic_temp_warning_threashold(),
+                    self.get_asic_temp_critical_threashold()
+                )
         except Exception as e:
             logger.log_error('Failed to update ASIC thermal data - {e}')
-            self.set_thermal_data(0, 'input', 'invalid')
+            hw_management_independent_mode_update.thermal_data_set_asic(
+                0, # ASIC index always 0 for now
+                ERROR_READ_THERMAL_DATA,
+                ERROR_READ_THERMAL_DATA,
+                ERROR_READ_THERMAL_DATA,
+            )

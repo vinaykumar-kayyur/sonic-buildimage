@@ -19,7 +19,7 @@ import time
 from unittest import mock
 
 from sonic_platform import utils
-from sonic_platform.thermal_updater import ThermalUpdater
+from sonic_platform.thermal_updater import ThermalUpdater, hw_management_independent_mode_update
 from sonic_platform.thermal_updater import ASIC_DEFAULT_TEMP_WARNNING_THRESHOLD, \
                                            ASIC_DEFAULT_TEMP_CRITICAL_THRESHOLD
 
@@ -65,7 +65,9 @@ class TestThermalUpdater:
     @mock.patch('sonic_platform.utils.write_file')
     def test_start_stop(self, mock_write, mock_wait):
         mock_wait.return_value = True
-        updater = ThermalUpdater(None)
+        mock_sfp = mock.MagicMock()
+        mock_sfp.sdk_index = 1
+        updater = ThermalUpdater([mock_sfp])
         updater.start()
         mock_write.assert_called_once_with('/run/hw-management/config/suspend', 0)
         utils.wait_until(updater._timer.is_alive, timeout=5)
@@ -94,15 +96,14 @@ class TestThermalUpdater:
     def test_update_asic(self, mock_read):
         mock_read.return_value = 8
         updater = ThermalUpdater(None)
-        updater.set_thermal_data = mock.MagicMock()
         assert updater.get_asic_temp() == 1000
         assert updater.get_asic_temp_warning_threashold() == 1000
         assert updater.get_asic_temp_critical_threashold() == 1000
         updater.update_asic()
-        assert updater.set_thermal_data.call_count == 3
+        hw_management_independent_mode_update.thermal_data_set_asic.assert_called_once()
 
         mock_read.return_value = None
-        assert updater.get_asic_temp() == ASIC_DEFAULT_TEMP_WARNNING_THRESHOLD
+        assert updater.get_asic_temp() is None
         assert updater.get_asic_temp_warning_threashold() == ASIC_DEFAULT_TEMP_WARNNING_THRESHOLD
         assert updater.get_asic_temp_critical_threashold() == ASIC_DEFAULT_TEMP_CRITICAL_THRESHOLD
 
@@ -114,27 +115,14 @@ class TestThermalUpdater:
         mock_sfp.get_temperature_warning_threashold = mock.MagicMock(return_value=70.0)
         mock_sfp.get_temperature_critical_threashold = mock.MagicMock(return_value=80.0)
         updater = ThermalUpdater([mock_sfp])
-        updater.set_thermal_data = mock.MagicMock()
         updater.update_module()
-        updater.set_thermal_data.assert_has_calls([
-            mock.call(11, 'input', 55000),
-            mock.call(11, 'emergency', 70000),
-            mock.call(11, 'crit', 80000),
-        ])
+        hw_management_independent_mode_update.thermal_data_set_module.assert_called_once_with(0, 11, 55000, 70000, 80000)
 
         mock_sfp.get_temperature = mock.MagicMock(return_value=0.0)
+        hw_management_independent_mode_update.reset_mock()
         updater.update_module()
-        updater.set_thermal_data.assert_has_calls([
-            mock.call(11, 'input', 0),
-            mock.call(11, 'emergency', 0),
-            mock.call(11, 'crit', 0),
-        ])
+        hw_management_independent_mode_update.thermal_data_set_module.assert_called_once_with(0, 11, 0, 0, 0)
 
         mock_sfp.get_presence = mock.MagicMock(return_value=False)
-        updater.remove_thermal_data = mock.MagicMock()
         updater.update_module()
-        updater.remove_thermal_data.assert_has_calls([
-            mock.call(11, 'input'),
-            mock.call(11, 'emergency'),
-            mock.call(11, 'crit'),
-        ])
+        hw_management_independent_mode_update.thermal_data_clean_module.assert_called_once_with(0, 11)

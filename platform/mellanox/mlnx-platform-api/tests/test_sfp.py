@@ -294,11 +294,11 @@ class TestSfp:
     def test_get_temperature(self, mock_read):
         sfp = SFP(0)
         sfp.is_sw_control = mock.MagicMock(return_value=True)
-        assert sfp.get_temperature() == 0.0
+        assert sfp.get_temperature() == None
 
         mock_read.return_value = None
         sfp.is_sw_control.return_value = False
-        assert sfp.get_temperature() == 0.0
+        assert sfp.get_temperature() == None
 
         mock_read.return_value = 448
         assert sfp.get_temperature() == 56.0

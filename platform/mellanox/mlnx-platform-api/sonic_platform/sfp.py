@@ -538,12 +538,12 @@ class SFP(NvidiaSFPCommon):
             if not self.is_sw_control():
                 temperature = utils.read_int_from_file(f'/sys/module/sx_core/asic0/module{self.sdk_index}/temperature/input',
                                                        default=None)
-                return temperature / SFP_TEMPERATURE_SCALE if temperature is not None else 0.0
+                return temperature / SFP_TEMPERATURE_SCALE if temperature is not None else None
         except:
             return 0.0
 
         temperature = super().get_temperature()
-        return temperature if temperature is not None else 0.0
+        return temperature if temperature is not None else None
 
     def get_temperature_warning_threashold(self):
         """Get temperature warning threshold
