@@ -18,8 +18,6 @@
 from . import utils
 from sonic_py_common import logger
 
-import queue
-import threading
 import time
 
 SFP_TEMPERATURE_SCALE = 1000
