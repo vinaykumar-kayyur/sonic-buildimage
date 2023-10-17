@@ -13,12 +13,11 @@ from datetime import datetime
 from ipaddress import ip_interface
 from queue import Queue
 
-from swsscommon.swsscommon import ConfigDBConnector, SonicV2Connector
+from swsscommon.swsscommon import ConfigDBConnector, SonicV2Connector, \
+                                  DBConnector, Select, SubscriberStateTable
 from sonic_py_common import logger as log
 
 from pyroute2 import IPRoute
-from pyroute2 import NDB
-from pyroute2.netlink.rtnl.ifinfmsg import ifinfmsg
 from pyroute2.netlink.exceptions import NetlinkError
 from scapy.layers.inet import IP
 from scapy.layers.inet6 import IPv6
@@ -28,17 +27,20 @@ from scapy.sendrecv import AsyncSniffer
 logger = log.Logger()
 
 STATE_DB = 'STATE_DB'
+APPL_DB = 'APPL_DB'
 PORTCHANNEL_INTERFACE_TABLE = 'PORTCHANNEL_INTERFACE'
 TUNNEL_TABLE = 'TUNNEL'
 PEER_SWITCH_TABLE = 'PEER_SWITCH'
 INTF_TABLE_TEMPLATE = 'INTERFACE_TABLE|{}|{}'
+LAG_TABLE = 'LAG_TABLE'
 STATE_KEY = 'state'
 TUNNEL_TYPE_KEY = 'tunnel_type'
 DST_IP_KEY = 'dst_ip'
 ADDRESS_IPV4_KEY = 'address_ipv4'
+OPER_STATUS_KEY = 'oper_status'
 IPINIP_TUNNEL = 'ipinip'
-
 RTM_NEWLINK = 'RTM_NEWLINK'
+SELECT_TIMEOUT = 1000
 
 nl_msgs = Queue()
 portchannel_intfs = None
@@ -251,24 +253,26 @@ class TunnelPacketHandler(object):
                 return IPv6
         return False
 
-    def sniffer_restart_required(self, msg):
+    def sniffer_restart_required(self, lag, fvs):
         """
         Determines if the packet sniffer needs to be restarted
 
         The sniffer needs to be restarted when a portchannel interface transitions
         from down to up. When a portchannel interface goes down, the sniffer is
-        able to continue sniffing on other portchannels. We
+        able to continue sniffing on other portchannels. 
         """
-        intf_name = msg.get_attr('IFLA_IFNAME')
-        oper_state = msg.get_attr('IFLA_OPERSTATE').lower()
-        if intf_name not in self.sniff_intfs and oper_state == 'up':
+        oper_status = dict(fvs).get(OPER_STATUS_KEY)
+        if lag not in self.sniff_intfs and oper_status == 'up':
+            import pdb; pdb.set_trace()
             logger.log_info('{} came back up, sniffer restart required'
-                            .format(intf_name))
+                            .format(lag))
+            # Don't need to modify self.sniff_intfs here since it is repopulated
+            # by self.get_up_portchannels()
             return True
-        elif intf_name in self.sniff_intfs and oper_state == 'down':
+        elif lag in self.sniff_intfs and oper_status == 'down':
             # A portchannel interface went down, remove it from the list of
             # sniffed interfaces so we can detect when it comes back up
-            self.sniff_intfs.remove(intf_name)
+            self.sniff_intfs.remove(lag)
             return False
         else:
             return False
@@ -325,15 +329,31 @@ class TunnelPacketHandler(object):
 
         self.sniff_intfs = self.get_up_portchannels()
 
-        with NDB() as self.ndb:
-            self.ndb.register_handler(ifinfmsg, add_msg_to_queue)
-            self.start_sniffer()
-            logger.log_info("Listening on interfaces {}".format(self.sniff_intfs))
-            while True:
-                msg = nl_msgs.get(block=True)
-                if self.sniffer_restart_required(msg):
+        app_db = DBConnector(APPL_DB, 0)
+        lag_table = SubscriberStateTable(app_db, LAG_TABLE)
+        sel = Select()
+        sel.addSelectable(lag_table)
+
+        self.start_sniffer()
+        logger.log_info("Listening on interfaces {}".format(self.sniff_intfs))
+        while True:
+            rc, _ = sel.select(SELECT_TIMEOUT)
+
+            if rc == Select.TIMEOUT:
+                continue
+            elif rc == Select.ERROR:
+                raise Exception("Select() error")
+            else:
+                lag, op, fvs = lag_table.pop()
+                if self.sniffer_restart_required(lag, fvs):
                     self.sniffer.stop()
-                    self.sniff_intfs = self.get_up_portchannels()
+                    start = datetime.now()
+                    # wait up to 3 seconds for the kernel interface to be synced with APPL_DB status
+                    while (datetime.now() - start).seconds < 3:
+                        self.sniff_intfs = self.get_up_portchannels()
+                        if lag in self.sniff_intfs:
+                            break
+                        time.sleep(0.1)
                     logger.log_notice('Restarting tunnel packet handler on '
                                     'interfaces {}'.format(self.sniff_intfs))
                     self.start_sniffer()
