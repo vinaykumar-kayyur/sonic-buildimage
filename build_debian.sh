@@ -275,6 +275,14 @@ else
     echo '[INFO] Skipping Install kubernetes'
 fi
 
+if [ "$INCLUDE_DEVICE_HEALTH" == "y" ]
+then
+    sudo mkdir -p $FILESYSTEM_ROOT/usr/share/device_health/
+else
+    echo '[INFO] Skipping Install of device-health'
+fi
+
+
 if [ "$INCLUDE_KUBERNETES_MASTER" == "y" ]
 then
     ## Install Kubernetes master
