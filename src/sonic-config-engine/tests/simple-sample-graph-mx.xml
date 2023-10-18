@@ -238,8 +238,8 @@
     </DeviceDataPlaneInfo>
   </DpgDec>
   <PngDec>
-    <DeviceInterfaceLink i:type="DeviceInterfaceLink">
-      <DeviceLinkBase>
+    <DeviceInterfaceLink>
+      <DeviceLinkBase i:type="DeviceInterfaceLink">
         <ElementType>DeviceInterfaceLink</ElementType>
         <EndDevice>ARISTA01M0</EndDevice>
         <EndPort>Ethernet1</EndPort>
