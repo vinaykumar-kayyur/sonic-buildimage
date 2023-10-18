@@ -49,6 +49,17 @@ $(BASH_TACPLUS)_RDEPENDS += $(LIBTAC2)
 $(BASH_TACPLUS)_SRC_PATH = $(SRC_PATH)/tacacs/bash_tacplus
 SONIC_DPKG_DEBS += $(BASH_TACPLUS)
 
+# tacplus-probe packages
+TACPLUS_PROBE_VERSION = 1.0.0
+
+export TACPLUS_PROBE_VERSION
+
+TACPLUS_PROBE = tacplus-probe_$(TACPLUS_PROBE_VERSION)_$(CONFIGURED_ARCH).deb
+$(TACPLUS_PROBE)_DEPENDS += $(LIBTAC_DEV) $(LIBSWSSCOMMON_DEV) 
+$(TACPLUS_PROBE)_RDEPENDS += $(LIBTAC2) $(LIBSWSSCOMMON) 
+$(TACPLUS_PROBE)_SRC_PATH = $(SRC_PATH)/tacacs/tacplus_probe
+SONIC_DPKG_DEBS += $(TACPLUS_PROBE)
+
 # The .c, .cpp, .h & .hpp files under src/{$DBG_SRC_ARCHIVE list}
 # are archived into debug one image to facilitate debugging.
 #
