@@ -51,20 +51,12 @@ start() {
     debug "Starting ${SERVICE}$DEV service..."
 
     # start service docker
-    if [ x"$SERVICE" == x"gnmi" ] || [ x"$SERVICE" == x"telemetry" ]; then
-        /usr/bin/gnmi.sh start $SERVICE $DEV
-    else
-        /usr/bin/${SERVICE}.sh start $DEV
-    fi
+    /usr/bin/${SERVICE}.sh start $DEV
     debug "Started ${SERVICE}$DEV service..."
 }
 
 wait() {
-    if [ x"$SERVICE" == x"gnmi" ] || [ x"$SERVICE" == x"telemetry" ]; then
-        /usr/bin/gnmi.sh wait $SERVICE $DEV
-    else
-        /usr/bin/${SERVICE}.sh wait $DEV
-    fi
+    /usr/bin/${SERVICE}.sh wait $DEV
 }
 
 stop() {
@@ -82,20 +74,12 @@ stop() {
             debug "Killing Docker ${SERVICE}${DEV} for active-active dualtor device..."
             /usr/bin/${SERVICE}.sh kill $DEV
         else
-            if [ x"$SERVICE" == x"gnmi" ] || [ x"$SERVICE" == x"telemetry" ]; then
-                /usr/bin/gnmi.sh stop $SERVICE $DEV
-            else
-                /usr/bin/${SERVICE}.sh stop $DEV
-            fi
+            /usr/bin/${SERVICE}.sh stop $DEV
             debug "Stopped ${SERVICE}$DEV service..."
         fi
     else
         debug "Killing Docker ${SERVICE}${DEV}..."
-        if [ x"$SERVICE" == x"gnmi" ] || [ x"$SERVICE" == x"telemetry" ]; then
-            /usr/bin/gnmi.sh kill $SERVICE $DEV
-        else
-            /usr/bin/${SERVICE}.sh kill $DEV
-        fi
+        /usr/bin/${SERVICE}.sh kill $DEV
     fi
 }
 

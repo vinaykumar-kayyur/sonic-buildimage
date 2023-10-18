@@ -2039,23 +2039,8 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         results['ACL_TABLE_TYPE'] = acl_table_types
     results['ACL_TABLE'] = filter_acl_table_bindings(acls, neighbors, pcs, pc_members, sub_role, current_device['type'] if current_device else None, is_storage_device, vlan_members)
     results['FEATURE'] = {
-        'telemetry': {
-            'state': 'disabled'
-        },
         'gnmi': {
             'state': 'enabled'
-        }
-    }
-    results['TELEMETRY'] = {
-        'gnmi': {
-            'client_auth': 'true',
-            'port': '50051',
-            'log_level': '2'
-        },
-        'certs': {
-            'server_crt': '/etc/sonic/telemetry/streamingtelemetryserver.cer',
-            'server_key': '/etc/sonic/telemetry/streamingtelemetryserver.key',
-            'ca_crt': '/etc/sonic/telemetry/dsmsroot.cer'
         }
     }
     results['GNMI'] = {
