@@ -238,7 +238,7 @@
     </DeviceDataPlaneInfo>
   </DpgDec>
   <PngDec>
-    <DeviceInterfaceLink>
+    <DeviceInterfaceLinks>
       <DeviceLinkBase i:type="DeviceInterfaceLink">
         <ElementType>DeviceInterfaceLink</ElementType>
         <EndDevice>ARISTA01M0</EndDevice>
