@@ -274,16 +274,6 @@
           <InAcl>SNMP_ACL</InAcl>
           <Type>SNMP</Type>
         </AclInterface>
-        <AclInterface>
-        <AttachTo>Ethernet0;Ethernet1</AttachTo>
-        <InAcl>BMC_ACL_NORTHBOUND</InAcl>
-        <Type>BmcData</Type>
-      </AclInterface>
-      <AclInterface>
-        <AttachTo>Ethernet0;Ethernet1</AttachTo>
-        <InAcl>BMC_ACL_NORTHBOUND_V6</InAcl>
-        <Type>BmcData</Type>
-      </AclInterface>
       </AclInterfaces>
       <DownstreamSummaries/>
       <DownstreamSummarySet xmlns:a="http://schemas.datacontract.org/2004/07/Microsoft.Search.Autopilot.Evolution"/>
@@ -322,26 +312,34 @@
       </DeviceLinkBase>
     </DeviceInterfaceLinks>
     <Devices>
-      <Device i:type="ToRRouter">
-        <Hostname>switch-t0</Hostname>
-        <HwSku>Force10-S6000</HwSku>
+      <Device i:type="MgmtToRRouter">
+        <Hostname>switch-m0</Hostname>
+        <HwSku>Nokia-M0-7215</HwSku>
         <ClusterName>AAA00PrdStr00</ClusterName>
       </Device>
-      <Device i:type="LeafRouter">
-        <Hostname>ARISTA01T1</Hostname>
-        <HwSku>Arista</HwSku>
+      <Device i:type="MgmtLeafRouter">
+         <Hostname>ARISTA04M1</Hostname>
+         <HwSku>Arista</HwSku>
       </Device>
-      <Device i:type="LeafRouter">
-        <Hostname>ARISTA02T1</Hostname>
-        <HwSku>Arista</HwSku>
+      <Device i:type="MgmtLeafRouter">
+         <Hostname>ARISTA02M1</Hostname>
+         <HwSku>Arista</HwSku>
       </Device>
-      <Device i:type="LeafRouter">
-        <Hostname>ARISTA03T1</Hostname>
-        <HwSku>Arista</HwSku>
+      <Device i:type="BmcMgmtToRRouter">
+         <Hostname>ARISTA02MX</Hostname>
+         <HwSku>Arista</HwSku>
       </Device>
-      <Device i:type="LeafRouter">
-        <Hostname>ARISTA04T1</Hostname>
-        <HwSku>Arista</HwSku>
+      <Device i:type="BmcMgmtToRRouter">
+         <Hostname>ARISTA01MX</Hostname>
+         <HwSku>Arista</HwSku>
+      </Device>
+      <Device i:type="MgmtLeafRouter">
+         <Hostname>ARISTA01M1</Hostname>
+         <HwSku>Arista</HwSku>
+      </Device>
+      <Device i:type="MgmtLeafRouter">
+         <Hostname>ARISTA03M1</Hostname>
+         <HwSku>Arista</HwSku>
       </Device>
     </Devices>
   </PngDec>
