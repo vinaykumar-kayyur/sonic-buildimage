@@ -178,6 +178,13 @@ char g_datetime[DATETIME_LEN];
 #define LED_MODE_STAT_AMBER_VALUE       (0x01)
 #define LED_MODE_STAT_OFF_VALUE         (0x00)
 
+/*
+ * Ref optoe.c:
+ * specs often allow 5 msec for a page write, sometimes 20 msec;
+ * it's important to recover from write timeouts.
+ */
+static unsigned int write_timeout = 25;
+
 /***********************************************
  *       structure & variable declare
  * *********************************************/
@@ -211,7 +218,8 @@ struct as9736_64d_fpga_data {
 
 static struct as9736_64d_fpga_data  *fpga_ctl = NULL;
 
-struct mutex update_lock;
+struct mutex update_lock;          /*use for lock get/set port status via fpga register*/
+struct mutex xcvr_eeprom_lock[66]; /*use for lock read/write per port eeprom via fpga register*/
 
 struct eeprom_bin_private_data {
     int    port_num;
@@ -1441,7 +1449,7 @@ static ssize_t port_read(struct device *dev, struct device_attribute *da, char *
 
     pdata = pdev->dev.platform_data;
 
-    mutex_lock(&update_lock);
+    mutex_lock(&xcvr_eeprom_lock[pdata->port_num - 1]);
     switch(attr->index)
     {
         case PORT_SYSFS_PORT_NAME_ID:
@@ -1457,7 +1465,7 @@ static ssize_t port_read(struct device *dev, struct device_attribute *da, char *
             ret = -EINVAL;
             break;
     }
-    mutex_unlock(&update_lock);
+    mutex_unlock(&xcvr_eeprom_lock[pdata->port_num - 1]);
 
     return ret;
 }
@@ -1478,17 +1486,17 @@ static ssize_t port_write(struct device *dev, struct device_attribute *da,
         return status;
     }
 
-    mutex_lock(&update_lock);
+    mutex_lock(&xcvr_eeprom_lock[pdata->port_num - 1]);
     switch(attr->index)
     {
         case PORT_SYSFS_DEV_CLASS_ID:
             pdata->dev_class = value;
             break;
         default:
-            mutex_unlock(&update_lock);
+            mutex_unlock(&xcvr_eeprom_lock[pdata->port_num - 1]);
             return  -EINVAL;
     }
-    mutex_unlock(&update_lock);
+    mutex_unlock(&xcvr_eeprom_lock[pdata->port_num - 1]);
     return count;
 }
 
@@ -1619,54 +1627,65 @@ static int fpga_i2c_ready_to_read(struct bin_attribute *attr, int page_type, int
 {
     int  cnt = 0;
     int  chk_state_cnt = 0;
+    unsigned long timeout, access_time;
     u32  i2c_new_trigger_val = 0;
     u32  flag = 0;
     struct eeprom_bin_private_data *pdata = NULL;
 
     pdata = attr->private;
+    timeout = jiffies + msecs_to_jiffies(write_timeout);
 
-    /*Select i2c protocol profile*/
-    iowrite32(0x0, pdata->data_base_addr + pdata->i2c_mgmt_rtc0_profile);
+    do {
+        access_time = jiffies;
 
-    /*clean read data*/
-    for(cnt = 0 ; cnt < 32; cnt++)
-    {
-        iowrite32(0x0, pdata->data_base_addr + ( pdata->i2c_rtc_read_data + (4 * cnt) ));
-    }
+        /*Select i2c protocol profile*/
+        iowrite32(0x0, pdata->data_base_addr + pdata->i2c_mgmt_rtc0_profile);
 
-    /*clean done status*/
-    iowrite32(0x3, pdata->data_base_addr + pdata->i2c_contrl_rtc0_stats);
+        /*clean read data*/
+        for(cnt = 0 ; cnt < 32; cnt++)
+        {
+            iowrite32(0x0, pdata->data_base_addr + ( pdata->i2c_rtc_read_data + (4 * cnt) ));
+        }
 
-    /*set read slave addr*/
-    iowrite32( 0x10000080|(i2c_slave_addr << 8), pdata->data_base_addr + pdata->i2c_contrl_rtc0_config_0);
+        /*clean done status*/
+        iowrite32(0x3, pdata->data_base_addr + pdata->i2c_contrl_rtc0_stats);
 
-    /*triger*/
-    if(page_type == EEPROM_LOWER_PAGE) {
-        i2c_new_trigger_val = PCIE_FPGA_I2C_NEW_TRIGGER_VALUE;
-    } else {
-        i2c_new_trigger_val = PCIE_FPGA_I2C_NEW_TRIGGER_VALUE + 0x80;
-    }
-    iowrite32(i2c_new_trigger_val, pdata->data_base_addr + pdata->i2c_contrl_rtc0_config_1);
+        /*set read slave addr*/
+        iowrite32( 0x10000080|(i2c_slave_addr << 8), pdata->data_base_addr + pdata->i2c_contrl_rtc0_config_0);
 
-    /*read done status*/
-    while( 1 ) {
-        flag = ioread32(pdata->data_base_addr + pdata->i2c_contrl_rtc0_stats);
-        if(flag == 0) {
-            /*In normal case:
-              observed chk_state_cnt(10~120) times can get i2c rtc0 done status. */
-            if( chk_state_cnt > 500 ) {
-                flag = -EAGAIN;
+        /*triger*/
+        if(page_type == EEPROM_LOWER_PAGE) {
+            i2c_new_trigger_val = PCIE_FPGA_I2C_NEW_TRIGGER_VALUE;
+        } else {
+            i2c_new_trigger_val = PCIE_FPGA_I2C_NEW_TRIGGER_VALUE + 0x80;
+        }
+        iowrite32(i2c_new_trigger_val, pdata->data_base_addr + pdata->i2c_contrl_rtc0_config_1);
+
+        /*read done status*/
+        while( 1 ) {
+            flag = ioread32(pdata->data_base_addr + pdata->i2c_contrl_rtc0_stats);
+            if(flag == 0) {
+                /*In normal case:
+                  observed chk_state_cnt(10~120) times can get i2c rtc0 done status. */
+                if( chk_state_cnt > 500 ) {
+                    flag = -EAGAIN;
+                    break;
+                }
+                usleep_range(50, 100);
+                chk_state_cnt++;
+                continue;
+            }
+            else {
                 break;
             }
-            usleep_range(50, 100);
-            chk_state_cnt++;
-            continue;
         }
-        else {
+        if( flag == RTC0_STATUS_0_DONE ) {
             break;
         }
-    }
-    msleep(1);
+
+        usleep_range(1000, 2000);
+
+    } while (time_before(access_time, timeout));
 
     return flag;
 }
@@ -1675,52 +1694,63 @@ static int fpga_i2c_set_data(struct bin_attribute *attr, loff_t offset, char *da
 {
     int cnt = 0;
     int chk_state_cnt = 0;
+    unsigned long timeout, access_time;
     struct eeprom_bin_private_data *pdata = NULL;
     u32  flag = 0;
     u32  i2c_new_trigger_val = 0;
 
     pdata = attr->private;
+    timeout = jiffies + msecs_to_jiffies(write_timeout);
 
-    /*Select i2c protocol profile*/
-    iowrite32(0x0, pdata->data_base_addr + pdata->i2c_mgmt_rtc0_profile);
+    do {
+        access_time = jiffies;
 
-    /*clean read data*/
-    for( cnt=0 ; cnt < (PCIE_FPGA_I2C_MAX_LEN/4); cnt++)
-    {
-        iowrite32(0x0, pdata->data_base_addr + ( pdata->i2c_rtc_write_data + (4 * cnt) ));
-    }
+        /*Select i2c protocol profile*/
+        iowrite32(0x0, pdata->data_base_addr + pdata->i2c_mgmt_rtc0_profile);
 
-    /* Prepare date to set into data registor*/
-    iowrite32(data[0], pdata->data_base_addr + pdata->i2c_rtc_write_data);
+        /*clean read data*/
+        for( cnt=0 ; cnt < (PCIE_FPGA_I2C_MAX_LEN/4); cnt++)
+        {
+            iowrite32(0x0, pdata->data_base_addr + ( pdata->i2c_rtc_write_data + (4 * cnt) ));
+        }
 
-    /*clean done status*/
-    iowrite32(0x3, pdata->data_base_addr + pdata->i2c_contrl_rtc0_stats);
+        /* Prepare date to set into data registor*/
+        iowrite32(data[0], pdata->data_base_addr + pdata->i2c_rtc_write_data);
 
-    /*set write slave addr*/
-    iowrite32( EEPROM_ALLOW_SET_LEN | (i2c_slave_addr << 8), pdata->data_base_addr + pdata->i2c_contrl_rtc0_config_0);
+        /*clean done status*/
+        iowrite32(0x3, pdata->data_base_addr + pdata->i2c_contrl_rtc0_stats);
 
-    /*triger*/
-    i2c_new_trigger_val = PCIE_FPGA_I2C_NEW_TRIGGER_VALUE + offset;
-    iowrite32(i2c_new_trigger_val, pdata->data_base_addr + pdata->i2c_contrl_rtc0_config_1);
+        /*set write slave addr*/
+        iowrite32( EEPROM_ALLOW_SET_LEN | (i2c_slave_addr << 8), pdata->data_base_addr + pdata->i2c_contrl_rtc0_config_0);
 
-    /*read done status*/
-    while( 1 ) {
-        flag = ioread32(pdata->data_base_addr + pdata->i2c_contrl_rtc0_stats);
-        if(flag == 0) {
-            /*In normal case:
-              observed chk_state_cnt(10~120) times can get i2c rtc0 done status. */
-            if( chk_state_cnt > 500 ) {
-                flag = -EAGAIN;
+        /*triger*/
+        i2c_new_trigger_val = PCIE_FPGA_I2C_NEW_TRIGGER_VALUE + offset;
+        iowrite32(i2c_new_trigger_val, pdata->data_base_addr + pdata->i2c_contrl_rtc0_config_1);
+
+        /*read done status*/
+        while( 1 ) {
+            flag = ioread32(pdata->data_base_addr + pdata->i2c_contrl_rtc0_stats);
+            if(flag == 0) {
+                /*In normal case:
+                  observed chk_state_cnt(10~120) times can get i2c rtc0 done status. */
+                if( chk_state_cnt > 500 ) {
+                    flag = -EAGAIN;
+                    break;
+                }
+                usleep_range(50, 100);
+                chk_state_cnt++;
+                continue;
+            } else {
                 break;
             }
-            usleep_range(50, 100);
-            chk_state_cnt++;
-            continue;
-        } else {
+        }
+        if( flag == RTC0_STATUS_0_DONE ) {
             break;
         }
-    }
-    msleep(1);
+
+        usleep_range(1000, 2000);
+
+    } while (time_before(access_time, timeout));
 
     return flag;
 }
@@ -1921,20 +1951,20 @@ static ssize_t sfp_bin_read(struct file *filp, struct kobject *kobj,
         return count;
     }
 
-    mutex_lock(&update_lock);
+    mutex_lock(&xcvr_eeprom_lock[pdata->port_num - 1]);
 
     present = get_port_present_status(attr);
     if( !present ) { /*unpresent*/
-        mutex_unlock(&update_lock);
+        mutex_unlock(&xcvr_eeprom_lock[pdata->port_num - 1]);
         return -ENODEV;
     }
-    mutex_unlock(&update_lock);
+    mutex_unlock(&xcvr_eeprom_lock[pdata->port_num - 1]);
 
     /*
      * Read data from chip, protecting against concurrent updates
      * from this host
      */
-    mutex_lock(&update_lock);
+    mutex_lock(&xcvr_eeprom_lock[pdata->port_num - 1]);
     while (count) {
         ssize_t status;
 
@@ -1965,11 +1995,11 @@ static ssize_t sfp_bin_read(struct file *filp, struct kobject *kobj,
             ( pdata->port_num > FPGA_QSFP_PORT_NUM) ? TWO_ADDR_0X51 : pdata->i2c_slave_addr;
 
         if( (state = fpga_i2c_set_data(attr, OPTOE_PAGE_SELECT_REG, set_page_num, i2c_slave_addr)) != 1) { /*set page to 0*/
-            mutex_unlock(&update_lock);
+            mutex_unlock(&xcvr_eeprom_lock[pdata->port_num - 1]);
             goto exit_err;
         }
     }
-    mutex_unlock(&update_lock);
+    mutex_unlock(&xcvr_eeprom_lock[pdata->port_num - 1]);
 
     return retval;
 
@@ -2040,29 +2070,32 @@ static ssize_t sfp_bin_write(struct file *filp, struct kobject *kobj,
     int present;
     ssize_t status = 0;
 
+    struct eeprom_bin_private_data *pdata = NULL;
+    pdata = attr->private;
+
     if (unlikely(!count) ||
         likely(count > EEPROM_ALLOW_SET_LEN)) { //only allow count = 1
         return count;
     }
 
-    mutex_lock(&update_lock);
+    mutex_lock(&xcvr_eeprom_lock[pdata->port_num - 1]);
 
     present = get_port_present_status(attr);
     if( !present ) { /*unpresent*/
-        mutex_unlock(&update_lock);
+        mutex_unlock(&xcvr_eeprom_lock[pdata->port_num - 1]);
         return -ENODEV;
     }
-    mutex_unlock(&update_lock);
+    mutex_unlock(&xcvr_eeprom_lock[pdata->port_num - 1]);
 
     /*
      * Write data to chip, protecting against concurrent updates
      * from this host.
      */
-    mutex_lock(&update_lock);
+    mutex_lock(&xcvr_eeprom_lock[pdata->port_num - 1]);
 
     status = sfp_eeprom_write(attr, buf, off, count);
 
-    mutex_unlock(&update_lock);
+    mutex_unlock(&xcvr_eeprom_lock[pdata->port_num - 1]);
 
     return status;
 }
@@ -2127,7 +2160,7 @@ static int sfp_sysfs_eeprom_init(struct kobject *kobj, struct bin_attribute *eep
     eeprom->read        = sfp_bin_read;
     eeprom->write       = sfp_bin_write;
 
-    mutex_lock(&update_lock);
+    mutex_lock(&xcvr_eeprom_lock[pdata->port_num - 1]);
 
     present = get_port_present_status(eeprom);
 
@@ -2141,7 +2174,7 @@ static int sfp_sysfs_eeprom_init(struct kobject *kobj, struct bin_attribute *eep
             ret = fpga_read_sfp_ddm_status_value(eeprom); /*check support_a2 and pageable*/
             if(ret < 0) {
                 pcie_err("Err: PCIE device port eeprom is empty");
-                mutex_unlock(&update_lock);
+                mutex_unlock(&xcvr_eeprom_lock[pdata->port_num - 1]);
                 return ret;
             }
 
@@ -2162,7 +2195,7 @@ static int sfp_sysfs_eeprom_init(struct kobject *kobj, struct bin_attribute *eep
         }
     }
 
-    mutex_unlock(&update_lock);
+    mutex_unlock(&xcvr_eeprom_lock[pdata->port_num - 1]);
 
     /* Create eeprom file */
     err = sysfs_create_bin_file(kobj, eeprom);
@@ -2491,6 +2524,8 @@ static int __init as9736_64d_pcie_fpga_init(void)
             pcie_err("Fail to register (UDB)port%d device.\n", (udb_fpga_cnt + 1) );
             goto exit_udb_fpga;
         }
+        xcvr_eeprom_lock[udb_fpga_cnt] = pcie_udb_qsfp_device[udb_fpga_cnt].dev.mutex;
+        mutex_init(&xcvr_eeprom_lock[udb_fpga_cnt]);
     }
     pcie_info("Init UDB_FPGA driver and device.");
 
@@ -2508,6 +2543,8 @@ static int __init as9736_64d_pcie_fpga_init(void)
             pcie_err("Fail to register (LDB)port%d device.\n", (ldb_fpga_cnt + 33) );
             goto exit_ldb_fpga;
         }
+        xcvr_eeprom_lock[ldb_fpga_cnt+FPGA_UDB_QSFP_PORT_NUM] = pcie_ldb_qsfp_device[ldb_fpga_cnt].dev.mutex;
+        mutex_init(&xcvr_eeprom_lock[ldb_fpga_cnt+FPGA_UDB_QSFP_PORT_NUM]);
     }
     pcie_info("Init LDB_FPGA driver and device.");
 
