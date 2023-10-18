@@ -1453,11 +1453,6 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 			$(if $(shell ls files/build_templates/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service.j2 2>/dev/null),\
 				$(eval $(docker:-dbg.gz=.gz)_GLOBAL = yes)
 			)
-
-			if [ x$($(docker:-dbg.gz=.gz)_CONTAINER_NAME) == x"gnmi" ]; then
-				j2 files/build_templates/telemetry.service.j2 > telemetry.service
-				$(eval $(docker:-dbg.gz=.gz)_TELEMETRY = yes)
-			fi
 		fi
 		# Any service template, inside instance directory, will be used to generate .service and @.service file.
 		if [ -f files/build_templates/per_namespace/$($(docker:-dbg.gz=.gz)_CONTAINER_NAME).service.j2 ]; then
@@ -1497,9 +1492,6 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 		$(if $($(docker:-dbg.gz=.gz)_TEMPLATE),\
 			$(if $($(docker:-dbg.gz=.gz)_GLOBAL),\
 				$(eval SERVICES += "$(addsuffix .service, $($(docker:-dbg.gz=.gz)_CONTAINER_NAME))")\
-			)\
-			$(if $($(docker:-dbg.gz=.gz)_TELEMETRY),\
-				$(eval SERVICES += "telemetry.service")\
 			)\
 			$(eval SERVICES += "$(addsuffix @.service, $($(docker:-dbg.gz=.gz)_CONTAINER_NAME))"),\
 			$(eval SERVICES += "$(addsuffix .service, $($(docker:-dbg.gz=.gz)_CONTAINER_NAME))")

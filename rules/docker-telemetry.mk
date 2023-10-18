@@ -1,4 +1,4 @@
-# docker image for GNMI agent
+# docker image for telemetry agent
 
 DOCKER_TELEMETRY_STEM = docker-sonic-telemetry
 DOCKER_TELEMETRY = $(DOCKER_TELEMETRY_STEM).gz
