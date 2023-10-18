@@ -18,22 +18,22 @@ using namespace swss;
 // Config file path
 const char *tacacs_config_file = "/etc/tacplus_nss.conf";
 
-// Counter DB table name
+// COUNTERS_DB table name
 #define COUNTERS_TACPLUS_SERVER_LATENCY             "TACPLUS_SERVER_LATENCY"
 #define LATENCY_ATTRIBUTE_NAME                      "latency"
 
 int main(int argc, char** argv)
 {
-    int tacacs_ctrl = parse_config_file(tacacs_config_file);
-
+    parse_config_file(tacacs_config_file);
     if (tac_srv_no == 0)
     {
         cout << "No TACACS server found in:" << tacacs_config_file << endl;
+        return 0;
     }
 
-    
-    auto counter_db = make_unique<DBConnector>("COUNTER_DB", 0);
-    auto tacacs_counter_table = make_unique<Table>(counter_db.get(), COUNTERS_TACPLUS_SERVER_LATENCY);
+    // initialize COUNTERS_DB tables
+    DBConnector counter_db(COUNTERS_DB, DBConnector::DEFAULT_UNIXSOCKET, 0);
+    Table tacacs_counter_table(&counter_db, COUNTERS_TACPLUS_SERVER_LATENCY);
 
     for(int server_idx = 0; server_idx < tac_srv_no; server_idx++)
     {
@@ -59,6 +59,8 @@ int main(int argc, char** argv)
             fieldValues.emplace_back(LATENCY_ATTRIBUTE_NAME, std::to_string(latency));
         }
 
-        tacacs_counter_table->set(server, fieldValues);
+        tacacs_counter_table.set(server, fieldValues);
     }
+    
+    return 0;
 }
