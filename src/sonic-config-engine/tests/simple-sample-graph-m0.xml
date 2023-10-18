@@ -318,28 +318,28 @@
         <ClusterName>AAA00PrdStr00</ClusterName>
       </Device>
       <Device i:type="MgmtLeafRouter">
-         <Hostname>ARISTA04M1</Hostname>
-         <HwSku>Arista</HwSku>
+        <Hostname>ARISTA04M1</Hostname>
+        <HwSku>Arista</HwSku>
       </Device>
       <Device i:type="MgmtLeafRouter">
-         <Hostname>ARISTA02M1</Hostname>
-         <HwSku>Arista</HwSku>
+        <Hostname>ARISTA02M1</Hostname>
+        <HwSku>Arista</HwSku>
       </Device>
       <Device i:type="BmcMgmtToRRouter">
-         <Hostname>ARISTA02MX</Hostname>
-         <HwSku>Arista</HwSku>
+        <Hostname>ARISTA02MX</Hostname>
+        <HwSku>Arista</HwSku>
       </Device>
       <Device i:type="BmcMgmtToRRouter">
-         <Hostname>ARISTA01MX</Hostname>
-         <HwSku>Arista</HwSku>
+        <Hostname>ARISTA01MX</Hostname>
+        <HwSku>Arista</HwSku>
       </Device>
       <Device i:type="MgmtLeafRouter">
-         <Hostname>ARISTA01M1</Hostname>
-         <HwSku>Arista</HwSku>
+        <Hostname>ARISTA01M1</Hostname>
+        <HwSku>Arista</HwSku>
       </Device>
       <Device i:type="MgmtLeafRouter">
-         <Hostname>ARISTA03M1</Hostname>
-         <HwSku>Arista</HwSku>
+        <Hostname>ARISTA03M1</Hostname>
+        <HwSku>Arista</HwSku>
       </Device>
     </Devices>
   </PngDec>

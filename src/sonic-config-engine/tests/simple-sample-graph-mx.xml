@@ -328,12 +328,12 @@
         <ClusterName>AAA00PrdStr00</ClusterName>
       </Device>
       <Device i:type="MgmtToRRouter">
-         <Hostname>ARISTA01M0</Hostname>
-         <HwSku>Arista</HwSku>
+        <Hostname>ARISTA01M0</Hostname>
+        <HwSku>Arista</HwSku>
       </Device>
       <Device i:type="MgmtToRRouter">
-         <Hostname>ARISTA02M0</Hostname>
-         <HwSku>Arista</HwSku>
+        <Hostname>ARISTA02M0</Hostname>
+        <HwSku>Arista</HwSku>
       </Device>
     </Devices>
   </PngDec>

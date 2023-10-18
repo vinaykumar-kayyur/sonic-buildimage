@@ -2109,7 +2109,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     if current_device and current_device['type'] in dhcp_server_enabled_device_types:
         results['DEVICE_METADATA']['localhost']['dhcp_server'] = 'enabled'
 
-    # Disable unused counters on management devices
+    # Disable unsupported counters on management devices
     if current_device and current_device['type'] in mgmt_device_types:
         results["FLEX_COUNTER_TABLE"] = {counter: {"FLEX_COUNTER_STATUS": "disable"} for counter in mgmt_disabled_counters}
 
