@@ -369,7 +369,7 @@
   </DpgDec>
   <PngDec>
     <DeviceInterfaceLinks>
-      <DeviceLinkBase>
+      <DeviceLinkBase i:type="DeviceInterfaceLink">
         <ElementType>DeviceInterfaceLink</ElementType>
         <EndDevice>ARISTA01M1</EndDevice>
         <EndPort>Ethernet1</EndPort>
@@ -377,7 +377,7 @@
         <StartPort>etp49</StartPort>
         <Bandwidth>10000</Bandwidth>
       </DeviceLinkBase>
-      <DeviceLinkBase>
+      <DeviceLinkBase i:type="DeviceInterfaceLink">
         <ElementType>DeviceInterfaceLink</ElementType>
         <EndDevice>ARISTA01MX</EndDevice>
         <EndPort>Ethernet1</EndPort>
@@ -385,7 +385,7 @@
         <StartPort>etp47</StartPort>
         <Bandwidth>1000</Bandwidth>
       </DeviceLinkBase>
-      <DeviceLinkBase>
+      <DeviceLinkBase i:type="DeviceInterfaceLink">
         <ElementType>DeviceInterfaceLink</ElementType>
         <EndDevice>ARISTA02M1</EndDevice>
         <EndPort>Ethernet1</EndPort>
@@ -393,7 +393,7 @@
         <StartPort>etp50</StartPort>
         <Bandwidth>10000</Bandwidth>
       </DeviceLinkBase>
-      <DeviceLinkBase>
+      <DeviceLinkBase i:type="DeviceInterfaceLink">
         <ElementType>DeviceInterfaceLink</ElementType>
         <EndDevice>ARISTA02MX</EndDevice>
         <EndPort>Ethernet1</EndPort>
@@ -401,7 +401,7 @@
         <StartPort>etp48</StartPort>
         <Bandwidth>1000</Bandwidth>
       </DeviceLinkBase>
-      <DeviceLinkBase>
+      <DeviceLinkBase i:type="DeviceInterfaceLink">
         <ElementType>DeviceInterfaceLink</ElementType>
         <EndDevice>ARISTA03M1</EndDevice>
         <EndPort>Ethernet1</EndPort>
@@ -409,7 +409,7 @@
         <StartPort>etp51</StartPort>
         <Bandwidth>10000</Bandwidth>
       </DeviceLinkBase>
-      <DeviceLinkBase>
+      <DeviceLinkBase i:type="DeviceInterfaceLink">
         <ElementType>DeviceInterfaceLink</ElementType>
         <EndDevice>ARISTA04M1</EndDevice>
         <EndPort>Ethernet1</EndPort>
@@ -417,14 +417,14 @@
         <StartPort>etp52</StartPort>
         <Bandwidth>10000</Bandwidth>
       </DeviceLinkBase>
-      <DeviceLinkBase>
+      <DeviceLinkBase i:type="DeviceInterfaceLink">
         <ElementType>DeviceInterfaceLink</ElementType>
         <EndDevice>switch-m0</EndDevice>
         <EndPort>etp1</EndPort>
         <StartDevice>Servers0</StartDevice>
         <StartPort>eth0</StartPort>
       </DeviceLinkBase>
-      <DeviceLinkBase>
+      <DeviceLinkBase i:type="DeviceInterfaceLink">
         <ElementType>DeviceInterfaceLink</ElementType>
         <EndDevice>switch-m0</EndDevice>
         <EndPort>etp2</EndPort>
