@@ -2,138 +2,91 @@
   <CpgDec>
     <IsisRouters xmlns:a="http://schemas.datacontract.org/2004/07/Microsoft.Search.Autopilot.Evolution"/>
     <PeeringSessions>
-       <BGPSession>
-         <StartRouter>switch-t0</StartRouter>
-         <StartPeer>10.1.0.32</StartPeer>
-         <EndRouter>BGPMonitor</EndRouter>
-         <EndPeer>10.20.30.40</EndPeer>
-         <Multihop>30</Multihop>
-         <HoldTime>10</HoldTime>
-         <KeepAliveTime>3</KeepAliveTime>
+      <BGPSession>
+        <MacSec>false</MacSec>
+        <StartRouter>switch-mx</StartRouter>
+        <StartPeer>10.0.0.64</StartPeer>
+        <EndRouter>ARISTA01M0</EndRouter>
+        <EndPeer>10.0.0.65</EndPeer>
+        <Multihop>1</Multihop>
+        <HoldTime>10</HoldTime>
+        <KeepAliveTime>3</KeepAliveTime>
+      </BGPSession>
+      <BGPSession>
+        <StartRouter>switch-mx</StartRouter>
+        <StartPeer>FC00::81</StartPeer>
+        <EndRouter>ARISTA01M0</EndRouter>
+        <EndPeer>FC00::82</EndPeer>
+        <Multihop>1</Multihop>
+        <HoldTime>10</HoldTime>
+        <KeepAliveTime>3</KeepAliveTime>
       </BGPSession>
       <BGPSession>
         <MacSec>false</MacSec>
-        <StartRouter>switch-t0</StartRouter>
-        <StartPeer>10.0.0.56</StartPeer>
-        <EndRouter>ARISTA01T1</EndRouter>
-        <EndPeer>10.0.0.57</EndPeer>
+        <StartRouter>switch-mx</StartRouter>
+        <StartPeer>10.0.0.66</StartPeer>
+        <EndRouter>ARISTA02M0</EndRouter>
+        <EndPeer>10.0.0.67</EndPeer>
         <Multihop>1</Multihop>
-        <HoldTime>180</HoldTime>
-        <KeepAliveTime>60</KeepAliveTime>
+        <HoldTime>10</HoldTime>
+        <KeepAliveTime>3</KeepAliveTime>
       </BGPSession>
       <BGPSession>
-        <StartRouter>switch-t0</StartRouter>
-        <StartPeer>FC00::71</StartPeer>
-        <EndRouter>ARISTA01T1</EndRouter>
-        <EndPeer>FC00::72</EndPeer>
+        <StartRouter>switch-mx</StartRouter>
+        <StartPeer>FC00::85</StartPeer>
+        <EndRouter>ARISTA02M0</EndRouter>
+        <EndPeer>FC00::86</EndPeer>
         <Multihop>1</Multihop>
-        <HoldTime>180</HoldTime>
-        <KeepAliveTime>60</KeepAliveTime>
-      </BGPSession>
-      <BGPSession>
-        <MacSec>false</MacSec>
-        <StartRouter>switch-t0</StartRouter>
-        <StartPeer>10.0.0.58</StartPeer>
-        <EndRouter>ARISTA02T1</EndRouter>
-        <EndPeer>10.0.0.59</EndPeer>
-        <Multihop>1</Multihop>
-        <HoldTime>180</HoldTime>
-        <KeepAliveTime>60</KeepAliveTime>
-      </BGPSession>
-      <BGPSession>
-        <StartRouter>switch-t0</StartRouter>
-        <StartPeer>FC00::75</StartPeer>
-        <EndRouter>ARISTA02T1</EndRouter>
-        <EndPeer>FC00::76</EndPeer>
-        <Multihop>1</Multihop>
-        <HoldTime>180</HoldTime>
-        <KeepAliveTime>60</KeepAliveTime>
-      </BGPSession>
-      <BGPSession>
-        <StartRouter>switch-t0</StartRouter>
-        <StartPeer>FC00::75</StartPeer>
-        <EndRouter>ARISTA02T1</EndRouter>
-        <EndPeer>FC00::76</EndPeer>
-        <Multihop>1</Multihop>
-        <HoldTime>180</HoldTime>
-        <KeepAliveTime>60</KeepAliveTime>
-      </BGPSession>
-      <BGPSession>
-        <MacSec>false</MacSec>
-        <StartRouter>switch-t0</StartRouter>
-        <StartPeer>10.2.0.20</StartPeer>
-        <EndRouter>CHASSIS_PEER</EndRouter>
-        <EndPeer>10.2.0.21</EndPeer>
-        <Multihop>1</Multihop>
-        <HoldTime>180</HoldTime>
-        <KeepAliveTime>60</KeepAliveTime>
-        <ChassisInternal>voq</ChassisInternal>
+        <HoldTime>10</HoldTime>
+        <KeepAliveTime>3</KeepAliveTime>
       </BGPSession>
     </PeeringSessions>
     <Routers xmlns:a="http://schemas.datacontract.org/2004/07/Microsoft.Search.Autopilot.Evolution">
       <a:BGPRouterDeclaration>
-          <a:ASN>1</a:ASN>
-          <a:BgpGroups/>
-          <a:Hostname>BGPMonitor</a:Hostname>
-          <a:Peers>
-              <BGPPeer>
-                  <ElementType>BGPPeer</ElementType>
-                  <Address>10.1.0.32</Address>
-                  <RouteMapIn i:nil="true"/>
-                  <RouteMapOut i:nil="true"/>
-                  <Vrf i:nil="true"/>
-              </BGPPeer>
-          </a:Peers>
-          <a:RouteMaps/>
-      </a:BGPRouterDeclaration>
-      <a:BGPRouterDeclaration>
-        <a:ASN>65100</a:ASN>
-        <a:Hostname>switch-t0</a:Hostname>
+        <a:ASN>64001</a:ASN>
+        <a:Hostname>switch-mx</a:Hostname>
         <a:Peers>
           <BGPPeer>
-            <Address>10.0.0.57</Address>
+            <Address>10.0.0.65</Address>
             <RouteMapIn i:nil="true"/>
             <RouteMapOut i:nil="true"/>
             <Vrf i:nil="true"/>
           </BGPPeer>
           <BGPPeer>
-            <Address>10.0.0.59</Address>
+            <Address>10.0.0.67</Address>
             <RouteMapIn i:nil="true"/>
             <RouteMapOut i:nil="true"/>
             <Vrf i:nil="true"/>
           </BGPPeer>
-          <BGPPeer>
-            <Address>10.2.0.21</Address>
+          <BGPPeer i:type="a:BGPPeerPassive">
+            <ElementType>BGPPeer</ElementType>
+            <Address>10.1.0.32</Address>
             <RouteMapIn i:nil="true"/>
             <RouteMapOut i:nil="true"/>
             <Vrf i:nil="true"/>
+            <a:Name>BGPSLBPassive</a:Name>
+            <a:PeersRange>10.255.0.0/25</a:PeersRange>
+          </BGPPeer>
+          <BGPPeer i:type="a:BGPPeerPassive">
+            <ElementType>BGPPeer</ElementType>
+            <Address>10.1.0.32</Address>
+            <RouteMapIn i:nil="true"/>
+            <RouteMapOut i:nil="true"/>
+            <Vrf i:nil="true"/>
+            <a:Name>BGPVac</a:Name>
+            <a:PeersRange>192.168.0.0/21</a:PeersRange>
           </BGPPeer>
         </a:Peers>
         <a:RouteMaps/>
       </a:BGPRouterDeclaration>
       <a:BGPRouterDeclaration>
-        <a:ASN>64600</a:ASN>
-        <a:Hostname>ARISTA01T1</a:Hostname>
-        <a:RouteMaps/>
-      </a:BGPRouterDeclaration>
-      <a:BGPRouterDeclaration>
-        <a:ASN>64600</a:ASN>
-        <a:Hostname>ARISTA02T1</a:Hostname>
-        <a:RouteMaps/>
-      </a:BGPRouterDeclaration>
-      <a:BGPRouterDeclaration>
-        <a:ASN>64600</a:ASN>
-        <a:Hostname>ARISTA03T1</a:Hostname>
-        <a:RouteMaps/>
-      </a:BGPRouterDeclaration>
-      <a:BGPRouterDeclaration>
-        <a:ASN>64600</a:ASN>
-        <a:Hostname>ARISTA04T1</a:Hostname>
+        <a:ASN>65100</a:ASN>
+        <a:Hostname>ARISTA01M0</a:Hostname>
         <a:RouteMaps/>
       </a:BGPRouterDeclaration>
       <a:BGPRouterDeclaration>
         <a:ASN>65100</a:ASN>
-        <a:Hostname>CHASSIS_PEER</a:Hostname>
+        <a:Hostname>ARISTA02M0</a:Hostname>
         <a:RouteMaps/>
       </a:BGPRouterDeclaration>
     </Routers>
@@ -173,13 +126,8 @@
       <MplsInterfaces/>
       <MplsTeInterfaces/>
       <RsvpInterfaces/>
-      <Hostname>switch-t0</Hostname>
+      <Hostname>switch-mx</Hostname>
       <PortChannelInterfaces>
-        <PortChannel>
-          <Name>PortChannel1</Name>
-          <AttachTo>fortyGigE0/4</AttachTo>
-          <SubInterface/>
-        </PortChannel>
       </PortChannelInterfaces>
       <VlanInterfaces>
         <VlanInterface>
@@ -291,34 +239,35 @@
   </DpgDec>
   <PngDec>
     <DeviceInterfaceLinks>
-      <DeviceLinkBase i:type="DeviceInterfaceLink">
+      <DeviceLinkBase>
         <ElementType>DeviceInterfaceLink</ElementType>
+        <EndDevice>ARISTA01M0</EndDevice>
+        <EndPort>Ethernet1</EndPort>
+        <StartDevice>bjw-can-720dt-2</StartDevice>
+        <StartPort>etp47</StartPort>
         <Bandwidth>1000</Bandwidth>
-        <EndDevice>ARISTA01T1</EndDevice>
-        <EndPort>et1</EndPort>
-        <FlowControl>true</FlowControl>
-        <StartDevice>switch-t0</StartDevice>
-        <StartPort>fortyGigE0/8</StartPort>
-        <Validate>true</Validate>
       </DeviceLinkBase>
-      <DeviceLinkBase i:type="DeviceMgmtLink">
-        <ElementType>DeviceMgmtLink</ElementType>
+      <DeviceLinkBase>
+        <ElementType>DeviceInterfaceLink</ElementType>
+        <EndDevice>ARISTA02M0</EndDevice>
+        <EndPort>Ethernet1</EndPort>
+        <StartDevice>bjw-can-720dt-2</StartDevice>
+        <StartPort>etp48</StartPort>
         <Bandwidth>1000</Bandwidth>
-        <EndDevice>switch-t0</EndDevice>
-        <EndPort>fortyGigE0/16</EndPort>
-        <FlowControl>true</FlowControl>
-        <StartDevice>ChassisMTS1</StartDevice>
-        <StartPort>mgmt0</StartPort>
-        <Validate>true</Validate>
       </DeviceLinkBase>
-      <DeviceLinkBase i:type="DeviceMgmtLink">
-      <ElementType>DeviceMgmtLink</ElementType>
-      <Bandwidth>1000</Bandwidth>
-      <EndDevice>switch-t0</EndDevice>
-      <EndPort>Management1</EndPort>
-      <StartDevice>switch-m0</StartDevice>
-      <StartPort>Management1</StartPort>
-      <Validate>true</Validate>
+      <DeviceLinkBase>
+        <ElementType>DeviceInterfaceLink</ElementType>
+        <EndDevice>bjw-can-720dt-2</EndDevice>
+        <EndPort>etp1</EndPort>
+        <StartDevice>Servers0</StartDevice>
+        <StartPort>eth0</StartPort>
+      </DeviceLinkBase>
+      <DeviceLinkBase>
+        <ElementType>DeviceInterfaceLink</ElementType>
+        <EndDevice>bjw-can-720dt-2</EndDevice>
+        <EndPort>etp2</EndPort>
+        <StartDevice>Servers1</StartDevice>
+        <StartPort>eth0</StartPort>
       </DeviceLinkBase>
     </DeviceInterfaceLinks>
     <Devices>
@@ -770,7 +719,7 @@
 <MetadataDeclaration>
  <Devices xmlns:a="http://schemas.datacontract.org/2004/07/Microsoft.Search.Autopilot.Evolution">
   <a:DeviceMetadata>
-   <a:Name>switch-t0</a:Name>
+   <a:Name>switch-mx</a:Name>
    <a:Properties>
     <a:DeviceProperty>
      <a:Name>DeploymentId</a:Name>
@@ -782,6 +731,6 @@
  </Devices>
  <Properties xmlns:a="http://schemas.datacontract.org/2004/07/Microsoft.Search.Autopilot.Evolution"/>
 </MetadataDeclaration>
-  <Hostname>switch-t0</Hostname>
-  <HwSku>Force10-S6000</HwSku>
+  <Hostname>switch-mx</Hostname>
+  <HwSku>Arista-720DT-G48S4</HwSku>
 </DeviceMiniGraph>

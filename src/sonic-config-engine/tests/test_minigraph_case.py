@@ -551,6 +551,7 @@ class TestCfgGenCaseInsensitive(TestCase):
 
     def test_mgmt_device_disable_counters(self):
         expected_mgmt_disabled_counters = ["BUFFER_POOL_WATERMARK", "PFCWD", "PG_DROP", "PG_WATERMARK", "PORT_BUFFER_DROP", "QUEUE", "QUEUE_WATERMARK"]
+        expected_mgmt_enabled_counters = ["ACL", "PORT", "RIF"]
         mgmt_graphs = ['simple-sample-graph-mx.xml', 'simple-sample-graph-m0.xml']
         for graph in mgmt_graphs:
             graph_path = os.path.join(self.test_dir, graph)
@@ -559,3 +560,6 @@ class TestCfgGenCaseInsensitive(TestCase):
             for counter in expected_mgmt_disabled_counters:
                 self.assertIn(counter, result['FLEX_COUNTER_TABLE'])
                 self.assertDictEqual(result['FLEX_COUNTER_TABLE'][counter], {'FLEX_COUNTER_STATUS': 'disable'})
+            for counter in expected_mgmt_enabled_counters:
+                if counter in result['FLEX_COUNTER_TABLE']:
+                    self.assertDictEqual(result['FLEX_COUNTER_TABLE'][counter], {'FLEX_COUNTER_STATUS': 'enable'})
