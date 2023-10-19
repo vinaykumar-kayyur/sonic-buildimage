@@ -159,7 +159,7 @@ static firmware_upgrade_device_t firmware_upgrade_device_data3 = {
 
     .en_logic_dev[0]     = "/dev/cpld1",
     .en_logic_addr[0]    = 0x91,
-    .en_logic_mask[0]    = 0xfc,
+    .en_logic_mask[0]    = 0xf8,
     .en_logic_en_val[0]  = 0x3,
     .en_logic_dis_val[0] = 0x0,
     .en_logic_width[0]   = 0x1,
@@ -205,11 +205,11 @@ static firmware_upgrade_device_t firmware_upgrade_device_data5 = {
     },
 
     .en_gpio[0]     = 99,
-    .en_level[0]    = 1,
+    .en_level[0]    = 0,
 
     .en_logic_dev[0]     = "/dev/cpld1",
     .en_logic_addr[0]    = 0x91,
-    .en_logic_mask[0]    = 0xfc,
+    .en_logic_mask[0]    = 0xf8,
     .en_logic_en_val[0]  = 0x6,
     .en_logic_dis_val[0] = 0x0,
     .en_logic_width[0]   = 0x1,
@@ -226,8 +226,8 @@ static firmware_upgrade_device_t firmware_upgrade_device_data5 = {
     .en_logic_dis_val[2] = 0x3,
     .en_logic_width[2]   = 0x1,
 
-    .en_gpio_num        = 2,
-    .en_logic_num       = 2,
+    .en_gpio_num        = 1,
+    .en_logic_num       = 3,
 };
 
 /* bios */

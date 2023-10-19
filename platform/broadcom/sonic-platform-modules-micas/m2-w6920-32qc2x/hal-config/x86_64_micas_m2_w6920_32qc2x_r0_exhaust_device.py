@@ -2,7 +2,7 @@
 
 psu_fan_airflow = {
     "intake": ['GW-CRPS1300D', 'DPS-1300AB-6 F', 'DPS-1300AB-6 S'],
-    "exhaust": ['GW-CRPS1300D3R', 'DPS-1300AB-11 C']
+    "exhaust": ['CRPS1300D3R', 'DPS-1300AB-11 C']
 }
 
 fanairflow = {
@@ -12,7 +12,7 @@ fanairflow = {
 
 psu_display_name = {
     "PA1300I-F": ['GW-CRPS1300D', 'DPS-1300AB-6 F', 'DPS-1300AB-6 S'],
-    "PA1300I-R": ['GW-CRPS1300D3R', 'DPS-1300AB-11 C']
+    "PA1300I-R": ['CRPS1300D3R', 'DPS-1300AB-11 C']
 }
 
 psutypedecode = {
@@ -60,8 +60,8 @@ class threshold:
     PSU_INPUT_CURRENT_MIN = 0.05 * 1000
     PSU_INPUT_CURRENT_MAX = 12 * 1000
 
-    FRONT_FAN_SPEED_MAX = 32000
-    REAR_FAN_SPEED_MAX = 30200
+    FRONT_FAN_SPEED_MAX = 35000
+    REAR_FAN_SPEED_MAX = 33000
     FAN_SPEED_MIN = 7248
 
 
@@ -333,7 +333,7 @@ devices = {
             "name": "PSU1_TEMP",
             "temp_id": "TEMP6",
             "Temperature": {
-                "value": {"loc": "/sys/bus/i2c/devices/58-0058/hwmon/hwmon*/temp1_input", "way": "sysfs"},
+                "value": {"loc": "/sys/bus/i2c/devices/59-0058/hwmon/hwmon*/temp1_input", "way": "sysfs"},
                 "Min": -20000,
                 "Low": 0,
                 "High": 55000,
@@ -346,7 +346,7 @@ devices = {
             "name": "PSU2_TEMP",
             "temp_id": "TEMP7",
             "Temperature": {
-                "value": {"loc": "/sys/bus/i2c/devices/59-0058/hwmon/hwmon*/temp1_input", "way": "sysfs"},
+                "value": {"loc": "/sys/bus/i2c/devices/58-0058/hwmon/hwmon*/temp1_input", "way": "sysfs"},
                 "Min": -20000,
                 "Low": 0,
                 "High": 55000,
@@ -1162,7 +1162,7 @@ devices = {
             },
             "read_times": 5,
             "Unit": "V",
-            "Max": 112600,
+            "Max": 12600,
             "format": "float(float(%s)/1000)",
         },
 

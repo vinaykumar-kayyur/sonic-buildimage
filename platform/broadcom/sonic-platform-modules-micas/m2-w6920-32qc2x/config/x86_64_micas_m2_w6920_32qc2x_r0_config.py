@@ -6,14 +6,14 @@ from platform_common import *
 STARTMODULE = {
     "hal_fanctrl": 1,
     "hal_ledctrl": 1,
-    "avscontrol": 0,
-    "avscontrol_sysfs":1,
-    "dev_monitor": 0,
+    "avscontrol": 1,
+    "dev_monitor": 1,
     "reboot_cause": 0,
-    "pmon_syslog": 0,
+    "pmon_syslog": 1,
     "sff_temp_polling": 1,
     "generate_airflow": 1,
     "set_eth_mac": 1,
+    "drv_update": 1,
 }
 
 MANUINFO_CONF = {
@@ -300,7 +300,7 @@ MANUINFO_CONF = {
         "key": "Hardware Version",
         "parent": "psu1",
         "extra": {
-            "funcname": "getCustPsu",
+            "funcname": "getPsu",
             "id": "psu1",
             "key": "hw_version"
         },
@@ -322,7 +322,7 @@ MANUINFO_CONF = {
         "key": "Hardware Version",
         "parent": "psu2",
         "extra": {
-            "funcname": "getCustPsu",
+            "funcname": "getPsu",
             "id": "psu2",
             "key": "hw_version"
         },
@@ -559,7 +559,7 @@ MANUINFO_CONF = {
                 "before": [
                     {"dealtype": "shell", "cmd": "echo 99 > /sys/class/gpio/export"},
                     {"dealtype": "shell", "cmd": "echo out > /sys/class/gpio/gpio99/direction"},
-                    {"dealtype": "shell", "cmd": "echo 0 > /sys/class/gpio/gpio99/direction"},
+                    {"dealtype": "shell", "cmd": "echo 0 > /sys/class/gpio/gpio99/value"},
                     # select update 5387
                     {"dealtype": "io_wr", "io_addr": 0x991, "value": 0xfd},
                     {"dealtype": "io_wr", "io_addr": 0x990, "value": 0xfe},
@@ -668,50 +668,45 @@ PMON_SYSLOG_STATUS = {
 
 ##################### MAC Voltage adjust####################################
 
-MAC_AVS_SYSFS_PARAM ={
-    0x72:0x0e66 ,
-    0x73:0x0e4c ,
-    0x74:0x0e33 ,
-    0x75:0x0e19 ,
-    0x76:0x0e00 ,
-    0x77:0x0de6 ,
-    0x78:0x0dcc ,
-    0x79:0x0db3 ,
-    0x7a:0x0d99 ,
-    0x7b:0x0d80 ,
-    0x7c:0x0d66 ,
-    0x7d:0x0d4c ,
-    0x7e:0x0d33 ,
-    0x7f:0x0d19 ,
-    0x80:0x0d00 ,
-    0x81:0x0ce6 ,
-    0x82:0x0ccc ,
-    0x83:0x0cb3 ,
-    0x84:0x0c99 ,
-    0x85:0x0c80 ,
-    0x86:0x0c66 ,
-    0x87:0x0c4c ,
-    0x88:0x0c33 ,
-    0x89:0x0c19 ,
-    0x8A:0x0c00
-}
+MAC_DEFAULT_PARAM = [
+    {
+        "name": "mac_core",              # AVS name
+        "type": 0,                       # 1: used default value, if rov value not in range. 0: do nothing, if rov value not in range
+        "default": 0x73,                 # default value, if rov value not in range
+        "rov_source": 0,                 # 0: get rov value from cpld, 1: get rov value from SDK
+        "cpld_avs": {"bus":26, "loc":0x2d, "offset":0x3f, "gettype":"i2c"},
+        "set_avs": {
+            "loc": "/sys/bus/i2c/devices/30-0040/avs0_vout_command","gettype": "sysfs","formula": None},
+        "mac_avs_param": {
+            0x72:0x0e66 ,
+            0x73:0x0e4c ,
+            0x74:0x0e33 ,
+            0x75:0x0e19 ,
+            0x76:0x0e00 ,
+            0x77:0x0de6 ,
+            0x78:0x0dcc ,
+            0x79:0x0db3 ,
+            0x7a:0x0d99 ,
+            0x7b:0x0d80 ,
+            0x7c:0x0d66 ,
+            0x7d:0x0d4c ,
+            0x7e:0x0d33 ,
+            0x7f:0x0d19 ,
+            0x80:0x0d00 ,
+            0x81:0x0ce6 ,
+            0x82:0x0ccc ,
+            0x83:0x0cb3 ,
+            0x84:0x0c99 ,
+            0x85:0x0c80 ,
+            0x86:0x0c66 ,
+            0x87:0x0c4c ,
+            0x88:0x0c33 ,
+            0x89:0x0c19 ,
+            0x8A:0x0c00
+        }
+    }
+]
 
-AVS_VOUT_MODE_PARAM = {
-    0x18:256,        # 2^8
-    0x17:512,        # 2^9
-    0x16:1024,       # 2^10
-    0x15:2048,       # 2^11
-    0x14:4096,       # 2^12
-}
-
-
-MAC_AVS_SYSFS_DEFAULT_PARAM = {
-    "type": 0,
-    "default":0x73,
-    "rov_source":0,
-    "cpld_avs":{"bus":26, "loc":0x2d, "offset":0x3f, "gettype":"i2c"},
-    "set_avs":{"loc":"/sys/bus/i2c/devices/30-0040/avs0_vout_command", "gettype":"sysfs"},
-}
 
 DRIVERLISTS = [
     {"name": "wb_gpio_c3000", "delay": 0},
@@ -882,15 +877,17 @@ DEV_MONITOR_PARAM = {
     "psus": [
         {
             "name": "psu1",
-            "present": {"gettype": "i2c", "bus": 26, "loc": 0x1d, "offset": 0x34, "presentbit": 0, "okval": 0},
+            "present": {"gettype": "i2c", "bus": 26, "loc": 0x1d, "offset": 0x34, "presentbit": 4, "okval": 0},
             "device": [
+                {"id": "psu1pmbus", "name": "wb_fsp1200", "bus": 59, "loc": 0x58, "attr": "hwmon"},
                 {"id": "psu1frue2", "name": "wb_24c02", "bus": 59, "loc": 0x50, "attr": "eeprom"},
             ],
         },
         {
             "name": "psu2",
-            "present": {"gettype": "i2c", "bus": 26, "loc": 0x1d, "offset": 0x34, "presentbit": 4, "okval": 0},
+            "present": {"gettype": "i2c", "bus": 26, "loc": 0x1d, "offset": 0x34, "presentbit": 0, "okval": 0},
             "device": [
+                {"id": "psu2pmbus", "name": "wb_fsp1200", "bus": 58, "loc": 0x58, "attr": "hwmon"},
                 {"id": "psu2frue2", "name": "wb_24c02", "bus": 58, "loc": 0x50, "attr": "eeprom"},
             ],
         },
@@ -900,7 +897,7 @@ DEV_MONITOR_PARAM = {
             "name": "fan1",
             "present": {"gettype": "i2c", "bus": 28, "loc": 0x3d, "offset": 0x37, "presentbit": 5, "okval": 0},
             "device": [
-                {"id": "fan1frue2", "name": "wb_24c64", "bus": 47, "loc": 0x50, "attr": "eeprom"},
+                {"id": "fan1frue2", "name": "wb_24c64", "bus": 52, "loc": 0x50, "attr": "eeprom"},
             ],
         },
         {
@@ -914,28 +911,28 @@ DEV_MONITOR_PARAM = {
             "name": "fan3",
             "present": {"gettype": "i2c", "bus": 28, "loc": 0x3d, "offset": 0x37, "presentbit": 3, "okval": 0},
             "device": [
-                {"id": "fan2frue2", "name": "wb_24c64", "bus": 50, "loc": 0x50, "attr": "eeprom"},
+                {"id": "fan3frue2", "name": "wb_24c64", "bus": 50, "loc": 0x50, "attr": "eeprom"},
             ],
         },
         {
             "name": "fan4",
             "present": {"gettype": "i2c", "bus": 28, "loc": 0x3d, "offset": 0x37, "presentbit": 2, "okval": 0},
             "device": [
-                {"id": "fan2frue2", "name": "wb_24c64", "bus": 49, "loc": 0x50, "attr": "eeprom"},
+                {"id": "fan4frue2", "name": "wb_24c64", "bus": 49, "loc": 0x50, "attr": "eeprom"},
             ],
         },
         {
             "name": "fan5",
             "present": {"gettype": "i2c", "bus": 28, "loc": 0x3d, "offset": 0x37, "presentbit": 1, "okval": 0},
             "device": [
-                {"id": "fan2frue2", "name": "wb_24c64", "bus": 48, "loc": 0x50, "attr": "eeprom"},
+                {"id": "fan5frue2", "name": "wb_24c64", "bus": 48, "loc": 0x50, "attr": "eeprom"},
             ],
         },
         {
             "name": "fan6",
             "present": {"gettype": "i2c", "bus": 28, "loc": 0x3d, "offset": 0x37, "presentbit": 0, "okval": 0},
             "device": [
-                {"id": "fan2frue2", "name": "wb_24c64", "bus": 47, "loc": 0x50, "attr": "eeprom"},
+                {"id": "fan6frue2", "name": "wb_24c64", "bus": 47, "loc": 0x50, "attr": "eeprom"},
             ],
         },
     ],
@@ -987,6 +984,229 @@ INIT_PARAM = []
 
 INIT_COMMAND = []
 
+
+WARM_UPGRADE_PARAM = {
+    "slot0": {
+        "VME": {
+            "chain1": [
+                {"name": "BASE_CPLD",
+                    "refresh_file_judge_flag": 1,
+                    "refresh_file": "/etc/.cpld_refresh/base_cpld_transf_header.vme",
+                    "init_cmd": [
+                        {"cmd": "echo 63 > /sys/class/gpio/export", "gettype": "cmd"},
+                        {"cmd": "echo out > /sys/class/gpio/gpio63/direction", "gettype": "cmd"},
+                        {"cmd": "echo 0 > /sys/class/gpio/gpio63/value", "gettype": "cmd"},
+                        {"io_addr": 0x9cc, "value": 0x0, "gettype": "io"},
+                    ],
+                    "rw_recover_reg": [
+                        {"io_addr": 0x932, "value": None, "gettype": "io"},
+                        {"io_addr": 0x933, "value": None, "gettype": "io"},
+                        {"io_addr": 0x937, "value": None, "gettype": "io"},
+                        {"io_addr": 0x938, "value": None, "gettype": "io"},
+                        {"io_addr": 0x939, "value": None, "gettype": "io"},
+                        {"io_addr": 0x93a, "value": None, "gettype": "io"},
+                        {"io_addr": 0x941, "value": None, "gettype": "io"},
+                        {"io_addr": 0x942, "value": None, "gettype": "io"},
+                        {"io_addr": 0x947, "value": None, "gettype": "io"},
+                        {"io_addr": 0x948, "value": None, "gettype": "io"},
+                        {"io_addr": 0x949, "value": None, "gettype": "io"},
+                        {"io_addr": 0x94d, "value": None, "gettype": "io"},
+                        {"io_addr": 0x94e, "value": None, "gettype": "io"},
+                        {"io_addr": 0x94f, "value": None, "gettype": "io"},
+                        {"io_addr": 0x950, "value": None, "gettype": "io"},
+                        {"io_addr": 0x951, "value": None, "gettype": "io"},
+                        {"io_addr": 0x952, "value": None, "gettype": "io"},
+                        {"io_addr": 0x953, "value": None, "gettype": "io"},
+                        {"io_addr": 0x990, "value": None, "gettype": "io"},
+                        {"io_addr": 0x991, "value": None, "gettype": "io"},
+                        {"io_addr": 0x9a3, "value": None, "gettype": "io"},
+                        {"io_addr": 0x9a4, "value": None, "gettype": "io"},
+                        {"io_addr": 0x9a5, "value": None, "gettype": "io"},
+                        {"io_addr": 0x9a6, "value": None, "gettype": "io"},
+                        {"io_addr": 0x9a7, "value": None, "gettype": "io"},
+                        {"io_addr": 0x9ad, "value": None, "gettype": "io"},
+                        {"io_addr": 0x9d2, "value": None, "gettype": "io"},
+                        {"io_addr": 0x9d3, "value": None, "gettype": "io"},
+                        {"io_addr": 0x9d4, "value": None, "gettype": "io"},
+                        {"io_addr": 0x9d5, "value": None, "gettype": "io"},
+                        {"io_addr": 0x9d6, "value": None, "gettype": "io"},
+                        {"io_addr": 0x9d7, "value": None, "gettype": "io"},
+                        {"io_addr": 0x9d8, "value": None, "gettype": "io"},
+                    ],
+                    "after_upgrade_delay": 30,
+                    "after_upgrade_delay_timeout": 60,
+                    "refresh_finish_flag_check": {"io_addr": 0x9cb, "value": 0x5a, "gettype": "io"},
+                    "access_check_reg": {"io_addr": 0x955, "value": 0xaa, "gettype": "io"},
+                    "finish_cmd": [
+                        {"io_addr": 0x9cc, "value": 0xff, "gettype": "io"},
+                        {"cmd": "echo 1 > /sys/class/gpio/gpio63/value", "gettype": "cmd"},
+                        {"cmd": "echo 63 > /sys/class/gpio/unexport", "gettype": "cmd", "delay": 0.1},
+                    ],
+                 },
+            ],
+
+            "chain2": [
+                {"name": "MAC_CPLDA",
+                    "refresh_file_judge_flag": 1,
+                    "refresh_file": "/etc/.cpld_refresh/mac_cplda_transf_header.vme",
+                    "init_cmd": [
+                        {"io_addr": 0x9a7, "value": 0x1, "gettype": "io"},
+                        {"io_addr": 0x9cc, "value": 0x0, "gettype": "io"},
+                    ],
+                    "rw_recover_reg": [
+                        {"bus": 26, "loc": 0x1d, "offset": 0x11, "value": None, "gettype": "i2c"},
+                        {"bus": 26, "loc": 0x1d, "offset": 0x14, "value": None, "gettype": "i2c"},
+                        {"bus": 26, "loc": 0x1d, "offset": 0x15, "value": None, "gettype": "i2c"},
+                        {"bus": 26, "loc": 0x1d, "offset": 0x1c, "value": None, "gettype": "i2c"},
+                        {"bus": 26, "loc": 0x1d, "offset": 0x1d, "value": None, "gettype": "i2c"},
+                        {"bus": 26, "loc": 0x1d, "offset": 0x1f, "value": None, "gettype": "i2c"},
+                        {"bus": 26, "loc": 0x1d, "offset": 0x20, "value": None, "gettype": "i2c"},
+                        {"bus": 26, "loc": 0x1d, "offset": 0x21, "value": None, "gettype": "i2c"},
+                        {"bus": 26, "loc": 0x1d, "offset": 0x22, "value": None, "gettype": "i2c"},
+                        {"bus": 26, "loc": 0x1d, "offset": 0x35, "value": None, "gettype": "i2c"},
+                        {"bus": 26, "loc": 0x1d, "offset": 0x36, "value": None, "gettype": "i2c"},
+                        {"bus": 26, "loc": 0x1d, "offset": 0x37, "value": None, "gettype": "i2c"},
+                        {"bus": 26, "loc": 0x1d, "offset": 0x38, "value": None, "gettype": "i2c"},
+                        {"bus": 26, "loc": 0x1d, "offset": 0x39, "value": None, "gettype": "i2c"},
+                        {"bus": 26, "loc": 0x1d, "offset": 0x3a, "value": None, "gettype": "i2c"},
+                        {"bus": 26, "loc": 0x1d, "offset": 0x4c, "value": None, "gettype": "i2c"},
+                        {"bus": 26, "loc": 0x1d, "offset": 0x4d, "value": None, "gettype": "i2c"},
+                        {"bus": 26, "loc": 0x1d, "offset": 0x4e, "value": None, "gettype": "i2c"},
+                        {"bus": 26, "loc": 0x1d, "offset": 0x4f, "value": None, "gettype": "i2c"},
+                        {"bus": 26, "loc": 0x1d, "offset": 0x50, "value": None, "gettype": "i2c"},
+                        {"bus": 26, "loc": 0x1d, "offset": 0x51, "value": None, "gettype": "i2c"},
+                        {"bus": 26, "loc": 0x1d, "offset": 0x53, "value": None, "gettype": "i2c"},
+                        {"bus": 26, "loc": 0x1d, "offset": 0x54, "value": None, "gettype": "i2c"},
+                        {"bus": 26, "loc": 0x1d, "offset": 0x55, "value": None, "gettype": "i2c"},
+                        {"bus": 26, "loc": 0x1d, "offset": 0x5f, "value": None, "gettype": "i2c"},
+                    ],
+                    "after_upgrade_delay": 1,
+                    "after_upgrade_delay_timeout": 30,
+                    "refresh_finish_flag_check": {"bus": 26, "loc": 0x1d, "offset": 0xcb, "value": 0x5a, "gettype": "i2c"},
+                    "access_check_reg": {"bus": 26, "loc": 0x1d, "offset": 0xaa, "value": 0x55, "gettype": "i2c"},
+                    "finish_cmd": [
+                        {"io_addr": 0x9cc, "value": 0xff, "gettype": "io"},
+                        {"io_addr": 0x9a7, "value": 0x0, "gettype": "io"},
+                    ],
+                 },
+
+                {"name": "MAC_CPLDB",
+                    "refresh_file_judge_flag": 1,
+                    "refresh_file": "/etc/.cpld_refresh/mac_cpldb_transf_header.vme",
+                    "init_cmd": [
+                        {"io_addr": 0x9a7, "value": 0x2, "gettype": "io"},
+                        {"io_addr": 0x9cc, "value": 0x0, "gettype": "io"},
+                    ],
+                    "rw_recover_reg": [
+                        {"bus": 26, "loc": 0x2d, "offset": 0x11, "value": None, "gettype": "i2c"},
+                        {"bus": 26, "loc": 0x2d, "offset": 0x14, "value": None, "gettype": "i2c"},
+                        {"bus": 26, "loc": 0x2d, "offset": 0x15, "value": None, "gettype": "i2c"},
+                        {"bus": 26, "loc": 0x2d, "offset": 0x22, "value": None, "gettype": "i2c"},
+                        {"bus": 26, "loc": 0x2d, "offset": 0x23, "value": None, "gettype": "i2c"},
+                        {"bus": 26, "loc": 0x2d, "offset": 0x30, "value": None, "gettype": "i2c"},
+                        {"bus": 26, "loc": 0x2d, "offset": 0x31, "value": None, "gettype": "i2c"},
+                        {"bus": 26, "loc": 0x2d, "offset": 0x32, "value": None, "gettype": "i2c"},
+                        {"bus": 26, "loc": 0x2d, "offset": 0x3a, "value": None, "gettype": "i2c"},
+                        {"bus": 26, "loc": 0x2d, "offset": 0x42, "value": None, "gettype": "i2c"},
+                        {"bus": 26, "loc": 0x2d, "offset": 0x43, "value": None, "gettype": "i2c"},
+                        {"bus": 26, "loc": 0x2d, "offset": 0x44, "value": None, "gettype": "i2c"},
+                        {"bus": 26, "loc": 0x2d, "offset": 0x4a, "value": None, "gettype": "i2c"},
+                        {"bus": 26, "loc": 0x2d, "offset": 0x4d, "value": None, "gettype": "i2c"},
+                        {"bus": 26, "loc": 0x2d, "offset": 0x50, "value": None, "gettype": "i2c"},
+                        {"bus": 26, "loc": 0x2d, "offset": 0x54, "value": None, "gettype": "i2c"},
+                        {"bus": 26, "loc": 0x2d, "offset": 0x55, "value": None, "gettype": "i2c"},
+                        {"bus": 26, "loc": 0x2d, "offset": 0x60, "value": None, "gettype": "i2c"},
+                        {"bus": 26, "loc": 0x2d, "offset": 0x61, "value": None, "gettype": "i2c"},
+                        {"bus": 26, "loc": 0x2d, "offset": 0x62, "value": None, "gettype": "i2c"},
+                        {"bus": 26, "loc": 0x2d, "offset": 0x63, "value": None, "gettype": "i2c"},
+                        {"bus": 26, "loc": 0x2d, "offset": 0x64, "value": None, "gettype": "i2c"},
+                        {"bus": 26, "loc": 0x2d, "offset": 0x65, "value": None, "gettype": "i2c"},
+                        {"bus": 26, "loc": 0x2d, "offset": 0xf3, "value": None, "gettype": "i2c"},
+                    ],
+                    "after_upgrade_delay": 1,
+                    "after_upgrade_delay_timeout": 30,
+                    "refresh_finish_flag_check": {"bus": 26, "loc": 0x2d, "offset": 0xcb, "value": 0x5a, "gettype": "i2c"},
+                    "access_check_reg": {"bus": 26, "loc": 0x2d, "offset": 0xaa, "value": 0x55, "gettype": "i2c"},
+                    "finish_cmd": [
+                        {"io_addr": 0x9cc, "value": 0xff, "gettype": "io"},
+                        {"io_addr": 0x9a7, "value": 0x0, "gettype": "io"},
+                    ],
+                },
+            ],
+
+            "chain4": [
+                {"name": "CPU_CPLD",
+                    "refresh_file_judge_flag": 1,
+                    "refresh_file": "/etc/.cpld_refresh/cpu_cpld_transf_header.vme",
+                    "init_cmd": [
+                        {"cmd": "echo 77 > /sys/class/gpio/export", "gettype": "cmd"},
+                        {"cmd": "echo out > /sys/class/gpio/gpio77/direction", "gettype": "cmd"},
+                        {"cmd": "echo 0 > /sys/class/gpio/gpio0/value", "gettype": "cmd"},
+                        {"io_addr": 0x7a4, "value": 0x0, "gettype": "io"},
+                    ],
+                    "rw_recover_reg": [
+                        {"io_addr": 0x705, "value": None, "gettype": "io"},
+                        {"io_addr": 0x713, "value": None, "gettype": "io"},
+                        {"io_addr": 0x715, "value": None, "gettype": "io"},
+                        {"io_addr": 0x721, "value": None, "gettype": "io"},
+                        {"io_addr": 0x722, "value": None, "gettype": "io"},
+                        {"io_addr": 0x772, "value": None, "gettype": "io"},
+                        {"io_addr": 0x774, "value": None, "gettype": "io"},
+                        {"io_addr": 0x776, "value": None, "gettype": "io"},
+                        {"io_addr": 0x778, "value": None, "gettype": "io"},
+                        {"io_addr": 0x77a, "value": None, "gettype": "io"},
+                        {"io_addr": 0x77c, "value": None, "gettype": "io"},
+                        {"io_addr": 0x780, "value": None, "gettype": "io"},
+                    ],
+                    "after_upgrade_delay": 1,
+                    "after_upgrade_delay_timeout": 30,
+                    "access_check_reg": {"io_addr": 0x705, "value": 0x5a, "gettype": "io"},
+                    "finish_cmd": [
+                        {"io_addr": 0x7a4, "value": 0xff, "gettype": "io"},
+                        {"cmd": "echo 1 > /sys/class/gpio/gpio77/value", "gettype": "cmd"},
+                        {"cmd": "echo 77 > /sys/class/gpio/unexport", "gettype": "cmd", "delay": 0.1},
+                    ],
+                 },
+            ],
+
+        },
+
+        # "MTD": {
+        #     "chain1": [
+        #         {"name": "MAC_FPGA",
+        #             "init_cmd": [
+        #                 {"file": WARM_UPG_FLAG, "gettype": "creat_file"},
+        #                 {"cmd": "setpci -s 00:0e.0 0xA0.W=0x0050", "gettype": "cmd"}, # link_disable
+        #                 {"bus": 26, "loc": 0x1d, "offset": 0x44, "value": 0x00, "gettype": "i2c"},
+        #             ],
+        #             "after_upgrade_delay": 10,
+        #             "after_upgrade_delay_timeout": 180,
+        #             "access_check_reg": {
+        #                 "path": "/dev/fpga0", "offset": 0x8, "value": [0x55, 0xaa, 0x5a, 0xa5], "read_len":4, "gettype":"devfile",
+        #                 "polling_cmd":[
+        #                     {"cmd": "setpci -s 00:0e.0 0xA0.W=0x0060", "gettype": "cmd"}, # retrain_link
+        #                     {"cmd": "rmmod wb_fpga_pcie", "gettype": "cmd"},
+        #                     {"cmd": "modprobe wb_fpga_pcie", "gettype": "cmd", "delay": 0.1},
+        #                 ],
+        #                 "polling_delay": 0.1
+        #             },
+        #             "finish_cmd": [
+        #                 {"cmd": "setpci -s  00:0e.0 0xA0.W=0x0060", "gettype": "cmd"}, # retrain_link
+        #                 {"bus": 26, "loc": 0x1d, "offset": 0x44, "value": 0xff, "gettype": "i2c"},
+        #                 {"file": WARM_UPG_FLAG, "gettype": "remove_file"},
+        #             ],
+        #         },
+        #     ],
+        # },
+    },
+    "stop_services_cmd": [
+        "/usr/local/bin/platform_process.py stop",
+    ],
+    "start_services_cmd": [
+        "/usr/local/bin/platform_process.py start",
+    ],
+}
+
 UPGRADE_SUMMARY = {
     "devtype": 0x40c1,
 
@@ -995,11 +1215,11 @@ UPGRADE_SUMMARY = {
         "VME": {
             "chain1": {
                 "name": "BASE_CPLD",
-                "is_support_warm_upg": 0,
+                "is_support_warm_upg": 1,
             },
             "chain2": {
                 "name": "MAC_CPLD",
-                "is_support_warm_upg": 0,
+                "is_support_warm_upg": 1,
             },
             "chain3": {
                 "name": "FAN_CPLD",
@@ -1177,3 +1397,13 @@ SET_MAC_CONF = [
     }
 ]
 
+DRVIER_UPDATE_CONF = {
+    "reboot_flag": 1,
+    "drv_list": [
+        {
+            "source": "extra/sdhci_pci.ko",
+            "target": "kernel/drivers/mmc/host/sdhci-pci.ko",
+            "judge_flag": "/sys/module/sdhci_pci/parameters/wb_sdhci_pci"
+        },
+    ]
+}

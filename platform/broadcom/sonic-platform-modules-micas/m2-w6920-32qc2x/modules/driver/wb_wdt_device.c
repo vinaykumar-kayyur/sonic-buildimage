@@ -47,6 +47,29 @@ static wb_wdt_device_t wb_wdt_device_data_0 = {
     .sysfs_index = SYSFS_NO_CFG,
 };
 
+static wb_wdt_device_t wb_wdt_device_data_1 = {
+    .feed_wdt_type = 1,
+    .hw_margin = 90000,
+    .feed_time = 9000,
+    .config_dev_name = "/dev/cpld1",
+    .config_mode = 2,
+    .priv_func_mode = 3,
+    .enable_reg = 0x4f,
+    .enable_val = 0x1,
+    .disable_val = 0x0,
+    .enable_mask = 0x1,
+    .timeout_cfg_reg = 0x50,
+    .hw_algo = "level",
+    .wdt_config_mode.logic_wdt = {
+        .feed_dev_name = "/dev/cpld1",
+        .feed_reg = 0xac,
+        .active_val = 0x0,
+        .logic_func_mode = 0x3,
+    },
+    .timer_accuracy = 1600,          /* 1.6s */
+    .sysfs_index = SYSFS_NO_CFG,
+};
+
 static void wb_wdt_device_release(struct device *dev)
 {
     return;
@@ -58,6 +81,14 @@ static struct platform_device wb_wdt_device[] = {
         .id = 0,
         .dev    = {
             .platform_data  = &wb_wdt_device_data_0,
+            .release = wb_wdt_device_release,
+        },
+    },
+    {
+        .name   = "wb_wdt",
+        .id = 1,
+        .dev    = {
+            .platform_data  = &wb_wdt_device_data_1,
             .release = wb_wdt_device_release,
         },
     },

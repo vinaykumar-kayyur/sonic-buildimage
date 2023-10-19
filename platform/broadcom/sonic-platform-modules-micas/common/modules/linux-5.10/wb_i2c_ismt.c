@@ -69,6 +69,9 @@
 #include <linux/delay.h>
 
 #include <linux/io-64-nonatomic-lo-hi.h>
+#include <linux/string.h>
+
+#define mem_clear(data, size) memset((data), 0, (size))
 
 /* PCI Address Constants */
 #define SMBBAR		0
@@ -549,10 +552,10 @@ static int ismt_access(struct i2c_adapter *adap, u16 addr,
 	desc = &priv->hw[priv->head];
 
 	/* Initialize the DMA buffer */
-	memset(priv->buffer, 0, sizeof(priv->buffer));
+	mem_clear(priv->buffer, sizeof(priv->buffer));
 
 	/* Initialize the descriptor */
-	memset(desc, 0, sizeof(struct ismt_desc));
+	mem_clear(desc, sizeof(struct ismt_desc));
 	desc->tgtaddr_rw = ISMT_DESC_ADDR_RW(addr, read_write);
 
 	/* Initialize common control bits */

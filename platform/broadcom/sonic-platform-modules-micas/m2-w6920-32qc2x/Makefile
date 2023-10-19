@@ -9,6 +9,7 @@ INSTALL_LIB_DIR = $(SUB_BUILD_DIR)/usr/lib/python3/dist-packages
 INSTALL_SYSFS_CFG_DIR = $(SUB_BUILD_DIR)/etc/plat_sysfs_cfg
 INSTALL_UPGRADE_TEST_DIR = $(SUB_BUILD_DIR)/etc/.upgrade_test
 INSTALL_SERVICE_DIR = $(SUB_BUILD_DIR)/lib/systemd/system
+INSTALL_CPLD_REFRESH_DIR = $(SUB_BUILD_DIR)/etc/.cpld_refresh
 
 all:
 	$(MAKE) -C $(KBUILD_OUTPUT) M=$(DIR_KERNEL_SRC) modules
@@ -24,6 +25,8 @@ all:
 	@if [ -d $(PWD)/.upgrade_test/ ]; then cp -r $(PWD)/.upgrade_test/* ${INSTALL_UPGRADE_TEST_DIR} ;fi
 	@if [ ! -d ${INSTALL_SERVICE_DIR} ]; then mkdir -p ${INSTALL_SERVICE_DIR} ;fi
 	@if [ -d $(PWD)/service/ ]; then cp -r $(PWD)/service/* ${INSTALL_SERVICE_DIR} ;fi
+	@if [ ! -d ${INSTALL_CPLD_REFRESH_DIR} ]; then mkdir -p ${INSTALL_CPLD_REFRESH_DIR} ;fi
+	@if [ -d $(PWD)/.cpld_refresh/ ]; then cp -r $(PWD)/.cpld_refresh/* ${INSTALL_CPLD_REFRESH_DIR} ;fi
 clean:
 	rm -f ${DIR_KERNEL_SRC}/*.o ${DIR_KERNEL_SRC}/*.ko ${DIR_KERNEL_SRC}/*.mod.c ${DIR_KERNEL_SRC}/.*.cmd
 	rm -f ${DIR_KERNEL_SRC}/Module.markers ${DIR_KERNEL_SRC}/Module.symvers ${DIR_KERNEL_SRC}/modules.order

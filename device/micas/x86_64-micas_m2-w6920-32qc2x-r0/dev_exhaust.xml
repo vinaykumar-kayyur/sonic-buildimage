@@ -83,11 +83,27 @@
             <property name="present" location="/sys/wb_plat/psu/psu1/present" type="4" decode="psucheck"  default="1"/>
             <property name="status"  location="/sys/wb_plat/psu/psu1/output"  type="4" decode="psustatus" default="1"/>
             <property name="psu" e2type="fru"  location="/sys/bus/i2c/devices/59-0050/eeprom"/>
+            <property name="in_current"    location="/sys/bus/i2c/devices/59-0058/hwmon/*/curr1_input" type="1" />
+            <property name="in_voltage"    location="/sys/bus/i2c/devices/59-0058/hwmon/*/in1_input"  type="1"/>
+            <property name="out_voltage"    location="/sys/bus/i2c/devices/59-0058/hwmon/*/in2_input" type="1" />
+            <property name="out_current"    location="/sys/bus/i2c/devices/59-0058/hwmon/*/curr2_input" type="1" />
+            <property name="temp"    location="/sys/bus/i2c/devices/59-0058/hwmon/*/temp1_input" type="1"/>
+            <property name="fan_speed"     location="/sys/bus/i2c/devices/59-0058/hwmon/*/fan1_input" />
+            <property name="in_power"      location="/sys/bus/i2c/devices/59-0058/hwmon/*/power1_input"  type="5"/>
+            <property name="out_power"     location="/sys/bus/i2c/devices/59-0058/hwmon/*/power2_input"  type="5"/>
         </psu>
         <psu id="psu2" >
             <property name="present" location="/sys/wb_plat/psu/psu2/present" type="4" decode="psucheck"  default="1"/>
             <property name="status"  location="/sys/wb_plat/psu/psu2/output"  type="4" decode="psustatus" default="1"/>
             <property name="psu" e2type="fru"  location="/sys/bus/i2c/devices/58-0050/eeprom"/>
+            <property name="in_current"    location="/sys/bus/i2c/devices/58-0058/hwmon/*/curr1_input" type="1" />
+            <property name="in_voltage"    location="/sys/bus/i2c/devices/58-0058/hwmon/*/in1_input"  type="1"/>
+            <property name="out_voltage"    location="/sys/bus/i2c/devices/58-0058/hwmon/*/in2_input" type="1" />
+            <property name="out_current"    location="/sys/bus/i2c/devices/58-0058/hwmon/*/curr2_input" type="1" />
+            <property name="temp"    location="/sys/bus/i2c/devices/58-0058/hwmon/*/temp1_input" type="1"/>
+            <property name="fan_speed"     location="/sys/bus/i2c/devices/58-0058/hwmon/*/fan1_input" />
+            <property name="in_power"      location="/sys/bus/i2c/devices/58-0058/hwmon/*/power1_input"  type="5"/>
+            <property name="out_power"     location="/sys/bus/i2c/devices/58-0058/hwmon/*/power2_input"  type="5"/>
         </psu>
     </psus>
     <dcdcs>
@@ -426,7 +442,7 @@
         <code key="GW-CRPS1300D" value="PA1300I-F"/>
         <code key="DPS-1300AB-6 F" value="PA1300I-F"/>
         <code key="DPS-1300AB-6 S" value="PA1300I-F"/>
-        <code key="GW-CRPS1300D3R" value="PA1300I-R"/>
+        <code key="CRPS1300D3R" value="PA1300I-R"/>
         <code key="DPS-1300AB-11 C" value="PA1300I-R"/>
     </psutype>
     <fan_display_name>
