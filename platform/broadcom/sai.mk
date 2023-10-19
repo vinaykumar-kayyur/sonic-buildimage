@@ -1,8 +1,8 @@
-LIBSAIBCM_XGS_VERSION = 8.4.21.0
+LIBSAIBCM_XGS_VERSION = 8.4.26.0
 LIBSAIBCM_DNX_VERSION = 7.1.111.1
 LIBSAIBCM_XGS_BRANCH_NAME = SAI_8.4.0_GA
 LIBSAIBCM_DNX_BRANCH_NAME = REL_7.0_SAI_1.11
-LIBSAIBCM_XGS_URL_PREFIX = "https://sonicstorage.blob.core.windows.net/public/sai/sai-broadcom/$(LIBSAIBCM_XGS_BRANCH_NAME)/$(LIBSAIBCM_XGS_VERSION)/xgs"
+LIBSAIBCM_XGS_URL_PREFIX = "https://sonicstorage.blob.core.windows.net/public/sai/sai-broadcom/zitingguo/CS00012309154/$(LIBSAIBCM_XGS_VERSION)/xgs"
 LIBSAIBCM_DNX_URL_PREFIX = "https://sonicstorage.blob.core.windows.net/public/sai/bcmsai/$(LIBSAIBCM_DNX_BRANCH_NAME)/$(LIBSAIBCM_DNX_VERSION)"
 
 BRCM_XGS_SAI = libsaibcm_$(LIBSAIBCM_XGS_VERSION)_amd64.deb
