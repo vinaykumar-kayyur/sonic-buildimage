@@ -105,7 +105,6 @@ class Sfp(SfpOptoeBase):
 
         self.sfp_type = self.QSFP_TYPE
         self.update_sfp_type()
-        self.refresh_optoe_dev_class()
 
     def __write_txt_file(self, file_path, value):
         try:
