@@ -305,9 +305,13 @@ ENABLE_FIPS ?= n
 # SONIC_SLAVE_DOCKER_DRIVER - set the sonic slave docker storage driver
 SONIC_SLAVE_DOCKER_DRIVER ?= vfs
 
+# INCLUDE_PIT - Build PIT(Platform Integration Test) option, default to NOT
+INCLUDE_PIT ?= n
+
 # GZ_COMPRESS_PROGRAM - select pigz (a parallel implementation of gzip) to reduce a build time
 # and speed up a decompression of docker images on target system
 GZ_COMPRESS_PROGRAM ?= gzip
 
 # SONIC_OS_VERSION - sonic os version
 SONIC_OS_VERSION ?= 11
+
