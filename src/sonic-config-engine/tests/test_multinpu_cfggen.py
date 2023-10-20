@@ -538,6 +538,219 @@ class TestMultiNpuCfgGen(TestCase):
             }
         )
 
+    def test_qos_chassis_packet_lc_template(self):
+        build_root_dir = os.path.join(
+            self.test_dir, "..", "..", ".."
+        )
+        # using T2 qos configuration
+        qos_template = os.path.join(
+            build_root_dir, "files", "build_templates", "qos_config.j2"
+        )
+        minigraph = os.path.join(
+            self.test_dir, "sample-chassis-packet-lc-graph.xml"
+        )
+        port_config_ini_asic1 = os.path.join(
+            self.test_dir, "sample-chassis-packet-lc-port-config.ini"
+        )
+        device_config_dir = self.test_data_dir
+        device_qos_template = os.path.join(
+            device_config_dir, "qos.json.j2"
+        )
+        shutil.copy2(qos_template, device_config_dir)
+        # asic1 - mix of front end and back end ports
+        argument = ["-m", minigraph, "-p", port_config_ini_asic1, "-n", "asic1", "-t", device_qos_template]
+        output = json.loads(self.run_script(argument, check_stderr=True))
+        os.remove(os.path.join(device_config_dir, "qos_config.j2"))
+        self.assertDictEqual(
+            output['QUEUE'],
+            {
+                'Ethernet-BP2320|0': {
+                    'scheduler': 'scheduler.0'
+                },
+                'Ethernet-BP2320|1': {
+                    'scheduler': 'scheduler.0'
+                },
+                'Ethernet-BP2320|2': {
+                    'scheduler': 'scheduler.0'
+                },
+                'Ethernet-BP2320|3': {
+                    'scheduler': 'scheduler.1',
+                    'wred_profile': 'AZURE_LOSSLESS_NO_MARK'
+                },
+                'Ethernet-BP2320|4': {
+                    'scheduler': 'scheduler.1',
+                    'wred_profile': 'AZURE_LOSSLESS_NO_MARK'
+                },
+                'Ethernet-BP2320|5': {
+                    'scheduler': 'scheduler.0'
+                },
+                'Ethernet-BP2320|6': {
+                    'scheduler': 'scheduler.0'
+                },
+                'Ethernet-BP2502|0': {
+                    'scheduler': 'scheduler.0'
+                },
+                'Ethernet-BP2502|1': {
+                    'scheduler': 'scheduler.0'
+                },
+                'Ethernet-BP2502|2': {
+                    'scheduler': 'scheduler.0'
+                },
+                'Ethernet-BP2502|3': {
+                    'scheduler': 'scheduler.1',
+                    'wred_profile': 'AZURE_LOSSLESS_NO_MARK'
+                },
+                'Ethernet-BP2502|4': {
+                    'scheduler': 'scheduler.1',
+                    'wred_profile': 'AZURE_LOSSLESS_NO_MARK'
+                },
+                'Ethernet-BP2502|5': {
+                    'scheduler': 'scheduler.0'
+                },
+                'Ethernet-BP2502|6': {
+                    'scheduler': 'scheduler.0'
+                },
+                'Ethernet-BP2504|0': {
+                    'scheduler': 'scheduler.0'
+                },
+                'Ethernet-BP2504|1': {
+                    'scheduler': 'scheduler.0'
+                },
+                'Ethernet-BP2504|2': {
+                    'scheduler': 'scheduler.0'
+                },
+                'Ethernet-BP2504|3': {
+                    'scheduler': 'scheduler.1',
+                    'wred_profile': 'AZURE_LOSSLESS_NO_MARK'
+                },
+                'Ethernet-BP2504|4': {
+                    'scheduler': 'scheduler.1',
+                    'wred_profile': 'AZURE_LOSSLESS_NO_MARK'
+                },
+                'Ethernet-BP2504|5': {
+                    'scheduler': 'scheduler.0'
+                },
+                'Ethernet-BP2504|6': {
+                    'scheduler': 'scheduler.0'
+                },
+                'Ethernet-BP2506|0': {
+                    'scheduler': 'scheduler.0'
+                },
+                'Ethernet-BP2506|1': {
+                    'scheduler': 'scheduler.0'
+                },
+                'Ethernet-BP2506|2': {
+                    'scheduler': 'scheduler.0'
+                },
+                'Ethernet-BP2506|3': {
+                    'scheduler': 'scheduler.1',
+                    'wred_profile': 'AZURE_LOSSLESS_NO_MARK'
+                },
+                'Ethernet-BP2506|4': {
+                    'scheduler': 'scheduler.1',
+                    'wred_profile': 'AZURE_LOSSLESS_NO_MARK'
+                },
+                'Ethernet-BP2506|5': {
+                    'scheduler': 'scheduler.0'
+                },
+                'Ethernet-BP2506|6': {
+                    'scheduler': 'scheduler.0'
+                },
+                'Ethernet-BP2508|0': {
+                    'scheduler': 'scheduler.0'
+                },
+                'Ethernet-BP2508|1': {
+                    'scheduler': 'scheduler.0'
+                },
+                'Ethernet-BP2508|2': {
+                    'scheduler': 'scheduler.0'
+                },
+                'Ethernet-BP2508|3': {
+                    'scheduler': 'scheduler.1',
+                    'wred_profile': 'AZURE_LOSSLESS_NO_MARK'
+                },
+                'Ethernet-BP2508|4': {
+                    'scheduler': 'scheduler.1',
+                    'wred_profile': 'AZURE_LOSSLESS_NO_MARK'
+                },
+                'Ethernet-BP2508|5': {
+                    'scheduler': 'scheduler.0'
+                },
+                'Ethernet-BP2508|6': {
+                    'scheduler': 'scheduler.0'
+                },
+                'Ethernet-BP2510|0': {
+                    'scheduler': 'scheduler.0'
+                },
+                'Ethernet-BP2510|1': {
+                    'scheduler': 'scheduler.0'
+                },
+                'Ethernet-BP2510|2': {
+                    'scheduler': 'scheduler.0'
+                },
+                'Ethernet-BP2510|3': {
+                    'scheduler': 'scheduler.1',
+                    'wred_profile': 'AZURE_LOSSLESS_NO_MARK'
+                },
+                'Ethernet-BP2510|4': {
+                    'scheduler': 'scheduler.1',
+                    'wred_profile': 'AZURE_LOSSLESS_NO_MARK'
+                },
+                'Ethernet-BP2510|5': {
+                    'scheduler': 'scheduler.0'
+                },
+                'Ethernet-BP2510|6': {
+                    'scheduler': 'scheduler.0'
+                },
+                'Ethernet-BP2516|0': {
+                    'scheduler': 'scheduler.0'
+                },
+                'Ethernet-BP2516|1': {
+                    'scheduler': 'scheduler.0'
+                },
+                'Ethernet-BP2516|2': {
+                    'scheduler': 'scheduler.0'
+                },
+                'Ethernet-BP2516|3': {
+                    'scheduler': 'scheduler.1',
+                    'wred_profile': 'AZURE_LOSSLESS_NO_MARK'
+                },
+                'Ethernet-BP2516|4': {
+                    'scheduler': 'scheduler.1',
+                    'wred_profile': 'AZURE_LOSSLESS_NO_MARK'
+                },
+                'Ethernet-BP2516|5': {
+                    'scheduler': 'scheduler.0'
+                },
+                'Ethernet-BP2516|6': {
+                    'scheduler': 'scheduler.0'
+                },
+                'Ethernet47|0': {
+                    'scheduler': 'scheduler.0'
+                },
+                'Ethernet47|1': {
+                    'scheduler': 'scheduler.0'
+                },
+                'Ethernet47|2': {
+                    'scheduler': 'scheduler.0'
+                },
+                'Ethernet47|3': {
+                    'scheduler': 'scheduler.1',
+                    'wred_profile': 'AZURE_LOSSLESS'
+                },
+                'Ethernet47|4': {
+                    'scheduler': 'scheduler.1',
+                    'wred_profile': 'AZURE_LOSSLESS'
+                },
+                'Ethernet47|5': {
+                    'scheduler': 'scheduler.0'
+                },
+                'Ethernet47|6': {
+                    'scheduler': 'scheduler.0'
+                }
+            }
+        )
+
     def test_bgpd_frr_frontendasic(self):
         self.assertTrue(*self.run_frr_asic_case('bgpd/bgpd.conf.j2', 'bgpd_frr_frontend_asic.conf', "asic0", self.port_config[0]))
 

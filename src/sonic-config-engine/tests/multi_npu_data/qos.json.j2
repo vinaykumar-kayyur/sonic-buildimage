@@ -1,0 +1,30 @@
+{%- set backplane_port_no_ecn_marking = true %}
+
+{%- macro generate_wred_profiles() %}
+    "WRED_PROFILE": {
+        "AZURE_LOSSLESS" : {
+            "wred_green_enable"      : "true",
+            "wred_yellow_enable"     : "true",
+            "ecn"                    : "ecn_green_yellow",
+            "green_drop_probability" : "5",
+            "green_min_threshold"    : "1048576",
+            "green_max_threshold"    : "4194304",
+            "yellow_min_threshold"   : "0",
+            "yellow_drop_probability": "0",
+            "yellow_max_threshold"   : "6144000"
+        },
+        "AZURE_LOSSLESS_NO_MARK": {
+            "ecn": "ecn_green_yellow",
+            "green_drop_probability": "0",
+            "green_max_threshold": "6144000",
+            "green_min_threshold": "0",
+            "wred_green_enable": "true",
+            "wred_yellow_enable": "true",
+            "yellow_drop_probability": "0",
+            "yellow_max_threshold": "6144000",
+            "yellow_min_threshold": "0"
+        }
+    },
+{%- endmacro %}
+
+{%- include 'qos_config.j2' %}
