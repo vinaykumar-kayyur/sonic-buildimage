@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+cp /usr/share/lom/LoM-Version /usr/share/device_health/
+
 # Generate supervisord config file
 mkdir -p /etc/supervisor/conf.d/
 
