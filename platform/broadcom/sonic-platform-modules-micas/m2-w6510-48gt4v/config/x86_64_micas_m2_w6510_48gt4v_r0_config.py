@@ -552,7 +552,7 @@ REBOOT_CAUSE_PARA = {
                 {"record_type": "file", "mode": "cover", "log": "Watchdog, ",
                     "path": "/etc/sonic/.reboot/.previous-reboot-cause.txt"},
                 {"record_type": "file", "mode": "add", "log": "Watchdog, ", 
-                    "path": "/etc/.reboot/.history-reboot-cause.txt", "file_max_size":1*1024*1024}
+                    "path": "/etc/sonic/.reboot/.history-reboot-cause.txt", "file_max_size":1*1024*1024}
             ],
             "finish_operation": [
                 {"gettype": "io", "io_addr": 0x76b, "value": 0x00},

@@ -41,6 +41,8 @@
 #include "sdhci.h"
 #include "sdhci-pci.h"
 
+#define mem_clear(data, size) memset((data), 0, (size))
+
 static int wb_sdhci_pci = 0;
 module_param(wb_sdhci_pci, int, S_IRUGO);
 
@@ -2406,7 +2408,7 @@ static int sdhci_set_quirks2_by_cmdline(struct pci_dev *pdev)
     char *option, cmdline[COMMAND_LINE_SIZE];
     int ret = 0;
 
-    memset(cmdline, 0, COMMAND_LINE_SIZE);
+    mem_clear(cmdline, COMMAND_LINE_SIZE);
 
     ret = sdhci_cmdline_read(cmdline);
     if (ret) {

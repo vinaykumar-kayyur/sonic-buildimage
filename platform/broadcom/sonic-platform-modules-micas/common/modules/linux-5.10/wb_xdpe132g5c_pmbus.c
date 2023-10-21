@@ -59,7 +59,7 @@ static ssize_t set_xdpe132g5c_avs(struct device *dev, struct device_attribute *d
     struct pmbus_data *data;
 
     data = i2c_get_clientdata(client);
-    ret = kstrtoul(buf, 16, &val);
+    ret = kstrtoul(buf, 0, &val);
     if (ret){
         return ret;
     }
