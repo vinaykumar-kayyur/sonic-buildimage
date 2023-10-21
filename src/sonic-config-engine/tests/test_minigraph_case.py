@@ -154,7 +154,7 @@ class TestCfgGenCaseInsensitive(TestCase):
                 'grat_arp': 'enabled'
             },
             'Vlan1000|192.168.1.1/27': {
-                'secondary': "true"
+                'secondary': 'true'
             }
         }
         self.assertEqual(utils.to_dict(output.strip()), expected_table)
