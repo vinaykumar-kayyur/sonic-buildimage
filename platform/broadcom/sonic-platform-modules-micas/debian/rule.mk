@@ -1,12 +1,6 @@
 currentdir = $(shell pwd)
 
 MODULE_DIRS := m2-w6510-48v8c
-MODULE_DIRS += m2-w6510-32c
-MODULE_DIRS += m2-w6910-64c
-MODULE_DIRS += m2-w6920-4s
-MODULE_DIRS += m2-w6520-24dc8qc
-MODULE_DIRS += m2-w6930-64qc
 MODULE_DIRS += m2-w6510-48gt4v
-MODULE_DIRS += m2-w6920-32qc2x
 
 export MODULE_DIRS
