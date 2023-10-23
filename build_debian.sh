@@ -335,13 +335,6 @@ if [[ $CONFIGURED_ARCH == amd64 ]]; then
         firmware-linux-nonfree
 fi
 
-if [ "$BUILD_REDUCE_IMAGE_SIZE" = "y" ]; then
-   vim=vim-tiny
-   sudo ln -s vim.tiny $FILESYSTEM_ROOT/bin/vim
-else
-   vim=vim
-fi
-
 ## Pre-install the fundamental packages
 ## Note: gdisk is needed for sgdisk in install.sh
 ## Note: parted is needed for partprobe in install.sh
@@ -355,7 +348,7 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     bridge-utils            \
     isc-dhcp-client         \
     sudo                    \
-    $vim                    \
+    vim                     \
     tcpdump                 \
     dbus                    \
     ntpstat                 \
