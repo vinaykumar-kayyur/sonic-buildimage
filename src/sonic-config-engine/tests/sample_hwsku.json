@@ -6,11 +6,11 @@
         },
         "Ethernet4": {
             "default_brkout_mode": "2x50G",
-            "mode" : "routed"
+            "mode" : "trunk"
         },
         "Ethernet8": {
             "default_brkout_mode": "4x25G[10G]",
-            "mode" : "routed"
+            "mode" : "trunk"
         },
         "Ethernet12": {
             "default_brkout_mode": "2x25G(2)+1x50G(2)",

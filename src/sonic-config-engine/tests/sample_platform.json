@@ -27,7 +27,7 @@
         "Ethernet4": {
             "index": "2,2,2,2",
             "lanes": "4,5,6,7",
-            "mode" : "routed",
+            "mode" : "trunk",
             "breakout_modes": {
                 "1x100G[40G]": ["Eth2"],
                 "2x50G": ["Eth2/1", "Eth2/2"],
@@ -37,7 +37,7 @@
         "Ethernet8": {
             "index": "3,3,3,3",
             "lanes": "8,9,10,11",
-            "mode" : "routed",
+            "mode" : "trunk",
             "breakout_modes": {
                 "1x100G[40G]": ["Eth3"],
                 "2x50G": ["Eth3/1", "Eth3/2"],
