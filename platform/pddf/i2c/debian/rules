@@ -60,7 +60,7 @@ binary-indep:
 	# Need to take a backup of symvers file for compilation of custom modules in various platforms
 	cp $(MOD_SRC_DIR)/Module.symvers $(MOD_SRC_DIR)/Module.symvers.PDDF; \
 	cp -r $(MOD_SRC_DIR)/$(UTILS_DIR)/* debian/$(PACKAGE_PRE_NAME)/usr/local/bin/; \
-	$(PIP) install --root=$(MOD_SRC_DIR)/debian/test-pkg1 $(MOD_SRC_DIR)/; \
+	$(PIP) install --root=$(MOD_SRC_DIR)/debian/$(PACKAGE_PRE_NAME) $(MOD_SRC_DIR)/; \
 	set +e
 
 	# Resuming debhelper scripts
