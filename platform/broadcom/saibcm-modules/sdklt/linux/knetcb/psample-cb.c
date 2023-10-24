@@ -192,7 +192,7 @@ psample_meta_get(struct sk_buff *skb, psample_meta_t *sflow_meta)
     psample_netif_t *psample_netif = NULL;
     const struct ngknet_callback_desc *cbd = NGKNET_SKB_CB(skb);
     ngknet_netif_t *netif = cbd->netif;
-    memset(sflow_meta, 0, sizeof(psample_meta_t));    
+    memset_s(sflow_meta, 0, sizeof(psample_meta_t));    
 
     /* find src port */
     if ((psample_netif = psample_netif_lookup_by_ifindex(netif->id))) {
@@ -864,7 +864,7 @@ psample_proc_stats_write(struct file *file, const char *buf,
 
     spin_lock_irqsave(&g_psample_work.lock, flags);
     qlen_cur = g_psample_stats.pkts_c_qlen_cur;
-    memset(&g_psample_stats, 0, sizeof(psample_stats_t));
+    memset_s(&g_psample_stats, 0, sizeof(psample_stats_t));
     g_psample_stats.pkts_c_qlen_cur = qlen_cur;
     spin_unlock_irqrestore(&g_psample_work.lock, flags);
 
@@ -944,9 +944,9 @@ int psample_init(void)
     }
 
     /* clear data structs */
-    memset(&g_psample_stats, 0, sizeof(psample_stats_t));
-    memset(&g_psample_info, 0, sizeof(psample_info_t));
-    memset(&g_psample_work, 0, sizeof(psample_work_t));
+    memset_s(&g_psample_stats, 0, sizeof(psample_stats_t));
+    memset_s(&g_psample_info, 0, sizeof(psample_info_t));
+    memset_s(&g_psample_work, 0, sizeof(psample_work_t));
 
     /* FIXME: How to get DCB type from NGKNET? */
     //g_psample_info.dcb_type

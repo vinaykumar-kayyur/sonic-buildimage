@@ -318,7 +318,7 @@ cmblock_alloc(size_t size, size_t chunk_size)
     if ((cmbd = kmalloc(sizeof(cmblock_desc_t), GFP_KERNEL)) == NULL) {
         return NULL;
     }
-    memset(cmbd, 0, sizeof(*cmbd));
+    memset_s(cmbd, 0, sizeof(*cmbd));
     cmbd->req_size = size;
     cmbd->chunk_size = PAGE_ALIGN(chunk_size);
     while ((PAGE_SIZE << cmbd->chunk_order) < cmbd->chunk_size) {
@@ -336,7 +336,7 @@ cmblock_alloc(size_t size, size_t chunk_size)
         kfree(cmbd);
         return NULL;
     }
-    memset(cmbd->chunk_ptr, 0, chunk_ptr_size);
+    memset_s(cmbd->chunk_ptr, 0, chunk_ptr_size);
 
     /* Allocate minimum number of memory chunks */
     (void)alloc_mem_chunks(cmbd, cmbd->req_size / cmbd->chunk_size);

@@ -492,7 +492,7 @@ _dma_segment_alloc(size_t size, size_t blk_size)
     if ((dseg = kmalloc(sizeof(dma_segment_t), GFP_KERNEL)) == NULL) {
         return NULL;
     }
-    memset(dseg, 0, sizeof(dma_segment_t));
+    memset_s(dseg, 0, sizeof(dma_segment_t));
     dseg->req_size = size;
     dseg->blk_size = PAGE_ALIGN(blk_size);
     while ((PAGE_SIZE << dseg->blk_order) < dseg->blk_size) {
@@ -512,7 +512,7 @@ _dma_segment_alloc(size_t size, size_t blk_size)
         kfree(dseg);
         return NULL;
     }
-    memset(dseg->blk_ptr, 0, blk_ptr_size);
+    memset_s(dseg->blk_ptr, 0, blk_ptr_size);
     /* Allocate minimum number of blocks */
     if (_alloc_dma_blocks(dseg, dseg->req_size / dseg->blk_size) != 0) {
         gprintk("Failed to allocate minimum number of DMA blocks\n");

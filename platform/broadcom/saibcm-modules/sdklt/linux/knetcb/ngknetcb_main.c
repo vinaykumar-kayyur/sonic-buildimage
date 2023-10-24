@@ -416,7 +416,7 @@ static ssize_t
 ngknetcb_write(struct file *file, const char *buf,
                size_t count, loff_t *loff)
 {
-    memset(&strip_stats, 0, sizeof(strip_stats));
+    memset_s(&strip_stats, 0, sizeof(strip_stats));
     printk("Cleared NGKNET callback stats\n");
     return count;
 }

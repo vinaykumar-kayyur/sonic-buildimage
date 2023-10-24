@@ -320,7 +320,7 @@ ngknet_ptp_rx_hwts_set(struct net_device *ndev, struct sk_buff *skb)
         return SHR_E_FAIL;
     }
 
-    memset(shhwtstamps, 0, sizeof(*shhwtstamps));
+    memset_s(shhwtstamps, 0, sizeof(*shhwtstamps));
     shhwtstamps->hwtstamp = ns_to_ktime(ts);
 
     return SHR_E_NONE;
@@ -588,7 +588,7 @@ ngknet_ptp_tx_hwts_set(struct net_device *ndev, struct sk_buff *skb)
         return SHR_E_FAIL;
     }
 
-    memset(&shhwtstamps, 0, sizeof(shhwtstamps));
+    memset_s(&shhwtstamps, 0, sizeof(shhwtstamps));
     shhwtstamps.hwtstamp = ns_to_ktime(ts);
     skb_tstamp_tx(skb, &shhwtstamps);
 
@@ -734,7 +734,7 @@ ngknet_tx_frame_process(struct net_device *ndev, struct sk_buff **oskb)
             skb = nskb;
         }
         skb_push(skb, PKT_HDR_SIZE + meta_len);
-        memset(skb->data, 0, PKT_HDR_SIZE + meta_len);
+        memset_s(skb->data, 0, PKT_HDR_SIZE + meta_len);
         pkh = (struct pkt_hdr *)skb->data;
         pkh->data_len = skb->len - PKT_HDR_SIZE - meta_len + ETH_FCS_LEN;
         pkh->meta_len = meta_len;
@@ -2396,7 +2396,7 @@ ngknet_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
             ioc.rc = SHR_E_PARAM;
             break;
         }
-        memset(pdev, 0, sizeof(*pdev));
+        memset_s(pdev, 0, sizeof(*pdev));
         strlcpy(pdev->name, dev_cfg->name, sizeof(pdev->name));
         pdev->dev_id = dev_cfg->dev_id;
         for (dt = 0; dt < drv_num; dt++) {

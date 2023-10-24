@@ -1001,7 +1001,7 @@ psample_proc_stats_write(struct file *file, const char *buf,
 
     spin_lock_irqsave(&g_psample_work.lock, flags);
     qlen_cur = g_psample_stats.pkts_c_qlen_cur;
-    memset(&g_psample_stats, 0, sizeof(psample_stats_t));
+    memset_s(&g_psample_stats, 0, sizeof(psample_stats_t));
     g_psample_stats.pkts_c_qlen_cur = qlen_cur;
     spin_unlock_irqrestore(&g_psample_work.lock, flags);
 
@@ -1077,9 +1077,9 @@ int psample_init(void)
     }
 
     /* clear data structs */
-    memset(&g_psample_stats, 0, sizeof(psample_stats_t));
-    memset(&g_psample_info, 0, sizeof(psample_info_t));
-    memset(&g_psample_work, 0, sizeof(psample_work_t));
+    memset_s(&g_psample_stats, 0, sizeof(psample_stats_t));
+    memset_s(&g_psample_info, 0, sizeof(psample_info_t));
+    memset_s(&g_psample_work, 0, sizeof(psample_work_t));
 
     /* setup psample_info struct */
     INIT_LIST_HEAD(&g_psample_info.netif_list);

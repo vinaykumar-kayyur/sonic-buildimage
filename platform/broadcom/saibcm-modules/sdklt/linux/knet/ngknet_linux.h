@@ -215,7 +215,7 @@ sal_free(void *addr)
 static inline void *
 sal_memset(void *dest, int c, size_t cnt)
 {
-    return memset(dest, c, cnt);
+    return memset_s(dest, c, cnt);
 }
 
 static inline void *

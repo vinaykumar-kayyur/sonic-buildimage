@@ -1340,15 +1340,15 @@ _init(void)
 
     lkbde_get_dma_info(&cpu_pbase, &dma_pbase, &dmasize);
 
-    memset(&_dma_pool, 0, sizeof(_dma_pool));
+    memset_s(&_dma_pool, 0, sizeof(_dma_pool));
     _dma_pool.cpu_pbase = cpu_pbase;
     _dma_pool.dma_pbase = dma_pbase;
     _dma_pool.total_size = dmasize / ONE_MB;
 
-    memset(_devices, 0, sizeof(_devices));
+    memset_s(_devices, 0, sizeof(_devices));
 
     /* Use _bde_inst_resource[0] as the default resource */
-    memset(_bde_inst_resource, 0, sizeof(_bde_inst_resource));
+    memset_s(_bde_inst_resource, 0, sizeof(_bde_inst_resource));
     res = &_bde_inst_resource[0];
     res->dma_offset = 0;
     res->dma_size = _dma_pool.total_size;

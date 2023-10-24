@@ -123,7 +123,7 @@ ngbde_dmamem_pgmem_alloc(ngbde_dmactrl_t *dmactrl, ngbde_dmamem_t *dmamem)
                                        dmamem->size, DMA_BIDIRECTIONAL);
         if (dma_mapping_error(dmactrl->dev, dmamem->baddr)) {
             ngbde_pgmem_free(dmamem->vaddr);
-            memset(dmamem, 0, sizeof(*dmamem));
+            memset_s(dmamem, 0, sizeof(*dmamem));
             if (dma_debug) {
                 printk("DMA: Failed to map PGMEM memory\n");
             }
@@ -228,7 +228,7 @@ ngbde_dmamem_free(ngbde_dmamem_t *dmamem)
         }
         dma_free_coherent(dmamem->dev, dmamem->size,
                           dmamem->vaddr, dmamem->baddr);
-        memset(dmamem, 0, sizeof(*dmamem));
+        memset_s(dmamem, 0, sizeof(*dmamem));
         break;
     case NGBDE_DMA_T_PGMEM:
         if (dma_debug) {
@@ -244,7 +244,7 @@ ngbde_dmamem_free(ngbde_dmamem_t *dmamem)
                              dmamem->size, DMA_BIDIRECTIONAL);
         }
         ngbde_pgmem_free(dmamem->vaddr);
-        memset(dmamem, 0, sizeof(*dmamem));
+        memset_s(dmamem, 0, sizeof(*dmamem));
         break;
     case NGBDE_DMA_T_NONE:
         /* Nothing to free */

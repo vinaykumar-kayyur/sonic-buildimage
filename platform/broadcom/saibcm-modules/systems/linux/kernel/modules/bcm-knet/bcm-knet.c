@@ -370,14 +370,14 @@ static struct sk_buff *skb_pad(struct sk_buff *skb, int pad)
         /* If the skbuff is non linear tailroom is always zero.. */
         if(skb_tailroom(skb) >= pad)
         {
-                memset(skb->data+skb->len, 0, pad);
+                memset_s(skb->data+skb->len, 0, pad);
                 return skb;
         }
 
         nskb = skb_copy_expand(skb, skb_headroom(skb), skb_tailroom(skb) + pad, GFP_ATOMIC);
         kfree_skb(skb);
         if(nskb)
-                memset(nskb->data+nskb->len, 0, pad);
+                memset_s(nskb->data+nskb->len, 0, pad);
         return nskb;
 }
 static inline struct sk_buff *skb_padto(struct sk_buff *skb, unsigned int len)
@@ -2035,7 +2035,7 @@ bkn_init_dcbs(bkn_switch_info_t *sinfo)
     int idx;
     int chan;
 
-    memset(sinfo->dcb_mem, 0, sinfo->dcb_mem_size);
+    memset_s(sinfo->dcb_mem, 0, sinfo->dcb_mem_size);
 
     dcb_size = sinfo->dcb_wsize * sizeof(uint32_t);
     dcb_mem = sinfo->dcb_mem;
@@ -2705,7 +2705,7 @@ bkn_match_rx_pkt(bkn_switch_info_t *sinfo, uint8_t *pkt, int pktlen,
             if (kf->dest_type == KCOM_DEST_T_CB) {
                 /* Check for custom filters */
                 if (knet_filter_cb != NULL && cbf != NULL) {
-                    memset(cbf, 0, sizeof(*cbf));
+                    memset_s(cbf, 0, sizeof(*cbf));
                     memcpy(&cbf->kf, kf, sizeof(cbf->kf));
                     if (knet_filter_cb(pkt, pktlen, sinfo->dev_no,
                                        meta, chan, &cbf->kf)) {
@@ -2770,7 +2770,7 @@ bkn_hw_tstamp_rx_set(bkn_switch_info_t *sinfo, int phys_port, struct sk_buff *sk
         }
     }
 
-    memset(shhwtstamps, 0, sizeof(*shhwtstamps));
+    memset_s(shhwtstamps, 0, sizeof(*shhwtstamps));
     shhwtstamps->hwtstamp = ns_to_ktime(ts);
 
     return ret;
@@ -2790,15 +2790,15 @@ bkn_add_rcpu_encap(bkn_switch_info_t *sinfo, struct sk_buff *skb, void *meta, in
          */
         psize = RCPU_HDR_SIZE + len;
         skb_push(skb, psize);
-        memset(skb->data, 0, psize);
+        memset_s(skb->data, 0, psize);
     } else if (sinfo->cmic_type == 'x') {
         psize = RCPU_HDR_SIZE + sinfo->pkt_hdr_size;
         skb_push(skb, psize);
-        memset(skb->data, 0, RCPU_HDR_SIZE);
+        memset_s(skb->data, 0, RCPU_HDR_SIZE);
     } else {
         psize = RCPU_RX_ENCAP_SIZE;
         skb_push(skb, psize);
-        memset(skb->data, 0, RCPU_RX_ENCAP_SIZE);
+        memset_s(skb->data, 0, RCPU_RX_ENCAP_SIZE);
     }
 
     /* RCPU Header */
@@ -3759,7 +3759,7 @@ bkn_do_api_rx(bkn_switch_info_t *sinfo, int chan, int budget)
             err_woff = BKN_SAND_SCRATCH_DATA_SIZE - 1;
             sand_scratch_data[err_woff] = dcb[sinfo->dcb_wsize-1];
             meta = (uint32_t *)pkt;
-            memset(&packet_info, 0, sizeof(bkn_dune_system_header_info_t));
+            memset_s(&packet_info, 0, sizeof(bkn_dune_system_header_info_t));
             /* Decode system headers and fill sratch data */
             bkn_packet_header_parse(sinfo, pkt, (uint32_t)pktlen, &packet_info);
             pkt_hdr_size = packet_info.system_header_size;
@@ -4176,7 +4176,7 @@ bkn_do_skb_rx(bkn_switch_info_t *sinfo, int chan, int budget)
             sand_scratch_data[err_woff] = dcb[sinfo->dcb_wsize-1];
             meta = (uint32_t *)skb->data;
             pkt = skb->data;
-            memset(&packet_info, 0, sizeof(bkn_dune_system_header_info_t));
+            memset_s(&packet_info, 0, sizeof(bkn_dune_system_header_info_t));
             /* Decode system headers and fill sratch data */
             bkn_packet_header_parse(sinfo, pkt, (uint32_t)pktlen, &packet_info);
             pkt_hdr_size = packet_info.system_header_size;
@@ -4189,7 +4189,7 @@ bkn_do_skb_rx(bkn_switch_info_t *sinfo, int chan, int budget)
 
                     meta = (uint32_t *)(skb->data + skip_hdrlen);
                     pkt = (skb->data + skip_hdrlen);
-                    memset(&packet_info, 0, sizeof(bkn_dune_system_header_info_t));
+                    memset_s(&packet_info, 0, sizeof(bkn_dune_system_header_info_t));
 
                     /* Decode system headers and fill sratch data */
                     bkn_packet_header_parse(sinfo, pkt, (uint32_t)(pktlen - skip_hdrlen), &packet_info);
@@ -4782,7 +4782,7 @@ bkn_hw_tstamp_tx_set(bkn_switch_info_t *sinfo, struct sk_buff *skb)
         }
     }
 
-    memset(&shhwtstamps, 0, sizeof(shhwtstamps));
+    memset_s(&shhwtstamps, 0, sizeof(shhwtstamps));
     shhwtstamps.hwtstamp = ns_to_ktime(ts);
     skb_tstamp_tx(skb, &shhwtstamps);
 
@@ -4916,7 +4916,7 @@ bkn_tx_cdma_chain_switch(bkn_switch_info_t *sinfo)
          */
         sinfo->tx.api_active = 1;
         dcb_mem = sinfo->tx.desc[sinfo->tx.cur].dcb_mem;
-        memset(dcb_mem, 0, sinfo->dcb_wsize * sizeof(uint32_t));
+        memset_s(dcb_mem, 0, sinfo->dcb_wsize * sizeof(uint32_t));
         dcb_mem[0] = dcb_chain->dcb_dma;
         if (sinfo->cmic_type == 'x') {
             dcb_mem[1] = DMA_TO_BUS_HI(dcb_chain->dcb_dma >> 32);
@@ -6153,7 +6153,7 @@ bkn_tx(struct sk_buff *skb, struct net_device *dev)
                     DBG_SKB(("Expand Tx SKB\n"));
                     skb_push(skb, hdrlen);
                 }
-                memset(skb->data, 0, hdrlen);
+                memset_s(skb->data, 0, hdrlen);
                 pktdata = skb->data;
                 pktlen += hdrlen;
             } else {
@@ -6237,7 +6237,7 @@ bkn_tx(struct sk_buff *skb, struct net_device *dev)
 
         dcb = desc->dcb_mem;
         meta = (sinfo->cmic_type == 'x') ? (uint32_t *)pktdata : dcb;
-        memset(dcb, 0, sinfo->dcb_wsize * sizeof(uint32_t));
+        memset_s(dcb, 0, sinfo->dcb_wsize * sizeof(uint32_t));
         if (priv->flags & KCOM_NETIF_F_RCPU_ENCAP) {
             if (device_is_sand(sinfo)) {
                 if (sinfo->cmic_type == 'x') {
@@ -6742,7 +6742,7 @@ bkn_create_sinfo(int dev_no)
     if ((sinfo = kmalloc(sizeof(*sinfo), GFP_KERNEL)) == NULL) {
         return NULL;
     }
-    memset(sinfo, 0, sizeof(*sinfo));
+    memset_s(sinfo, 0, sizeof(*sinfo));
     INIT_LIST_HEAD(&sinfo->ndev_list);
     INIT_LIST_HEAD(&sinfo->rxpf_list);
     sinfo->base_addr = lkbde_get_dev_virt(dev_no);
@@ -7304,7 +7304,7 @@ bkn_seq_dma_start(struct seq_file *s, loff_t *pos)
     if (!iter) {
         return NULL;
     }
-    memset(iter, 0, sizeof(*iter));
+    memset_s(iter, 0, sizeof(*iter));
     iter->idx = -2;
     if (bkn_seq_dma_next_pos(iter, *pos) < 0) {
         kfree(iter);
@@ -8148,7 +8148,7 @@ bkn_knet_dma_info(kcom_msg_dma_info_t *kmsg, int len)
         kmsg->hdr.status = KCOM_E_RESOURCE;
         return sizeof(kcom_msg_hdr_t);
     }
-    memset(dcb_chain, 0, sizeof(*dcb_chain));
+    memset_s(dcb_chain, 0, sizeof(*dcb_chain));
     dcb_chain->dcb_cnt = kmsg->dma_info.cnt;
     dcb_chain->dcb_dma = kmsg->dma_info.data.dcb_start;
     dcb_chain->dcb_mem = kernel_bde->p2l(sinfo->dev_no,
@@ -8735,7 +8735,7 @@ bkn_knet_netif_create(kcom_msg_netif_create_t *kmsg, int len)
         priv->port = kmsg->netif.port;
         priv->phys_port = kmsg->netif.phys_port;
         priv->qnum = kmsg->netif.qnum;
-        memset(&(priv->link_settings), 0, sizeof(struct ethtool_link_settings));
+        memset_s(&(priv->link_settings), 0, sizeof(struct ethtool_link_settings));
     } else {
         if (device_is_sand(sinfo) && (priv->type == KCOM_NETIF_T_VLAN)) {
             /* PTCH.SSPA */
@@ -8792,7 +8792,7 @@ bkn_knet_netif_create(kcom_msg_netif_create_t *kmsg, int len)
         void *ndevs = kmalloc(size, GFP_ATOMIC);
         if (ndevs != NULL) {
             DBG_NDEV(("Reallocate netif table for ID %d\n", id));
-            memset(ndevs, 0, size);
+            memset_s(ndevs, 0, size);
             if (sinfo->ndevs != NULL) {
                 size = sinfo->ndev_max * sizeof(struct net_device *);
                 memcpy(ndevs, sinfo->ndevs, size);
@@ -8871,7 +8871,7 @@ bkn_knet_netif_destroy(kcom_msg_netif_destroy_t *kmsg, int len)
         if (knet_netif_destroy_cb != NULL) {
             int retv;
             kcom_netif_t netif;
-            memset(&netif, 0, sizeof(kcom_netif_t));
+            memset_s(&netif, 0, sizeof(kcom_netif_t));
             netif.id = priv->id;
             retv = knet_netif_destroy_cb(kmsg->hdr.unit, &netif, priv->dev);
             if (retv) {
@@ -9054,7 +9054,7 @@ bkn_knet_filter_create(kcom_msg_filter_create_t *kmsg, int len)
         kmsg->hdr.status = KCOM_E_PARAM;
         return sizeof(kcom_msg_hdr_t);
     }
-    memset(filter, 0, sizeof(*filter));
+    memset_s(filter, 0, sizeof(*filter));
     memcpy(&filter->kf, &kmsg->filter, sizeof(filter->kf));
     filter->kf.id = id;
 
@@ -9751,7 +9751,7 @@ _init(void)
 
     /* Initialize event queue */
     for (idx = 0; idx < LINUX_BDE_MAX_DEVICES; idx++) {
-        memset(&_bkn_evt[idx], 0, sizeof(bkn_evt_resource_t));
+        memset_s(&_bkn_evt[idx], 0, sizeof(bkn_evt_resource_t));
         _bkn_evt[idx].inst_id = INVALID_INSTANCE_ID;
     }
     evt = &_bkn_evt[0];
@@ -9792,7 +9792,7 @@ _ioctl(unsigned int cmd, unsigned long arg)
             io.len = bkn_handle_cmd_req(&kmsg, io.len);
             ioctl_cmd--;
         } else {
-            memset(&kmsg, 0, sizeof(kcom_msg_t));
+            memset_s(&kmsg, 0, sizeof(kcom_msg_t));
             /*
              * Retrive the kmsg.hdr.unit from user space. The dma event queue
              * selection is based the instance derived from unit.

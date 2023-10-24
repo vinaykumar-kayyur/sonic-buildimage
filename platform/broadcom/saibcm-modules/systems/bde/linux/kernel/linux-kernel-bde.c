@@ -678,7 +678,7 @@ iproc_cmicd_get_irqres(ibde_dev_t bde_dev, struct resource *res_irq)
     shbde_iproc_config_t iproc_config, *icfg = &iproc_config;
 
     /* iProc configuration parameters */
-    memset(icfg, 0, sizeof(*icfg));
+    memset_s(icfg, 0, sizeof(*icfg));
     shbde_iproc_config_init(icfg, bde_dev.device, bde_dev.rev);
 
     if ((icfg->iproc_ver == 0) && (debug >= 1)) {
@@ -806,7 +806,7 @@ iproc_cmicd_probe(struct platform_device *pldev)
 #ifdef CONFIG_OF
     if (of_find_compatible_node(NULL, NULL, IPROC_CMICX_COMPATIBLE)) {
         int i;
-        memset(iproc_cmicx_irqs, 0, IHOST_CMICX_MAX_INTRS*sizeof(uint32_t));
+        memset_s(iproc_cmicx_irqs, 0, IHOST_CMICX_MAX_INTRS*sizeof(uint32_t));
         for (i = 0; i < IHOST_CMICX_MAX_INTRS; i++) {
             irqres = iproc_platform_get_resource(pldev, IORESOURCE_IRQ, i);
             if (irqres) {
@@ -4452,7 +4452,7 @@ int
 linux_bde_create(linux_bde_bus_t *bus, ibde_t **ibde)
 {
 
-    memset(&_bus, 0, sizeof(_bus));
+    memset_s(&_bus, 0, sizeof(_bus));
 
     if (bus) {
         _bus = *bus;

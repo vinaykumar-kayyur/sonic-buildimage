@@ -111,7 +111,7 @@ linux_pci_parent_device_get(void *pci_dev)
 int
 linux_shbde_hal_init(shbde_hal_t *shbde, shbde_log_func_t log_func)
 {
-    memset(shbde, 0, sizeof(*shbde));
+    memset_s(shbde, 0, sizeof(*shbde));
 
     shbde->log_func = log_func;
 

@@ -448,7 +448,7 @@ ngbde_intr_regs_clr(int kdev, unsigned int irq_num)
     }
 
     ic->num_regs = 0;
-    memset(ic->regs, 0, sizeof(ic->regs));
+    memset_s(ic->regs, 0, sizeof(ic->regs));
 
     return 0;
 }

@@ -75,7 +75,7 @@ pci_probe(struct pci_dev *pci_dev, const struct pci_device_id *ent)
                pci_dev->vendor, pci_dev->device);
     }
 
-    memset(nd, 0, sizeof(*nd));
+    memset_s(nd, 0, sizeof(*nd));
     nd->pci_dev = pci_dev;
     nd->dma_dev = &pci_dev->dev;
     nd->vendor_id = pci_dev->vendor;

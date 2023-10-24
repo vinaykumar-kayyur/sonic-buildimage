@@ -71,7 +71,7 @@ iproc_cmicd_probe(struct platform_device *pldev)
         return -1;
     }
 
-    memset(nd, 0, sizeof(*nd));
+    memset_s(nd, 0, sizeof(*nd));
     nd->pci_dev = NULL; /* No PCI bus */
     nd->dma_dev = &pldev->dev;
 
