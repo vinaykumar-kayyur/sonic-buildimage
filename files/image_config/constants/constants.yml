@@ -2,6 +2,7 @@ constants:
   deployment_id_asn_map:
     "1" : 65432
     "2" : 65433
+    "HHHH"
   bgp:
     traffic_shift_community: 12345:12345
     families:
