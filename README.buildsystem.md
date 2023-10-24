@@ -65,7 +65,7 @@ Every **platform/[VENDOR]/** directory is a derived part of buildimage frontend,
 ### SONiC Build Execution sequence
 A pictorial representation depicting the control flow during build execution sequence is shown as below,
 
-![image](https://github.com/thovikeerthi/sonic-buildimage/assets/118048345/78ab5497-434c-4b37-81fb-e6538644f207)
+![image](./images/sonic_build_execution_sequence.png)
 
 
 ## Recipes and target groups
