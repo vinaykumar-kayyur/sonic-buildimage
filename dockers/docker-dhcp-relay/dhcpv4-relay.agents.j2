@@ -15,7 +15,7 @@ command=/usr/sbin/dhcrelay -d -m discard -a %%h:%%p %%P --name-alias-map-file /t
 {#- si option to use intf addr in relay #}
 {% if DEVICE_METADATA['localhost']['deployment_id'] == '8' %} -si{% endif -%}
 {% for (name, gateway) in VLAN_INTERFACE|get_gateway_addr %}
-{% if name == vlan_name %} -g {{ gateway }}{% endif -%}
+{% if gateway | ipv4 and name == vlan_name %} -g {{ gateway }}{% endif -%}
 {% endfor %}
 {#- We treat all other interfaces as upstream interfaces (-iu), as we only want to listen for replies #}
 {% for (name, prefix) in VLAN_INTERFACE|pfx_filter %}
