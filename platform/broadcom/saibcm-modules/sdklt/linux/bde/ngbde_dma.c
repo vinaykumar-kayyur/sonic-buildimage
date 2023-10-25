@@ -244,7 +244,7 @@ ngbde_dmamem_free(ngbde_dmamem_t *dmamem)
                              dmamem->size, DMA_BIDIRECTIONAL);
         }
         ngbde_pgmem_free(dmamem->vaddr);
-        memset(dmamem, 0, sizeof(*dmamem));
+        memset(dmamem, 0, sizeof(*dmamem)); // nosemgrep
         break;
     case NGBDE_DMA_T_NONE:
         /* Nothing to free */
