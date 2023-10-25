@@ -50,7 +50,6 @@
 #define PCA954X_MAX_NCHANS 8
 
 #define PCA954X_IRQ_OFFSET 4
-static void pca954x_remove(struct i2c_client *client);
 enum pca_type {
 	pca_9540,
 	pca_9542,
