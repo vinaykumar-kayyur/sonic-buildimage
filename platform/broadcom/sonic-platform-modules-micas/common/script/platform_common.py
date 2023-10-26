@@ -25,6 +25,8 @@ __all__ = [
     "INIT_COMMAND_PRE",
     "INIT_PARAM",
     "INIT_COMMAND",
+    "SET_MAC_CONF",
+    "DRVIER_UPDATE_CONF",
     "MONITOR_TEMP_MIN",
     "MONITOR_K",
     "MONITOR_MAC_IN",
@@ -127,6 +129,12 @@ INIT_PARAM_PRE = []
 INIT_COMMAND_PRE = []
 INIT_PARAM = []
 INIT_COMMAND = []
+
+# Set eth mac address parameters
+SET_MAC_CONF = []
+
+# driver update config
+DRVIER_UPDATE_CONF = {}
 
 ################################ fancontrol parameter###################################
 MONITOR_TEMP_MIN = 38

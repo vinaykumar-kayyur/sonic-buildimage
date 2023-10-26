@@ -216,7 +216,10 @@ class interface(object):
         if psu is None:
             return -1
         psu.InputsCurrent.Value  # just for clear faults
-        if (psu.InputStatus is True) and (psu.OutputStatus is True):
+        if psu.InputStatus is True and psu.OutputStatus is True:
+            return True
+        # only has outputstatus
+        if psu.InputStatus is None and psu.OutputStatus is True:
             return True
         return False
 
@@ -245,6 +248,9 @@ class interface(object):
         psu = self.chas.get_psu_byname(psu_name)
         if psu is None:
             return -1
+
+        if psu.get_threshold_by_model == 1:
+            psu.get_fru_info()
 
         dic = collections.OrderedDict()
         # psu.get_Temperature()
@@ -327,7 +333,8 @@ class interface(object):
         psu = self.chas.get_psu_byname(psu_name)
         if psu is None:
             return -1
-
+        if psu.get_threshold_by_model == 1:
+            psu.get_fru_info()
         dic = collections.OrderedDict()
         inputdic = collections.OrderedDict()
         Outputsdic = collections.OrderedDict()

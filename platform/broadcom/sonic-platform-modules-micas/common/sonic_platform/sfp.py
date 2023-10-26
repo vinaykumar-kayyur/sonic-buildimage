@@ -91,7 +91,11 @@ class Sfp(SfpOptoeBase):
         # temporary solution for a sonic202111 bug
         transceiver_info = super().get_transceiver_info()
         try:
-            if transceiver_info is not None and transceiver_info["vendor_rev"] is not None:
+            if transceiver_info == None:
+                return None
+            if transceiver_info['cable_type'] == None:
+                transceiver_info['cable_type'] = 'N/A'
+            if transceiver_info["vendor_rev"] is not None:
                 transceiver_info["hardware_rev"] = transceiver_info["vendor_rev"]
         except BaseException:
             print(traceback.format_exc())
@@ -539,7 +543,7 @@ class SfpV1(SfpCust):
     def _get_sfp_cpld_info(self, cpld_config):
         dev_id = 0
         offset = 0
-
+        offset_bit = 0
         for dev_id_temp in cpld_config["dev_id"]:
             for offset_temp in cpld_config["dev_id"][dev_id_temp]["offset"]:
                 port_range_str = cpld_config["dev_id"][dev_id_temp]["offset"][offset_temp]

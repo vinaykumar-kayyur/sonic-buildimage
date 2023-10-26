@@ -44,6 +44,10 @@ module_param(g_wb_spi_gpio_device_error, int, S_IRUGO | S_IWUSR);
 
 static char gpiod_lookup_table_devid[64];
 
+static char *gpio_chip_name = NULL;
+module_param(gpio_chip_name, charp, 0644);
+MODULE_PARM_DESC(str_var, "A string variable for GPIO controller");
+
 #define WB_SPI_GPIO_DEVICE_VERBOSE(fmt, args...) do {                                        \
     if (g_wb_spi_gpio_device_debug) { \
         printk(KERN_INFO "[WB_SPI_GPIO_DEVICE][VER][func:%s line:%d]\r\n"fmt, __func__, __LINE__, ## args); \
@@ -122,6 +126,12 @@ static int __init wb_spi_gpio_device_init(void)
     wb_spi_gpio_table.table[1].chip_hwnum = mosi;
     wb_spi_gpio_table.table[2].chip_hwnum = miso;
     wb_spi_gpio_table.table[3].chip_hwnum = cs;
+    if (gpio_chip_name) {
+        wb_spi_gpio_table.table[0].key = gpio_chip_name;
+        wb_spi_gpio_table.table[1].key = gpio_chip_name;
+        wb_spi_gpio_table.table[2].key = gpio_chip_name;
+        wb_spi_gpio_table.table[3].key = gpio_chip_name;
+    }
     wb_spi_gpio_table_devid_name_set();
     WB_SPI_GPIO_DEVICE_VERBOSE("spi gpi device table bus[%d] dev id[%s]\n", bus, wb_spi_gpio_table.dev_id);
     for (p = &wb_spi_gpio_table.table[0]; p->key; p++) {

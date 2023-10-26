@@ -311,6 +311,11 @@ static lm75_temp_threshold_t g_lm75_temp_threshold_info[] = {
         .temp_max = 125000,
         .temp_min = -55000,
     },
+    {
+        .chip_type = tmp275,
+        .temp_max = 125000,
+        .temp_min = -40000,
+    },
 };
 
 /*-----------------------------------------------------------------------*/
@@ -400,7 +405,7 @@ static int lm75_read(struct device *dev, enum hwmon_sensor_types type, u32 attr,
                 return err;
             }
             *val = lm75_reg_to_mc(regval, data->resolution);
-            if (attr != LM75_REG_TEMP) {
+            if (reg != LM75_REG_TEMP) {
                 return 0;
             }
             /* do input_temp_check */

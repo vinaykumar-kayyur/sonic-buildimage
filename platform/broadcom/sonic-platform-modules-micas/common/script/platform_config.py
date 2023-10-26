@@ -30,6 +30,8 @@ __all__ = [
     "GLOBALINITCOMMAND",
     "GLOBALINITPARAM_PRE",
     "GLOBALINITCOMMAND_PRE",
+    "SET_MAC_CONF",
+    "DRVIER_UPDATE_CONF",
     "MONITOR_CONST",
     "PSU_FAN_FOLLOW",
     "MONITOR_SYS_LED",
@@ -131,6 +133,12 @@ GLOBALINITPARAM = module_product.INIT_PARAM
 GLOBALINITCOMMAND = module_product.INIT_COMMAND
 GLOBALINITPARAM_PRE = module_product.INIT_PARAM_PRE
 GLOBALINITCOMMAND_PRE = module_product.INIT_COMMAND_PRE
+
+# Set eth mac address parameters
+SET_MAC_CONF = module_product.SET_MAC_CONF
+
+# driver update config
+DRVIER_UPDATE_CONF = module_product.DRVIER_UPDATE_CONF
 
 ################################ fancontrol parameter###################################
 
