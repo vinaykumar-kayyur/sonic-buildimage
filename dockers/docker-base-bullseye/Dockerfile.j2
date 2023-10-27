@@ -93,7 +93,10 @@ RUN pip3 install 'python-lzf==0.2.4'
 RUN pip3 install 'rdbtools==0.1.15'
 
 # Uninstall gcc, libc6-dev and python3-dev for compiling python-lzf
-RUN apt-get -y remove build-essential libc6-dev python3-dev
+RUN apt-get -y purge build-essential libc6-dev python3-dev
+
+# Uninstall unused dependencies
+RUN apt autoremove -y --purge
 
 RUN apt-get -y purge   \
     exim4              \
