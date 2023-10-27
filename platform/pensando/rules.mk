@@ -1,4 +1,3 @@
-include $(PLATFORM_PATH)/dpu.mk
 include $(PLATFORM_PATH)/docker-dpu.mk
 include $(PLATFORM_PATH)/one-image.mk
 include $(PLATFORM_PATH)/sdk.mk

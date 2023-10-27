@@ -766,6 +766,9 @@ fi
 if [[ $CONFIGURED_PLATFORM == pensando ]]; then
 #Disable rc.local
 sudo LANG=C chroot $FILESYSTEM_ROOT chmod -x /etc/rc.local
+sudo cp files/dsc/dpu.service $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM/
+sudo cp files/dsc/dpu.init $FILESYSTEM_ROOT/etc/init.d/dpu
+sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable dpu.service
 fi
 
 SONIC_PACKAGE_MANAGER_FOLDER="/var/lib/sonic-package-manager/"
