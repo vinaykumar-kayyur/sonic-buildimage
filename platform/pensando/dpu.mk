@@ -1,7 +1,0 @@
-# Pensando dpu version
-
-DPU_MODULE_VERSION = 1.0.0
-DPU_MODULE = dpu_$(DPU_MODULE_VERSION)_arm64.deb
-$(DPU_MODULE)_SRC_PATH = $(PLATFORM_PATH)/dpu
-$(DPU_MODULE)_MACHINE = pensando
-SONIC_DPKG_DEBS += $(DPU_MODULE)
