@@ -319,7 +319,6 @@ static void psu_remove(struct i2c_client *client)
         if (ret!=0)
             printk(KERN_ERR "FAN post_remove function failed\n");
     }
-
 }
 
 enum psu_intf
