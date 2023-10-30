@@ -1093,7 +1093,7 @@ static char *show_date_time(void)
     struct tm tm_val;
 
 #ifdef __STDC_LIB_EXT1__
-    memset_s(dmamem, DATETIME_LEN, 0, DATETIME_LEN);
+    memset_s(g_datetime, 0, DATETIME_LEN);
 #else
     memset(g_datetime, 0, DATETIME_LEN);
 #endif
