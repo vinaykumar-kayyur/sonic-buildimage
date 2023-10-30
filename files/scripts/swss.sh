@@ -18,6 +18,12 @@ function debug()
     /bin/echo `date` "- $1" >> ${DEBUGLOG}
 }
 
+function get_switch_type()
+{
+    switch_type=`$SONIC_DB_CLI CONFIG_DB  hget 'DEVICE_METADATA|localhost' 'switch_type'`
+    echo "${switch_type}"
+}
+
 function read_dependent_services()
 {
     # Update dependent list based on other packages requirements
@@ -124,11 +130,8 @@ function clean_up_tables()
 #       SYSTEM_LAG_ID_TABLE and SYSTEM_LAG_ID_SET are adjusted appropriately
 function clean_up_chassis_db_tables()
 {
-
-    switch_type=`$SONIC_DB_CLI CONFIG_DB  hget 'DEVICE_METADATA|localhost' 'switch_type'`
-
     # Run clean up only in swss running for voq switches
-    if is_chassis_supervisor || [[ $switch_type != 'voq' ]]; then
+    if is_chassis_supervisor || [[ $(get_switch_type) != 'voq' ]]; then
         return
     fi
 
@@ -231,11 +234,52 @@ function clean_up_chassis_db_tables()
 
 }
 
+update_peer_systemd_config() {
+    # Can be extended for pizza box in future
+    if is_chassis_supervisor || [[ $(get_switch_type) != 'voq' ]]; then
+        return
+    fi
+
+    local dep_peer=$1
+    if [[ ! -z $DEV ]]; then
+        dep_peer=${dep_peer}@$DEV
+
+    fi
+
+    local systemd_system_dir="/etc/systemd/system/"
+    local peer_systemd_system_override_dir="${systemd_system_dir}${dep_peer}.service.d/"
+    local peer_systemd_system_override_dep_file="${peer_systemd_system_override_dir}dependency.conf"
+
+    mkdir -p $peer_systemd_system_override_dir
+    if [[ ! -f $peer_systemd_system_override_dep_file ]]; then
+        touch $peer_systemd_system_override_dep_file
+    fi
+    echo "[Unit]" > $peer_systemd_system_override_dep_file
+    if [[ ! -z $DEV ]]; then
+        debug "Updating ${dep_peer} systemd config with Requires=${SERVICE}@${DEV}.service"
+        echo "Requires=${SERVICE}@${DEV}.service" >> $peer_systemd_system_override_dep_file
+    else
+        debug "Updating ${dep_peer} systemd config with Requires=${SERVICE}.service"
+        echo "Requires=${SERVICE}.service" >> $peer_systemd_system_override_dep_file
+    fi
+
+    #reload systemd config
+    systemctl daemon-reload
+    # check if error
+    if [[ $? -ne 0 ]]; then
+        echo "Failed to reload systemd config"
+        exit 1
+    fi
+}
+
 start_peer_and_dependent_services() {
     check_warm_boot
 
     if [[ x"$WARM_BOOT" != x"true" ]]; then
         for peer in ${PEER}; do
+            # Update peer systemd config
+            update_peer_systemd_config ${peer}
+
             if [[ ! -z $DEV ]]; then
                 /bin/systemctl start ${peer}@$DEV
             else
