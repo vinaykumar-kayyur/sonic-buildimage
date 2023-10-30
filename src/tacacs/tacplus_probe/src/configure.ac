@@ -1,7 +1,7 @@
 dnl
 dnl File:        configure.in
 dnl Revision:    $Id: configure.ac,v 1.0 2021/08/24 12:04:29 liuh@microsoft.com Exp $
-dnl Created:     2021/08/24
+dnl Created:     2023/10/27
 dnl Author:      Liu Hua <liuh@microsoft.com>
 dnl
 dnl Process this file with autoconf to produce a configure script
