@@ -1717,6 +1717,19 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
             results['LOOPBACK_INTERFACE'][host_lo_intf[0]] = {}
 
     results['MGMT_VRF_CONFIG'] = mvrf
+    # Update SNMP_AGENT_ADDRESS_CONFIG with Management IP and Loopback0 IP
+    # if available.
+    results['SNMP_AGENT_ADDRESS_CONFIG'] = {}
+    port = 161
+    vrf = ''
+    for mgmt_if in results['MGMT_INTERFACE'].keys():
+        snmp_key = mgmt_if[1].split('/')[0] + '|' + str(port)  + '|'
+        results['SNMP_AGENT_ADDRESS_CONFIG'][snmp_key] = {}
+    # Add Loopback0 IP as agent address for single asic
+    for loip in results['LOOPBACK_INTERFACE']:
+        if len(loip) == 2 and loip[0] == 'Loopback0':
+            snmp_key = loip[1].split('/')[0] + '|161|'
+            results['SNMP_AGENT_ADDRESS_CONFIG'][snmp_key] = {}
 
     phyport_intfs = {}
     vlan_intfs = {}

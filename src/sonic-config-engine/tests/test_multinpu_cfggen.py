@@ -549,5 +549,12 @@ class TestMultiNpuCfgGen(TestCase):
         output = json.loads(self.run_script(argument, check_stderr=False, validateYang=False))
         self.assertDictEqual(output, {})
 
+    def testsnmp_agent_address_config(self):
+        argument = ['-m', self.sample_graph, '-p', self.sample_port_config, '-v', 'SNMP_AGENT_ADDRESS_CONFIG.keys()|list']
+        output = self.run_script(argument, check_stderr=False, validateYang=False)
+        self.assertEqual(
+            utils.liststr_to_dict(output.strip()),
+            utils.liststr_to_dict("['3.10.147.150|161|', '10.1.0.32|161|', 'FC00:2::32|161|', 'FC00:1::32|161|']"))
+
     def tearDown(self):
         os.environ["CFGGEN_UNIT_TESTING"] = ""
