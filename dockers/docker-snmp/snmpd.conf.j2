@@ -28,7 +28,7 @@
 {% for (agentip, port, vrf) in SNMP_AGENT_ADDRESS_CONFIG %}
 agentAddress {{ protocol(agentip) }}:[{{ agentip }}]{% if port %}:{{ port }}{% endif %}{% if vrf %}%{{ vrf }}{% endif %}{{ "" }}
 {% endfor %}
-{% if NAMESPACE_COUNT is not defined or NAMESPACE_COUNT|int <= 1 %}
+{% if NAMESPACE_COUNT is defined and NAMESPACE_COUNT|int > 1 %}
 agentAddress udp:[{{ docker0_v4 }}]:161
 agentAddress udp6:[{{ docker0_v6 }}]:161
 {% endif %}
