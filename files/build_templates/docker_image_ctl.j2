@@ -542,7 +542,7 @@ start() {
 {%- endif %}
 {%- if sonic_asic_platform == "broadcom" %}
 {%- if docker_container_name == "syncd" %}
-        --shm-size=1g \y
+        --shm-size=${SYNCD_SHM_SIZE:-64m} \
         -v /var/run/docker-syncd$DEV:/var/run/sswsyncd \
 {%- endif %}
 {%- endif %}
