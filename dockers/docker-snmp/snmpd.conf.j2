@@ -26,12 +26,13 @@
 
 {% if SNMP_AGENT_ADDRESS_CONFIG %}
 {% for (agentip, port, vrf) in SNMP_AGENT_ADDRESS_CONFIG %}
-agentAddress {{ protocol(agentip) }}:[{{ agentip }}]{% if port %}:{{ port }}{% endif %}{% if vrf %}%{{ vrf }}{% endif %}{{ "" }}
-{% endfor %}
-{% if NAMESPACE_COUNT is defined and NAMESPACE_COUNT|int > 1 %}
-agentAddress udp:[{{ docker0_v4 }}]:161
-agentAddress udp6:[{{ docker0_v6 }}]:161
+{% set zoneid = '' %}
+{% if agentip.startswith('fe80') %}
+# Use interface as zoneid for link local ipv6
+{% set zoneid = '%' + intf %}
 {% endif %}
+agentAddress {{ protocol(agentip) }}:[{{ agentip }}{{ zoneid }}]{% if port %}:{{ port }}{% endif %}{% if vrf %}%{{ vrf }}{% endif %}{{ "" }}
+{% endfor %}
 {% else %}
 agentAddress udp:161
 agentAddress udp6:161
