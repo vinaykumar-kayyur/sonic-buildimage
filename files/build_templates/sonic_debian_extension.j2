@@ -340,7 +340,7 @@ sudo chmod 755 $FILESYSTEM_ROOT/usr/bin/restart_service
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install smartmontools=7.2-1
 
 # Install custom-built openssh sshd
-sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/openssh-server_${OPENSSH_VERSION}_*.deb
+sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/openssh-server_${OPENSSH_VERSION}_*.deb $debs_path/openssh-client_${OPENSSH_VERSION}_*.deb $debs_path/openssh-sftp-server_${OPENSSH_VERSION}_*.deb
 
 {% if sonic_asic_platform == 'broadcom' %}
 # Install custom-built flashrom
@@ -467,12 +467,6 @@ SONIC_CTRMGMT_WHEEL_NAME=$(basename {{sonic_ctrmgmt_py3_wheel_path}})
 sudo cp {{sonic_ctrmgmt_py3_wheel_path}} $FILESYSTEM_ROOT/$SONIC_CTRMGMT_WHEEL_NAME
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install $SONIC_CTRMGMT_WHEEL_NAME
 sudo rm -rf $FILESYSTEM_ROOT/$SONIC_CTRMGMT_WHEEL_NAME
-
-# Copy remote container mangement files
-# File called from each container upon start/stop to record the state
-sudo mkdir -p ${FILESYSTEM_ROOT_USR_SHARE_SONIC_SCRIPTS}
-sudo cp ${files_path}/container_startup.py ${FILESYSTEM_ROOT_USR_SHARE_SONIC_SCRIPTS}/
-sudo chmod a+x ${FILESYSTEM_ROOT_USR_SHARE_SONIC_SCRIPTS}/container_startup.py
 
 # Config file used by container mgmt scripts/service
 fl="${files_path}/remote_ctr.config.json"
@@ -931,7 +925,8 @@ for fw_file_name in ${!FW_FILE_MAP[@]}; do
     # Link old FW location to not break existing automation/scripts
     sudo ln -s /host/image-$SONIC_IMAGE_VERSION/$PLATFORM_DIR/fw/asic/${FW_FILE_MAP[$fw_file_name]} $FILESYSTEM_ROOT/etc/mlnx/${FW_FILE_MAP[$fw_file_name]}
 done
-sudo cp $files_path/$ISSU_VERSION_FILE $FILESYSTEM_ROOT/etc/mlnx/issu-version
+sudo cp $files_path/$ISSU_VERSION_FILE $FILESYSTEM_ROOT/$PLATFORM_DIR/fw/asic/issu-version
+sudo ln -s /host/image-$SONIC_IMAGE_VERSION/$PLATFORM_DIR/fw/asic/issu-version $FILESYSTEM_ROOT/etc/mlnx/issu-version
 sudo cp $files_path/$MLNX_FFB_SCRIPT $FILESYSTEM_ROOT/usr/bin/mlnx-ffb.sh
 sudo cp $files_path/$MLNX_ONIE_FW_UPDATE $FILESYSTEM_ROOT/usr/bin/$MLNX_ONIE_FW_UPDATE
 sudo cp $files_path/$MLNX_SSD_FW_UPDATE $FILESYSTEM_ROOT/usr/bin/$MLNX_SSD_FW_UPDATE

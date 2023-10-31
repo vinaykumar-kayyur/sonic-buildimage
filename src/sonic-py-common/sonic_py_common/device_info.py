@@ -367,7 +367,7 @@ def get_platform_info(config_db=None):
     if hw_info_dict:
         return hw_info_dict
 
-    from .multi_asic import get_num_asics
+    from .multi_asic import get_asic_presence_list
 
     version_info = get_sonic_version_info()
 
@@ -375,7 +375,10 @@ def get_platform_info(config_db=None):
     hw_info_dict['hwsku'] = get_hwsku()
     if version_info:
         hw_info_dict['asic_type'] = version_info.get('asic_type')
-    hw_info_dict['asic_count'] = get_num_asics()
+    try:
+        hw_info_dict['asic_count'] = len(get_asic_presence_list())
+    except:
+        hw_info_dict['asic_count'] = 'N/A'
 
     try:
         # TODO: enforce caller to provide config_db explicitly and remove its default value
@@ -682,3 +685,13 @@ def is_fast_reboot_enabled():
 
     state_db.close(state_db.STATE_DB)
     return fb_enable_state
+
+
+def is_frontend_port_present_in_host():
+    if is_supervisor():
+        return False
+    if is_multi_npu():
+        namespace_id = os.getenv("NAMESPACE_ID")
+        if not namespace_id:
+            return False
+    return True

@@ -1,6 +1,6 @@
 bfnplatform==1.0.0
-libhiredis-dev==0.14.0-3~bpo9+1
-libhiredis0.14==0.14.0-3~bpo9+1
+libhiredis-dev==0.14.1-1
+libhiredis0.14==0.14.1-1
 libnl-cli-3-200==3.5.0-1
 libnl-cli-3-dev==3.5.0-1
 libnl-genl-3-200==3.5.0-1
@@ -33,8 +33,4 @@ python3-thrift==0.14.1
 python3-yang==1.0.73
 sonic-mgmt-common==1.0.0
 sonic-mgmt-common-codegen==1.0.0
-sonic-mgmt-framework==1.0-01
-swss==1.0.0
-syncd==1.0.0
-syncd-vs==1.0.0
 thrift-compiler==0.11.0-4

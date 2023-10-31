@@ -39,6 +39,11 @@ chassis_backend_role = 'ChassisBackendRouter'
 backend_device_types = ['BackEndToRRouter', 'BackEndLeafRouter']
 console_device_types = ['MgmtTsToR']
 dhcp_server_enabled_device_types = ['BmcMgmtToRRouter']
+mgmt_device_types = ['BmcMgmtToRRouter', 'MgmtToRRouter', 'MgmtTsToR']
+
+# Counters disabled on management devices
+mgmt_disabled_counters = ["BUFFER_POOL_WATERMARK", "PFCWD", "PG_DROP", "PG_WATERMARK", "PORT_BUFFER_DROP", "QUEUE", "QUEUE_WATERMARK"]
+
 VLAN_SUB_INTERFACE_SEPARATOR = '.'
 VLAN_SUB_INTERFACE_VLAN_ID = '10'
 
@@ -53,14 +58,14 @@ vni_default = 8000
 # Defination of custom acl table types
 acl_table_type_defination = {
     'BMCDATA': {
-        "ACTIONS": "PACKET_ACTION,COUNTER",
-        "BIND_POINTS": "PORT",
-        "MATCHES": "SRC_IP,DST_IP,ETHER_TYPE,IP_TYPE,IP_PROTOCOL,IN_PORTS,TCP_FLAGS",
+        "ACTIONS": ["PACKET_ACTION", "COUNTER"],
+        "BIND_POINTS": ["PORT"],
+        "MATCHES": ["SRC_IP", "DST_IP", "ETHER_TYPE", "IP_TYPE", "IP_PROTOCOL", "IN_PORTS", "L4_SRC_PORT", "L4_DST_PORT", "L4_SRC_PORT_RANGE", "L4_DST_PORT_RANGE"]
     },
     'BMCDATAV6': {
-        "ACTIONS": "PACKET_ACTION,COUNTER",
-        "BIND_POINTS": "PORT",
-        "MATCHES": "SRC_IPV6,DST_IPV6,ETHER_TYPE,IP_TYPE,IP_PROTOCOL,IN_PORTS,TCP_FLAGS",
+        "ACTIONS": ["PACKET_ACTION", "COUNTER"],
+        "BIND_POINTS": ["PORT"],
+        "MATCHES": ["SRC_IPV6", "DST_IPV6", "ETHER_TYPE", "IP_TYPE", "IP_PROTOCOL", "IN_PORTS", "L4_SRC_PORT", "L4_DST_PORT", "L4_SRC_PORT_RANGE", "L4_DST_PORT_RANGE", "ICMPV6_TYPE", "ICMPV6_CODE", "TCP_FLAGS"]
     }
 }
 
@@ -1255,6 +1260,28 @@ def parse_spine_chassis_fe(results, vni, lo_intfs, phyport_intfs, pc_intfs, pc_m
             # Enslave the port channel interface to a Vnet
             pc_intfs[pc_intf] = {'vnet_name': chassis_vnet}        
 
+def parse_default_vxlan_decap(results, vni, lo_intfs):
+    vnet ='Vnet-default'
+    vxlan_tunnel = 'tunnel_v4'
+
+    # Vxlan tunnel information
+    lo_addr = '0.0.0.0'
+    for lo in lo_intfs:
+        lo_network = ipaddress.ip_network(UNICODE_TYPE(lo[1]), False)
+        if lo_network.version == 4:
+            lo_addr = str(lo_network.network_address)
+            break
+    results['VXLAN_TUNNEL'] = {vxlan_tunnel: {
+        'src_ip': lo_addr
+    }}
+
+    # Vnet information
+    results['VNET'] = {vnet: {
+        'vxlan_tunnel': vxlan_tunnel,
+        'scope': "default",
+        'vni': vni
+    }}
+
 ###############################################################################
 #
 # Post-processing functions
@@ -1605,9 +1632,10 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         for key in voq_inband_intfs:
            results['VOQ_INBAND_INTERFACE'][key] = voq_inband_intfs[key]
 
-
     if resource_type is not None:
         results['DEVICE_METADATA']['localhost']['resource_type'] = resource_type
+        if 'Appliance' in resource_type:
+            parse_default_vxlan_decap(results, vni_default, lo_intfs)
 
     if downstream_subrole is not None:
         results['DEVICE_METADATA']['localhost']['downstream_subrole'] = downstream_subrole
@@ -1713,7 +1741,10 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         port_default_speed =  port_speeds_default.get(port_name, None)
         port_png_speed = port_speed_png[port_name]
 
-        # when the port speed is changes from 400g to 100g/40g 
+        # set Port Speed before lane update
+        ports.setdefault(port_name, {})['speed'] = port_png_speed
+
+        # when the port speed is changes from 400g to 100g/40g
         # update the port lanes, use the first 4 lanes of the 400G port to support 100G/40G port
         if port_default_speed == '400000' and (port_png_speed == '100000' or port_png_speed == '40000'):
             port_lanes =  ports[port_name].get('lanes', '').split(',')
@@ -1723,7 +1754,6 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
             updated_lanes = ",".join(port_lanes[:4])
             ports[port_name]['lanes'] = updated_lanes
 
-        ports.setdefault(port_name, {})['speed'] = port_speed_png[port_name]
 
     for port_name, port in list(ports.items()):
         # get port alias from port_config.ini
@@ -2000,6 +2030,10 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     # Enable DHCP Server feature for specific device type
     if current_device['type'] in dhcp_server_enabled_device_types:
         results['DEVICE_METADATA']['localhost']['dhcp_server'] = 'enabled'
+
+    # Disable unsupported counters on management devices
+    if current_device and current_device['type'] in mgmt_device_types:
+        results["FLEX_COUNTER_TABLE"] = {counter: {"FLEX_COUNTER_STATUS": "disable"} for counter in mgmt_disabled_counters}
 
     return results
 
