@@ -647,6 +647,11 @@ fi
 # Collect host image version files before cleanup
 scripts/collect_host_image_version_files.sh $TARGET_PATH $FILESYSTEM_ROOT
 
+# Create LoM archive
+if [[ -f src/sonic-device-health/LoM-Install/sonic/make-install-archive.sh ]]; then
+    src/sonic-device-health/LoM-Install/sonic/make-install-archive.sh
+fi
+
 # Remove GCC
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y remove gcc
 
