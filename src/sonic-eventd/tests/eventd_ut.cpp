@@ -338,10 +338,8 @@ TEST(eventd, capture)
     /* Initialize the capture */
     EXPECT_EQ(0, pcap->set_control(INIT_CAPTURE));
 
-    
     /* Run subscriber; Else publisher will drop events on floor, with no subscriber. */
     thread thr_sub(&run_sub, zctx, ref(term_sub), ref(sub_source), ref(sub_evts), ref(sub_evts_sz));
-
 
     EXPECT_TRUE(init_cache > 1);
     EXPECT_TRUE((cache_max+3) < (int)ARRAY_SIZE(ldata));
