@@ -1,13 +1,5 @@
-# -*- coding: UTF-8 -*-
-# -------------------------------------------------------------------------
-# Name:        platform_util
-# Purpose:     common configuration and api
-#
-# Author:      rd
-#
-# Created:     02/07/2018
-# Copyright:   (c) rd 2018
-# -------------------------------------------------------------------------
+#!/usr/bin/python3
+
 import sys
 
 if sys.version_info >= (3, 0):

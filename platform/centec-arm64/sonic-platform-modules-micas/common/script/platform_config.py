@@ -1,14 +1,5 @@
 #!/usr/bin/python3
-# -*- coding: UTF-8 -*-
-# -------------------------------------------------------------------------------
-# Name:         platform_config.py
-# Purpose:      block the difference between various product/onie version for other module
-#
-# Author:      rd
-#
-# Created:     02/07/2018
-# Copyright:   (c) rd 2018
-# -------------------------------------------------------------------------------
+
 import sys
 import os
 from wbutil.baseutil import get_machine_info
