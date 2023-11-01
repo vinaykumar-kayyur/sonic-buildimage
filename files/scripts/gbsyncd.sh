@@ -26,7 +26,7 @@ function stopplatform1() {
         /usr/bin/docker exec -i gbsyncd$DEV /usr/share/sonic/platform/plugins/gbsyncd_request_pre_shutdown --${TYPE}
 
     debug "${TYPE} shutdown syncd process in container gbsyncd$DEV ..."
-    /usr/bin/docker exec -i gbsyncd$DEV /usr/bin/syncd_request_shutdown -g 1 --${TYPE}
+    /usr/bin/docker exec -i gbsyncd$DEV /usr/bin/syncd_request_shutdown -g 1 -x /usr/share/sonic/hwsku/context_config.json --${TYPE}
 
     # wait until syncd quits gracefully or force syncd to exit after
     # waiting for 20 seconds
