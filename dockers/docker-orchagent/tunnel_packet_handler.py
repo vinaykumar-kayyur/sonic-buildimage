@@ -263,7 +263,6 @@ class TunnelPacketHandler(object):
         """
         oper_status = dict(fvs).get(OPER_STATUS_KEY)
         if lag not in self.sniff_intfs and oper_status == 'up':
-            import pdb; pdb.set_trace()
             logger.log_info('{} came back up, sniffer restart required'
                             .format(lag))
             # Don't need to modify self.sniff_intfs here since it is repopulated
