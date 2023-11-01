@@ -4,9 +4,9 @@
 #   * PSU
 #
 import os
+import xml.etree.ElementTree as ET
 import glob
 import json
-from lxml import etree as ET
 from decimal import Decimal
 from fru import ipmifru
 from fantlv import fan_tlv
