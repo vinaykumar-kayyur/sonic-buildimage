@@ -146,19 +146,22 @@ class ThermalUpdater:
                 if temperature == 0:
                     warning_thresh = 0
                     critical_thresh = 0
+                    fault = 0
                 else:
                     warning_thresh = sfp.get_temperature_warning_threashold()
                     critical_thresh = sfp.get_temperature_critical_threashold()
-                    temperature = ERROR_READ_THERMAL_DATA if temperature is None else int(temperature * SFP_TEMPERATURE_SCALE)
-                    warning_thresh = ERROR_READ_THERMAL_DATA if warning_thresh is None else int(warning_thresh * SFP_TEMPERATURE_SCALE)
-                    critical_thresh = ERROR_READ_THERMAL_DATA if critical_thresh is None else int(critical_thresh * SFP_TEMPERATURE_SCALE)
+                    fault = ERROR_READ_THERMAL_DATA if (temperature is None or warning_thresh is None or critical_thresh is None) else 0
+                    temperature = 0 if temperature is None else int(temperature * SFP_TEMPERATURE_SCALE)
+                    warning_thresh = 0 if warning_thresh is None else int(warning_thresh * SFP_TEMPERATURE_SCALE)
+                    critical_thresh = 0 if critical_thresh is None else int(critical_thresh * SFP_TEMPERATURE_SCALE)
 
                 hw_management_independent_mode_update.thermal_data_set_module(
                     0, # ASIC index always 0 for now
                     sfp.sdk_index + 1,
                     temperature,
+                    critical_thresh,
                     warning_thresh,
-                    critical_thresh
+                    fault
                 )
             else:
                 if pre_presence != presence:
@@ -171,8 +174,9 @@ class ThermalUpdater:
             hw_management_independent_mode_update.thermal_data_set_module(
                 0, # ASIC index always 0 for now
                 sfp.sdk_index + 1,
-                ERROR_READ_THERMAL_DATA,
-                ERROR_READ_THERMAL_DATA,
+                0,
+                0,
+                0,
                 ERROR_READ_THERMAL_DATA
             )
 
@@ -183,25 +187,27 @@ class ThermalUpdater:
     def update_asic(self):
         try:
             asic_temp = self.get_asic_temp()
-            if asic_temp:
-                hw_management_independent_mode_update.thermal_data_set_asic(
-                    0, # ASIC index always 0 for now
-                    self.get_asic_temp(),
-                    self.get_asic_temp_warning_threashold(),
-                    self.get_asic_temp_critical_threashold()
-                )
-            else:
-                hw_management_independent_mode_update.thermal_data_set_asic(
-                    0, # ASIC index always 0 for now
-                    ERROR_READ_THERMAL_DATA,
-                    self.get_asic_temp_warning_threashold(),
-                    self.get_asic_temp_critical_threashold()
-                )
+            warn_threshold = self.get_asic_temp_warning_threashold()
+            critical_threshold = self.get_asic_temp_critical_threashold()
+            fault = 0
+            if asic_temp is None:
+                logger.log_error('Failed to read ASIC temperature, send fault to hw-management-tc')
+                asic_temp = warn_threshold
+                fault = ERROR_READ_THERMAL_DATA
+
+            hw_management_independent_mode_update.thermal_data_set_asic(
+                0, # ASIC index always 0 for now
+                asic_temp,
+                critical_threshold,
+                warn_threshold,
+                fault
+            )
         except Exception as e:
             logger.log_error('Failed to update ASIC thermal data - {e}')
             hw_management_independent_mode_update.thermal_data_set_asic(
                 0, # ASIC index always 0 for now
-                ERROR_READ_THERMAL_DATA,
-                ERROR_READ_THERMAL_DATA,
-                ERROR_READ_THERMAL_DATA,
+                0,
+                0,
+                0,
+                ERROR_READ_THERMAL_DATA
             )

@@ -542,6 +542,7 @@ class SFP(NvidiaSFPCommon):
         except:
             return 0.0
 
+        self.reinit()
         temperature = super().get_temperature()
         return temperature if temperature is not None else None
 
@@ -586,6 +587,7 @@ class SFP(NvidiaSFPCommon):
         return SFP_DEFAULT_TEMP_CRITICAL_THRESHOLD
 
     def _get_temperature_threshold(self):
+        self.reinit()
         api = self.get_xcvr_api()
         if not api:
             return None
