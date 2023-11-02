@@ -301,9 +301,8 @@ class SFP(NvidiaSFPCommon):
         Returns:
             bool: True if device is present, False if not
         """
-        file_path = SFP_SDK_MODULE_SYSFS_ROOT_TEMPLATE.format(self.sdk_index) + SFP_SYSFS_PRESENT
-        present = utils.read_int_from_file(file_path)
-        return present == 1
+        eeprom_raw = self._read_eeprom(0, 1, log_on_error=False)
+        return eeprom_raw is not None
 
     # read eeprom specfic bytes beginning from offset with size as num_bytes
     def read_eeprom(self, offset, num_bytes):
@@ -448,17 +447,6 @@ class SFP(NvidiaSFPCommon):
         """
         file_path = SFP_SDK_MODULE_SYSFS_ROOT_TEMPLATE.format(self.sdk_index) + SFP_SYSFS_RESET
         return utils.write_file(file_path, '1')
-
-    @classmethod
-    def _reset(cls, sdk_handle, sdk_index, slot_id):
-        module_id_info = sx_mgmt_module_id_info_t()
-        module_id_info.slot_id = slot_id
-        module_id_info.module_id = sdk_index
-        rc = sx_mgmt_phy_module_reset(sdk_handle, module_id_info)
-        if rc != SX_STATUS_SUCCESS:
-            logger.log_error("Error occurred when resetting SFP module {}, slot {}, error code {}".format(sdk_index, slot_id, rc))
-
-        return rc == SX_STATUS_SUCCESS
 
 
     @classmethod

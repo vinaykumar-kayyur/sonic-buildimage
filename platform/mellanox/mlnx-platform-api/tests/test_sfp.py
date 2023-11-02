@@ -28,7 +28,7 @@ test_path = os.path.dirname(os.path.abspath(__file__))
 modules_path = os.path.dirname(test_path)
 sys.path.insert(0, modules_path)
 
-from sonic_platform.sfp import SFP, SX_PORT_MODULE_STATUS_INITIALIZING, SX_PORT_MODULE_STATUS_PLUGGED, SX_PORT_MODULE_STATUS_UNPLUGGED, SX_PORT_MODULE_STATUS_PLUGGED_WITH_ERROR, SX_PORT_MODULE_STATUS_PLUGGED_DISABLED
+from sonic_platform.sfp import SFP, RJ45Port, SX_PORT_MODULE_STATUS_INITIALIZING, SX_PORT_MODULE_STATUS_PLUGGED, SX_PORT_MODULE_STATUS_UNPLUGGED, SX_PORT_MODULE_STATUS_PLUGGED_WITH_ERROR, SX_PORT_MODULE_STATUS_PLUGGED_DISABLED
 from sonic_platform.chassis import Chassis
 
 
@@ -218,12 +218,12 @@ class TestSfp:
         assert page_offset is 0
 
     @mock.patch('sonic_platform.sfp.SFP._read_eeprom')
-    def test_get_presence(self, mock_read_eeprom):
+    def test_get_presence(self, mock_read):
         sfp = SFP(0)
-        mock_read_eeprom.return_value = None
+        mock_read.return_value = None
         assert not sfp.get_presence()
 
-        mock_read_eeprom.return_value = bytearray([1])
+        mock_read.return_value = 0
         assert sfp.get_presence()
 
     @mock.patch('sonic_platform.sfp.SFP.get_xcvr_api')
