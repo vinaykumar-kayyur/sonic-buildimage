@@ -246,12 +246,12 @@ TEST(eventd, proxy)
 
     /* Starting proxy */
     EXPECT_EQ(0, pxy->init());
+ 
+    /* capture in a thread */
+    thread thrc(&run_cap, zctx, ref(term_cap), ref(rd_csource), ref(rd_cevts_sz));
 
     /* subscriber in a thread */
     thread thr(&run_sub, zctx, ref(term_sub), ref(rd_source), ref(rd_evts), ref(rd_evts_sz));
-
-    /* capture in a thread */
-    thread thrc(&run_cap, zctx, ref(term_cap), ref(rd_csource), ref(rd_cevts_sz));
 
     /* Init pub connection */
     void *mock_pub = init_pub(zctx);
