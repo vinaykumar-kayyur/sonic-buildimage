@@ -301,8 +301,9 @@ class SFP(NvidiaSFPCommon):
         Returns:
             bool: True if device is present, False if not
         """
-        eeprom_raw = self._read_eeprom(0, 1, log_on_error=False)
-        return eeprom_raw is not None
+        file_path = SFP_SDK_MODULE_SYSFS_ROOT_TEMPLATE.format(self.sdk_index) + SFP_SYSFS_PRESENT
+        present = utils.read_int_from_file(file_path)
+        return present == 1
 
     # read eeprom specfic bytes beginning from offset with size as num_bytes
     def read_eeprom(self, offset, num_bytes):
@@ -445,23 +446,8 @@ class SFP(NvidiaSFPCommon):
 
         refer plugins/sfpreset.py
         """
-        if utils.is_host():
-            # To avoid performance issue,
-            # call class level method to avoid initialize the whole sonic platform API
-            reset_code = 'from sonic_platform import sfp;\n' \
-                         'with sfp.SdkHandleContext() as sdk_handle:' \
-                         'print(sfp.SFP._reset(sdk_handle, {}, {}))' \
-                         .format(self.sdk_index, self.slot_id)
-            reset_cmd = ["docker", "exec", "pmon", "python3", "-c", reset_code]
-
-            try:
-                output = subprocess.check_output(reset_cmd, universal_newlines=True)
-                return 'True' in output
-            except subprocess.CalledProcessError as e:
-                print("Error! Unable to set LPM for {}, rc = {}, err msg: {}".format(self.sdk_index, e.returncode, e.output))
-                return False
-        else:
-            return self._reset(self.sdk_handle, self.sdk_index, self.slot_id)
+        file_path = SFP_SDK_MODULE_SYSFS_ROOT_TEMPLATE.format(self.sdk_index) + SFP_SYSFS_RESET
+        return utils.write_file(file_path, '1')
 
     @classmethod
     def _reset(cls, sdk_handle, sdk_index, slot_id):
