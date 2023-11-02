@@ -216,12 +216,12 @@ using cross-compilation, run the following commands:
 ```shell
 # Execute make configure once to configure ASIC and ARCH for cross-compilation build
 
-NOJESSIE=1 NOSTRETCH=1 BLDENV=buster CROSS_BLDENV=1 \
+BLDENV=bullseye CROSS_BLDENV=1 \
 make configure PLATFORM=marvell-armhf PLATFORM_ARCH=armhf
 
 # Execute Arm32 build using cross-compilation environment
 
-NOJESSIE=1 NOSTRETCH=1 BLDENV=buster CROSS_BLDENV=1 make target/sonic-marvell-armhf.bin
+BLDENV=bullseye CROSS_BLDENV=1 make target/sonic-marvell-armhf.bin
 ```
 
 Running the above Arm32 build using cross-compilation instead of qemu emulator
@@ -269,8 +269,6 @@ ONIE image is used for all other Broadcom ASIC based devices.
 
 ```shell
 make configure PLATFORM=broadcom
-# build debian stretch required targets
-BLDENV=stretch make stretch
 # build ONIE image
 make target/sonic-broadcom.bin
 # build EOS image

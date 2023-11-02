@@ -121,14 +121,10 @@ else
 TARGET_BOOTLOADER = uboot
 endif
 
-ifeq ($(BLDENV), bullseye)
-SLAVE_DIR = sonic-slave-bullseye
-else ifeq ($(BLDENV), buster)
+ifeq ($(BLDENV), buster)
 SLAVE_DIR = sonic-slave-buster
-else ifeq ($(BLDENV), stretch)
-SLAVE_DIR = sonic-slave-stretch
 else
-SLAVE_DIR = sonic-slave-jessie
+SLAVE_DIR = sonic-slave-bullseye
 endif
 
 # Define a do-nothing target for rules/config.user so that when
