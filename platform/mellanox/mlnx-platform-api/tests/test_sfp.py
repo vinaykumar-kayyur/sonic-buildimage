@@ -122,7 +122,6 @@ class TestSfp:
             handle.write.side_effect = OSError('')
             assert not sfp.write_eeprom(0, 1, bytearray([1]))
 
-    @mock.patch('sonic_platform.sfp.SFP.get_mst_pci_device', mock.MagicMock(return_value = None))
     @mock.patch('sonic_platform.sfp.SFP._get_page_and_page_offset')
     def test_sfp_read_eeprom(self, mock_get_page):
         sfp = SFP(0)

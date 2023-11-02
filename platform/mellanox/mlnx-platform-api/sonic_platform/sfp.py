@@ -264,19 +264,8 @@ class SFP(NvidiaSFPCommon):
             self._thermal_list = initialize_linecard_sfp_thermal(lc_name, slot_id, sfp_index)
 
         self.slot_id = slot_id
-        self.mst_pci_device = self.get_mst_pci_device()
         self._sfp_type_str = None
 
-    # get MST PCI device name
-    def get_mst_pci_device(self):
-        device_name = None
-        try:
-            device_name = check_output_pipe(["ls", "/dev/mst/"], ["grep", "pciconf"]).strip()
-        except subprocess.CalledProcessError as e:
-            logger.log_error("Failed to find mst PCI device rc={} err.msg={}".format(e.returncode, e.output))
-        return device_name
-
-    '''
     @property
     def sdk_handle(self):
         if not SFP.shared_sdk_handle:
@@ -284,7 +273,6 @@ class SFP(NvidiaSFPCommon):
             if not SFP.shared_sdk_handle:
                 logger.log_error('Failed to open SDK handle')
         return SFP.shared_sdk_handle
-    '''
 
     def reinit(self):
         """
@@ -809,21 +797,6 @@ class RJ45Port(NvidiaSFPCommon):
         super(RJ45Port, self).__init__(sfp_index)
         self.sfp_type = RJ45_TYPE
 
-    @classmethod
-    def _get_presence(cls, sdk_handle, sdk_index):
-        """Class level method to get low power mode.
-
-        Args:
-            sdk_handle: SDK handle
-            sdk_index (integer): SDK port index
-            slot_id (integer): Slot ID
-
-        Returns:
-            [boolean]: True if low power mode is on else off
-        """
-        oper_status, _ = cls._get_module_info(sdk_handle, sdk_index)
-        return print(oper_status == SX_PORT_MODULE_STATUS_PLUGGED)
-
     def get_presence(self):
         """
         Retrieves the presence of the device
@@ -832,22 +805,9 @@ class RJ45Port(NvidiaSFPCommon):
         Returns:
             bool: True if device is present, False if not
         """
-        if utils.is_host():
-            # To avoid performance issue,
-            # call class level method to avoid initialize the whole sonic platform API
-            get_presence_code = 'from sonic_platform import sfp;\n' \
-                              'with sfp.SdkHandleContext() as sdk_handle:' \
-                              'print(sfp.RJ45Port._get_presence(sdk_handle, {}))'.format(self.sdk_index)
-            presence_cmd = ["docker", "exec", "pmon", "python3", "-c", get_presence_code]
-            try:
-                output = subprocess.check_output(presence_cmd, universal_newlines=True)
-                return 'True' in output
-            except subprocess.CalledProcessError as e:
-                print("Error! Unable to get presence for {}, rc = {}, err msg: {}".format(self.sdk_index, e.returncode, e.output))
-                return False
-        else:
-            oper_status, _ = self._get_module_info(self.sdk_handle, self.sdk_index);
-            return (oper_status == SX_PORT_MODULE_STATUS_PLUGGED)
+        file_path = SFP_SDK_MODULE_SYSFS_ROOT_TEMPLATE.format(self.sdk_index) + SFP_SYSFS_PRESENT
+        present = utils.read_int_from_file(file_path)
+        return present == 1
 
     def get_transceiver_info(self):
         """
