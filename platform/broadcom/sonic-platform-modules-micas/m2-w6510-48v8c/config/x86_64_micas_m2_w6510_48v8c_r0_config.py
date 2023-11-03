@@ -746,10 +746,6 @@ DRIVERLISTS = [
     {"name": "wb_csu550", "delay": 0},
     {"name": "wb_ina3221", "delay": 0},
     {"name": "wb_tps53622", "delay": 0},
-    {"name": "firmware_driver_cpld", "delay": 0},
-    {"name": "firmware_driver_ispvme", "delay": 0},
-    {"name": "firmware_driver_sysfs", "delay": 0},
-    {"name": "wb_firmware_upgrade_device", "delay": 0},
     {"name": "plat_dfd", "delay": 0},
     {"name": "plat_switch", "delay": 0},
     {"name": "plat_fan", "delay": 0},
@@ -990,14 +986,14 @@ UPGRADE_SUMMARY = {
 
         "TEST": {
             "cpld": [
-                #{"chain": 1, "file": "/etc/.upgrade_test/cpld_test_header.vme", "display_name": "CPLD"},
+                {"chain": 1, "file": "/etc/.upgrade_test/cpld_test_header.vme", "display_name": "CPLD"},
             ],
             "fpga": [
-                #{
-                #    "chain": 3,
-                #    "file": "/etc/.upgrade_test/fpga_test_header",
-                #    "display_name": "FPGA",
-                #},
+                {
+                    "chain": 3,
+                    "file": "/etc/.upgrade_test/fpga_test_header.bin",
+                    "display_name": "FPGA",
+                },
             ],
         },
     },

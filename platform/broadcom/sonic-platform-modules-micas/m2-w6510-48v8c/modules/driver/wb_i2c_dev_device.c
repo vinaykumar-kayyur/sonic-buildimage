@@ -7,7 +7,6 @@
 
 #include <wb_i2c_dev.h>
 
-
 static int g_wb_i2c_dev_device_debug = 0;
 static int g_wb_i2c_dev_device_error = 0;
 
