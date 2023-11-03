@@ -159,19 +159,11 @@ void run_cap(void *zctx, bool &term, string &read_source,
     internal_event_t ev_int;
     int block_ms = 200;
     int i=0;
-    static int proxy_finished_init = false;
 
     EXPECT_TRUE(NULL != mock_cap);
     EXPECT_EQ(0, zmq_connect(mock_cap, get_config(CAPTURE_END_KEY).c_str()));
     EXPECT_EQ(0, zmq_setsockopt(mock_cap, ZMQ_SUBSCRIBE, "", 0));
     EXPECT_EQ(0, zmq_setsockopt(mock_cap, ZMQ_RCVTIMEO, &block_ms, sizeof (block_ms)));
-
-    if(!proxy_finished_init) {
-        zmq_msg_t msg;
-        zmq_msg_init(&msg);
-        EXPECT_EQ(1, zmq_msg_recv(&msg, mock_cap, 0)); // Subscription message
-        proxy_finished_init = true;
-    }
 
     while(!term) {
         string source;
@@ -227,6 +219,24 @@ void run_pub(void *mock_pub, const string wr_source, internal_events_lst_t &lst)
     }
 }
 
+TEST(eventd, capture_socket)
+{
+    printf("Capture socket TEST started\n");
+    void *mock_cap = zmq_socket (zctx, ZMQ_SUB);
+    int block_ms = 200;
+
+    EXPECT_TRUE(NULL != mock_cap);
+    EXPECT_EQ(0, zmq_connect(mock_cap, get_config(CAPTURE_END_KEY).c_str()));
+    EXPECT_EQ(0, zmq_setsockopt(mock_cap, ZMQ_SUBSCRIBE, "", 0));
+    EXPECT_EQ(0, zmq_setsockopt(mock_cap, ZMQ_RCVTIMEO, &block_ms, sizeof (block_ms)));
+
+    zmq_msg_t msg;
+    zmq_msg_init(&msg);
+    EXPECT_EQ(1, zmq_msg_recv(&msg, mock_cap, 0)); // Subscription message
+    proxy_finished_init = true;
+
+    zmq_close(mock_cap);
+}
 
 TEST(eventd, proxy)
 {
@@ -473,9 +483,6 @@ TEST(eventd, captureCacheMax)
     /* Starting proxy */
     EXPECT_EQ(0, pxy->init());
 
-    /* Run subscriber; Else publisher will drop events on floor, with no subscriber. */
-    thread thr_sub(&run_sub, zctx, ref(term_sub), ref(sub_source), ref(sub_evts), ref(sub_evts_sz));
-
     /* Create capture service */
     capture_service *pcap = new capture_service(zctx, cache_max, &stats_instance);
 
@@ -483,6 +490,9 @@ TEST(eventd, captureCacheMax)
     EXPECT_EQ(-1, pcap->set_control(STOP_CAPTURE));
 
     EXPECT_TRUE(init_cache > 1);
+
+    /* Run subscriber; Else publisher will drop events on floor, with no subscriber. */
+    thread thr_sub(&run_sub, zctx, ref(term_sub), ref(sub_source), ref(sub_evts), ref(sub_evts_sz));
 
     /* Collect few serailized strings of events for startup cache */
     for(int i=0; i < init_cache; ++i) {
