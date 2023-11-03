@@ -199,6 +199,16 @@ def deinitialize_sdk_handle(sdk_handle):
          logger.log_warning("Sdk handle is none")
          return False
 
+class SdkHandleContext(object):
+    def __init__(self):
+        self.sdk_handle = None
+
+    def __enter__(self):
+        self.sdk_handle = initialize_sdk_handle()
+        return self.sdk_handle
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        deinitialize_sdk_handle(self.sdk_handle)
 
 class NvidiaSFPCommon(SfpOptoeBase):
     def __init__(self, sfp_index):
@@ -265,14 +275,6 @@ class SFP(NvidiaSFPCommon):
 
         self.slot_id = slot_id
         self._sfp_type_str = None
-
-    @property
-    def sdk_handle(self):
-        if not SFP.shared_sdk_handle:
-            SFP.shared_sdk_handle = initialize_sdk_handle()
-            if not SFP.shared_sdk_handle:
-                logger.log_error('Failed to open SDK handle')
-        return SFP.shared_sdk_handle
 
     def reinit(self):
         """

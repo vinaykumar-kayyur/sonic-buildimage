@@ -217,12 +217,22 @@ class TestSfp:
         assert page_offset is 0
 
     @mock.patch('sonic_platform.sfp.SFP._read_eeprom')
-    def test_get_presence(self, mock_read):
+    def test_sfp_get_presence(self, mock_read):
         sfp = SFP(0)
         mock_read.return_value = None
         assert not sfp.get_presence()
 
         mock_read.return_value = 0
+        assert sfp.get_presence()
+
+    @mock.patch('sonic_platform.utils.read_int_from_file')
+    def test_rj45_get_presence(self, mock_read_int):
+        sfp = RJ45Port(0)
+        mock_read_int.return_value = 0
+        assert not sfp.get_presence()
+        mock_read_int.assert_called_with('/sys/module/sx_core/asic0/module0/present')
+
+        mock_read_int.return_value = 1
         assert sfp.get_presence()
 
     @mock.patch('sonic_platform.sfp.SFP.get_xcvr_api')
