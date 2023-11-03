@@ -65,7 +65,6 @@ DRIVERLISTS = [
         {"name":"rtcpcf85063", "delay":0},
         {"name":"i2c_mux_pca954x", "delay":0}, # force_deselect_on_exit=1
         {"name":"platform_common dfd_my_type=0x4065", "delay":0},
-        {"name":"firmware_driver", "delay":0},
         {"name":"wb_cpld", "delay":0},
         {"name":"wb_at24", "delay":0},
         {"name":"optoe", "delay":0},
