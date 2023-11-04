@@ -494,6 +494,7 @@ SONIC_SLAVE_USER_BUILD = \
 
 SONIC_BUILD_INSTRUCTION :=  $(MAKE) \
                            -f slave.mk \
+                           DBGOPT='$(DBGOPT)' \
                            PLATFORM=$(PLATFORM) \
                            PLATFORM_ARCH=$(PLATFORM_ARCH) \
                            MULTIARCH_QEMU_ENVIRON=$(MULTIARCH_QEMU_ENVIRON)  \
