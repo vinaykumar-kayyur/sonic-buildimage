@@ -277,3 +277,25 @@ class TestSfp:
         assert sfp.get_transceiver_bulk_status()
         assert sfp.get_transceiver_threshold_info()
         sfp.reinit()
+
+    @mock.patch('sonic_platform.utils.is_host', mock.MagicMock(side_effect = [True, True, False, False]))
+    @mock.patch('subprocess.check_output', mock.MagicMock(side_effect = ['True', 'False']))
+    @mock.patch('sonic_platform.sfp.SFP._get_lpmode', mock.MagicMock(side_effect = [True, False]))
+    @mock.patch('sonic_platform.sfp.SFP.sdk_handle', mock.MagicMock(return_value = None))
+    def test_get_lpmode(self):
+        sfp = SFP(0)
+        assert sfp.get_lpmode()
+        assert not sfp.get_lpmode()
+        assert sfp.get_lpmode()
+        assert not sfp.get_lpmode()
+
+    @mock.patch('sonic_platform.utils.is_host', mock.MagicMock(side_effect = [True, True, False, False]))
+    @mock.patch('subprocess.check_output', mock.MagicMock(side_effect = ['True', 'False']))
+    @mock.patch('sonic_platform.sfp.SFP._set_lpmode', mock.MagicMock(side_effect = [True, False]))
+    @mock.patch('sonic_platform.sfp.SFP.sdk_handle', mock.MagicMock(return_value = None))
+    def test_set_lpmode(self):
+        sfp = SFP(0)
+        assert sfp.set_lpmode(True)
+        assert not sfp.set_lpmode(True)
+        assert sfp.set_lpmode(False)
+        assert not sfp.set_lpmode(False)
