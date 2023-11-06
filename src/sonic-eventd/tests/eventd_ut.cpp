@@ -152,7 +152,7 @@ static const test_data_t ldata[] = {
 
 
 void run_cap(void *zctx, bool &term, string &read_source,
-        int &cnt)
+        int &cnt, bool &should_read_control)
 {
     void *mock_cap = zmq_socket (zctx, ZMQ_SUB);
     string source;
@@ -164,6 +164,12 @@ void run_cap(void *zctx, bool &term, string &read_source,
     EXPECT_EQ(0, zmq_connect(mock_cap, get_config(CAPTURE_END_KEY).c_str()));
     EXPECT_EQ(0, zmq_setsockopt(mock_cap, ZMQ_SUBSCRIBE, "", 0));
     EXPECT_EQ(0, zmq_setsockopt(mock_cap, ZMQ_RCVTIMEO, &block_ms, sizeof (block_ms)));
+
+    if(should_read_control) {
+        zmq_msg_t msg;
+        zmq_msg_init(&msg);
+        EXPECT_NE(1, zmq_msg_recv(&msg, mock_cap, 0)); // Subscription message should be read by do_capture
+    }
 
     while(!term) {
         string source;
@@ -219,28 +225,10 @@ void run_pub(void *mock_pub, const string wr_source, internal_events_lst_t &lst)
     }
 }
 
-TEST(eventd, capture_socket)
-{
-    printf("Capture socket TEST started\n");
-    void *mock_cap = zmq_socket (zctx, ZMQ_SUB);
-    int block_ms = 200;
-
-    EXPECT_TRUE(NULL != mock_cap);
-    EXPECT_EQ(0, zmq_connect(mock_cap, get_config(CAPTURE_END_KEY).c_str()));
-    EXPECT_EQ(0, zmq_setsockopt(mock_cap, ZMQ_SUBSCRIBE, "", 0));
-    EXPECT_EQ(0, zmq_setsockopt(mock_cap, ZMQ_RCVTIMEO, &block_ms, sizeof (block_ms)));
-
-    zmq_msg_t msg;
-    zmq_msg_init(&msg);
-    EXPECT_EQ(1, zmq_msg_recv(&msg, mock_cap, 0)); // Subscription message
-    proxy_finished_init = true;
-
-    zmq_close(mock_cap);
-}
-
 TEST(eventd, proxy)
 {
     printf("Proxy TEST started\n");
+    bool should_read_control = false;
     bool term_sub = false;
     bool term_cap = false;
     string rd_csource, rd_source, wr_source("hello");
@@ -258,7 +246,7 @@ TEST(eventd, proxy)
     EXPECT_EQ(0, pxy->init());
  
     /* capture in a thread */
-    thread thrc(&run_cap, zctx, ref(term_cap), ref(rd_csource), ref(rd_cevts_sz));
+    thread thrc(&run_cap, zctx, ref(term_cap), ref(rd_csource), ref(rd_cevts_sz), ref(should_read_control));
 
     /* subscriber in a thread */
     thread thr(&run_sub, zctx, ref(term_sub), ref(rd_source), ref(rd_evts), ref(rd_evts_sz));
@@ -285,9 +273,6 @@ TEST(eventd, proxy)
     }
     this_thread::sleep_for(chrono::milliseconds(1000));
 
-    delete pxy;
-    pxy = NULL;
-
     term_sub = true;
     term_cap = true;
 
@@ -297,6 +282,18 @@ TEST(eventd, proxy)
     EXPECT_EQ(rd_cevts_sz,  wr_evts.size());
 
     zmq_close(mock_pub);
+
+    /* Do control test */
+
+    should_read_control = true;
+    
+    /* capture in a thread */
+    thread thrcc(&run_cap, zctx, ref(term_cap), ref(rd_csource), ref(rd_cevts_sz), ref(should_read_control));
+
+    delete pxy;
+    pxy = NULL;
+
+    thrcc.join();
     zmq_ctx_term(zctx);
 
     /* Provide time for async proxy removal to complete */
@@ -304,7 +301,6 @@ TEST(eventd, proxy)
 
     printf("eventd_proxy is tested GOOD\n");
 }
-
 
 TEST(eventd, capture)
 {
