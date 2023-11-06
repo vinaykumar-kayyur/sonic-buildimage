@@ -1,6 +1,7 @@
-#!/bin/bash
+#!/bin/bash -xe
 ## This script is to automate the preparation for a debian file system, which will be used for
 ## an ONIE installer image.
+## This is the 2nd part. 1st part in build_rfs.sh
 ##
 ## USAGE:
 ##   USERNAME=username PASSWORD=password ./build_debian
@@ -10,39 +11,19 @@
 ##   PASSWORD
 ##          The password, expected by chpasswd command
 
-## Default user
-[ -n "$USERNAME" ] || {
-    echo "Error: no or empty USERNAME"
-    exit 1
-}
-
-## Password for the default user
-[ -n "$PASSWORD" ] || {
-    echo "Error: no or empty PASSWORD"
-    exit 1
-}
-
 ## Include common functions
 . functions.sh
 
-## Enable debug output for script
-set -x -e
+[ -n "$USERNAME" ] || die "[ERROR] USERNAME is not set"
+[ -n "$PASSWORD" ] || die "[ERROR] PASSWORD is not set"
+[ -n "$RFS_SQUASHFS_NAME" ] || die "[ERROR] RFS_SQUASHFS_NAME is not set"
 
-CONFIGURED_ARCH=$([ -f .arch ] && cat .arch || echo amd64)
-
-## docker engine version (with platform)
-DOCKER_VERSION=5:24.0.2-1~debian.11~$IMAGE_DISTRO
-CONTAINERD_IO_VERSION=1.6.21-1
-LINUX_KERNEL_VERSION=5.10.0-23-2
+LINUX_KERNEL_VERSION=$SONIC_LINUX_KERNEL_VERSION
 
 ## Working directory to prepare the file system
 FILESYSTEM_ROOT=./fsroot
 PLATFORM_DIR=platform
-## Hostname for the linux image
-HOSTNAME=sonic
 DEFAULT_USERINFO="Default admin user,,,"
-BUILD_TOOL_PATH=src/sonic-build-hooks/buildinfo
-TRUSTED_GPG_DIR=$BUILD_TOOL_PATH/trusted.gpg.d
 
 ## Read ONIE image related config file
 . ./onie-image.conf
@@ -63,114 +44,32 @@ if [ "$IMAGE_TYPE" = "aboot" ]; then
     TARGET_BOOTLOADER="aboot"
 fi
 
-## Check if not a last stage of RFS build
-if [[ $RFS_SPLIT_LAST_STAGE != y ]]; then
-
-## Prepare the file system directory
-if [[ -d $FILESYSTEM_ROOT ]]; then
-    sudo rm -rf $FILESYSTEM_ROOT || die "Failed to clean chroot directory"
-fi
-mkdir -p $FILESYSTEM_ROOT
-mkdir -p $FILESYSTEM_ROOT/$PLATFORM_DIR
-touch $FILESYSTEM_ROOT/$PLATFORM_DIR/firsttime
-
-bootloader_packages=""
-if [ "$TARGET_BOOTLOADER" != "aboot" ]; then
-    mkdir -p $FILESYSTEM_ROOT/$PLATFORM_DIR/grub
-    bootloader_packages="grub2-common"
-fi
-
 ## ensure proc is mounted
 sudo mount proc /proc -t proc || true
 
-## Build the host debian base system
-echo '[INFO] Build host debian base system...'
-TARGET_PATH=$TARGET_PATH scripts/build_debian_base_system.sh $CONFIGURED_ARCH $IMAGE_DISTRO $FILESYSTEM_ROOT
+## Prepare the file system directory
+sudo rm -rf $FILESYSTEM_ROOT || die "Failed to clean chroot directory"
+## Extract 1st stage RFS (build_rfs.sh)
+sudo unsquashfs -d $FILESYSTEM_ROOT $TARGET_PATH/$RFS_SQUASHFS_NAME
 
-# Prepare buildinfo
-sudo SONIC_VERSION_CACHE=${SONIC_VERSION_CACHE} \
-	DBGOPT="${DBGOPT}" \
-	scripts/prepare_debian_image_buildinfo.sh $CONFIGURED_ARCH $IMAGE_DISTRO $FILESYSTEM_ROOT $http_proxy
-
+## make / as a mountpoint in chroot env, needed by dockerd
+pushd $FILESYSTEM_ROOT
+sudo mount --bind . .
+popd
 
 sudo chown root:root $FILESYSTEM_ROOT
 
-## Config hostname and hosts, otherwise 'sudo ...' will complain 'sudo: unable to resolve host ...'
-sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "echo '$HOSTNAME' > /etc/hostname"
-sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "echo '127.0.0.1       $HOSTNAME' >> /etc/hosts"
-sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "echo '127.0.0.1       localhost' >> /etc/hosts"
-
-## Config basic fstab
-sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c 'echo "proc /proc proc defaults 0 0" >> /etc/fstab'
-sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c 'echo "sysfs /sys sysfs defaults 0 0" >> /etc/fstab'
+## Update /etc/resolv.conf
+sudo cat /etc/resolv.conf | sudo tee $FILESYSTEM_ROOT/etc/resolv.conf
 
 ## Setup proxy
 [ -n "$http_proxy" ] && sudo /bin/bash -c "echo 'Acquire::http::Proxy \"$http_proxy\";' > $FILESYSTEM_ROOT/etc/apt/apt.conf.d/01proxy"
 
-trap_push 'sudo LANG=C chroot $FILESYSTEM_ROOT umount /proc || true'
+## Mount /proc.
+trap_push "sudo LANG=C chroot $FILESYSTEM_ROOT umount /proc || true"
 sudo LANG=C chroot $FILESYSTEM_ROOT mount proc /proc -t proc
-## Note: mounting is necessary to makedev and install linux image
-echo '[INFO] Mount all'
-## Output all the mounted device for troubleshooting
-sudo LANG=C chroot $FILESYSTEM_ROOT mount
 
-## Install the trusted gpg public keys
-[ -d $TRUSTED_GPG_DIR ] && [ ! -z "$(ls $TRUSTED_GPG_DIR)" ] && sudo cp $TRUSTED_GPG_DIR/* ${FILESYSTEM_ROOT}/etc/apt/trusted.gpg.d/
-
-## Pointing apt to public apt mirrors and getting latest packages, needed for latest security updates
-scripts/build_mirror_config.sh files/apt $CONFIGURED_ARCH $IMAGE_DISTRO
-sudo cp files/apt/sources.list.$CONFIGURED_ARCH $FILESYSTEM_ROOT/etc/apt/sources.list
-sudo cp files/apt/apt-retries-count $FILESYSTEM_ROOT/etc/apt/apt.conf.d/
-sudo cp files/apt/apt.conf.d/{81norecommends,apt-{clean,gzip-indexes,no-languages},no-check-valid-until} $FILESYSTEM_ROOT/etc/apt/apt.conf.d/
-
-## Note: set lang to prevent locale warnings in your chroot
-sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y update
-sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y upgrade
-
-echo '[INFO] Install and setup eatmydata'
-sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install eatmydata
-sudo LANG=C chroot $FILESYSTEM_ROOT ln -s /usr/bin/eatmydata /usr/local/bin/dpkg
-echo 'Dir::Bin::dpkg "/usr/local/bin/dpkg";' | sudo tee $FILESYSTEM_ROOT/etc/apt/apt.conf.d/00image-install-eatmydata > /dev/null
-## Note: dpkg hook conflict with eatmydata
-sudo LANG=C chroot $FILESYSTEM_ROOT rm /usr/local/sbin/dpkg -f
-
-echo '[INFO] Install packages for building image'
-sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install makedev psmisc
-
-if [[ $CROSS_BUILD_ENVIRON == y ]]; then
-    sudo LANG=C chroot $FILESYSTEM_ROOT dpkg --add-architecture $CONFIGURED_ARCH
-fi
-
-## Create device files
-echo '[INFO] MAKEDEV'
-if [[ $CONFIGURED_ARCH == armhf || $CONFIGURED_ARCH == arm64 ]]; then
-    sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c 'cd /dev && MAKEDEV generic-arm'
-else
-    sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c 'cd /dev && MAKEDEV generic'
-fi
-
-## docker and mkinitramfs on target system will use pigz/unpigz automatically
-sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install pigz
-
-## Install initramfs-tools and linux kernel
-## Note: initramfs-tools recommends depending on busybox, and we really want busybox for
-## 1. commands such as touch
-## 2. mount supports squashfs
-## However, 'dpkg -i' plus 'apt-get install -f' will ignore the recommended dependency. So
-## we install busybox explicitly
-sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install busybox linux-base
-echo '[INFO] Install SONiC linux kernel image'
-## Note: duplicate apt-get command to ensure every line return zero
-sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/initramfs-tools-core_*.deb || \
-    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
-sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/initramfs-tools_*.deb || \
-    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
-sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/linux-image-${LINUX_KERNEL_VERSION}-*_${CONFIGURED_ARCH}.deb || \
-    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
-sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install acl
-if [[ $CONFIGURED_ARCH == amd64 ]]; then
-    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install dmidecode hdparm
-fi
+sudo LANG=C chroot $FILESYSTEM_ROOT apt-get update
 
 ## Sign the Linux kernel
 # note: when flag SONIC_ENABLE_SECUREBOOT_SIGNATURE is enabled the Secure Upgrade flags should be disabled (no_sign) to avoid conflict between the features.
@@ -243,37 +142,12 @@ if [ -f platform/$CONFIGURED_PLATFORM/modules ]; then
     cat platform/$CONFIGURED_PLATFORM/modules | sudo tee -a $FILESYSTEM_ROOT/etc/initramfs-tools/modules > /dev/null
 fi
 
-## Add mtd and uboot firmware tools package
-sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install u-boot-tools libubootenv-tool mtd-utils device-tree-compiler
-
-## Install docker
-echo '[INFO] Install docker'
-## Install apparmor utils since they're missing and apparmor is enabled in the kernel
-## Otherwise Docker will fail to start
-sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install apparmor
 sudo cp files/image_config/ntp/ntp-apparmor $FILESYSTEM_ROOT/etc/apparmor.d/local/usr.sbin.ntpd
-sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install apt-transport-https \
-                                                       ca-certificates \
-                                                       curl \
-                                                       gnupg2 \
-                                                       software-properties-common
-if [[ $CONFIGURED_ARCH == armhf ]]; then
-    # update ssl ca certificates for secure pem
-    sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT c_rehash
-fi
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT curl -o /tmp/docker.asc -fsSL https://download.docker.com/linux/debian/gpg
-sudo LANG=C chroot $FILESYSTEM_ROOT mv /tmp/docker.asc /etc/apt/trusted.gpg.d/
-sudo LANG=C chroot $FILESYSTEM_ROOT add-apt-repository \
-                                    "deb [arch=$CONFIGURED_ARCH] https://download.docker.com/linux/debian $IMAGE_DISTRO stable"
-sudo LANG=C chroot $FILESYSTEM_ROOT apt-get update
-sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install docker-ce=${DOCKER_VERSION} docker-ce-cli=${DOCKER_VERSION} containerd.io=${CONTAINERD_IO_VERSION}
-
-# Uninstall 'python3-gi' installed as part of 'software-properties-common' to remove debian version of 'PyGObject'
-# pip version of 'PyGObject' will be installed during installation of 'sonic-host-services'
-sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y remove software-properties-common gnupg2 python3-gi
 
 install_kubernetes () {
     local ver="$1"
+    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install gnupg
+    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y remove gnupg
     sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT curl -fsSL \
         https://packages.cloud.google.com/apt/doc/apt-key.gpg | \
         sudo LANG=C chroot $FILESYSTEM_ROOT apt-key add -
@@ -301,9 +175,7 @@ then
     echo '[INFO] Install kubernetes master'
     install_kubernetes ${MASTER_KUBERNETES_VERSION}
 
-    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get update
-    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install hyperv-daemons gnupg xmlstarlet parted netcat
-    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y remove gnupg
+    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install hyperv-daemons xmlstarlet parted netcat
     sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT curl -o /tmp/cri-dockerd.deb -fsSL \
         https://github.com/Mirantis/cri-dockerd/releases/download/v${MASTER_CRI_DOCKERD}/cri-dockerd_${MASTER_CRI_DOCKERD}.3-0.debian-${IMAGE_DISTRO}_amd64.deb
     sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install -f /tmp/cri-dockerd.deb
@@ -327,84 +199,6 @@ echo "$USERNAME:$PASSWORD" | sudo LANG=C chroot $FILESYSTEM_ROOT chpasswd
 sudo LANG=C chroot $FILESYSTEM_ROOT groupadd -f redis
 sudo LANG=C chroot $FILESYSTEM_ROOT usermod -aG redis $USERNAME
 
-if [[ $CONFIGURED_ARCH == amd64 ]]; then
-    ## Pre-install hardware drivers
-    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install      \
-        firmware-linux-nonfree
-fi
-
-## Pre-install the fundamental packages
-## Note: gdisk is needed for sgdisk in install.sh
-## Note: parted is needed for partprobe in install.sh
-## Note: ca-certificates is needed for easy_install
-## Note: don't install python-apt by pip, older than Debian repo one
-## Note: fdisk and gpg are needed by fwutil
-sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install      \
-    file                    \
-    ifmetric                \
-    iproute2                \
-    bridge-utils            \
-    isc-dhcp-client         \
-    sudo                    \
-    vim                     \
-    tcpdump                 \
-    dbus                    \
-    ntpstat                 \
-    openssh-server          \
-    python3-apt             \
-    traceroute              \
-    iputils-ping            \
-    arping                  \
-    net-tools               \
-    bsdmainutils            \
-    ca-certificates         \
-    i2c-tools               \
-    efibootmgr              \
-    usbutils                \
-    pciutils                \
-    iptables-persistent     \
-    ebtables                \
-    logrotate               \
-    curl                    \
-    kexec-tools             \
-    less                    \
-    unzip                   \
-    gdisk                   \
-    sysfsutils              \
-    squashfs-tools          \
-    $bootloader_packages    \
-    screen                  \
-    hping3                  \
-    tcptraceroute           \
-    mtr-tiny                \
-    locales                 \
-    cgroup-tools            \
-    ipmitool                \
-    ndisc6                  \
-    makedumpfile            \
-    conntrack               \
-    python3                 \
-    python3-distutils       \
-    python3-pip             \
-    python-is-python3       \
-    cron                    \
-    libprotobuf23           \
-    libgrpc++1              \
-    libgrpc10               \
-    haveged                 \
-    fdisk                   \
-    gpg                     \
-    jq                      \
-    auditd                  \
-    linux-perf              \
-    resolvconf              \
-	lsof                    \
-	sysstat
-
-# default rsyslog version is 8.2110.0 which has a bug on log rate limit,
-# use backport version
-sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -t bullseye-backports -y install rsyslog
-
 # Have systemd create the auditd log directory
 sudo mkdir -p ${FILESYSTEM_ROOT}/etc/systemd/system/auditd.service.d
 sudo tee ${FILESYSTEM_ROOT}/etc/systemd/system/auditd.service.d/log-directory.conf >/dev/null <<EOF
@@ -416,12 +210,6 @@ EOF
 # latest tcpdump control resource access with AppArmor.
 # override tcpdump profile to allow tcpdump access TACACS config file.
 sudo cp files/apparmor/usr.bin.tcpdump $FILESYSTEM_ROOT/etc/apparmor.d/local/usr.bin.tcpdump
-
-if [[ $CONFIGURED_ARCH == amd64 ]]; then
-## Pre-install the fundamental packages for amd64 (x86)
-sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install      \
-    rasdaemon
-fi
 
 ## Set /etc/shadow permissions to -rw-------.
 sudo LANG=c chroot $FILESYSTEM_ROOT chmod 600 /etc/shadow
@@ -437,18 +225,6 @@ sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "echo 'MODULES=most' >> /etc/in
 # Copy vmcore-sysctl.conf to add more vmcore dump flags to kernel
 sudo cp files/image_config/kdump/vmcore-sysctl.conf $FILESYSTEM_ROOT/etc/sysctl.d/
 
-#Adds a locale to a debian system in non-interactive mode
-sudo sed -i '/^#.* en_US.* /s/^#//' $FILESYSTEM_ROOT/etc/locale.gen && \
-    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT locale-gen "en_US.UTF-8"
-sudo LANG=en_US.UTF-8 DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT update-locale "LANG=en_US.UTF-8"
-sudo LANG=C chroot $FILESYSTEM_ROOT bash -c "find /usr/share/i18n/locales/ ! -name 'en_US' -type f -exec rm -f {} +"
-
-sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install \
-    picocom \
-    systemd \
-    systemd-sysv \
-    ntp
-
 # Workaround for issue: The udev rule may fail to be executed because the
 #                       daemon-reload command is executed in parallel
 # Github issue: https://github.com/systemd/systemd/issues/24668
@@ -456,19 +232,6 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
 # This workaround should be removed after a upstream already contains the fixes
 sudo patch $FILESYSTEM_ROOT/lib/systemd/system/systemd-udevd.service \
     files/image_config/systemd/systemd-udevd/fix-udev-rule-may-fail-if-daemon-reload-command-runs.patch
-
-if [[ $TARGET_BOOTLOADER == grub ]]; then
-    if [[ $CONFIGURED_ARCH == amd64 ]]; then
-        GRUB_PKG=grub-pc-bin
-    elif [[ $CONFIGURED_ARCH == arm64 ]]; then
-        GRUB_PKG=grub-efi-arm64-bin
-    fi
-
-    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get install -d -o dir::cache=/var/cache/apt \
-        $GRUB_PKG
-
-    sudo cp $FILESYSTEM_ROOT/var/cache/apt/archives/grub*.deb $FILESYSTEM_ROOT/$PLATFORM_DIR/grub
-fi
 
 ## Disable kexec supported reboot which was installed by default
 sudo sed -i 's/LOAD_KEXEC=true/LOAD_KEXEC=false/' $FILESYSTEM_ROOT/etc/default/kexec
@@ -510,7 +273,6 @@ sudo augtool -r $FILESYSTEM_ROOT --autosave "
 rm /files/lib/systemd/system/rsyslog.service/Service/ExecStart/arguments
 set /files/lib/systemd/system/rsyslog.service/Service/ExecStart/arguments/1 -n
 "
-
 sudo mkdir -p $FILESYSTEM_ROOT/var/core
 
 # Config sysctl
@@ -532,28 +294,6 @@ while read line; do
 done < files/image_config/sysctl/sysctl-net.conf
 
 sudo augtool --autosave "$sysctl_net_cmd_string" -r $FILESYSTEM_ROOT
-
-# Upgrade pip via PyPI and uninstall the Debian version
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install --upgrade pip
-sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get purge -y python3-pip
-
-# For building Python packages
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install 'setuptools==49.6.00'
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install 'wheel==0.35.1'
-
-# docker Python API package is needed by Ansible docker module as well as some SONiC applications
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install 'docker==6.1.1'
-
-# Install scapy
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install 'scapy==2.4.4'
-
-# The option --no-build-isolation can be removed when upgrading PyYAML to 6.0.1
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install 'PyYAML==5.4.1' --no-build-isolation
-
-## Note: keep pip installed for maintainance purpose
-
-# Install GCC, needed for building/installing some Python packages
-sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install gcc
 
 ## Create /var/run/redis folder for docker-database to mount
 sudo mkdir -p $FILESYSTEM_ROOT/var/run/redis
@@ -581,10 +321,27 @@ if [ -f files/image_config/ntp/ntp-systemd-wrapper ]; then
     sudo cp ./files/image_config/ntp/ntp-systemd-wrapper $FILESYSTEM_ROOT/usr/lib/ntp/
 fi
 
-## Version file part 1
+## Version file
 sudo mkdir -p $FILESYSTEM_ROOT/etc/sonic
 if [ -f files/image_config/sonic_release ]; then
     sudo cp files/image_config/sonic_release $FILESYSTEM_ROOT/etc/sonic/
+fi
+export build_version="${SONIC_IMAGE_VERSION}"
+export debian_version="$(cat $FILESYSTEM_ROOT/etc/debian_version)"
+export kernel_version="${kversion}"
+export asic_type="${sonic_asic_platform}"
+export asic_subtype="${TARGET_MACHINE}"
+export commit_id="$(git rev-parse --short HEAD)"
+export branch="$(git rev-parse --abbrev-ref HEAD)"
+export release="$(if [ -f $FILESYSTEM_ROOT/etc/sonic/sonic_release ]; then cat $FILESYSTEM_ROOT/etc/sonic/sonic_release; fi)"
+export build_date="$(date -u)"
+export build_number="${BUILD_NUMBER:-0}"
+export built_by="$USER@$BUILD_HOSTNAME"
+export sonic_os_version="${SONIC_OS_VERSION}"
+j2 files/build_templates/sonic_version.yml.j2 | sudo tee $FILESYSTEM_ROOT/etc/sonic/sonic_version.yml
+
+if [ -f sonic_debian_extension.sh ]; then
+    ./sonic_debian_extension.sh $FILESYSTEM_ROOT $PLATFORM_DIR $IMAGE_DISTRO
 fi
 
 # Default users info
@@ -607,69 +364,11 @@ if [[ ! -f './asic_config_checksum' ]]; then
 fi
 sudo cp ./asic_config_checksum $FILESYSTEM_ROOT/etc/sonic/asic_config_checksum
 
-## Check if not a last stage of RFS build
-fi
-
-if [[ $RFS_SPLIT_FIRST_STAGE == y ]]; then
-    echo '[INFO] Finished with RFS first stage'
-    echo '[INFO] Umount all'
-
-    ## Display all process details access /proc
-    sudo LANG=C chroot $FILESYSTEM_ROOT fuser -vm /proc
-    ## Kill the processes
-    sudo LANG=C chroot $FILESYSTEM_ROOT fuser -km /proc || true
-    ## Wait fuser fully kill the processes
-    sudo timeout 15s bash -c 'until LANG=C chroot $0 umount /proc; do sleep 1; done' $FILESYSTEM_ROOT || true
-
-    sudo rm -f $TARGET_PATH/$RFS_SQUASHFS_NAME
-    sudo mksquashfs $FILESYSTEM_ROOT $TARGET_PATH/$RFS_SQUASHFS_NAME -Xcompression-level 1
-
-    exit 0
-fi
-
-if [[ $RFS_SPLIT_LAST_STAGE == y ]]; then
-    echo '[INFO] RFS build: second stage'
-
-    ## ensure proc is mounted
-    sudo mount proc /proc -t proc || true
-
-    sudo fuser -vm $FILESYSTEM_ROOT || true
-    sudo rm -rf $FILESYSTEM_ROOT
-    sudo unsquashfs -d $FILESYSTEM_ROOT $TARGET_PATH/$RFS_SQUASHFS_NAME
-
-    ## make / as a mountpoint in chroot env, needed by dockerd
-    pushd $FILESYSTEM_ROOT
-    sudo mount --bind . .
-    popd
-
-    trap_push 'sudo LANG=C chroot $FILESYSTEM_ROOT umount /proc || true'
-    sudo LANG=C chroot $FILESYSTEM_ROOT mount proc /proc -t proc
-fi
-
-## Version file part 2
-export build_version="${SONIC_IMAGE_VERSION}"
-export debian_version="$(cat $FILESYSTEM_ROOT/etc/debian_version)"
-export kernel_version="${kversion}"
-export asic_type="${sonic_asic_platform}"
-export asic_subtype="${TARGET_MACHINE}"
-export commit_id="$(git rev-parse --short HEAD)"
-export branch="$(git rev-parse --abbrev-ref HEAD)"
-export release="$(if [ -f $FILESYSTEM_ROOT/etc/sonic/sonic_release ]; then cat $FILESYSTEM_ROOT/etc/sonic/sonic_release; fi)"
-export build_date="$(date -u)"
-export build_number="${BUILD_NUMBER:-0}"
-export built_by="$USER@$BUILD_HOSTNAME"
-export sonic_os_version="${SONIC_OS_VERSION}"
-j2 files/build_templates/sonic_version.yml.j2 | sudo tee $FILESYSTEM_ROOT/etc/sonic/sonic_version.yml
-
-if [ -f sonic_debian_extension.sh ]; then
-    ./sonic_debian_extension.sh $FILESYSTEM_ROOT $PLATFORM_DIR $IMAGE_DISTRO
-fi
-
 ## Organization specific extensions such as Configuration & Scripts for features like AAA, ZTP...
 if [ "${enable_organization_extensions}" = "y" ]; then
    if [ -f files/build_templates/organization_extensions.sh ]; then
       sudo chmod 755 files/build_templates/organization_extensions.sh
-      ./files/build_templates/organization_extensions.sh -f $FILESYSTEM_ROOT -h $HOSTNAME
+      ./files/build_templates/organization_extensions.sh -f $FILESYSTEM_ROOT -h $SONIC_DEFAULT_HOSTNAME
    fi
 fi
 
@@ -780,8 +479,18 @@ SONIC_VERSION_CACHE=${SONIC_VERSION_CACHE}  \
 	DBGOPT="${DBGOPT}" \
 	scripts/collect_host_image_version_files.sh $CONFIGURED_ARCH $IMAGE_DISTRO $TARGET_PATH $FILESYSTEM_ROOT
 
-# Remove GCC
-sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y remove gcc
+# Remove dev packages
+sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y remove \
+    build-essential \
+    gcc \
+    libcairo2-dev \
+    libdbus-1-dev \
+    libgirepository1.0-dev \
+    libssl-dev \
+    libsystemd-dev \
+    pkg-config \
+    python3-dev \
+    swig
 
 # Remove eatmydata
 sudo rm $FILESYSTEM_ROOT/etc/apt/apt.conf.d/00image-install-eatmydata $FILESYSTEM_ROOT/usr/local/bin/dpkg

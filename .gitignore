@@ -9,6 +9,7 @@ rules/config.user
 
 # Build artifacts
 fsroot/
+fsroot-*/
 fs.*
 target/
 *.deb
