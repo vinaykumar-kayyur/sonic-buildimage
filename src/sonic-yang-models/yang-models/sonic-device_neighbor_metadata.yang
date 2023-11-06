@@ -41,7 +41,7 @@ module sonic-device_neighbor_metadata {
                 }
 
                 leaf cluster {
-                    description "The switch is a member of this cluster"
+                    description "The switch is a member of this cluster";
                     type string;
                 }
 
