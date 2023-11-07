@@ -179,6 +179,9 @@ INCLUDE_TEAMD ?= y
 # INCLUDE_ROUTER_ADVERTISER - build docker-router-advertiser for router advertisements support
 INCLUDE_ROUTER_ADVERTISER ?= y
 
+# INCLUDE_DEVICE_HEALTH - if set to y installs Device health
+INCLUDE_DEVICE_HEALTH ?= y
+
 # INCLUDE_KUBERNETES - if set to y kubernetes packages are installed to be able to
 # run as worker node in kubernetes cluster.
 INCLUDE_KUBERNETES ?= n
