@@ -601,6 +601,7 @@ TEST(eventd, service)
     }
 
     thread thread_service(&run_eventd_service);
+    this_thread::sleep_for(chrono::milliseconds(1000));
 
     /* Need client side service to interact with server side */
     EXPECT_EQ(0, service.init_client(zctx));
@@ -631,7 +632,7 @@ TEST(eventd, service)
         run_pub(mock_pub, wr_source, wr_evts);
 
         /* Published events must have been captured. Give a pause, to ensure sent. */
-        this_thread::sleep_for(chrono::milliseconds(200));
+        this_thread::sleep_for(chrono::milliseconds(1000));
 
         EXPECT_EQ(0, service.cache_stop());
 
