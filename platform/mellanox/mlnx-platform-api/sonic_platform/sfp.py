@@ -554,10 +554,14 @@ class SFP(NvidiaSFPCommon):
 
         db = utils.DbUtils.get_db_instance('STATE_DB')
         control_type = db.get('STATE_DB', f'TRANSCEIVER_MODULES_MGMT|{self.sdk_index}', 'control_type')
-        if not control_type:
-            raise Exception(f'Module {self.sdk_index} is in initialization, please retry later')
+        control_file_value = utils.read_int_from_file(f'/sys/module/sx_core/asic0/module{self.sdk_index}/control')
 
-        return control_type == 'SW_CONTROL'
+        if control_type == 'SW_CONTROL' and control_file_value == 1:
+            return True
+        elif control_type == 'FW_CONTROL' and control_file_value == 0:
+            return False
+        else:
+            raise Exception(f'Module {self.sdk_index} is in initialization, please retry later')
 
 
 class RJ45Port(NvidiaSFPCommon):
