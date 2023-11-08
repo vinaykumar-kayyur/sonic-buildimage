@@ -8,6 +8,7 @@ packet is trapped to the CPU. In this case, we should ping the inner
 destination IP to trigger the process of obtaining neighbor information
 """
 import subprocess
+import sys
 import time
 from datetime import datetime
 from ipaddress import ip_interface
@@ -280,6 +281,18 @@ class TunnelPacketHandler(object):
         """
         Starts an AsyncSniffer and waits for it to inititalize fully
         """
+        start = datetime.now()
+        
+        self.sniff_intfs = self.get_up_portchannels()
+
+        while not self.sniff_intfs:
+            logger.log_info('No portchannels are up yet...')
+            if (datetime.now() - start).seconds > 180:
+                logger.log_error('All portchannels failed to come up within 3 minutes, exiting...')
+                sys.exit(1)
+            self.sniff_intfs = self.get_up_portchannels()
+            time.sleep(10)
+
         self.sniffer = AsyncSniffer(
             iface=list(self.sniff_intfs),
             filter=self.packet_filter,
@@ -326,7 +339,6 @@ class TunnelPacketHandler(object):
         logger.log_notice('Starting tunnel packet handler for {}'
                           .format(self.packet_filter))
 
-        self.sniff_intfs = self.get_up_portchannels()
 
         app_db = DBConnector(APPL_DB, 0)
         lag_table = SubscriberStateTable(app_db, LAG_TABLE)
