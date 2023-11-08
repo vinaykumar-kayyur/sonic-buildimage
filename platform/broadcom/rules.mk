@@ -2,8 +2,6 @@ include $(PLATFORM_PATH)/sai-modules.mk
 include $(PLATFORM_PATH)/sai.mk
 # TODO: re-enable once the following have been updated for bookworm:
 # * Nokia
-# * Dell
-# * Accton
 # * Juniper
 # * Ragile
 # * Ufispace
