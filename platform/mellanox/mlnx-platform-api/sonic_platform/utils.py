@@ -19,6 +19,7 @@ import functools
 import subprocess
 import json
 import sys
+import threading
 import time
 import os
 from sonic_py_common import device_info
@@ -31,8 +32,6 @@ PORT_TYPE_KEY = "port_type"
 RJ45_PORT_TYPE = "RJ45"
 
 logger = Logger()
-
-db_instances = None
 
 
 def read_from_file(file_path, target_type, default='', raise_exception=False, log_func=logger.log_error):
@@ -291,19 +290,23 @@ def wait_until(predict, timeout, interval=1, *args, **kwargs):
 
 
 class DbUtils:
-    db_instances = {}
+    lock = threading.Lock()
+    db_instances = threading.local()
 
     @classmethod
     def get_db_instance(cls, db_name, **kargs):
         try:
-            if db_name not in cls.db_instances:
-                from sonic_py_common import multi_asic
+            if not hasattr(cls.db_instances, 'data'):
+                with cls.lock:
+                    if not hasattr(cls.db_instances, 'data'):
+                        cls.db_instances.data = {}
+
+            if db_name not in cls.db_instances.data:
                 from swsscommon.swsscommon import SonicV2Connector
-                namespace = multi_asic.get_current_namespace()
-                db = SonicV2Connector(use_unix_socket_path=True, namespace=namespace)
+                db = SonicV2Connector(use_unix_socket_path=True)
                 db.connect(db_name)
-                cls.db_instances[db_name] = db
-            return cls.db_instances[db_name]
+                cls.db_instances.data[db_name] = db
+            return cls.db_instances.data[db_name]
         except Exception as e:
             logger.log_error(f'Failed to get DB instance for DB {db_name} - {e}')
             raise e
