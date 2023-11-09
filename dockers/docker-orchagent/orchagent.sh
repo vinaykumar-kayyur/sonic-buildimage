@@ -17,8 +17,8 @@ fi
 mkdir -p /var/log/swss
 ORCHAGENT_ARGS="-d /var/log/swss "
 
-# Set orchagent pop batch size to 8192
-ORCHAGENT_ARGS+="-b 8192 "
+# Set orchagent pop batch size to 1024
+ORCHAGENT_ARGS+="-b 1024 "
 
 # Set synchronous mode if it is enabled in CONFIG_DB
 SYNC_MODE=$(echo $SWSS_VARS | jq -r '.synchronous_mode')
@@ -67,6 +67,12 @@ elif [ "$platform" == "innovium" ]; then
 else
     # Should we use the fallback MAC in case it is not found in Device.Metadata
     ORCHAGENT_ARGS+="-m $MAC_ADDRESS"
+fi
+
+# Enable ZMQ for SmartSwitch
+LOCALHOST_SUBTYPE=`sonic-db-cli CONFIG_DB hget localhost "subtype"`
+if [[ x"${LOCALHOST_SUBTYPE}" == x"SmartSwitch" ]]; then
+    ORCHAGENT_ARGS+=" -q tcp://127.0.0.1:8100"
 fi
 
 exec /usr/bin/orchagent ${ORCHAGENT_ARGS}

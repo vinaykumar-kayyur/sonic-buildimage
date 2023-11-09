@@ -29,7 +29,7 @@ endif
 -include rsyslog_plugin/subdir.mk
 -include rsyslog_plugin_tests/subdir.mk
 
-all: sonic-eventd eventd-tests eventd-tool rsyslog-plugin rsyslog-plugin-tests
+all: sonic-eventd eventd-tool rsyslog-plugin
 
 sonic-eventd: $(OBJS)
 	@echo 'Building target: $@'
@@ -85,6 +85,7 @@ deinstall:
 	$(RM) -rf $(DESTDIR)/etc
 
 clean:
+	-$(RM) $(EVENTD_TARGET) $(OBJS) $(EVENTD_TOOL) $(TOOL_OBJS) $(RSYSLOG-PLUGIN_TARGET) $(RSYSLOG-PLUGIN_OBJS) $(EVENTD_TEST) $(TEST_OBJS) $(RSYSLOG-PLUGIN_TEST) $(RSYSLOG-PLUGIN-TEST_OBJS)
 	-@echo ' '
 
 .PHONY: all clean dependents

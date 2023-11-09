@@ -41,6 +41,12 @@ chassis_backend_role = 'ChassisBackendRouter'
 backend_device_types = ['BackEndToRRouter', 'BackEndLeafRouter']
 console_device_types = ['MgmtTsToR']
 dhcp_server_enabled_device_types = ['BmcMgmtToRRouter']
+mgmt_device_types = ['BmcMgmtToRRouter', 'MgmtToRRouter', 'MgmtTsToR']
+leafrouter_device_types = ['LeafRouter']
+
+# Counters disabled on management devices
+mgmt_disabled_counters = ["BUFFER_POOL_WATERMARK", "PFCWD", "PG_DROP", "PG_WATERMARK", "PORT_BUFFER_DROP", "QUEUE", "QUEUE_WATERMARK"]
+
 VLAN_SUB_INTERFACE_SEPARATOR = '.'
 VLAN_SUB_INTERFACE_VLAN_ID = '10'
 
@@ -55,14 +61,14 @@ vni_default = 8000
 # Defination of custom acl table types
 acl_table_type_defination = {
     'BMCDATA': {
-        "ACTIONS": "PACKET_ACTION,COUNTER",
-        "BIND_POINTS": "PORT",
-        "MATCHES": "SRC_IP,DST_IP,ETHER_TYPE,IP_TYPE,IP_PROTOCOL,IN_PORTS,L4_SRC_PORT,L4_DST_PORT,L4_SRC_PORT_RANGE,L4_DST_PORT_RANGE",
+        "ACTIONS": ["PACKET_ACTION", "COUNTER"],
+        "BIND_POINTS": ["PORT"],
+        "MATCHES": ["SRC_IP", "DST_IP", "ETHER_TYPE", "IP_TYPE", "IP_PROTOCOL", "IN_PORTS", "L4_SRC_PORT", "L4_DST_PORT", "L4_SRC_PORT_RANGE", "L4_DST_PORT_RANGE"]
     },
     'BMCDATAV6': {
-        "ACTIONS": "PACKET_ACTION,COUNTER",
-        "BIND_POINTS": "PORT",
-        "MATCHES": "SRC_IPV6,DST_IPV6,ETHER_TYPE,IP_TYPE,IP_PROTOCOL,IN_PORTS,L4_SRC_PORT,L4_DST_PORT,L4_SRC_PORT_RANGE,L4_DST_PORT_RANGE",
+        "ACTIONS": ["PACKET_ACTION", "COUNTER"],
+        "BIND_POINTS": ["PORT"],
+        "MATCHES": ["SRC_IPV6", "DST_IPV6", "ETHER_TYPE", "IP_TYPE", "IP_PROTOCOL", "IN_PORTS", "L4_SRC_PORT", "L4_DST_PORT", "L4_SRC_PORT_RANGE", "L4_DST_PORT_RANGE", "ICMPV6_TYPE", "ICMPV6_CODE", "TCP_FLAGS"]
     }
 }
 
@@ -2103,6 +2109,14 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     # Enable DHCP Server feature for specific device type
     if current_device and current_device['type'] in dhcp_server_enabled_device_types:
         results['DEVICE_METADATA']['localhost']['dhcp_server'] = 'enabled'
+
+    # Disable unsupported counters on management devices
+    if current_device and current_device['type'] in mgmt_device_types:
+        results["FLEX_COUNTER_TABLE"] = {counter: {"FLEX_COUNTER_STATUS": "disable"} for counter in mgmt_disabled_counters}
+
+    # Enable bgp-suppress-fib by default for leafrouter
+    if current_device and current_device['type'] in leafrouter_device_types:
+        results['DEVICE_METADATA']['localhost']['suppress-fib-pending'] = 'enabled'
 
     return results
 
