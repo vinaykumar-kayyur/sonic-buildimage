@@ -400,7 +400,7 @@ class TestCfgGen(TestCase):
         output = self.run_script(argument)
         self.assertEqual(
             utils.to_dict(output.strip()),
-            utils.to_dict("{'lanes': '25,26,27,28', 'description': 'Servers0:eth0', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'routed', 'alias': 'fortyGigE0/4', 'admin_status': 'up', 'speed': '100000', 'autoneg': 'on', 'fec': 'none'}")
+            utils.to_dict("{'lanes': '25,26,27,28', 'description': 'Servers0:eth0', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'trunk', 'alias': 'fortyGigE0/4', 'admin_status': 'up', 'speed': '100000', 'autoneg': 'on', 'fec': 'none'}")
         )
 
     def test_minigraph_port_autonegotiation(self):
@@ -411,8 +411,8 @@ class TestCfgGen(TestCase):
             utils.to_dict(output.strip()),
             utils.to_dict(
                 "{'Ethernet0': {'alias': 'fortyGigE0/0', 'pfc_asym': 'off', 'lanes': '29,30,31,32', 'description': 'fortyGigE0/0', 'mtu': '9100', 'tpid': '0x8100','mode': 'routed', 'speed': '40000'}, "
-                "'Ethernet4': {'lanes': '25,26,27,28', 'description': 'Servers0:eth0', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'routed','alias': 'fortyGigE0/4', 'admin_status': 'up', 'autoneg': 'on', 'speed': '100000', 'fec': 'none'}, "
-                "'Ethernet8': {'lanes': '37,38,39,40', 'description': 'fortyGigE0/8', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'routed', 'alias': 'fortyGigE0/8', 'admin_status': 'up', 'autoneg': 'off', 'fec': 'none', 'speed': '40000'}, "
+                "'Ethernet4': {'lanes': '25,26,27,28', 'description': 'Servers0:eth0', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'trunk','alias': 'fortyGigE0/4', 'admin_status': 'up', 'autoneg': 'on', 'speed': '100000', 'fec': 'none'}, "
+                "'Ethernet8': {'lanes': '37,38,39,40', 'description': 'fortyGigE0/8', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'trunk', 'alias': 'fortyGigE0/8', 'admin_status': 'up', 'autoneg': 'off', 'fec': 'none', 'speed': '40000'}, "
                 "'Ethernet12': {'lanes': '33,34,35,36', 'description': 'fortyGigE0/12', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100',  'mode': 'routed','alias': 'fortyGigE0/12', 'admin_status': 'up', 'speed': '40000'}, "
                 "'Ethernet16': {'lanes': '41,42,43,44', 'description': 'fortyGigE0/16', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'routed', 'alias': 'fortyGigE0/16', 'admin_status': 'up', 'speed': '40000'}, "
                 "'Ethernet20': {'lanes': '45,46,47,48', 'description': 'fortyGigE0/20', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'routed', 'alias': 'fortyGigE0/20', 'admin_status': 'up', 'speed': '40000'}, "
@@ -452,8 +452,8 @@ class TestCfgGen(TestCase):
             utils.to_dict(output.strip()),
             utils.to_dict(
                 "{'Ethernet0': {'lanes': '29,30,31,32', 'description': 'fortyGigE0/0', 'mtu': '9100', 'tpid': '0x8100',  'mode': 'routed','alias': 'fortyGigE0/0', 'pfc_asym': 'off', 'autoneg': 'off', 'speed': '40000'}, "
-                "'Ethernet4': {'lanes': '25,26,27,28', 'description': 'Servers0:eth0', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'routed', 'alias': 'fortyGigE0/4', 'admin_status': 'up', 'autoneg': 'on', 'speed': '100000', 'fec': 'none'}, "
-                "'Ethernet8': {'lanes': '37,38,39,40', 'description': 'fortyGigE0/8', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100',  'mode': 'routed','alias': 'fortyGigE0/8', 'admin_status': 'up', 'autoneg': 'off', 'fec': 'none', 'speed': '40000'}, "
+                "'Ethernet4': {'lanes': '25,26,27,28', 'description': 'Servers0:eth0', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'trunk', 'alias': 'fortyGigE0/4', 'admin_status': 'up', 'autoneg': 'on', 'speed': '100000', 'fec': 'none'}, "
+                "'Ethernet8': {'lanes': '37,38,39,40', 'description': 'fortyGigE0/8', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100',  'mode': 'trunk','alias': 'fortyGigE0/8', 'admin_status': 'up', 'autoneg': 'off', 'fec': 'none', 'speed': '40000'}, "
                 "'Ethernet12': {'lanes': '33,34,35,36', 'description': 'fortyGigE0/12', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'routed', 'alias': 'fortyGigE0/12', 'admin_status': 'up', 'autoneg': 'off', 'speed': '40000'}, "
                 "'Ethernet16': {'lanes': '41,42,43,44', 'description': 'fortyGigE0/16', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'routed', 'alias': 'fortyGigE0/16', 'admin_status': 'up', 'autoneg': 'off', 'speed': '40000'}, "
                 "'Ethernet20': {'lanes': '45,46,47,48', 'description': 'fortyGigE0/20', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100',  'mode': 'routed','alias': 'fortyGigE0/20', 'admin_status': 'up', 'autoneg': 'off', 'speed': '40000'}, "
@@ -542,7 +542,7 @@ class TestCfgGen(TestCase):
         output = self.run_script(argument)
         self.assertEqual(
             utils.to_dict(output.strip()),
-            utils.to_dict("{'lanes': '37,38,39,40', 'description': 'Interface description', 'pfc_asym': 'off', 'mtu': '9100', 'alias': 'fortyGigE0/8', 'admin_status': 'up', 'speed': '1000', 'tpid': '0x8100', 'mode': 'routed' }")
+            utils.to_dict("{'lanes': '37,38,39,40', 'description': 'Interface description', 'pfc_asym': 'off', 'mtu': '9100', 'alias': 'fortyGigE0/8', 'admin_status': 'up', 'speed': '1000', 'tpid': '0x8100', 'mode': 'trunk' }")
         )
         argument = ['-m', graph_file, '-p', self.port_config, '-v', "PORT[\'Ethernet12\']"]
         output = self.run_script(argument)
@@ -559,8 +559,8 @@ class TestCfgGen(TestCase):
             utils.to_dict(output.strip()),
             utils.to_dict( 
                 "{'Ethernet0': {'lanes': '29,30,31,32', 'description': 'switch-01t1:port1', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100','mode': 'routed' ,'alias': 'fortyGigE0/0', 'admin_status': 'up', 'speed': '10000', 'autoneg': 'on'}, "
-                "'Ethernet4': {'lanes': '25,26,27,28', 'description': 'server1:port1', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'routed' ,'alias': 'fortyGigE0/4', 'admin_status': 'up', 'speed': '25000', 'autoneg': 'on', 'mux_cable': 'true'}, "
-                "'Ethernet8': {'lanes': '37,38,39,40', 'description': 'Interface description', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100','mode': 'routed' , 'alias': 'fortyGigE0/8', 'admin_status': 'up', 'speed': '40000', 'autoneg': 'on', 'mux_cable': 'true'}, "
+                "'Ethernet4': {'lanes': '25,26,27,28', 'description': 'server1:port1', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'trunk' ,'alias': 'fortyGigE0/4', 'admin_status': 'up', 'speed': '25000', 'autoneg': 'on', 'mux_cable': 'true'}, "
+                "'Ethernet8': {'lanes': '37,38,39,40', 'description': 'Interface description', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100','mode': 'trunk' , 'alias': 'fortyGigE0/8', 'admin_status': 'up', 'speed': '40000', 'autoneg': 'on', 'mux_cable': 'true'}, "
                 "'Ethernet12': {'lanes': '33,34,35,36', 'description': 'Interface description', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100','mode': 'routed' , 'alias': 'fortyGigE0/12', 'admin_status': 'up', 'speed': '10000', 'autoneg': 'on'}, "
                 "'Ethernet16': {'alias': 'fortyGigE0/16', 'pfc_asym': 'off', 'lanes': '41,42,43,44', 'description': 'fortyGigE0/16', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'routed' ,'fec': 'rs', 'speed': '100000'}, "
                 "'Ethernet20': {'alias': 'fortyGigE0/20', 'pfc_asym': 'off', 'lanes': '45,46,47,48', 'description': 'fortyGigE0/20', 'mtu': '9100', 'tpid': '0x8100','mode': 'routed' , 'fec': 'rs', 'speed': '100000'}, "
@@ -602,8 +602,8 @@ class TestCfgGen(TestCase):
             utils.to_dict(output.strip()),
             utils.to_dict(
                 "{'Ethernet0': {'lanes': '29,30,31,32', 'description': 'switch-01t1:port1', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100','mode': 'routed' , 'alias': 'fortyGigE0/0', 'admin_status': 'up', 'speed': '10000', 'autoneg': 'on'}, "
-                "'Ethernet4': {'lanes': '25,26,27,28', 'description': 'server1:port1', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'routed' ,'alias': 'fortyGigE0/4', 'admin_status': 'up', 'speed': '25000', 'autoneg': 'on', 'mux_cable': 'true'}, "
-                "'Ethernet8': {'lanes': '37,38,39,40', 'description': 'Interface description', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'routed' ,'alias': 'fortyGigE0/8', 'admin_status': 'up', 'speed': '40000', 'autoneg': 'on', 'mux_cable': 'true'}, "
+                "'Ethernet4': {'lanes': '25,26,27,28', 'description': 'server1:port1', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'trunk' ,'alias': 'fortyGigE0/4', 'admin_status': 'up', 'speed': '25000', 'autoneg': 'on', 'mux_cable': 'true'}, "
+                "'Ethernet8': {'lanes': '37,38,39,40', 'description': 'Interface description', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'trunk' ,'alias': 'fortyGigE0/8', 'admin_status': 'up', 'speed': '40000', 'autoneg': 'on', 'mux_cable': 'true'}, "
                 "'Ethernet12': {'lanes': '33,34,35,36', 'description': 'Interface description', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100','mode': 'routed' , 'alias': 'fortyGigE0/12', 'admin_status': 'up', 'speed': '10000', 'autoneg': 'on'}, "
                 "'Ethernet16': {'alias': 'fortyGigE0/16', 'pfc_asym': 'off', 'lanes': '41,42,43,44', 'description': 'fortyGigE0/16', 'mtu': '9100', 'tpid': '0x8100','mode': 'routed' , 'fec': 'rs', 'speed': '100000'}, "
                 "'Ethernet20': {'alias': 'fortyGigE0/20', 'pfc_asym': 'off', 'lanes': '45,46,47,48', 'description': 'fortyGigE0/20', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'routed' ,'fec': 'rs', 'speed': '100000'}, "
@@ -646,8 +646,8 @@ class TestCfgGen(TestCase):
             utils.to_dict(output.strip()),
             utils.to_dict(
                 "{'Ethernet0': {'lanes': '29,30,31,32', 'description': 'fortyGigE0/0', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'routed' ,'alias': 'fortyGigE0/0', 'admin_status': 'up', 'speed': '10000'}, "
-                "'Ethernet4': {'lanes': '25,26,27,28', 'description': 'fortyGigE0/4', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'routed' ,'alias': 'fortyGigE0/4', 'admin_status': 'up', 'speed': '25000'}, "
-                "'Ethernet8': {'lanes': '37,38,39,40', 'description': 'Interface description', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'routed' ,'alias': 'fortyGigE0/8', 'admin_status': 'up', 'speed': '1000'}, "
+                "'Ethernet4': {'lanes': '25,26,27,28', 'description': 'fortyGigE0/4', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'trunk' ,'alias': 'fortyGigE0/4', 'admin_status': 'up', 'speed': '25000'}, "
+                "'Ethernet8': {'lanes': '37,38,39,40', 'description': 'Interface description', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'trunk' ,'alias': 'fortyGigE0/8', 'admin_status': 'up', 'speed': '1000'}, "
                 "'Ethernet12': {'lanes': '33,34,35,36', 'fec': 'rs', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'routed' ,'alias': 'fortyGigE0/12', 'admin_status': 'up', 'speed': '100000', 'description': 'Interface description'}, "
                 "'Ethernet16': {'lanes': '41,42,43,44', 'pfc_asym': 'off', 'description': 'fortyGigE0/16', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'routed' ,'alias': 'fortyGigE0/16', 'speed': '1000'}, "
                 "'Ethernet20': {'alias': 'fortyGigE0/20', 'pfc_asym': 'off', 'lanes': '45,46,47,48', 'description': 'fortyGigE0/20', 'mtu': '9100', 'tpid': '0x8100','mode': 'routed' , 'fec': 'rs', 'speed': '100000'}, "
