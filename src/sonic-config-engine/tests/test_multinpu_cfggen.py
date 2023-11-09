@@ -171,8 +171,8 @@ class TestMultiNpuCfgGen(TestCase):
         argument = ["-m", self.sample_graph, "-p", self.port_config[3], "-n", "asic3", "--var-json", "PORTCHANNEL"]
         output = json.loads(self.run_script(argument))
         self.assertDictEqual(output, \
-                {'PortChannel4013': {'admin_status': 'up', 'min_links': '2', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'routed' ,  'lacp_key': 'auto'},
-                 'PortChannel4014': {'admin_status': 'up', 'min_links': '2', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'routed' ,  'lacp_key': 'auto'}})
+                {'PortChannel4013': {'admin_status': 'up', 'min_links': '2', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'routed' , 'lacp_key': 'auto'},
+                 'PortChannel4014': {'admin_status': 'up', 'min_links': '2', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'routed' , 'lacp_key': 'auto'}})
 
     def test_frontend_asic_portchannel_mem(self):
         argument = ["-m", self.sample_graph, "-p", self.port_config[0], "-n", "asic0", "-v", "PORTCHANNEL_MEMBER.keys()|list"]
