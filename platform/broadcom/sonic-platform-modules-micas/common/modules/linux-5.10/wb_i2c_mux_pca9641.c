@@ -105,6 +105,7 @@ typedef struct i2c_muxs_struct_flag
 }i2c_mux_flag;
 
 i2c_mux_flag pca_flag = {
+	.nr = -1,
 	.flag = -1,
 };
 

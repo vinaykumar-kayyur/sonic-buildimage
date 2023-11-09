@@ -1156,8 +1156,8 @@ REBOOT_CAUSE_PARA = {
             "record": [
                 {"record_type": "file", "mode": "cover", "log": "Watchdog, ",
                     "path": "/etc/sonic/.reboot/.previous-reboot-cause.txt"},
-                {"record_type": "file", "mode": "add", "log": "Watchdog, ", 
-                    "path": "/etc/.reboot/.history-reboot-cause.txt", "file_max_size":1*1024*1024}
+                {"record_type": "file", "mode": "add", "log": "Watchdog, ",
+                    "path": "/etc/sonic/.reboot/.history-reboot-cause.txt", "file_max_size":1*1024*1024}
             ],
             "finish_operation": [
                 {"gettype": "io", "io_addr": 0x919, "value": 0xfc},
@@ -1168,8 +1168,8 @@ REBOOT_CAUSE_PARA = {
             "monitor_point": {"gettype": "io", "io_addr": 0x91b, "okval": 1},
             "record": [
                 {"record_type": "file", "mode": "cover", "log": "BMC reboot, ",
-                    "path": "/var/cache/sonic/previous-reboot-cause.txt"},
-                {"record_type": "file", "mode": "add", "log": "BMC reboot, ", "path": "/host/misc/history-reboot-cause.txt"}
+                    "path": "/etc/sonic/.reboot/.previous-reboot-cause.txt"},
+                {"record_type": "file", "mode": "add", "log": "BMC reboot, ", "path": "/etc/sonic/.reboot/.history-reboot-cause.txt"}
             ],
             "finish_operation": [
                 {"gettype": "io", "io_addr": 0x919, "value": 0xfa},
@@ -1180,8 +1180,8 @@ REBOOT_CAUSE_PARA = {
             "monitor_point": {"gettype": "io", "io_addr": 0x91c, "okval": 1},
             "record": [
                 {"record_type": "file", "mode": "cover", "log": "BMC powerdown, ",
-                    "path": "/var/cache/sonic/previous-reboot-cause.txt"},
-                {"record_type": "file", "mode": "add", "log": "BMC powerdown, ", "path": "/host/misc/history-reboot-cause.txt"}
+                    "path": "/etc/sonic/.reboot/.previous-reboot-cause.txt"},
+                {"record_type": "file", "mode": "add", "log": "BMC powerdown, ", "path": "/etc/sonic/.reboot/.history-reboot-cause.txt"}
             ],
             "finish_operation": [
                 {"gettype": "io", "io_addr": 0x919, "value": 0xf6},
@@ -1293,10 +1293,6 @@ DRIVERLISTS = [
     {"name": "wb_tps53622", "delay": 0},
     {"name": "wb_ucd9000", "delay": 0},
     {"name": "wb_xdpe132g5c", "delay": 0},
-    {"name": "firmware_driver_cpld", "delay": 0},
-    {"name": "firmware_driver_ispvme", "delay": 0},
-    {"name": "firmware_driver_sysfs", "delay": 0},
-    {"name": "wb_firmware_upgrade_device", "delay": 0},
     {"name": "plat_dfd", "delay": 0},
     {"name": "plat_switch", "delay": 0},
     {"name": "plat_fan", "delay": 0},
@@ -1391,7 +1387,7 @@ INIT_COMMAND = [
     "i2cset -f -y 112 0x4d 0xc9 0x1",
 
     # port led off
-    #MAC CPLD_U14 register: 
+    #MAC CPLD_U14 register:
     #port 50, 49, 54, 53, 58, 57, 62, 61
     "i2cset -f -y 109 0x1d 0xc0 0xff",
     "i2cset -f -y 109 0x1d 0xc1 0xff",
@@ -1412,7 +1408,7 @@ INIT_COMMAND = [
     "i2cset -f -y 110 0x2d 0xc9 0xff",
     "i2cset -f -y 110 0x2d 0xca 0xff",
     "i2cset -f -y 110 0x2d 0xcb 0xff",
-    
+
     #PORT CPLD_U5 register:
     #port:4, 3, 8, 7, 12, 11, 16, 15, 23, 20, 27, 24, 31, 28, 32
     "i2cset -f -y 111 0x3d 0xc0 0xff",
@@ -1423,7 +1419,7 @@ INIT_COMMAND = [
     "i2cset -f -y 111 0x3d 0xc5 0xff",
     "i2cset -f -y 111 0x3d 0xc6 0xff",
     "i2cset -f -y 111 0x3d 0xc7 0xff",
-    
+
     #PORT CPLD_U9 register
     #port: 35, 19, 39, 36, 43, 40, 47, 44, 51, 48, 55, 52, 59, 56, 63, 60, 64
     "i2cset -f -y 112 0x4d 0xc0 0xff",
@@ -1436,14 +1432,14 @@ INIT_COMMAND = [
     "i2cset -f -y 112 0x4d 0xc7 0xff",
     "i2cset -f -y 112 0x4d 0xc8 0xff",
     "sleep 0.5",
-    
-    #MAC CPLD_U14 register: 
+
+    #MAC CPLD_U14 register:
     #port 50, 49, 54, 53, 58, 57, 62, 61
     "i2cset -f -y 109 0x1d 0xc0 0x0",
     "i2cset -f -y 109 0x1d 0xc1 0x0",
     "i2cset -f -y 109 0x1d 0xc2 0x0",
     "i2cset -f -y 109 0x1d 0xc3 0x0",
-    
+
     #MAC CPLD_U14 register:
     #port 2, 1, 6, 5, 10, 9, 14, 13, 18, 17, 22, 21, 26, 25, 30, 29, 34, 33, 37, 38, 42, 41, 46, 45
     "i2cset -f -y 110 0x2d 0xc0 0x0",
@@ -1458,7 +1454,7 @@ INIT_COMMAND = [
     "i2cset -f -y 110 0x2d 0xc9 0x0",
     "i2cset -f -y 110 0x2d 0xca 0x0",
     "i2cset -f -y 110 0x2d 0xcb 0x0",
-    
+
     #PORT CPLD_U5 register
     #port:4, 3, 8, 7, 12, 11, 16, 15, 23, 20, 27, 24, 31, 28, 32
     "i2cset -f -y 111 0x3d 0xc0 0x0",
@@ -1469,7 +1465,7 @@ INIT_COMMAND = [
     "i2cset -f -y 111 0x3d 0xc5 0x0",
     "i2cset -f -y 111 0x3d 0xc6 0x0",
     "i2cset -f -y 111 0x3d 0xc7 0x0",
-    
+
     #PORT CPLD_U9 register
     #port: 35, 19, 39, 36, 43, 40, 47, 44, 51, 48, 55, 52, 59, 56, 63, 60, 64
     "i2cset -f -y 112 0x4d 0xc0 0x0",
@@ -1974,7 +1970,7 @@ UPGRADE_SUMMARY = {
                 ],
             },
         },
-        
+
         "SYSFS": {
             "chain3": {
                 "name": "BCM5387",
@@ -1991,7 +1987,7 @@ UPGRADE_SUMMARY = {
                 ],
             },
         },
-        
+
         "TEST": {
             "fpga": [
                 {"chain": 1, "file": "/etc/.upgrade_test/fpga_test_0_1_header.bin", "display_name": "MAC_FPGA"},

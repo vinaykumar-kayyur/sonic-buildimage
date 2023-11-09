@@ -746,10 +746,6 @@ DRIVERLISTS = [
     {"name": "wb_csu550", "delay": 0},
     {"name": "wb_ina3221", "delay": 0},
     {"name": "wb_tps53622", "delay": 0},
-    {"name": "firmware_driver_cpld", "delay": 0},
-    {"name": "firmware_driver_ispvme", "delay": 0},
-    {"name": "firmware_driver_sysfs", "delay": 0},
-    {"name": "wb_firmware_upgrade_device", "delay": 0},
     {"name": "plat_dfd", "delay": 0},
     {"name": "plat_switch", "delay": 0},
     {"name": "plat_fan", "delay": 0},
@@ -1069,7 +1065,7 @@ PLATFORM_E2_CONF = {
 
 AIR_FLOW_CONF = {
     "psu_fan_airflow": {
-        "intake": ['CSU550AP-3-500', 'DPS-550AB-39 A', 'GW-CRPS550N2C', 'CSU550AP-3-300', 'DPS-550AB-39 B', 'CSU550AP-3'],
+        "intake": ['CSU550AP-3-500', 'DPS-550AB-39 A', 'GW-CRPS550N2C', 'CSU550AP-3-300', 'DPS-550AB-39 B', 'CSU550AP-3', 'U1D-D10800-DRB'],
         "exhaust": ['CSU550AP-3-501', 'DPS-550AB-40 A', 'GW-CRPS550N2RC']
     },
 

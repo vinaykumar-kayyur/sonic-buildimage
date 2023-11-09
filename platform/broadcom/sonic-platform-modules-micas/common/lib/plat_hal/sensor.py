@@ -135,10 +135,23 @@ class sensor(devicebase):
     @property
     def Min(self):
         try:
-            if self.format is None:
-                self.__Min = self.Min_config
+            if isinstance(self.Min_config, dict):
+                if self.call_back is None:
+                    self.__Min = self.Min_config.get("other")
+                else:
+                    ret = self.call_back()
+                    if ret not in self.Min_config:
+                        self.__Min = self.Min_config.get("other")
+                    else:
+                        self.__Min = self.Min_config[ret]
             else:
-                self.__Min = self.get_format_value(self.format % self.Min_config)
+                self.__Min = self.Min_config
+
+            if self.__Min is None:
+                return None
+
+            if self.format is not None:
+                self.__Min = self.get_format_value(self.format % self.__Min)
             self.__Min = round(float(self.__Min), 3)
         except Exception:
             return None
@@ -151,10 +164,23 @@ class sensor(devicebase):
     @property
     def Max(self):
         try:
-            if self.format is None:
-                self.__Max = self.Max_config
+            if isinstance(self.Max_config, dict):
+                if self.call_back is None:
+                    self.__Max = self.Max_config.get("other")
+                else:
+                    ret = self.call_back()
+                    if ret not in self.Max_config:
+                        self.__Max = self.Max_config.get("other")
+                    else:
+                        self.__Max = self.Max_config[ret]
             else:
-                self.__Max = self.get_format_value(self.format % self.Max_config)
+                self.__Max = self.Max_config
+
+            if self.__Max is None:
+                return None
+
+            if self.format is not None:
+                self.__Max = self.get_format_value(self.format % self.__Max)
             self.__Max = round(float(self.__Max), 3)
         except Exception:
             return None
@@ -167,10 +193,24 @@ class sensor(devicebase):
     @property
     def Low(self):
         try:
-            if self.format is None:
-                self.__Low = self.Low_config
+            if isinstance(self.Low_config, dict):
+                if self.call_back is None:
+                    self.__Low = self.Low_config.get("other")
+                else:
+                    ret = self.call_back()
+                    if ret not in self.Low_config:
+                        self.__Low = self.Low_config.get("other")
+                    else:
+                        self.__Low = self.Low_config[ret]
             else:
-                self.__Low = self.get_format_value(self.format % self.Low_config)
+                self.__Low = self.Low_config
+
+            if self.__Low is None:
+                return None
+
+            if self.format is not None:
+                self.__Low = self.get_format_value(self.format % self.__Low)
+            self.__Low = round(float(self.__Low), 3)
         except Exception:
             return None
         return self.__Low
@@ -182,10 +222,24 @@ class sensor(devicebase):
     @property
     def High(self):
         try:
-            if self.format is None:
-                self.__High = self.High_config
+            if isinstance(self.High_config, dict):
+                if self.call_back is None:
+                    self.__High = self.High_config.get("other")
+                else:
+                    ret = self.call_back()
+                    if ret not in self.High_config:
+                        self.__High = self.High_config.get("other")
+                    else:
+                        self.__High = self.High_config[ret]
             else:
-                self.__High = self.get_format_value(self.format % self.High_config)
+                self.__High = self.High_config
+
+            if self.__High is None:
+                return None
+
+            if self.format is not None:
+                self.__High = self.get_format_value(self.format % self.__High)
+            self.__High = round(float(self.__High), 3)
         except Exception:
             return None
         return self.__High
@@ -194,7 +248,7 @@ class sensor(devicebase):
     def High(self, val):
         self.__High = val
 
-    def __init__(self, conf=None):
+    def __init__(self, conf=None, call_back=None):
         self.ValueConfig = conf.get("value", None)
         self.Flag = conf.get("flag", None)
         self.Min_config = conf.get("Min", None)
@@ -204,6 +258,7 @@ class sensor(devicebase):
         self.Unit = conf.get('Unit', None)
         self.format = conf.get('format', None)
         self.read_times = conf.get('read_times', 1)
+        self.call_back = call_back
 
     def __str__(self):
         formatstr =  \

@@ -10,6 +10,7 @@ EXTRA_CFLAGS+= -Wall
 
 obj-m := intel_spi.o
 obj-m += intel_spi_platform.o
+obj-m += intel_spi_pci.o
 
 all:
 	$(MAKE) -C $(KERNEL_SRC)/build M=$(PWD) modules

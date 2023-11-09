@@ -455,6 +455,9 @@ static void dfd_ko_cfg_set_info_ctrl_mem_value(info_ctrl_t *info_ctrl, info_ctrl
     case INFO_CTRL_MEM_INT_EXTRA2:
         dfd_ko_cfg_get_value_from_char(buf_val, &(info_ctrl->int_extra2), line_num);
         break;
+    case INFO_CTRL_MEM_INT_EXTRA3:
+        dfd_ko_cfg_get_value_from_char(buf_val, &(info_ctrl->int_extra3), line_num);
+        break;
     default:
         break;
     }

@@ -188,6 +188,13 @@ def start_tty_console():
         if len(rets) == 0:
             os.system(cmd)
 
+def startDrvUpdate():
+    if STARTMODULE.get('drv_update', 0) == 1:
+        cmd = "nohup drv_update.py >/dev/null 2>&1 &"
+        rets = getPid("drv_update.py")
+        if len(rets) == 0:
+            os.system(cmd)
+
 
 def stopAvscontrol():
     if STARTMODULE.get('avscontrol', 0) == 1:
@@ -358,6 +365,7 @@ def copy_machineconf():
 def load_apps():
     copy_machineconf()
     otherinit_pre()
+    startDrvUpdate()
     startGenerate_air_flow()
     start_tty_console()
     startRebootCause()
