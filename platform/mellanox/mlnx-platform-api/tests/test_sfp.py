@@ -308,7 +308,6 @@ class TestSfp:
         mock_read.return_value = 448
         assert sfp.get_temperature() == 56.0
 
-    @mock.patch('sonic_platform.utils.read_int_from_file')
     def test_get_temperature_threshold(self):
         sfp = SFP(0)
         sfp.is_sw_control = mock.MagicMock(return_value=True)
