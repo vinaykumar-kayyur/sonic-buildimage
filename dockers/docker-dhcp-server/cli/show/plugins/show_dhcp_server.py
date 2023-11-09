@@ -23,17 +23,22 @@ def ipv4():
 @click.argument('dhcp_interface', required=False)
 @clicommon.pass_db
 def lease(db, dhcp_interface):
-    if not dhcp_interface:
-        dhcp_interface = ""
     headers = ["Interface", "MAC Address", "IP", "Lease Start", "Lease End"]
     table = []
     dbconn = db.db
     for key in dbconn.keys("STATE_DB"):
-        if "DHCP_SERVER_IPV4_LEASE|" in key and dhcp_interface in key:
-            entry = dbconn.get_all("STATE_DB", key)
-            interface, mac = key.split("|")[1:]
-            port = dbconn.get("STATE_DB", "FDB_TABLE|" + interface + ":" + mac, "port")
-            table.append([interface + "|" + port, mac, entry["ip"], entry["lease_start"], entry["lease_end"]])
+        items = key.split("|")
+        if len(items) != 3:
+            continue
+        if items[0] != "DHCP_SERVER_IPV4_LEASE":
+            continue
+        if dhcp_interface and items[1] != dhcp_interface:
+            continue
+        entry = dbconn.get_all("STATE_DB", key)
+        interface = items[1]
+        mac = items[2]
+        port = dbconn.get("STATE_DB", "FDB_TABLE|" + interface + ":" + mac, "port")
+        table.append([interface + "|" + port, mac, entry["ip"], entry["lease_start"], entry["lease_end"]])
     print(tabulate(table, headers=headers))
 
 
