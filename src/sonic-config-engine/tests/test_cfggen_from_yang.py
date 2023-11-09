@@ -91,7 +91,7 @@ class TestCfgGen(object):
             {'Ethernet0': {'admin_status': 'up', 'alias': 'eth0', 'description': 'Ethernet0', 'fec': 'rs', 'lanes': '65, 66', 'mtu': '9100', 'pfc_asym': 'on', 'speed': '40000' },
             'Ethernet4': {'admin_status': 'up', 'alias': 'eth4', 'description': 'Ethernet4', 'fec': 'rs', 'lanes': '67, 68', 'mtu': '9100', 'pfc_asym': 'on', 'speed': '40000'},
             'Ethernet8': {'admin_status': 'up', 'alias': 'eth8', 'description': 'Ethernet8', 'fec': 'rs', 'lanes': '69, 70', 'mtu': '9100', 'pfc_asym': 'on', 'speed': '40000'},
-            'Ethernet12': {'admin_status': 'up', 'alias': 'eth12', 'description': 'Ethernet12', 'fec': 'rs', 'lanes': '71, 72', 'mtu': '9100' 'pfc_asym': 'on', 'speed': '40000'},
+            'Ethernet12': {'admin_status': 'up', 'alias': 'eth12', 'description': 'Ethernet12', 'fec': 'rs', 'lanes': '71, 72', 'mtu': '9100' , 'pfc_asym': 'on', 'speed': '40000'},
             'Ethernet16': {'admin_status': 'up', 'alias': 'eth16', 'description': 'Ethernet16', 'fec': 'rs', 'lanes': '73, 74', 'mtu': '9100', 'pfc_asym': 'on', 'speed': '40000'},
             'Ethernet20': {'admin_status': 'up', 'alias': 'eth20', 'description': 'Ethernet20', 'fec': 'rs', 'lanes': '75,76', 'mtu': '9100','pfc_asym': 'on', 'speed': '40000'},
             'Ethernet24': {'admin_status': 'up', 'alias': 'eth24', 'description': 'Ethernet24', 'fec': 'rs', 'lanes': '77,78', 'mtu': '9100','pfc_asym': 'on', 'speed': '40000'},
