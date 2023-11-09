@@ -39,7 +39,7 @@ def lease(db, dhcp_interface):
         mac = items[2]
         port = dbconn.get("STATE_DB", "FDB_TABLE|" + interface + ":" + mac, "port")
         table.append([interface + "|" + port, mac, entry["ip"], entry["lease_start"], entry["lease_end"]])
-    print(tabulate(table, headers=headers))
+    click.echo(tabulate(table, headers=headers))
 
 
 def register(cli):
