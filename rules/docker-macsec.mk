@@ -40,7 +40,6 @@ $(DOCKER_MACSEC)_VERSION = 1.0.0
 $(DOCKER_MACSEC)_PACKAGE_NAME = macsec
 $(DOCKER_MACSEC)_CONTAINER_PRIVILEGED = false
 $(DOCKER_MACSEC)_CONTAINER_VOLUMES += /etc/sonic:/etc/sonic:ro
-$(DOCKER_MACSEC)_CONTAINER_VOLUMES += /etc/timezone:/etc/timezone:ro
 $(DOCKER_MACSEC)_CONTAINER_VOLUMES += /host/warmboot:/var/warmboot
 
 $(DOCKER_MACSEC)_SERVICE_REQUIRES = updategraph
