@@ -138,21 +138,25 @@ def ip_network(value):
         return "Invalid ip address %s" % value
     return r_v.network
 
-def get_gateway_addr(value):
+def get_primary_addr(value):
     if not value:
         return ""
     table = pfx_filter(value)
     returnTable = OrderedDict()
+    intf_with_secondary = set()
     for key, val in table.items():
         name, prefix = key
         if "secondary" in val:
-            continue
-        else:
+            intf_with_secondary.add(name)
+    for key, val in table.items():
+        name, prefix = key
+        if name in intf_with_secondary and "secondary" not in val:
             if PY3x:
                 network_def = ipaddress.ip_network(prefix, strict=False)
             else:
                 network_def = ipaddress.ip_network(unicode(prefix), strict=False)
             returnTable[(name, network_def[1])] = {}
+            intf_with_secondary.remove(name)
     return returnTable
 
 def load_namespace_config(asic_name):
@@ -265,7 +269,7 @@ def _get_jinja2_env(paths):
     env.filters['unique_name'] = unique_name
     env.filters['pfx_filter'] = pfx_filter
     env.filters['ip_network'] = ip_network
-    env.filters['get_gateway_addr'] = get_gateway_addr
+    env.filters['get_primary_addr'] = get_primary_addr
     for attr in ['ip', 'network', 'prefixlen', 'netmask', 'broadcast']:
         env.filters[attr] = partial(prefix_attr, attr)
 

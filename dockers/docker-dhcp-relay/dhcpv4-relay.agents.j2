@@ -14,9 +14,6 @@ command=/usr/sbin/dhcrelay -d -m discard -a %%h:%%p %%P --name-alias-map-file /t
 {% if 'subtype' in DEVICE_METADATA['localhost'] and DEVICE_METADATA['localhost']['subtype'] == 'DualToR' %} -U Loopback0 -dt{% endif -%}
 {#- si option to use intf addr in relay #}
 {% if DEVICE_METADATA['localhost']['deployment_id'] == '8' %} -si{% endif -%}
-{% for (name, gateway) in VLAN_INTERFACE|get_gateway_addr %}
-{% if gateway | ipv4 and name == vlan_name %} -g {{ gateway }}{% endif -%}
-{% endfor %}
 {#- We treat all other interfaces as upstream interfaces (-iu), as we only want to listen for replies #}
 {% for (name, prefix) in VLAN_INTERFACE|pfx_filter %}
 {% if prefix | ipv4 and name != vlan_name %} -iu {{ name }}{% endif -%}
@@ -26,6 +23,9 @@ command=/usr/sbin/dhcrelay -d -m discard -a %%h:%%p %%P --name-alias-map-file /t
 {% endfor %}
 {% for (name, prefix) in PORTCHANNEL_INTERFACE|pfx_filter %}
 {% if prefix | ipv4 %} -iu {{ name }}{% endif -%}
+{% endfor %}
+{% for (name, gateway) in VLAN_INTERFACE|get_primary_addr %}
+{% if gateway | ipv4 %} -pg {{ gateway }}{% endif -%}
 {% endfor %}
 {% for dhcp_server in VLAN[vlan_name]['dhcp_servers'] %}
 {%- if dhcp_server | ipv4 %} {{ dhcp_server }}{% endif -%}
