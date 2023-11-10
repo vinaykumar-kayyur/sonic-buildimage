@@ -1,7 +1,3 @@
-/*
- * Copyright(C) 2020 Ruijie Network. All rights reserved.
- */
-
 #include <linux/err.h>
 #include <linux/i2c.h>
 #include <linux/init.h>
