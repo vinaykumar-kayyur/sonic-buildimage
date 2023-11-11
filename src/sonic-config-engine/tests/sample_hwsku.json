@@ -2,151 +2,151 @@
     "interfaces": {
         "Ethernet0": {
             "default_brkout_mode": "1x100G[40G]",
-            "mode" : "routed"
+            "mode" : "trunk"
         },
         "Ethernet4": {
             "default_brkout_mode": "2x50G",
-            "mode" : "routed"
+            "mode" : "trunk"
         },
         "Ethernet8": {
             "default_brkout_mode": "4x25G[10G]",
-            "mode" : "routed"
+            "mode" : "trunk"
         },
         "Ethernet12": {
             "default_brkout_mode": "2x25G(2)+1x50G(2)",
-            "mode" : "routed"
+            "mode" : "trunk"
         },
         "Ethernet16": {
             "default_brkout_mode": "1x50G(2)+2x25G(2)",
-            "mode" : "routed"
+            "mode" : "trunk"
         },
         "Ethernet20": {
             "default_brkout_mode": "1x100G[40G]",
-            "mode" : "routed"
+            "mode" : "trunk"
         },
         "Ethernet24": {
             "default_brkout_mode": "2x50G",
-            "mode" : "routed"
+            "mode" : "trunk"
         },
         "Ethernet28": {
             "default_brkout_mode": "4x25G[10G]",
-            "mode" : "routed"
+            "mode" : "trunk"
         },
         "Ethernet32": {
             "default_brkout_mode": "2x25G(2)+1x50G(2)",
-            "mode" : "routed"
+            "mode" : "trunk"
         },
         "Ethernet36": {
             "default_brkout_mode": "1x50G(2)+2x25G(2)",
-            "mode" : "routed"
+            "mode" : "trunk"
         },
         "Ethernet40": {
             "default_brkout_mode": "1x100G[50G,40G,25G,10G,1G]",
-            "mode" : "routed"
+            "mode" : "trunk"
         },
         "Ethernet44": {
             "default_brkout_mode": "2x50G[40G,25G,10G,1G]",
-            "mode" : "routed"
+            "mode" : "trunk"
         },
         "Ethernet48": {
             "default_brkout_mode": "4x25G[10G]",
-            "mode" : "routed"
+            "mode" : "trunk"
         },
         "Ethernet52": {
             "default_brkout_mode": "2x25G(2)+1x50G(2)",
-            "mode" : "routed"
+            "mode" : "trunk"
         },
         "Ethernet56": {
             "default_brkout_mode": "1x50G(2)+2x25G(2)",
-            "mode" : "routed"
+            "mode" : "trunk"
         },
         "Ethernet60": {
             "default_brkout_mode": "1x100G[40G]",
-            "mode" : "routed"
+            "mode" : "trunk"
         },
         "Ethernet64": {
             "default_brkout_mode": "2x50G",
-            "mode" : "routed"
+            "mode" : "trunk"
         },
         "Ethernet68": {
             "default_brkout_mode": "4x25G[10G]",
-            "mode" : "routed"
+            "mode" : "trunk"
         },
         "Ethernet72": {
             "default_brkout_mode": "2x25G(2)+1x50G(2)",
-            "mode" : "routed"
+            "mode" : "trunk"
         },
         "Ethernet76": {
             "default_brkout_mode": "1x50G(2)+2x25G(2)",
-            "mode" : "routed"
+            "mode" : "trunk"
         },
         "Ethernet80": {
             "default_brkout_mode": "1x100G[40G]",
-            "mode" : "routed"
+            "mode" : "trunk"
         },
         "Ethernet84": {
             "default_brkout_mode": "2x50G",
-            "mode" : "routed"
+            "mode" : "trunk"
         },
         "Ethernet88": {
             "default_brkout_mode": "4x25G[10G]",
-            "mode" : "routed"
+            "mode" : "trunk"
         },
         "Ethernet92": {
             "default_brkout_mode": "2x25G(2)+1x50G(2)",
-            "mode" : "routed"
+            "mode" : "trunk"
         },
         "Ethernet96": {
             "default_brkout_mode": "1x50G(2)+2x25G(2)",
-            "mode" : "routed"
+            "mode" : "trunk"
         },
         "Ethernet100": {
             "default_brkout_mode": "1x100G[40G]",
-            "mode" : "routed"
+            "mode" : "trunk"
         },
         "Ethernet104": {
             "default_brkout_mode": "2x50G",
-            "mode" : "routed"
+            "mode" : "trunk"
         },
         "Ethernet108": {
             "default_brkout_mode": "4x25G[10G]",
-            "mode" : "routed"
+            "mode" : "trunk"
         },
         "Ethernet112": {
             "default_brkout_mode": "2x25G(2)+1x50G(2)",
-            "mode" : "routed"
+            "mode" : "trunk"
         },
         "Ethernet116": {
             "default_brkout_mode": "1x50G(2)+2x25G(2)",
-            "mode" : "routed"
+            "mode" : "trunk"
         },
         "Ethernet120": {
             "default_brkout_mode": "1x100G[40G]",
-            "mode" : "routed"
+            "mode" : "trunk"
         },
         "Ethernet124": {
             "default_brkout_mode": "2x50G",
-            "mode" : "routed"
+            "mode" : "trunk"
         },
         "Ethernet128": {
             "default_brkout_mode": "1x40G[100G]",
-            "mode" : "routed"
+            "mode" : "trunk"
         },
         "Ethernet132": {
             "default_brkout_mode": "1x25G[100G,50G,40G,10G]",
-            "mode" : "routed"
+            "mode" : "trunk"
         },
         "Ethernet136": {
             "default_brkout_mode": "4x10G[25G]",
-            "mode" : "routed"
+            "mode" : "trunk"
         },
         "Ethernet140": {
             "default_brkout_mode": "2x25G(2)+1x50000(2)",
-            "mode" : "routed"
+            "mode" : "trunk"
         },
         "Ethernet144": {
             "default_brkout_mode": "1x100000[50G,40000,25G,10000]",
-            "mode" : "routed"
+            "mode" : "trunk"
         }
     }
 }
