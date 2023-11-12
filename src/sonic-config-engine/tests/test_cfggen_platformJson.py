@@ -85,7 +85,7 @@ class TestCfgGenPlatformJson(TestCase):
         argument = ['-m', self.platform_sample_graph, '-p', self.platform_json, '-S', self.hwsku_json, '-v', "PORT[\'Ethernet112\']"]
         output = self.run_script(argument)
         self.maxDiff = None
-        expected = "{'index': '29', 'lanes': '112', 'description': 'Eth29/1', 'mtu': '9100', 'alias': 'Eth29/1', 'pfc_asym': 'off', 'speed': '25000', 'mode': 'trunk','tpid': '0x8100'}"
+        expected = "{'index': '29', 'lanes': '112', 'description': 'Eth29/1', 'mtu': '9100', 'alias': 'Eth29/1', 'pfc_asym': 'off', 'speed': '25000', 'mode': 'routed','tpid': '0x8100'}"
         self.assertEqual(utils.to_dict(output.strip()), utils.to_dict(expected))
 
         argument = ['-m', self.platform_sample_graph, '-p', self.platform_json, '-S', self.hwsku_json, '-v', "PORT[\'Ethernet4\']"]
