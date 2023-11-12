@@ -20,7 +20,7 @@
     "FDB_TABLE|Vlan1000:10:70:fd:b6:13:00": {
         "port": "Ethernet10"
     },
-    "FDB_TABLE|Vlan1001:10:70:fd:b6:13:02": {
+    "FDB_TABLE|Vlan1000:10:70:fd:b6:13:01": {
         "port": "Ethernet11"
     }
 }
