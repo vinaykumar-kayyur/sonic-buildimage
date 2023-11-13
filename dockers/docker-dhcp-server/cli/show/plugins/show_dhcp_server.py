@@ -1,7 +1,7 @@
 import click
 from tabulate import tabulate
 from swsscommon.swsscommon import SonicV2Connector
-from utilities_common.cli as clicommon
+import utilities_common.cli as clicommon
 
 
 import ipaddress
