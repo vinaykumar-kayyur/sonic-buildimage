@@ -157,7 +157,7 @@ void run_cap(void *zctx, bool &term, string &read_source,
     void *mock_cap = zmq_socket (zctx, ZMQ_SUB);
     string source;
     internal_event_t ev_int;
-    int block_ms = 200;
+    int block_ms = 400;
     int i=0;
     static int proxy_finished_init = false;
 
@@ -190,7 +190,7 @@ void run_sub(void *zctx, bool &term, string &read_source, internal_events_lst_t 
     void *mock_sub = zmq_socket (zctx, ZMQ_SUB);
     string source;
     internal_event_t ev_int;
-    int block_ms = 200;
+    int block_ms = 400;
 
     EXPECT_TRUE(NULL != mock_sub);
     EXPECT_EQ(0, zmq_setsockopt(mock_sub, ZMQ_RCVTIMEO, &block_ms, sizeof (block_ms)));
