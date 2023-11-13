@@ -1,5 +1,4 @@
 import pytest
-import mock_tables # lgtm [py/unused-import]
 from unittest import mock
 
 
@@ -11,7 +10,7 @@ sys.path.insert(0, test_path)
 sys.path.insert(0, mock_table_path)
 
 
-TEST_DATA_PATH = ""
+TEST_DATA_PATH = os.path.dirname(os.path.abspath(__file__))
 
 
 @pytest.fixture()
