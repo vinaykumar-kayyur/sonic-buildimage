@@ -1,6 +1,9 @@
 import pytest
 from unittest import mock
 
+import os
+import json
+
 
 modules_path = os.path.join(os.path.dirname(__file__), "../../../src/sonic-utilities")
 test_path = os.path.join(modules_path, "tests")
