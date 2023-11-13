@@ -3,16 +3,15 @@ import mock_tables # lgtm [py/unused-import]
 from unittest import mock
 
 
-TEST_DATA_PATH = ""
+modules_path = os.path.join(os.path.dirname(__file__), "../../../src/sonic-utilities")
+test_path = os.path.join(modules_path, "tests")
+mock_table_path = os.path.join(test_path, "mock_tables")
+sys.path.insert(0, modules_path)
+sys.path.insert(0, test_path)
+sys.path.insert(0, mock_table_path)
 
-"""
-    modules_path = os.path.join(os.path.dirname(__file__), "../../../src/sonic-utilities")
-    test_path = os.path.join(modules_path, "tests")
-    mock_table_path = os.path.join(test_path, "mock_tables")
-    sys.path.insert(0, modules_path)
-    sys.path.insert(0, test_path)
-    sys.path.insert(0, mock_table_path)
-"""
+
+TEST_DATA_PATH = ""
 
 
 @pytest.fixture()

@@ -6,10 +6,6 @@ from click.testing import CliRunner
 sys.path.append('../cli/show/plugins/')
 import show_dhcp_server
 
-
-
-
-
 class TestShowDHCPServer(object):
     def test_plugin_registration(self):
         cli = mock.MagicMock()
