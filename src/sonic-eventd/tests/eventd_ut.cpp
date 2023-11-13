@@ -162,9 +162,9 @@ void run_cap(void *zctx, bool &term, string &read_source,
     static int proxy_finished_init = false;
 
     EXPECT_TRUE(NULL != mock_cap);
+    EXPECT_EQ(0, zmq_setsockopt(mock_cap, ZMQ_RCVTIMEO, &block_ms, sizeof (block_ms)));
     EXPECT_EQ(0, zmq_connect(mock_cap, get_config(CAPTURE_END_KEY).c_str()));
     EXPECT_EQ(0, zmq_setsockopt(mock_cap, ZMQ_SUBSCRIBE, "", 0));
-    EXPECT_EQ(0, zmq_setsockopt(mock_cap, ZMQ_RCVTIMEO, &block_ms, sizeof (block_ms)));
 
     if(!proxy_finished_init) {
         zmq_msg_t msg;
@@ -193,9 +193,9 @@ void run_sub(void *zctx, bool &term, string &read_source, internal_events_lst_t 
     int block_ms = 200;
 
     EXPECT_TRUE(NULL != mock_sub);
+    EXPECT_EQ(0, zmq_setsockopt(mock_sub, ZMQ_RCVTIMEO, &block_ms, sizeof (block_ms)));
     EXPECT_EQ(0, zmq_connect(mock_sub, get_config(XPUB_END_KEY).c_str()));
     EXPECT_EQ(0, zmq_setsockopt(mock_sub, ZMQ_SUBSCRIBE, "", 0));
-    EXPECT_EQ(0, zmq_setsockopt(mock_sub, ZMQ_RCVTIMEO, &block_ms, sizeof (block_ms)));
 
     while(!term) {
         if (0 == zmq_message_read(mock_sub, 0, source, ev_int)) {
