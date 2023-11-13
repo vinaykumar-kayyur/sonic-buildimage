@@ -3,6 +3,7 @@ from unittest import mock
 
 import os
 import json
+import sys
 
 
 modules_path = os.path.join(os.path.dirname(__file__), "../../../src/sonic-utilities")
