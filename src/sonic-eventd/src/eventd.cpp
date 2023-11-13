@@ -382,14 +382,14 @@ capture_service::do_capture()
     cap_sub_sock = zmq_socket(m_ctx, ZMQ_SUB);
     RET_ON_ERR(cap_sub_sock != NULL, "failing to get ZMQ_SUB socket");
 
+    rc = zmq_setsockopt(cap_sub_sock, ZMQ_RCVTIMEO, &block_ms, sizeof (block_ms));
+    RET_ON_ERR(rc == 0, "Failed to ZMQ_RCVTIMEO to %d", block_ms);
+
     rc = zmq_connect(cap_sub_sock, get_config(string(CAPTURE_END_KEY)).c_str());
     RET_ON_ERR(rc == 0, "Failing to bind capture SUB to %s", get_config(string(CAPTURE_END_KEY)).c_str());
 
     rc = zmq_setsockopt(cap_sub_sock, ZMQ_SUBSCRIBE, "", 0);
     RET_ON_ERR(rc == 0, "Failing to ZMQ_SUBSCRIBE");
-
-    rc = zmq_setsockopt(cap_sub_sock, ZMQ_RCVTIMEO, &block_ms, sizeof (block_ms));
-    RET_ON_ERR(rc == 0, "Failed to ZMQ_RCVTIMEO to %d", block_ms);
 
     m_cap_run = true;
 
