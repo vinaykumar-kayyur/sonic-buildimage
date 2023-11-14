@@ -6,9 +6,6 @@ import json
 import sys
 
 
-import utilities_common.cli as clicommon
-
-
 modules_path = os.path.join(os.path.dirname(__file__), "../../../src/sonic-utilities")
 test_path = os.path.join(modules_path, "tests")
 mock_table_path = os.path.join(test_path, "mock_tables")

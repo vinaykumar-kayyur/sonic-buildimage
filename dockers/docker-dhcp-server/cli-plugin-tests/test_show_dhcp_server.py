@@ -3,6 +3,8 @@ from unittest import mock
 
 from click.testing import CliRunner
 
+import utilities_common.cli as clicommon
+
 sys.path.append('../cli/show/plugins/')
 import show_dhcp_server
 
