@@ -75,6 +75,39 @@ def generate_t1_sample_config(data):
         port_count += 1
     return data
 
+def generate_t1_smartswitch_sample_config(data):
+    data = generate_t1_sample_config(data)
+    data['DEVICE_METADATA']['localhost']['subtype'] = 'SmartSwitch'
+
+    bridge_name = 'bridge_midplane'
+    data['MID_PLANE_BRIDGE'] = {
+        'GLOBAL': {
+            'bridge': bridge_name,
+            'address': '169.254.200.254/24'
+        }
+    }
+
+    dhcp_server_ports = {}
+
+    for dpu_name in natsorted(data['DPUS']):
+        midplane_interface = data['DPUS'][dpu_name]['midplane_interface']
+        dpu_id = int(midplane_interface.replace('dpu', ''))
+        dhcp_server_ports[f'{bridge_name}|{midplane_interface}'] = {"ips": [f"169.254.200.{dpu_id + 1}"]}
+
+    if dhcp_server_ports:
+        data['DHCP_SERVER_IPV4'] = {
+            bridge_name: {
+                'gateway': "169.254.200.254",
+                'lease_time': '3600',
+                'mode': 'PORT',
+                'netmask': '255.255.255.0',
+                "state": "enabled"
+            }
+        }
+        data['DHCP_SERVER_IPV4_PORT'] = dhcp_server_ports
+
+    return data
+
 def generate_empty_config(data):
     new_data = {'DEVICE_METADATA': data['DEVICE_METADATA']}
     if 'hostname' not in new_data['DEVICE_METADATA']['localhost']:
@@ -161,6 +194,7 @@ def generate_l2_config(data):
 _sample_generators = {
         't1': generate_t1_sample_config,
         'l2': generate_l2_config,
+        't1-smartswitch': generate_t1_smartswitch_sample_config,
         'empty': generate_empty_config,
         'l1': generate_l1_config,
         'l3': generate_l3_config
