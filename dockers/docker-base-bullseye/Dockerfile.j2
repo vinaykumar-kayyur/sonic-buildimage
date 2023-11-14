@@ -32,6 +32,10 @@ COPY ["no_install_recommend_suggest", "/etc/apt/apt.conf.d"]
 COPY ["no-check-valid-until", "/etc/apt/apt.conf.d"]
 COPY ["apt-multiple-retries", "/etc/apt/apt.conf.d"]
 
+{%- if CONFIGURED_ARCH == "arm64" and MULTIARCH_QEMU_ENVIRON == "y" %}
+RUN SKIP_BUILD_HOOK="y" wget -O debian-archive-keyring.deb 'http://ftp.de.debian.org/debian/pool/main/d/debian-archive-keyring/debian-archive-keyring_2021.1.1+deb11u1_all.deb' && dpkg -i debian-archive-keyring.deb && rm debian-archive-keyring.deb && SKIP_BUILD_HOOK="n"
+{%- endif %}
+
 # Update apt cache and
 # pre-install fundamental packages
 RUN apt-get update &&        \
