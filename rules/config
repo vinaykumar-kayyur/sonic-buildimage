@@ -121,6 +121,9 @@ FRR_USER_GID = 300
 SONIC_DPKG_CACHE_METHOD ?= none
 SONIC_DPKG_CACHE_SOURCE ?= /var/cache/sonic/artifacts
 
+# Enable DPKG cache for root fs (build_rfs.sh)
+SONIC_ENABLE_RFS_DPKG_CACHE ?= y
+
 # Default VS build memory preparation
 DEFAULT_VS_PREPARE_MEM = yes
 

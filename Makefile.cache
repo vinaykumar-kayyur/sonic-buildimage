@@ -357,6 +357,11 @@ define SAVE_CACHE
 	$(if $(call CHECK_WCACHE_ENABLED,$(1)), $(call SAVE_INTO_CACHE,$(1),$(2)))
 endef
 
+ifeq ($(SONIC_ENABLE_RFS_DPKG_CACHE),y)
+RFS_CACHE_MODE := GIT_CONTENT_SHA
+else
+RFS_CACHE_MODE := none
+endif
 RFS_DEP_FLAGS := $(SONIC_COMMON_FLAGS_LIST) $(SONIC_VERSION_CONTROL_COMPONENTS) $(MIRROR_SNAPSHOT)
 RFS_DEP_FILES := $(SONIC_COMMON_FILES_LIST) $(SONIC_COMMON_BASE_FILES_LIST) \
 	build_rfs.sh functions.sh \
@@ -392,7 +397,7 @@ $(foreach pkg, $(SONIC_INSTALL_PKGS), \
 
 $(foreach pkg, $(SONIC_RFS_TARGETS), \
         $(eval $(pkg)_DST_PATH := $(if $($(pkg)_DST_PATH), $($(pkg)_DST_PATH), $(TARGET_PATH))) \
-        $(eval $(pkg)_CACHE_MODE := GIT_CONTENT_SHA) \
+        $(eval $(pkg)_CACHE_MODE := $(RFS_CACHE_MODE)) \
         $(eval $(pkg)_DEP_FLAGS := $(RFS_DEP_FLAGS)) \
         $(eval $(pkg)_DEP_FILES := $(RFS_DEP_FILES)) \
         $(eval $(TARGET_PATH)/$(pkg)_TARGET := $(pkg)) )

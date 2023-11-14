@@ -527,6 +527,7 @@ SONIC_BUILD_INSTRUCTION :=  $(MAKE) \
                            KERNEL_PROCURE_METHOD=$(KERNEL_PROCURE_METHOD) \
                            SONIC_DPKG_CACHE_METHOD=$(SONIC_DPKG_CACHE_METHOD) \
                            SONIC_DPKG_CACHE_SOURCE=$(SONIC_DPKG_CACHE_SOURCE) \
+                           SONIC_ENABLE_RFS_DPKG_CACHE=$(SONIC_ENABLE_RFS_DPKG_CACHE) \
                            HTTP_PROXY=$(http_proxy) \
                            HTTPS_PROXY=$(https_proxy) \
                            NO_PROXY=$(no_proxy) \
