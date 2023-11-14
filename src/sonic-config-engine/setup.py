@@ -50,6 +50,7 @@ py_modules = [
     'minigraph',
     'openconfig_acl',
     'portconfig',
+    'smartswitch_config'
 ]
 if sys.version_info.major == 3:
     # Python 3-only modules
