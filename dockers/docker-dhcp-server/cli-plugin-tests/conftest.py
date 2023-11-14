@@ -21,10 +21,10 @@ TEST_DATA_PATH = os.path.dirname(os.path.abspath(__file__))
 def mock_db():
     db = mock.Mock()
 
-    with open(TEST_DATA_PATH + "mock_config_db.json") as f:
+    with open(os.path.join(TEST_DATA_PATH, "mock_config_db.json")) as f:
         s = f.read()
         mock_config_db = json.loads(s)
-    with open(TEST_DATA_PATH + "mock_state_db.json") as f:
+    with open(os.path.join(TEST_DATA_PATH, "mock_state_db.json")) as f:
         s = f.read()
         mock_state_db = json.loads(s)
 
