@@ -39,7 +39,6 @@ ARG PYTHON_CROSS_PLATFORM=linux_aarch64
 {%- endif %}
 
 RUN dpkg --add-architecture $arch
-
 RUN apt-get update && apt-get install -y eatmydata
 RUN eatmydata apt-get install -y crossbuild-essential-$arch
 RUN eatmydata apt-get install -y gcc-$gcc_arch
