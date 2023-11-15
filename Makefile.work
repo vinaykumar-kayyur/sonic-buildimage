@@ -147,6 +147,10 @@ ifeq ($(ENABLE_DOCKER_BASE_PULL),)
 	override ENABLE_DOCKER_BASE_PULL = n
 endif
 
+ifeq ($(LEGACY_SONIC_MGMT_DOCKER),)
+	override LEGACY_SONIC_MGMT_DOCKER = y
+endif
+
 ifneq ($(GZ_COMPRESS_PROGRAM), pigz)
 override GZ_COMPRESS_PROGRAM = gzip
 endif
@@ -222,9 +226,11 @@ $(shell CONFIGURED_ARCH=$(CONFIGURED_ARCH) \
 	j2 $(SLAVE_DIR)/Dockerfile.user.j2 > $(SLAVE_DIR)/Dockerfile.user)
 
 ifeq ($(CROSS_BUILD_ENVIRON), y)
-$(shell MIRROR_SNAPSHOT=$(MIRROR_SNAPSHOT) scripts/build_mirror_config.sh $(SLAVE_DIR) amd64 $(BLDENV))
+$(shell SONIC_VERSION_CONTROL_COMPONENTS=$(SONIC_VERSION_CONTROL_COMPONENTS) \
+	MIRROR_SNAPSHOT=$(MIRROR_SNAPSHOT) scripts/build_mirror_config.sh $(SLAVE_DIR) amd64 $(BLDENV))
 endif
-$(shell MIRROR_SNAPSHOT=$(MIRROR_SNAPSHOT) scripts/build_mirror_config.sh $(SLAVE_DIR) $(CONFIGURED_ARCH) $(BLDENV))
+$(shell SONIC_VERSION_CONTROL_COMPONENTS=$(SONIC_VERSION_CONTROL_COMPONENTS) \
+	MIRROR_SNAPSHOT=$(MIRROR_SNAPSHOT) scripts/build_mirror_config.sh $(SLAVE_DIR) $(CONFIGURED_ARCH) $(BLDENV))
 
 PREPARE_DOCKER=BUILD_SLAVE=y \
 	DEFAULT_CONTAINER_REGISTRY=$(DEFAULT_CONTAINER_REGISTRY) \
@@ -537,6 +543,7 @@ SONIC_BUILD_INSTRUCTION :=  $(MAKE) \
                            DOCKER_LOCKFILE_SAVE=$(DOCKER_LOCKFILE_SAVE) \
                            SONIC_CONFIG_USE_NATIVE_DOCKERD_FOR_BUILD=$(SONIC_CONFIG_USE_NATIVE_DOCKERD_FOR_BUILD) \
                            SONIC_INCLUDE_SYSTEM_TELEMETRY=$(INCLUDE_SYSTEM_TELEMETRY) \
+                           SONIC_INCLUDE_SYSTEM_GNMI=$(INCLUDE_SYSTEM_GNMI) \
                            INCLUDE_DHCP_RELAY=$(INCLUDE_DHCP_RELAY) \
                            INCLUDE_DHCP_SERVER=$(INCLUDE_DHCP_SERVER) \
                            INCLUDE_MACSEC=$(INCLUDE_MACSEC) \
@@ -572,6 +579,7 @@ SONIC_BUILD_INSTRUCTION :=  $(MAKE) \
                            ONIE_IMAGE_PART_SIZE=$(ONIE_IMAGE_PART_SIZE) \
                            SONIC_OS_VERSION=$(SONIC_OS_VERSION) \
                            PIP_HTTP_TIMEOUT=$(PIP_HTTP_TIMEOUT) \
+                           LEGACY_SONIC_MGMT_DOCKER=$(LEGACY_SONIC_MGMT_DOCKER) \
                            $(SONIC_OVERRIDE_BUILD_VARS)
 
 .PHONY: sonic-slave-build sonic-slave-bash init reset
