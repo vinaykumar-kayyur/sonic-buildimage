@@ -24,7 +24,7 @@ while /bin/true; do
       STATIC_ROUTE_IFNAMES=($(echo $ARP_UPDATE_VARS | jq -r '.static_route_ifnames'))
       # on supervisor/rp exit the script gracefully
       if [[ -z "$STATIC_ROUTE_NEXTHOPS" ]] || [[ -z "$STATIC_ROUTE_IFNAMES" ]]; then
-          logger "arp_update: exiting as no static route in packet based chassis"
+          logger "exiting as no static route in packet based chassis"
           exit 0
       fi
       for i in ${!STATIC_ROUTE_NEXTHOPS[@]}; do
@@ -43,7 +43,7 @@ while /bin/true; do
               interface="${STATIC_ROUTE_IFNAMES[i]}"
               if [[ -z "$interface" ]]; then
                   # should never be here, handling just in case
-                  logger "ERR: arp_update: missing interface entry for static route $nexthop"
+                  logger -p error "missing interface entry for static route $nexthop"
                   continue
               fi
               intf_up=$(ip link show $interface | grep "state UP")
@@ -52,7 +52,7 @@ while /bin/true; do
                   eval $pingcmd
                   # STALE entries may appear more often, not logging to prevent periodic syslogs
                   if [[ -z $(echo ${neigh_state} | grep 'STALE') ]]; then
-                      logger "arp_update: static route nexthop not resolved ($neigh_state), pinging $nexthop on $interface"
+                      logger "static route nexthop not resolved ($neigh_state), pinging $nexthop on $interface"
                   fi
               fi
           fi
@@ -176,11 +176,11 @@ while /bin/true; do
           if [[ $ip == *"."* ]] && [[ ! $KERNEIGH4 =~ "${ip},${intf}" ]]; then
               pingcmd="timeout 0.2 ping -I $intf -n -q -i 0 -c 1 -W 1 $ip >/dev/null"
               eval $pingcmd
-              logger "arp_update: mismatch arp entry, pinging ${ip} on ${intf}"
+              logger "mismatch arp entry, pinging ${ip} on ${intf}"
           elif [[ $ip == *":"* ]] && [[ ! $KERNEIGH6 =~ "${ip},${intf}" ]]; then
               ping6cmd="timeout 0.2 ping6 -I $intf -n -q -i 0 -c 1 -W 1 $ip >/dev/null"
               eval $ping6cmd
-              logger "arp_update: mismatch v6 nbr entry, pinging ${ip} on ${intf}"
+              logger "mismatch v6 nbr entry, pinging ${ip} on ${intf}"
           fi
       fi
   done
