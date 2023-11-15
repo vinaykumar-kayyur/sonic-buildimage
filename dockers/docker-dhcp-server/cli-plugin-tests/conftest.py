@@ -5,6 +5,8 @@ import os
 import json
 import sys
 
+import mock_tables
+
 
 modules_path = os.path.join(os.path.dirname(__file__), "../../../src/sonic-utilities")
 test_path = os.path.join(modules_path, "tests")
@@ -28,12 +30,19 @@ def mock_db():
         s = f.read()
         mock_state_db = json.loads(s)
 
-    def keys(table):
+    def keys(table, pattern="*"):
         assert table == "CONFIG_DB" or table == "STATE_DB"
+
+        import fnmatch
+        import re
+
+        regex = fnmatch.translate(pattern)
+        regex = re.compile(regex)
+
         if table == "CONFIG_DB":
-            return mock_config_db.keys()
+            return [key for key in mock_config_db if regex.match(key)]
         if table == "STATE_DB":
-            return mock_state_db.keys()
+            return [key for key in mock_state_db if regex.match(key)]
 
     def get_all(table, key):
         assert table == "CONFIG_DB" or table == "STATE_DB"
