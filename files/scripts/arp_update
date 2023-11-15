@@ -75,6 +75,16 @@ while /bin/true; do
       fi
   done
 
+  # find neighbor entries with aged MAC and flush/relearn them
+  STALE_NEIGHS=$(ip neigh show | grep -v "fe80" | grep "STALE" | awk '{print $1 "," $5}' | tr [:lower:] [:upper:])
+  for neigh in $STALE_NEIGHS; do
+        ip="$( cut -d ',' -f 1 <<< "$neigh" )"
+        mac="$( cut -d ',' -f 2 <<< "$neigh" )"
+        if [[ -z $(sonic-db-cli ASIC_DB keys "ASIC_STATE:SAI_OBJECT_TYPE_FDB_ENTRY*${mac}*") ]]; then
+            timeout 1 ping -c1 -w1 $ip > /dev/null
+        fi
+  done
+
   # Flush neighbor entries with MAC mismatch between kernel and APPL_DB
   KERNEL_NEIGH=$(ip neigh show | grep -v "FAILED\|INCOMPLETE" | cut -d ' ' -f 1,3,5 --output-delimiter=',' | tr -d ' ')
   for neigh in $KERNEL_NEIGH; do
