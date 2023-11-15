@@ -335,7 +335,7 @@ class TestCfgGen(TestCase):
         output = self.run_script(argument)
         self.assertEqual(
             utils.to_dict(output.strip()),
-            utils.to_dict("{'PortChannel1': {'admin_status': 'up', 'min_links': '1', 'mtu': '9100', 'tpid': '0x8100','mode': 'trunk',  'lacp_key': 'auto'}}")
+            utils.to_dict("{'PortChannel1': {'admin_status': 'up', 'min_links': '1', 'mtu': '9100', 'tpid': '0x8100','mode': 'routed',  'lacp_key': 'auto'}}")
         )
 
     def test_minigraph_portchannel_with_more_member(self):

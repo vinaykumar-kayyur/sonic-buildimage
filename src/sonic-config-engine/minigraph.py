@@ -1931,7 +1931,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
             if pc_name in vlan_members:
                  pc['mode'] = 'trunk'
             else:
-                 pc['mode'] = 'trunk'
+                 pc['mode'] = 'routed'
 
     results['PORTCHANNEL'] = pcs
     results['PORTCHANNEL_MEMBER'] = pc_members
