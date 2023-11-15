@@ -6,6 +6,7 @@ COPY --from=qemu /usr/bin/qemu-arm-static /usr/bin
 {%- elif CONFIGURED_ARCH == "arm64" and MULTIARCH_QEMU_ENVIRON == "y" %}
 FROM {{ prefix }}multiarch/qemu-user-static:x86_64-aarch64-6.1.0-8 as qemu
 FROM {{ prefix }}multiarch/debian-debootstrap:arm64-bullseye
+RUN apt-get update || apt-get install -y gnupg
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 0E98404D386FA1D9
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 6ED0E7B82643E131
 COPY --from=qemu /usr/bin/qemu-aarch64-static /usr/bin
