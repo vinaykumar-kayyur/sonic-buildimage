@@ -40,13 +40,6 @@ ARG PYTHON_CROSS_PLATFORM=linux_aarch64
 
 RUN dpkg --add-architecture $arch
 
-{%- if CONFIGURED_ARCH == "arm64" and MULTIARCH_QEMU_ENVIRON == "y" %}
-# multiarch/debian-debootstrap:arm64-bullseye is too old. It needs to install keys
-RUN apt-get update || apt-get install -y gnupg
-RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 0E98404D386FA1D9
-RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 6ED0E7B82643E131
-{%- endif %}
-
 RUN apt-get update && apt-get install -y eatmydata
 RUN eatmydata apt-get install -y crossbuild-essential-$arch
 RUN eatmydata apt-get install -y gcc-$gcc_arch
@@ -86,6 +79,13 @@ RUN PATH=/python_virtualenv/env3/bin/:$PATH python3 -m pip install pyang==2.4.0
 RUN PATH=/python_virtualenv/env3/bin/:$PATH python3 -m pip install pyangbind==0.8.1
 RUN PATH=/python_virtualenv/env3/bin/:$PATH python3 -m pip uninstall -y enum34
 RUN PATH=/python_virtualenv/env3/bin/:$PATH pip3 install --force-reinstall --no-cache-dir coverage
+{%- endif %}
+
+{%- if CONFIGURED_ARCH == "arm64" and MULTIARCH_QEMU_ENVIRON == "y" %}
+# multiarch/debian-debootstrap:arm64-bullseye is too old. It needs to install keys
+RUN apt-get update || apt-get install -y gnupg
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 0E98404D386FA1D9
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 6ED0E7B82643E131
 {%- endif %}
 
 RUN apt-get update && apt-get install -y eatmydata && eatmydata apt-get install -y \
