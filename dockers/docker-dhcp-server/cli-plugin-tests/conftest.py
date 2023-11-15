@@ -47,16 +47,16 @@ def mock_db():
     def get_all(table, key):
         assert table == "CONFIG_DB" or table == "STATE_DB"
         if table == "CONFIG_DB":
-            return mock_config_db[table][key]
+            return mock_config_db[key]
         if table == "STATE_DB":
-            return mock_state_db[table][key]
+            return mock_state_db[key]
 
     def get(table, key, entry):
         assert table == "CONFIG_DB" or table == "STATE_DB"
         if table == "CONFIG_DB":
-            return mock_config_db[table][key][entry]
+            return mock_config_db[key][entry]
         if table == "STATE_DB":
-            return mock_state_db[table][key][entry]
+            return mock_state_db[key][entry]
 
 
     db.keys = mock.Mock(side_effect=keys)
