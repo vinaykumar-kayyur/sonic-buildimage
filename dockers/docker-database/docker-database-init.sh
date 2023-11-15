@@ -71,7 +71,7 @@ if [[ $DATABASE_TYPE == "chassisdb" ]]; then
 fi
 
 # copy/generate the database_global.json file if this is global database service in multi asic platform.
-if [[ $NAMESPACE_ID == "" ]] && [[ $NAMESPACE_COUNT -gt 1 || $NUM_DPU -gt 1 ]]
+if [[ $DATABASE_TYPE == "" ]] && [[ $NAMESPACE_COUNT -gt 1 || $NUM_DPU -gt 1 ]]
 then
     if [ -f /etc/sonic/database_global.json ]; then
         cp /etc/sonic/database_global.json $REDIS_DIR/sonic-db/database_global.json
