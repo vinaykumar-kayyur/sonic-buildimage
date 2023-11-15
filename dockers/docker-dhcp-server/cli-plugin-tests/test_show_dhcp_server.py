@@ -15,13 +15,13 @@ class TestShowDHCPServer(object):
         show_dhcp_server.register(cli)
 
     def test_show_dhcp_server_ipv4_lease_without_dhcpintf(self, mock_db):
-        expected_stdout = """
+        expected_stdout = """\
 Interface            MAC Address        IP             Lease Start    Lease End
 -------------------  -----------------  -----------  -------------  -----------
 Vlan1000|Ethernet10  10:70:fd:b6:13:00  192.168.0.1     1677640581   1677641481
 Vlan1000|Ethernet11  10:70:fd:b6:13:01  192.168.0.2     1677640581   1677641481
 Vlan1001|<Unknown>   10:70:fd:b6:13:02  192.168.0.3     1677640581   1677641481
-        """
+"""
         runner = CliRunner()
         db = clicommon.Db()
         db.db = mock_db
@@ -30,12 +30,12 @@ Vlan1001|<Unknown>   10:70:fd:b6:13:02  192.168.0.3     1677640581   1677641481
         assert result.stdout == expected_stdout
 
     def test_show_dhcp_server_ipv4_lease_with_dhcpintf(self, mock_db):
-        expected_stdout = """
+        expected_stdout = """\
 Interface            MAC Address        IP             Lease Start    Lease End
 -------------------  -----------------  -----------  -------------  -----------
 Vlan1000|Ethernet10  10:70:fd:b6:13:00  192.168.0.1     1677640581   1677641481
 Vlan1000|Ethernet11  10:70:fd:b6:13:01  192.168.0.2     1677640581   1677641481
-        """
+"""
         runner = CliRunner()
         db = clicommon.Db()
         db.db = mock_db
@@ -44,11 +44,11 @@ Vlan1000|Ethernet11  10:70:fd:b6:13:01  192.168.0.2     1677640581   1677641481
         assert result.stdout == expected_stdout
 
     def test_show_dhcp_server_ipv4_lease_client_not_in_fdb(self, mock_db):
-        expected_stdout = """
+        expected_stdout = """\
 Interface           MAC Address        IP             Lease Start    Lease End
 ------------------  -----------------  -----------  -------------  -----------
 Vlan1001|<Unknown>  10:70:fd:b6:13:02  192.168.0.3     1677640581   1677641481
-        """
+"""
         runner = CliRunner()
         db = clicommon.Db()
         db.db = mock_db
