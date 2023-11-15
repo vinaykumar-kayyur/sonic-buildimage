@@ -19,7 +19,7 @@ fi
 
 redis_port=6379
 
-if [[ $DATABASE_TYPE == "dpu" ]]; then
+if [[ $DATABASE_TYPE == "dpudb" ]]; then
     host_ip="169.254.200.254"
     if ! ip -4 -o addr | awk '{print $4}' | grep $host_ip; then
         host_ip=127.0.0.1
@@ -36,7 +36,7 @@ mkdir -p /etc/supervisor/conf.d/
 if [ -f /etc/sonic/database_config$NAMESPACE_ID.json ]; then
     cp /etc/sonic/database_config$NAMESPACE_ID.json $REDIS_DIR/sonic-db/database_config.json
 else
-    HOST_IP=$host_ip REDIS_PORT=$redis_port j2 /usr/share/sonic/templates/database_config.json.j2 > $REDIS_DIR/sonic-db/database_config.json
+    HOST_IP=$host_ip REDIS_PORT=$redis_port DATABASE_TYPE=$DATABASE_TYPE j2 /usr/share/sonic/templates/database_config.json.j2 > $REDIS_DIR/sonic-db/database_config.json
 fi
 
 # on VoQ system, we only publish redis_chassis instance and CHASSIS_APP_DB when
