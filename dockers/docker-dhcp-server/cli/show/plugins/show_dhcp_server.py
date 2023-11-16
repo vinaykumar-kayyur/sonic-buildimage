@@ -1,10 +1,14 @@
 import click
 from tabulate import tabulate
-from swsscommon.swsscommon import SonicV2Connector
 import utilities_common.cli as clicommon
 
 
 import ipaddress
+from datetime import datetime
+
+
+def ts_to_str(ts):
+    return datetime.fromtimestamp(int(ts)).strftime("%Y-%m-%d %H:%M:%S")
 
 
 @click.group(cls=clicommon.AliasedGroup)
@@ -34,7 +38,7 @@ def lease(db, dhcp_interface):
         port = dbconn.get("STATE_DB", "FDB_TABLE|" + interface + ":" + mac, "port")
         if not port:
             port = "<Unknown>"
-        table.append([interface + "|" + port, mac, entry["ip"], entry["lease_start"], entry["lease_end"]])
+        table.append([interface + "|" + port, mac, entry["ip"], ts_to_str(entry["lease_start"]), ts_to_str(entry["lease_end"]]))
     click.echo(tabulate(table, headers=headers))
 
 
