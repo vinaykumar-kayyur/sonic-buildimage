@@ -42,5 +42,31 @@ def lease(db, dhcp_interface):
     click.echo(tabulate(table, headers=headers))
 
 
+def count_ipv4(start, end):
+    ip1 = int(ipaddress.IPv4Address(start))
+    ip2 = int(ipaddress.IPv4Address(end))
+    return ip2 - ip1 + 1
+
+
+@ipv4.command()
+@click.argument('range_name', required=False)
+@clicommon.pass_db
+def range(db, range_name):
+    if not range_name:
+        range_name = "*"
+    headers = ["Range", "IP Start", "IP End", "IP Count"]
+    table = []
+    dbconn = db.db
+    for key in dbconn.keys("CONFIG_DB", "DHCP_SERVER_IPV4_RANGE|" + range_name):
+        entry = dbconn.get_all("CONFIG_DB", key)
+        start, end = entry["range"].split(",")
+        name = key.split("|")[1]
+        count = count_ipv4(start, end)
+        if count < 1:
+            count = "range value is illegal"
+        table.append([name, start, end, count])
+    click.echo(tabulate(table, headers=headers))
+
+
 def register(cli):
     cli.add_command(dhcp_server)
