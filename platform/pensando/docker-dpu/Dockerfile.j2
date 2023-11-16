@@ -1,7 +1,15 @@
-# DOWNLOADED_DOCKER_IMAGES
 FROM docker-dpu-base
+# Auto-Generated for buildinfo
+ARG SONIC_VERSION_CACHE
+ARG SONIC_VERSION_CONTROL_COMPONENTS
+COPY ["buildinfo", "/usr/local/share/buildinfo"]
+COPY vcache/ /sonic/target/vcache/docker-dpu
+ENV IMAGENAME=docker-dpu
+ENV DISTRO=jessie
+RUN pre_run_buildinfo docker-dpu
 
 RUN echo "docker-dpu-base"
 
-ENTRYPOINT ["/nic/tools/sysinit.sh", "classic", "hw", "30"]
+RUN post_run_buildinfo docker-dpu 
 
+RUN post_run_cleanup docker-dpu 
