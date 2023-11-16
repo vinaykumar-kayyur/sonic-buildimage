@@ -58,7 +58,7 @@ class ServiceChecker(HealthChecker):
         self.load_critical_process_cache()
 
         self.events_handle = swsscommon.events_init_publisher(EVENTS_PUBLISHER_SOURCE)
- 
+
     def get_expected_running_containers(self, feature_table):
         """Get a set of containers that are expected to running on SONiC
 
@@ -87,10 +87,10 @@ class ServiceChecker(HealthChecker):
         for feature_name, feature_entry in feature_table.items():
             if feature_entry["state"] not in ["disabled", "always_disabled"]:
                 if multi_asic.is_multi_asic():
-                    if feature_entry["has_global_scope"] == "True":
+                    if feature_entry.get("has_global_scope", "True") == "True":
                         expected_running_containers.add(feature_name)
                         container_feature_dict[feature_name] = feature_name
-                    if feature_entry["has_per_asic_scope"] == "True":
+                    if feature_entry.get("has_per_asic_scope", "False") == "True":
                         num_asics = multi_asic.get_num_asics()
                         for asic_id in range(num_asics):
                             if asic_id in asics_id_presence or feature_name in run_all_instance_list:
@@ -269,7 +269,7 @@ class ServiceChecker(HealthChecker):
             config (config.Config): Health checker configuration.
         """
         if not self.config_db:
-            self.config_db = swsscommon.ConfigDBConnector()
+            self.config_db = swsscommon.ConfigDBConnector(use_unix_socket_path=True)
             self.config_db.connect()
         feature_table = self.config_db.get_table("FEATURE")
         expected_running_containers, self.container_feature_dict = self.get_expected_running_containers(feature_table)

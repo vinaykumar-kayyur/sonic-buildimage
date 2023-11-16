@@ -147,6 +147,10 @@ ifeq ($(ENABLE_DOCKER_BASE_PULL),)
 	override ENABLE_DOCKER_BASE_PULL = n
 endif
 
+ifeq ($(LEGACY_SONIC_MGMT_DOCKER),)
+	override LEGACY_SONIC_MGMT_DOCKER = y
+endif
+
 ifneq ($(GZ_COMPRESS_PROGRAM), pigz)
 override GZ_COMPRESS_PROGRAM = gzip
 endif
@@ -176,13 +180,13 @@ DOCKER_ROOT = $(PWD)/fsroot.docker.$(BLDENV)
 
 # Support FIPS feature, armhf not supported yet
 ifeq ($(PLATFORM_ARCH),armhf)
-ENABLE_FIPS_FEATURE := n
+INCLUDE_FIPS := n
 ENABLE_FIPS := n
 endif
 
-ifeq ($(ENABLE_FIPS_FEATURE), n)
+ifeq ($(INCLUDE_FIPS), n)
 ifeq ($(ENABLE_FIPS), y)
-    $(error Cannot set fips config ENABLE_FIPS=y when ENABLE_FIPS_FEATURE=n)
+    $(error Cannot set fips config ENABLE_FIPS=y when INCLUDE_FIPS=n)
 endif
 endif
 
@@ -203,13 +207,14 @@ $(shell \
 	SONIC_VERSION_CACHE_SOURCE=$(SONIC_VERSION_CACHE_SOURCE) \
 	DBGOPT='$(DBGOPT)' \
 	MIRROR_SNAPSHOT=$(MIRROR_SNAPSHOT) \
+	PIP_HTTP_TIMEOUT=$(PIP_HTTP_TIMEOUT) \
 	scripts/generate_buildinfo_config.sh)
 
 # Generate the slave Dockerfile, and prepare build info for it
 $(shell CONFIGURED_ARCH=$(CONFIGURED_ARCH) \
 	MULTIARCH_QEMU_ENVIRON=$(MULTIARCH_QEMU_ENVIRON) \
 	CROSS_BUILD_ENVIRON=$(CROSS_BUILD_ENVIRON) \
-	ENABLE_FIPS_FEATURE=$(ENABLE_FIPS_FEATURE) \
+	INCLUDE_FIPS=$(INCLUDE_FIPS) \
 	DOCKER_EXTRA_OPTS=$(DOCKER_EXTRA_OPTS) \
 	DEFAULT_CONTAINER_REGISTRY=$(DEFAULT_CONTAINER_REGISTRY) \
 	GZ_COMPRESS_PROGRAM=$(GZ_COMPRESS_PROGRAM) \
@@ -220,10 +225,18 @@ $(shell CONFIGURED_ARCH=$(CONFIGURED_ARCH) \
 	CROSS_BUILD_ENVIRON=$(CROSS_BUILD_ENVIRON) \
 	j2 $(SLAVE_DIR)/Dockerfile.user.j2 > $(SLAVE_DIR)/Dockerfile.user)
 
+ifeq ($(CROSS_BUILD_ENVIRON), y)
+$(shell SONIC_VERSION_CONTROL_COMPONENTS=$(SONIC_VERSION_CONTROL_COMPONENTS) \
+	MIRROR_SNAPSHOT=$(MIRROR_SNAPSHOT) scripts/build_mirror_config.sh $(SLAVE_DIR) amd64 $(BLDENV))
+endif
+$(shell SONIC_VERSION_CONTROL_COMPONENTS=$(SONIC_VERSION_CONTROL_COMPONENTS) \
+	MIRROR_SNAPSHOT=$(MIRROR_SNAPSHOT) scripts/build_mirror_config.sh $(SLAVE_DIR) $(CONFIGURED_ARCH) $(BLDENV))
+
 PREPARE_DOCKER=BUILD_SLAVE=y \
 	DEFAULT_CONTAINER_REGISTRY=$(DEFAULT_CONTAINER_REGISTRY) \
 	SONIC_VERSION_CACHE=$(SONIC_VERSION_CACHE) \
 	DBGOPT='$(DBGOPT)' \
+	MIRROR_SNAPSHOT=$(MIRROR_SNAPSHOT) \
 	scripts/prepare_docker_buildinfo.sh \
 		$(SLAVE_BASE_IMAGE) \
 		$(SLAVE_DIR)/Dockerfile \
@@ -245,6 +258,7 @@ SLAVE_BASE_TAG = $(shell \
 SLAVE_TAG = $(shell \
 	(cat $(SLAVE_DIR)/Dockerfile.user \
 		 $(SLAVE_DIR)/Dockerfile \
+		 $(SLAVE_DIR)/sources.list.* \
 		 $(SLAVE_DIR)/buildinfo/versions/versions-* \
 	&& echo $(USER)/$(PWD)/$(CONFIGURED_PLATFORM)) \
 	| sha1sum \
@@ -275,7 +289,7 @@ endif
 DOCKER_LOCKFILE_SAVE := $(DOCKER_LOCKDIR)/docker_save.lock
 $(shell mkdir -m 0777 -p $(DOCKER_LOCKDIR))
 $(shell [ -f $(DOCKER_LOCKFILE_SAVE) ] || (touch $(DOCKER_LOCKFILE_SAVE) && chmod 0777 $(DOCKER_LOCKFILE_SAVE)))
-$(docker run --rm -v $(DOCKER_ROOT)\:/mount alpine sh -c 'rm -rf /mount/')
+$(shell [ -d $(DOCKER_ROOT) ] && docker run --rm -v $(DOCKER_ROOT)\:/mount debian sh -c 'rm -rf /mount/*')
 $(mkdir -p $(DOCKER_ROOT))
 
 ifeq ($(DOCKER_BUILDER_MOUNT),)
@@ -307,6 +321,19 @@ endif
 
 ifdef SONIC_BUILD_QUIETER
 	DOCKER_RUN += -e "SONIC_BUILD_QUIETER=$(SONIC_BUILD_QUIETER)"
+endif
+
+# Mount the Signing key and Certificate in the slave container
+ifneq ($(SECURE_UPGRADE_DEV_SIGNING_KEY),)
+    DOCKER_RUN += -v $(SECURE_UPGRADE_DEV_SIGNING_KEY):$(SECURE_UPGRADE_DEV_SIGNING_KEY):ro
+endif
+ifneq ($(SECURE_UPGRADE_SIGNING_CERT),)
+    DOCKER_RUN += -v $(SECURE_UPGRADE_SIGNING_CERT):$(SECURE_UPGRADE_SIGNING_CERT):ro
+endif
+# Mount the Signing prod tool in the slave container
+$(info "SECURE_UPGRADE_PROD_SIGNING_TOOL": "$(SECURE_UPGRADE_PROD_SIGNING_TOOL)")
+ifneq ($(SECURE_UPGRADE_PROD_SIGNING_TOOL),)
+	DOCKER_RUN += -v $(SECURE_UPGRADE_PROD_SIGNING_TOOL):/sonic/scripts/$(shell basename -- $(SECURE_UPGRADE_PROD_SIGNING_TOOL)):ro
 endif
 
 ifneq ($(SONIC_DPKG_CACHE_SOURCE),)
@@ -399,7 +426,7 @@ endif
 
 endif
 
-SPLIT_LOG = | tee
+SPLIT_LOG = 2>&1 | tee
 
 DOCKER_BASE_LOG = $(SLAVE_DIR)/$(SLAVE_BASE_IMAGE)_$(SLAVE_BASE_TAG).log
 DOCKER_LOG = $(SLAVE_DIR)/$(SLAVE_IMAGE)_$(SLAVE_TAG).log
@@ -416,7 +443,7 @@ DOCKER_SLAVE_BASE_BUILD = docker build --no-cache \
 		    $(SPLIT_LOG) $(DOCKER_BASE_LOG)
 
 DOCKER_BASE_PULL = docker pull \
-			$(REGISTRY_SERVER):$(REGISTRY_PORT)/$(SLAVE_BASE_IMAGE):$(SLAVE_BASE_TAG)
+			$(REGISTRY_SERVER):$(REGISTRY_PORT)$(REGISTRY_SERVER_PATH)/$(SLAVE_BASE_IMAGE):$(SLAVE_BASE_TAG)
 
 DOCKER_USER_BUILD = docker build --no-cache \
 	       --build-arg user=$(USER) \
@@ -442,7 +469,7 @@ DOCKER_SLAVE_BASE_PULL_REGISTRY = \
 		$(DOCKER_BASE_PULL); \
 	} && \
 	{ \
-		docker tag $(REGISTRY_SERVER):$(REGISTRY_PORT)/$(SLAVE_BASE_IMAGE):$(SLAVE_BASE_TAG) $(SLAVE_BASE_IMAGE):$(SLAVE_BASE_TAG) && \
+		docker tag $(REGISTRY_SERVER):$(REGISTRY_PORT)$(REGISTRY_SERVER_PATH)/$(SLAVE_BASE_IMAGE):$(SLAVE_BASE_TAG) $(SLAVE_BASE_IMAGE):$(SLAVE_BASE_TAG) && \
 		$(COLLECT_DOCKER); \
 	}\
 
@@ -490,6 +517,7 @@ SONIC_BUILD_INSTRUCTION :=  $(MAKE) \
                            SHUTDOWN_BGP_ON_START=$(SHUTDOWN_BGP_ON_START) \
                            INCLUDE_KUBERNETES=$(INCLUDE_KUBERNETES) \
                            KUBERNETES_VERSION=$(KUBERNETES_VERSION) \
+                           KUBERNETES_CNI_VERSION=$(KUBERNETES_CNI_VERSION) \
                            K8s_GCR_IO_PAUSE_VERSION=$(K8s_GCR_IO_PAUSE_VERSION) \
                            INCLUDE_KUBERNETES_MASTER=$(INCLUDE_KUBERNETES_MASTER) \
                            SONIC_ENABLE_PFCWD_ON_START=$(ENABLE_PFCWD_ON_START) \
@@ -499,6 +527,7 @@ SONIC_BUILD_INSTRUCTION :=  $(MAKE) \
                            MDEBUG=$(MDEBUG) \
                            PASSWORD=$(PASSWORD) \
                            USERNAME=$(USERNAME) \
+			   CHANGE_DEFAULT_PASSWORD=$(CHANGE_DEFAULT_PASSWORD) \
                            SONIC_BUILD_JOBS=$(SONIC_BUILD_JOBS) \
                            SONIC_USE_DOCKER_BUILDKIT=$(SONIC_USE_DOCKER_BUILDKIT) \
                            VS_PREPARE_MEM=$(VS_PREPARE_MEM) \
@@ -514,7 +543,9 @@ SONIC_BUILD_INSTRUCTION :=  $(MAKE) \
                            DOCKER_LOCKFILE_SAVE=$(DOCKER_LOCKFILE_SAVE) \
                            SONIC_CONFIG_USE_NATIVE_DOCKERD_FOR_BUILD=$(SONIC_CONFIG_USE_NATIVE_DOCKERD_FOR_BUILD) \
                            SONIC_INCLUDE_SYSTEM_TELEMETRY=$(INCLUDE_SYSTEM_TELEMETRY) \
+                           SONIC_INCLUDE_SYSTEM_GNMI=$(INCLUDE_SYSTEM_GNMI) \
                            INCLUDE_DHCP_RELAY=$(INCLUDE_DHCP_RELAY) \
+                           INCLUDE_DHCP_SERVER=$(INCLUDE_DHCP_SERVER) \
                            INCLUDE_MACSEC=$(INCLUDE_MACSEC) \
                            SONIC_INCLUDE_RESTAPI=$(INCLUDE_RESTAPI) \
                            SONIC_INCLUDE_MUX=$(INCLUDE_MUX) \
@@ -524,6 +555,11 @@ SONIC_BUILD_INSTRUCTION :=  $(MAKE) \
                            BUILD_LOG_TIMESTAMP=$(BUILD_LOG_TIMESTAMP) \
                            SONIC_ENABLE_IMAGE_SIGNATURE=$(ENABLE_IMAGE_SIGNATURE) \
                            SONIC_ENABLE_SECUREBOOT_SIGNATURE=$(SONIC_ENABLE_SECUREBOOT_SIGNATURE) \
+                           SECURE_UPGRADE_MODE=$(SECURE_UPGRADE_MODE) \
+                           SECURE_UPGRADE_DEV_SIGNING_KEY=$(SECURE_UPGRADE_DEV_SIGNING_KEY) \
+                           SECURE_UPGRADE_SIGNING_CERT=$(SECURE_UPGRADE_SIGNING_CERT) \
+                           SECURE_UPGRADE_PROD_SIGNING_TOOL=$(SECURE_UPGRADE_PROD_SIGNING_TOOL) \
+                           SECURE_UPGRADE_PROD_TOOL_ARGS=$(SECURE_UPGRADE_PROD_TOOL_ARGS) \
                            SONIC_DEFAULT_CONTAINER_REGISTRY=$(DEFAULT_CONTAINER_REGISTRY) \
                            ENABLE_HOST_SERVICE_ON_START=$(ENABLE_HOST_SERVICE_ON_START) \
                            SLAVE_DIR=$(SLAVE_DIR) \
@@ -532,13 +568,18 @@ SONIC_BUILD_INSTRUCTION :=  $(MAKE) \
                            ENABLE_ASAN=$(ENABLE_ASAN) \
                            SONIC_INCLUDE_BOOTCHART=$(INCLUDE_BOOTCHART) \
                            SONIC_ENABLE_BOOTCHART=$(ENABLE_BOOTCHART) \
-                           ENABLE_FIPS_FEATURE=$(ENABLE_FIPS_FEATURE) \
+                           INCLUDE_FIPS=$(INCLUDE_FIPS) \
                            ENABLE_FIPS=$(ENABLE_FIPS) \
                            SONIC_SLAVE_DOCKER_DRIVER=$(SONIC_SLAVE_DOCKER_DRIVER) \
                            MIRROR_URLS=$(MIRROR_URLS) \
                            MIRROR_SECURITY_URLS=$(MIRROR_SECURITY_URLS) \
                            GZ_COMPRESS_PROGRAM=$(GZ_COMPRESS_PROGRAM) \
                            MIRROR_SNAPSHOT=$(MIRROR_SNAPSHOT) \
+                           SONIC_VERSION_CONTROL_COMPONENTS=$(SONIC_VERSION_CONTROL_COMPONENTS) \
+                           ONIE_IMAGE_PART_SIZE=$(ONIE_IMAGE_PART_SIZE) \
+                           SONIC_OS_VERSION=$(SONIC_OS_VERSION) \
+                           PIP_HTTP_TIMEOUT=$(PIP_HTTP_TIMEOUT) \
+                           LEGACY_SONIC_MGMT_DOCKER=$(LEGACY_SONIC_MGMT_DOCKER) \
                            $(SONIC_OVERRIDE_BUILD_VARS)
 
 .PHONY: sonic-slave-build sonic-slave-bash init reset
@@ -559,7 +600,9 @@ endif
 
 export MIRROR_URLS
 export MIRROR_SECURITY_URLS
+export MIRROR_SNAPSHOT
 export SONIC_VERSION_CONTROL_COMPONENTS
+export PIP_HTTP_TIMEOUT
 
 %:: | sonic-build-hooks
 ifneq ($(filter y, $(MULTIARCH_QEMU_ENVIRON) $(CROSS_BUILD_ENVIRON)),)
@@ -586,8 +629,6 @@ sonic-build-hooks:
 	$(Q)pushd src/sonic-build-hooks; TRUSTED_GPG_URLS=$(TRUSTED_GPG_URLS) $(MAKE) all; popd
 	$(Q)mkdir -p $(SLAVE_DIR)/buildinfo
 	$(Q)cp src/sonic-build-hooks/buildinfo/sonic-build-hooks* $(SLAVE_DIR)/buildinfo
-	$(Q)if [ "$(MULTIARCH_QEMU_ENVIRON)" == y ]; then scripts/build_mirror_config.sh $(SLAVE_DIR) amd64 $(BLDENV); fi
-	$(Q)scripts/build_mirror_config.sh $(SLAVE_DIR) $(CONFIGURED_ARCH) $(BLDENV)
 
 sonic-slave-base-build : | sonic-build-hooks
 ifeq ($(MULTIARCH_QEMU_ENVIRON), y)

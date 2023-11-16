@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2019-2021 NVIDIA CORPORATION & AFFILIATES.
+# Copyright (c) 2019-2023 NVIDIA CORPORATION & AFFILIATES.
 # Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -59,8 +59,9 @@ HWMGMT_SYSTEM_ROOT = '/var/run/hw-management/system/'
 
 #reboot cause related definitions
 REBOOT_CAUSE_ROOT = HWMGMT_SYSTEM_ROOT
-
-REBOOT_CAUSE_FILE_LENGTH = 1
+REBOOT_CAUSE_MAX_WAIT_TIME = 45
+REBOOT_CAUSE_CHECK_INTERVAL = 5
+REBOOT_CAUSE_READY_FILE = '/run/hw-management/config/reset_attr_ready'
 
 REBOOT_TYPE_KEXEC_FILE = "/proc/cmdline"
 REBOOT_TYPE_KEXEC_PATTERN_WARM = ".*SONIC_BOOT_TYPE=(warm|fastfast).*"
@@ -74,6 +75,9 @@ class Chassis(ChassisBase):
 
     # System status LED
     _led = None
+
+    # System UID LED
+    _led_uid = None
 
     def __init__(self):
         super(Chassis, self).__init__()
@@ -125,10 +129,6 @@ class Chassis(ChassisBase):
     def __del__(self):
         if self.sfp_event:
             self.sfp_event.deinitialize()
-
-        if self._sfp_list:
-            if self.sfp_module.SFP.shared_sdk_handle:
-                self.sfp_module.deinitialize_sdk_handle(self.sfp_module.SFP.shared_sdk_handle)
 
     @property
     def RJ45_port_list(self):
@@ -622,8 +622,10 @@ class Chassis(ChassisBase):
 
     def initizalize_system_led(self):
         if not Chassis._led:
-            from .led import SystemLed
+            from .led import SystemLed, \
+                SystemUidLed
             Chassis._led = SystemLed()
+            Chassis._led_uid = SystemUidLed()
 
     def set_status_led(self, color):
         """
@@ -649,6 +651,31 @@ class Chassis(ChassisBase):
         """
         self.initizalize_system_led()
         return None if not Chassis._led else Chassis._led.get_status()
+
+    def set_uid_led(self, color):
+        """
+        Sets the state of the system UID LED
+
+        Args:
+            color: A string representing the color with which to set the
+                   system UID LED
+
+        Returns:
+            bool: True if system LED state is set successfully, False if not
+        """
+        self.initizalize_system_led()
+        return False if not Chassis._led_uid else Chassis._led_uid.set_status(color)
+
+    def get_uid_led(self):
+        """
+        Gets the state of the system UID LED
+
+        Returns:
+            A string, one of the valid LED color strings which could be vendor
+            specified.
+        """
+        self.initizalize_system_led()
+        return None if not Chassis._led_uid else Chassis._led_uid.get_status()
 
     def get_watchdog(self):
         """
@@ -735,7 +762,6 @@ class Chassis(ChassisBase):
             'reset_hotswap_or_halt'     :   self.REBOOT_CAUSE_HARDWARE_OTHER,
             'reset_voltmon_upgrade_fail':   self.REBOOT_CAUSE_HARDWARE_OTHER,
             'reset_reload_bios'         :   self.REBOOT_CAUSE_HARDWARE_BIOS,
-            'reset_from_comex'          :   self.REBOOT_CAUSE_HARDWARE_CPU,
             'reset_fw_reset'            :   self.REBOOT_CAUSE_HARDWARE_RESET_FROM_ASIC,
             'reset_from_asic'           :   self.REBOOT_CAUSE_HARDWARE_RESET_FROM_ASIC,
             'reset_long_pb'             :   self.REBOOT_CAUSE_HARDWARE_BUTTON,
@@ -757,6 +783,16 @@ class Chassis(ChassisBase):
                 return 'fast-reboot'
         return None
 
+    def _wait_reboot_cause_ready(self):
+        max_wait_time = REBOOT_CAUSE_MAX_WAIT_TIME
+        while max_wait_time > 0:
+            if utils.read_int_from_file(REBOOT_CAUSE_READY_FILE, log_func=None) == 1:
+                return True
+            time.sleep(REBOOT_CAUSE_CHECK_INTERVAL)
+            max_wait_time -= REBOOT_CAUSE_CHECK_INTERVAL
+
+        return False
+
     def get_reboot_cause(self):
         """
         Retrieves the cause of the previous reboot
@@ -776,6 +812,10 @@ class Chassis(ChassisBase):
             reboot_cause = self._parse_warmfast_reboot_from_proc_cmdline()
             if reboot_cause:
                 return self.REBOOT_CAUSE_NON_HARDWARE, ''
+
+        if not self._wait_reboot_cause_ready():
+            logger.log_error("Hardware reboot cause is not ready")
+            return self.REBOOT_CAUSE_NON_HARDWARE, ''
 
         if not self.reboot_cause_initialized:
             self.initialize_reboot_cause()

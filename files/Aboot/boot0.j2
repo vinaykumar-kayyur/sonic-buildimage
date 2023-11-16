@@ -67,7 +67,7 @@ fi
 
 mountpoint_for_file() {
    local file="$1"
-   df "$file" | tail -1 | tr -s " " | cut -d ' ' -f6
+   df "$file" 2>/dev/null | tail -1 | tr -s " " | cut -d ' ' -f6
 }
 
 # extract mount point from the swi path, e.g., /mnt/flash/sonic.swi --> /mnt/flash
@@ -86,7 +86,7 @@ installer_image_path="$image_path/$installer_image"
 
 boot_config="$target_path/boot-config"
 
-cmdline_allowlist="crashkernel hwaddr_ma1 sonic_fips"
+cmdline_allowlist="crashkernel hwaddr_ma1 sonic_fips docker_inram"
 
 # for backward compatibility with the sonic_upgrade= behavior
 install="${install:-${sonic_upgrade:-}}"
@@ -118,7 +118,8 @@ clean_flash() {
            [ $f != "minigraph.xml" ] &&
            [ $f != "snmp.yml" ] &&
            [ $f != "acl.json" ] &&
-           [ $f != "port_config.json" ]
+           [ $f != "port_config.json" ] &&
+           [ $f != "golden_config_db.json" ]
         then
             rm -rf "$target_path/$f"
         fi
@@ -401,7 +402,7 @@ extract_image() {
 extract_image_secureboot() {
     info "Extracting necessary swi content"
     # NOTE: boot/ is not used by the boot process but only extracted for kdump
-    unzip -oq "$swipath" 'boot/*' .imagehash -d "$image_path"
+    unzip -oq "$swipath" 'boot/*' .imagehash kernel-cmdline-append -d "$image_path"
 
     ## Extract platform.tar.gz
     info "Extracting platform.tar.gz"
@@ -441,7 +442,7 @@ write_machine_config() {
     ## Detect SKU and create a hardware description file
     aboot_version=$(cmdline_get Aboot | sed 's/^.*norcal.-//')
     if [ -x /bin/sysinit ]; then
-       aboot_build_date=$(stat -c %y /bin/sysinit | sed 's/ /T/')
+       aboot_build_date=$(stat -c %y /bin/sysinit | sed 's/ /T/g')
     else
        aboot_build_date="unknown"
     fi
@@ -502,6 +503,7 @@ write_platform_specific_cmdline() {
         aboot_machine=arista_7260cx3_64
         flash_size=28000
         cmdline_add logs_inram=on
+        cmdline_add i2c-i801.disable_features=0x10
     fi
     if [ "$sid" = "Alhambra" ]; then
         aboot_machine=arista_7170_64c
@@ -525,6 +527,7 @@ write_platform_specific_cmdline() {
     if [ "$sid" = "Lodoga" ]; then
         aboot_machine=arista_7050cx3_32s
         cmdline_add logs_inram=on
+        cmdline_add libata.force=2.00:noncq
     fi
     if [ "$sid" = "Marysville" ]; then
         aboot_machine=arista_7050sx3_48yc8
@@ -551,6 +554,9 @@ write_platform_specific_cmdline() {
     fi
     if [ "$sid" = "BlackhawkT4DD" ]; then
         aboot_machine=arista_7050dx4_32s
+    fi
+    if [ "$sid" = "BlackhawkTH4DD" ] || [ "$sid" = "BlackhawkTh4Dd" ]; then
+           aboot_machine=arista_7060dx5_32
     fi
     if [ "$sid" = "Smartsville" ]; then
         aboot_machine=arista_7280cr3_32p4
@@ -609,6 +615,14 @@ write_platform_specific_cmdline() {
         aboot_machine=arista_7280cr3mk_32p4
         flash_size=7382
     fi
+
+    # disable cpu c-state other than C1
+    local cpuvendor="$(sed -nr 's/vendor_id[\t ]*: (.*)/\1/p' /proc/cpuinfo | head -n 1)"
+    cmdline_add processor.max_cstate=1
+    if [ "$cpuvendor" = "GenuineIntel" ]; then
+        cmdline_add intel_idle.max_cstate=0
+    fi
+
     if in_array "$platform" "rook" "magpie" "woodpecker" "sprucefish"; then
         cmdline_add tsc=reliable
         cmdline_add pcie_ports=native
@@ -619,7 +633,6 @@ write_platform_specific_cmdline() {
     if in_array "$platform" "rook" "sprucefish"; then
         cmdline_add iommu=on
         cmdline_add intel_iommu=on
-        cmdline_add intel_idle.max_cstate=0
         read_system_eeprom
     fi
     if in_array "$platform" "rook"; then
@@ -637,7 +650,6 @@ write_platform_specific_cmdline() {
         read_system_eeprom
     fi
     if in_array "$platform" "lorikeet" "hedgehog"; then
-        cmdline_add processor.max_cstate=1
         cmdline_add reassign_prefmem
         read_system_eeprom
     fi
@@ -653,10 +665,11 @@ write_platform_specific_cmdline() {
        else
            varlog_size=256
            cmdline_add logs_inram=on
+           cmdline_add docker_inram=on
+           cmdline_add docker_inram_algo=zstd
            if [ $flash_size -le 2000 ]; then
                # enable docker_inram for switches with less than 2G of flash
                varlog_size=128
-               cmdline_add docker_inram=on
            fi
        fi
     fi
@@ -739,13 +752,19 @@ write_cmdline() {
         cat "$target_path/$kernel_params" | cmdline_append
     fi
 
-    # FIXME: sonic sometimes adds extra kernel parameters from user space
-    #        this is unsafe but some will be kept as part of the regular boot
-    if [ -f "$image_path/kernel-cmdline" ]; then
-        for field in $cmdline_allowlist; do
-           cat "$image_path/kernel-cmdline" | tr ' ' '\n' | grep -E "$field" | tail -n 1 | cmdline_append
-        done
-    fi
+    # NOTE: SONiC might need to provide some extra kernel parameter to change the
+    #       next boot behavior. The following lines lookup allowed parameters and
+    #       append them to the cmdline.
+    #       - kernel-cmdline is still modified but its usage should ideally be deprecated over time
+    #       - kernel-cmdline-append is for the user (SONiC) to use.
+    #         this file can be either packaged in the swi or generated from userland
+    for cpath in "$image_path/kernel-cmdline" "$image_path/kernel-cmdline-append"; do
+        if [ -f "$cpath" ]; then
+            for field in $cmdline_allowlist; do
+               cat "$cpath" | tr ' ' '\n' | grep -E "$field" | tail -n 1 | cmdline_append
+            done
+        fi
+    done
 
     # FIXME: legacy configuration files used by fast-reboot and eos2sonic
     #        these should be deprecated over time.
@@ -827,6 +846,10 @@ regular_install() {
 
     info "Installing image under $image_path"
     extract_image
+
+    # NOTE: this call is necessary to process the kernel-cmdline-append file coming
+    #       from the just extracted swi
+    write_cmdline
 
     run_hooks post-install
 }

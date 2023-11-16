@@ -46,7 +46,7 @@
 [submodule "src/sonic-frr/frr"]
 	path = src/sonic-frr/frr
 	url = https://github.com/sonic-net/sonic-frr.git
-	branch = frr/8.2
+	branch = frr/8.5
 [submodule "platform/p4/p4-hlir/p4-hlir-v1.1"]
 	path = platform/p4/p4-hlir/p4-hlir-v1.1
 	url = https://github.com/p4lang/p4-hlir.git
@@ -65,15 +65,9 @@
 [submodule "src/scapy"]
 	path = src/scapy
 	url = https://github.com/secdev/scapy.git
-[submodule "platform/mellanox/mlnx-sai/SAI-Implementation"]
-	path = platform/mellanox/mlnx-sai/SAI-Implementation
-	url = https://github.com/Mellanox/SAI-Implementation
 [submodule "src/sonic-mgmt-framework"]
 	path = src/sonic-mgmt-framework
 	url = https://github.com/sonic-net/sonic-mgmt-framework
-[submodule "Switch-SDK-drivers"]
-	path = platform/mellanox/sdk-src/sx-kernel/Switch-SDK-drivers
-	url = https://github.com/Mellanox/Switch-SDK-drivers
 [submodule "src/sonic-ztp"]
 	path = src/sonic-ztp
 	url = https://github.com/sonic-net/sonic-ztp
@@ -115,3 +109,12 @@
 [submodule "src/sonic-genl-packet"]
 	path = src/sonic-genl-packet
 	url = https://github.com/sonic-net/sonic-genl-packet
+[submodule "src/dhcpmon"]
+	path = src/dhcpmon
+	url = https://github.com/sonic-net/sonic-dhcpmon.git
+[submodule "src/sonic-dash-api/sonic-dash-api"]
+	path = src/sonic-dash-api/sonic-dash-api
+	url = https://github.com/sonic-net/sonic-dash-api.git
+[submodule "platform/marvell-arm64/mrvl-prestera"]
+	path = platform/marvell-arm64/mrvl-prestera
+	url = https://github.com/Marvell-switching/mrvl-prestera.git

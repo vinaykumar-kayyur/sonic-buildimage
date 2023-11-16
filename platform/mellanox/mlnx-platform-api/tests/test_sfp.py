@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES.
+# Copyright (c) 2021-2023 NVIDIA CORPORATION & AFFILIATES.
 # Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,7 +28,7 @@ test_path = os.path.dirname(os.path.abspath(__file__))
 modules_path = os.path.dirname(test_path)
 sys.path.insert(0, modules_path)
 
-from sonic_platform.sfp import SFP, SX_PORT_MODULE_STATUS_INITIALIZING, SX_PORT_MODULE_STATUS_PLUGGED, SX_PORT_MODULE_STATUS_UNPLUGGED, SX_PORT_MODULE_STATUS_PLUGGED_WITH_ERROR, SX_PORT_MODULE_STATUS_PLUGGED_DISABLED
+from sonic_platform.sfp import SFP, RJ45Port, SX_PORT_MODULE_STATUS_INITIALIZING, SX_PORT_MODULE_STATUS_PLUGGED, SX_PORT_MODULE_STATUS_UNPLUGGED, SX_PORT_MODULE_STATUS_PLUGGED_WITH_ERROR, SX_PORT_MODULE_STATUS_PLUGGED_DISABLED
 from sonic_platform.chassis import Chassis
 
 
@@ -37,6 +37,7 @@ class TestSfp:
     @mock.patch('sonic_platform.device_data.DeviceDataManager.get_linecard_max_port_count')
     def test_sfp_index(self, mock_max_port):
         sfp = SFP(0)
+        assert sfp.is_replaceable()
         assert sfp.sdk_index == 0
         assert sfp.index == 1
 
@@ -54,7 +55,6 @@ class TestSfp:
         assert sfp.index == 5
 
     @mock.patch('sonic_platform.sfp.SFP.read_eeprom', mock.MagicMock(return_value=None))
-    @mock.patch('sonic_platform.sfp.SFP.shared_sdk_handle', mock.MagicMock(return_value=2))
     @mock.patch('sonic_platform.sfp.SFP._get_module_info')
     @mock.patch('sonic_platform.chassis.Chassis.get_num_sfps', mock.MagicMock(return_value=2))
     @mock.patch('sonic_platform.chassis.extract_RJ45_ports_index', mock.MagicMock(return_value=[]))
@@ -121,7 +121,6 @@ class TestSfp:
             handle.write.side_effect = OSError('')
             assert not sfp.write_eeprom(0, 1, bytearray([1]))
 
-    @mock.patch('sonic_platform.sfp.SFP.get_mst_pci_device', mock.MagicMock(return_value = None))
     @mock.patch('sonic_platform.sfp.SFP._get_page_and_page_offset')
     def test_sfp_read_eeprom(self, mock_get_page):
         sfp = SFP(0)
@@ -142,14 +141,6 @@ class TestSfp:
 
             handle.read.side_effect = OSError('')
             assert sfp.read_eeprom(0, 1) is None
-
-    @mock.patch('sonic_platform.sfp.SFP._fetch_port_status')
-    def test_is_port_admin_status_up(self, mock_port_status):
-        mock_port_status.return_value = (0, True)
-        assert SFP.is_port_admin_status_up(None, None)
-
-        mock_port_status.return_value = (0, False)
-        assert not SFP.is_port_admin_status_up(None, None)
 
     @mock.patch('sonic_platform.sfp.SFP._get_eeprom_path', mock.MagicMock(return_value = None))
     @mock.patch('sonic_platform.sfp.SFP._get_sfp_type_str')
@@ -217,12 +208,22 @@ class TestSfp:
         assert page_offset is 0
 
     @mock.patch('sonic_platform.sfp.SFP._read_eeprom')
-    def test_get_presence(self, mock_read_eeprom):
+    def test_sfp_get_presence(self, mock_read):
         sfp = SFP(0)
-        mock_read_eeprom.return_value = None
+        mock_read.return_value = None
         assert not sfp.get_presence()
 
-        mock_read_eeprom.return_value = bytearray([1])
+        mock_read.return_value = 0
+        assert sfp.get_presence()
+
+    @mock.patch('sonic_platform.utils.read_int_from_file')
+    def test_rj45_get_presence(self, mock_read_int):
+        sfp = RJ45Port(0)
+        mock_read_int.return_value = 0
+        assert not sfp.get_presence()
+        mock_read_int.assert_called_with('/sys/module/sx_core/asic0/module0/present')
+
+        mock_read_int.return_value = 1
         assert sfp.get_presence()
 
     @mock.patch('sonic_platform.sfp.SFP.get_xcvr_api')
@@ -238,3 +239,53 @@ class TestSfp:
         mock_get_xcvr_api.return_value = None
         assert sfp.get_rx_los() is None
         assert sfp.get_tx_fault() is None
+
+    @mock.patch('sonic_platform.utils.write_file')
+    def test_reset(self, mock_write):
+        sfp = SFP(0)
+        mock_write.return_value = True
+        assert sfp.reset()
+        mock_write.assert_called_with('/sys/module/sx_core/asic0/module0/reset', '1')
+
+    @mock.patch('sonic_platform.utils.read_int_from_file')
+    def test_get_lpmode(self, mock_read_int):
+        sfp = SFP(0)
+        mock_read_int.return_value = 1
+        assert sfp.get_lpmode()
+        mock_read_int.assert_called_with('/sys/module/sx_core/asic0/module0/power_mode')
+
+        mock_read_int.return_value = 2
+        assert not sfp.get_lpmode()
+
+    @mock.patch('sonic_platform.utils.write_file')
+    @mock.patch('sonic_platform.utils.read_int_from_file')
+    def test_set_lpmode(self, mock_read_int, mock_write):
+        sfp = SFP(0)
+        mock_read_int.return_value = 1
+        assert sfp.set_lpmode(False)
+        assert mock_write.call_count == 0
+
+        assert sfp.set_lpmode(True)
+        mock_write.assert_called_with('/sys/module/sx_core/asic0/module0/power_mode_policy', '2')
+
+    @mock.patch('sonic_platform.sfp.SFP.read_eeprom')
+    def test_get_xcvr_api(self, mock_read):
+        sfp = SFP(0)
+        api = sfp.get_xcvr_api()
+        assert api is None
+        mock_read.return_value = bytearray([0x18])
+        api = sfp.get_xcvr_api()
+        assert api is not None
+
+    def test_rj45_basic(self):
+        sfp = RJ45Port(0)
+        assert not sfp.get_lpmode()
+        assert not sfp.reset()
+        assert not sfp.set_lpmode(True)
+        assert not sfp.get_error_description()
+        assert not sfp.get_reset_status()
+        assert sfp.read_eeprom(0, 0) is None
+        assert sfp.get_transceiver_info()
+        assert sfp.get_transceiver_bulk_status()
+        assert sfp.get_transceiver_threshold_info()
+        sfp.reinit()

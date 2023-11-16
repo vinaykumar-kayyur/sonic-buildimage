@@ -96,6 +96,13 @@ echo "onie_platform: $onie_platform"
 # Get platform specific linux kernel command line arguments
 ONIE_PLATFORM_EXTRA_CMDLINE_LINUX=""
 
+# Start with build time value, set either using env variable
+# or from onie-image.conf. onie-mk-demo.sh will string replace
+# below value to env value. Platform specific installer.conf
+# will override this value if necessary by reading $onie_platform
+# after this.
+ONIE_IMAGE_PART_SIZE="%%ONIE_IMAGE_PART_SIZE%%"
+
 # Default var/log device size in MB
 VAR_LOG_SIZE=4096
 
@@ -137,6 +144,9 @@ fi
 # The build system prepares this script by replacing %%DEMO-TYPE%%
 # with "OS" or "DIAG".
 demo_type="%%DEMO_TYPE%%"
+
+# take final partition size after platform installer.conf override
+demo_part_size=$ONIE_IMAGE_PART_SIZE
 
 # The build system prepares this script by replacing %%IMAGE_VERSION%%
 # with git revision hash as a version identifier
@@ -236,10 +246,14 @@ if [ "$install_env" = "onie" ]; then
     fi
 fi
 
-demo_part_size="%%ONIE_IMAGE_PART_SIZE%%"
 echo "ONIE_IMAGE_PART_SIZE=$demo_part_size"
 
 extra_cmdline_linux=%%EXTRA_CMDLINE_LINUX%%
+# Inherit the FIPS option, so not necessary to do another reboot after upgraded
+if grep -q '\bsonic_fips=1\b' /proc/cmdline && echo " $extra_cmdline_linux" | grep -qv '\bsonic_fips=.\b'; then
+    extra_cmdline_linux="$extra_cmdline_linux sonic_fips=1"
+fi
+
 echo "EXTRA_CMDLINE_LINUX=$extra_cmdline_linux"
 
 # Update Bootloader Menu with installed image

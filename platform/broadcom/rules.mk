@@ -16,6 +16,7 @@ include $(PLATFORM_PATH)/platform-modules-juniper.mk
 #include $(PLATFORM_PATH)/platform-modules-ruijie.mk
 include $(PLATFORM_PATH)/platform-modules-ragile.mk
 #include $(PLATFORM_PATH)/platform-modules-tencent.mk
+include $(PLATFORM_PATH)/platform-modules-ufispace.mk
 include $(PLATFORM_PATH)/docker-syncd-brcm.mk
 include $(PLATFORM_PATH)/docker-syncd-brcm-rpc.mk
 include $(PLATFORM_PATH)/docker-saiserver-brcm.mk
@@ -29,8 +30,10 @@ include $(PLATFORM_PATH)/one-aboot.mk
 include $(PLATFORM_PATH)/libsaithrift-dev.mk
 include $(PLATFORM_PATH)/docker-syncd-brcm-dnx.mk
 include $(PLATFORM_PATH)/docker-syncd-brcm-dnx-rpc.mk
+ifeq ($(INCLUDE_GBSYNCD), y)
 include $(PLATFORM_PATH)/../components/docker-gbsyncd-credo.mk
 include $(PLATFORM_PATH)/../components/docker-gbsyncd-broncos.mk
+endif
 
 BCMCMD = bcmcmd
 $(BCMCMD)_URL = "https://sonicstorage.blob.core.windows.net/packages/20190307/bcmcmd?sv=2015-04-05&sr=b&sig=sUdbU7oVbh5exbXXHVL5TDFBTWDDBASHeJ8Cp0B0TIc%3D&se=2038-05-06T22%3A34%3A19Z&sp=r"

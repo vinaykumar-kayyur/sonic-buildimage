@@ -1,3 +1,16 @@
+{#-
+    Copyright (c) 2020-2023 NVIDIA CORPORATION & AFFILIATES.
+    Apache-2.0
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+    http://www.apache.org/licenses/LICENSE-2.0
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-#}
 #!/bin/bash
 
 declare -r SCRIPT_NAME="$(basename "$0")"
@@ -33,15 +46,16 @@ declare -r UNKN_ASIC="unknown"
 declare -r UNKN_MST="unknown"
 
 declare -rA FW_FILE_MAP=( \
-    [$SPC1_ASIC]="/etc/mlnx/fw-SPC.mfa" \
-    [$SPC2_ASIC]="/etc/mlnx/fw-SPC2.mfa" \
-    [$SPC3_ASIC]="/etc/mlnx/fw-SPC3.mfa" \
-    [$SPC4_ASIC]="/etc/mlnx/fw-SPC4.mfa" \
+    [$SPC1_ASIC]="fw-SPC.mfa" \
+    [$SPC2_ASIC]="fw-SPC2.mfa" \
+    [$SPC3_ASIC]="fw-SPC3.mfa" \
+    [$SPC4_ASIC]="fw-SPC4.mfa" \
 )
 
 IMAGE_UPGRADE="${NO_PARAM}"
 SYSLOG_LOGGER="${NO_PARAM}"
 VERBOSE_LEVEL="${VERBOSE_MIN}"
+MFT_DIAGNOSIS_FLAGS=""
 
 function PrintHelp() {
     echo
@@ -69,6 +83,7 @@ function ParseArguments() {
             ;;
             -v|--verbose)
                 VERBOSE_LEVEL="${VERBOSE_MAX}"
+                MFT_DIAGNOSIS_FLAGS="FLASH_ACCESS_DEBUG=1 FW_COMPS_DEBUG=1"
             ;;
             -s|--syslog)
                 SYSLOG_LOGGER="${YES_PARAM}"
@@ -152,8 +167,16 @@ function WaitForDevice() {
     while [[ ("${QUERY_RETRY_COUNT}" -lt "${QUERY_RETRY_COUNT_MAX}") && ("$?" -ne "${EXIT_SUCCESS}") ]]; do
         sleep 1s
         ((QUERY_RETRY_COUNT++))
-        ${QUERY_CMD} > /dev/null
+        output=$(eval ${MFT_DIAGNOSIS_FLAGS} ${QUERY_CMD}) > /dev/null
     done
+
+    ERROR_CODE="$?"
+    if [[ "${ERROR_CODE}" != "${EXIT_SUCCESS}" ]]; then
+        # Exit failure and print the detailed information
+        echo "$output"
+        failure_msg="${output#*Fail : }"
+        ExitFailure "FW Query command: ${QUERY_CMD} failed to wait for device with error: ${failure_msg}"
+    fi
 }
 
 function GetAsicType() {
@@ -211,7 +234,7 @@ function RunCmd() {
 
 function RunFwUpdateCmd() {
     local ERROR_CODE="${EXIT_SUCCESS}"
-    local COMMAND="${BURN_CMD} $@"
+    local COMMAND="${MFT_DIAGNOSIS_FLAGS} ${BURN_CMD} $@"
 
     if [[ "${VERBOSE_LEVEL}" -eq "${VERBOSE_MAX}" ]]; then
         output=$(eval "${COMMAND}")
@@ -221,23 +244,24 @@ function RunFwUpdateCmd() {
 
     ERROR_CODE="$?"
     if [[ "${ERROR_CODE}" != "${EXIT_SUCCESS}" ]]; then
+        echo "${output}"
         failure_msg="${output#*Fail : }"
         ExitFailure "FW Update command: ${COMMAND} failed with error: ${failure_msg}"
     fi
 }
 
 function UpgradeFW() {
-    local -r _FS_MOUNTPOINT="$1"
+    local -r _FW_BIN_PATH="$1"
 
     local -r _ASIC_TYPE="$(GetAsicType)"
     if [[ "${_ASIC_TYPE}" = "${UNKN_ASIC}" ]]; then
         ExitFailure "failed to detect ASIC type"
     fi
 
-    if [ ! -z "${_FS_MOUNTPOINT}" ]; then
-        local -r _FW_FILE="${_FS_MOUNTPOINT}/${FW_FILE_MAP[$_ASIC_TYPE]}"
+    if [ ! -z "${_FW_BIN_PATH}" ]; then
+        local -r _FW_FILE="${_FW_BIN_PATH}/${FW_FILE_MAP[$_ASIC_TYPE]}"
     else
-        local -r _FW_FILE="${FW_FILE_MAP[$_ASIC_TYPE]}"
+        local -r _FW_FILE="/etc/mlnx/${FW_FILE_MAP[$_ASIC_TYPE]}"
     fi
 
     if [ ! -f "${_FW_FILE}" ]; then
@@ -280,16 +304,29 @@ function UpgradeFWFromImage() {
     local -r _NEXT_SONIC_IMAGE="$(sonic-installer list | grep "Next: " | cut -f2 -d' ')"
     local -r _CURRENT_SONIC_IMAGE="$(sonic-installer list | grep "Current: " | cut -f2 -d' ')"
 
-    local -r _FS_PATH="/host/image-${_NEXT_SONIC_IMAGE#SONiC-OS-}/fs.squashfs"
-    local -r _FS_MOUNTPOINT="/tmp/image-${_NEXT_SONIC_IMAGE#SONiC-OS-}-fs"
-
     if [[ "${_CURRENT_SONIC_IMAGE}" == "${_NEXT_SONIC_IMAGE}" ]]; then
         ExitSuccess "firmware is up to date"
+    fi
+
+    # /host/image-<version>/platform/fw/asic is now the new location for FW binaries.
+    # Prefere this path and if it does not exist use squashfs as a fallback.
+    local -r _PLATFORM_FW_BIN_PATH="/host/image-${_NEXT_SONIC_IMAGE#SONiC-OS-}/platform/fw/asic/"
+
+    if [[ -d "${_PLATFORM_FW_BIN_PATH}" ]]; then
+        LogInfo "Using FW binaries from ${_PLATFORM_FW_BIN_PATH}"
+
+        UpgradeFW "${_PLATFORM_FW_BIN_PATH}"
     else
+        local -r _FS_PATH="/host/image-${_NEXT_SONIC_IMAGE#SONiC-OS-}/fs.squashfs"
+        local -r _FS_MOUNTPOINT="/tmp/image-${_NEXT_SONIC_IMAGE#SONiC-OS-}-fs"
+        local -r _FW_BIN_PATH="${_FS_MOUNTPOINT}/etc/mlnx/"
+
+        LogInfo "Using FW binaries from ${_FW_BIN_PATH}"
+
         mkdir -p "${_FS_MOUNTPOINT}"
         mount -t squashfs "${_FS_PATH}" "${_FS_MOUNTPOINT}"
 
-        UpgradeFW "${_FS_MOUNTPOINT}"
+        UpgradeFW "${_FW_BIN_PATH}"
 
         umount -rf "${_FS_MOUNTPOINT}"
         rm -rf "${_FS_MOUNTPOINT}"
