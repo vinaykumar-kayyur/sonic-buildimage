@@ -55,27 +55,14 @@ ENV IMAGENAME='${IMAGENAME}'
 ENV DISTRO='${DISTRO}'
 RUN pre_run_buildinfo '${IMAGENAME}'
 '
-DOWNLOADED_DOCKER_IMAGES_DOCKERFILE_PRE_SCRIPT='# Auto-Generated for buildinfo
-ARG SONIC_VERSION_CACHE
-ARG SONIC_VERSION_CONTROL_COMPONENTS
-COPY ["buildinfo", "/usr/local/share/buildinfo"]
-COPY vcache/ /sonic/target/vcache/'${IMAGENAME}'
-COPY ["tmp_extract", "/"]
-ENV IMAGENAME='${IMAGENAME}'
-ENV DISTRO='${DISTRO}'
-RUN pre_run_buildinfo '${IMAGENAME}'
-'
 
 # Add the auto-generate code if it is not added in the target Dockerfile
 if [ ! -f $DOCKERFILE_TARGET ] || ! grep -q "Auto-Generated for buildinfo" $DOCKERFILE_TARGET; then
     # Insert the docker build script before the RUN command
     LINE_NUMBER=$(grep -Fn -m 1 'RUN' $DOCKERFILE | cut -d: -f1)
     TEMP_FILE=$(mktemp)
-    if ! grep -q "DOWNLOADED_DOCKER_IMAGES" $DOCKERFILE_TARGET; then
-	    awk -v text="${DOCKERFILE_PRE_SCRIPT}" -v linenumber=$LINE_NUMBER 'NR==linenumber{print text}1' $DOCKERFILE > $TEMP_FILE
-    else
-	    awk -v text="${DOWNLOADED_DOCKER_IMAGES_DOCKERFILE_PRE_SCRIPT}" -v linenumber=$LINE_NUMBER 'NR==linenumber{print text}1' $DOCKERFILE > $TEMP_FILE
-    fi
+    awk -v text="${DOCKERFILE_PRE_SCRIPT}" -v linenumber=$LINE_NUMBER 'NR==linenumber{print text}1' $DOCKERFILE > $TEMP_FILE
+
     # Append the docker build script at the end of the docker file
     echo -e "\nRUN post_run_buildinfo ${IMAGENAME} " >> $TEMP_FILE
     echo -e "\nRUN post_run_cleanup ${IMAGENAME} " >> $TEMP_FILE
@@ -86,13 +73,7 @@ fi
 
 # Copy the build info config
 mkdir -p ${BUILDINFO_PATH}
-if ! grep -q "DOWNLOADED_DOCKER_IMAGES" $DOCKERFILE_TARGET; then
-	cp -rf src/sonic-build-hooks/buildinfo/* $BUILDINFO_PATH
-else
-	cp -rf src/sonic-build-hooks/buildinfo/* $BUILDINFO_PATH
-	mkdir -p $DOCKERFILE_PATH/tmp_extract
-	dpkg --extract $BUILDINFO_PATH/sonic-build-hooks_1.0_all.deb $DOCKERFILE_PATH/tmp_extract
-fi
+cp -rf src/sonic-build-hooks/buildinfo/* $BUILDINFO_PATH
 
 # Generate the version lock files
 scripts/versions_manager.py generate -t "$BUILDINFO_VERSION_PATH" -n "$IMAGENAME" -d "$DISTRO" -a "$ARCH"
