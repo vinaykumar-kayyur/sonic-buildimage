@@ -7,17 +7,7 @@ import sys
 
 import mock_tables
 
-
-modules_path = os.path.join(os.path.dirname(__file__), "../../../src/sonic-utilities")
-test_path = os.path.join(modules_path, "tests")
-mock_table_path = os.path.join(test_path, "mock_tables")
-sys.path.insert(0, modules_path)
-sys.path.insert(0, test_path)
-sys.path.insert(0, mock_table_path)
-
-
 TEST_DATA_PATH = os.path.dirname(os.path.abspath(__file__))
-
 
 @pytest.fixture()
 def mock_db():
@@ -57,7 +47,6 @@ def mock_db():
             return mock_config_db.get(key, {}).get(entry, None)
         if table == "STATE_DB":
             return mock_state_db.get(key, {}).get(entry, None)
-
 
     db.keys = mock.Mock(side_effect=keys)
     db.get_all = mock.Mock(side_effect=get_all)
