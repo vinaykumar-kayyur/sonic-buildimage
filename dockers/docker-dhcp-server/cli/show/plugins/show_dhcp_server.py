@@ -38,7 +38,7 @@ def lease(db, dhcp_interface):
         port = dbconn.get("STATE_DB", "FDB_TABLE|" + interface + ":" + mac, "port")
         if not port:
             port = "<Unknown>"
-        table.append([interface + "|" + port, mac, entry["ip"], ts_to_str(entry["lease_start"]), ts_to_str(entry["lease_end"]]))
+        table.append([interface + "|" + port, mac, entry["ip"], ts_to_str(entry["lease_start"]), ts_to_str(entry["lease_end"])])
     click.echo(tabulate(table, headers=headers))
 
 
