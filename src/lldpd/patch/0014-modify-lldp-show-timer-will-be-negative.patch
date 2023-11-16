@@ -1,0 +1,32 @@
+diff -Naurp lldpd-1.0.4/src/client/display.c lldpd-1.0.4_new/src/client/display.c
+--- lldpd-1.0.4/src/client/display.c	2019-04-06 23:03:01.000000000 +0800
++++ lldpd-1.0.4_new/src/client/display.c	2023-07-06 15:41:39.354369756 +0800
+@@ -584,6 +584,11 @@ display_age(time_t lastchange)
+ {
+ 	static char sage[30];
+ 	int age = (int)(time(NULL) - lastchange);
++	// [ISU2023063070054] Change the age to zero if age is less than 0
++	// If age is less than 0, the parse_time function in lldb_syncd will get wrong
++	if (age < 0) {
++		age = 0;
++	}
+ 	if (snprintf(sage, sizeof(sage),
+ 		"%d day%s, %02d:%02d:%02d",
+ 		age / (60*60*24),
+diff -Naurp lldpd-1.0.4/src/daemon/lldpd.c lldpd-1.0.4_new/src/daemon/lldpd.c
+--- lldpd-1.0.4/src/daemon/lldpd.c	2023-07-06 15:48:38.854924058 +0800
++++ lldpd-1.0.4_new/src/daemon/lldpd.c	2023-07-06 15:44:59.268540595 +0800
+@@ -573,6 +573,13 @@ lldpd_decode(struct lldpd *cfg, char *fr
+ 	}
+ 
+ 	TAILQ_FOREACH(oport, &hardware->h_rports, p_entries) {
++		// [ISU2023063070054] If the packets are all the same,the node of last change time won't be changed.
++		// Calculate the difference between the current time and the last lldp packet update time
++		// If the time is negative or larger than TTL, set the node of lastchange = 0.
++		time_t interval_time = time(NULL) - oport->p_lastchange;
++		if (interval_time > oport->p_ttl || interval_time < 0) {
++			oport->p_lastchange = time(NULL);
++		}
+ 		if ((oport->p_lastframe != NULL) &&
+ 		    (oport->p_lastframe->size == s) &&
+ 		    (memcmp(oport->p_lastframe->frame, frame, s) == 0)) {
