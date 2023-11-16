@@ -1,0 +1,47 @@
+diff -Naurp lldpd-1.0.4/src/daemon/interfaces.c lldpd-1.0.4_new/src/daemon/interfaces.c
+--- lldpd-1.0.4/src/daemon/interfaces.c	2023-06-30 14:31:16.897955818 +0800
++++ lldpd-1.0.4_new/src/daemon/interfaces.c	2023-06-30 13:54:42.025988876 +0800
+@@ -592,6 +592,24 @@ interfaces_helper_add_hardware(struct ll
+ 	TAILQ_INSERT_TAIL(&cfg->g_hardware, hardware, h_entries);
+ }
+ 
++static u_int32_t extractNumber(const char *str) {
++	u_int32_t number = 0;
++	const char *ptr = str;
++
++	// Skip non-number
++	while (*ptr && !isdigit(*ptr)) {
++		ptr++;
++	}
++
++	// Get the portchannel number
++	while (*ptr && isdigit(*ptr)) {
++		number = number * 10 + (*ptr - '0');
++		ptr++;
++	}
++
++	return number;
++}
++
+ void
+ interfaces_helper_physical(struct lldpd *cfg,
+     struct interfaces_device_list *interfaces,
+@@ -666,10 +684,14 @@ interfaces_helper_physical(struct lldpd
+ 		hardware->h_mtu = iface->mtu ? iface->mtu : 1500;
+ 
+ #ifdef ENABLE_DOT3
+-		if (iface->upper && iface->upper->type & IFACE_BOND_T)
+-			hardware->h_lport.p_aggregid = iface->upper->index;
+-		else
++		if (iface->upper && iface->upper->type & IFACE_BOND_T){
++			// Get the iface->upper->name from ip link, we parse the number from the name.
++			u_int32_t aggregationNumber = extractNumber(iface->upper->name);
++			hardware->h_lport.p_aggregid = aggregationNumber;
++		}
++		else{
+ 			hardware->h_lport.p_aggregid = 0;
++		}
+ #endif
+ 	}
+ }
+
