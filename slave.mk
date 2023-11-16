@@ -1091,7 +1091,8 @@ $(addprefix $(TARGET_PATH)/,$(DOWNLOADED_DOCKER_IMAGES)) : $(TARGET_PATH)/%.gz :
 		$$(%.gz_DEP_FILES)
 	$(HEADER)
 
-	cp files/$(DOWNLOADED_DOCKER_IMAGES) target/$(DOWNLOADED_DOCKER_IMAGES)
+	rm -rf $@ $@.log
+	wget "$($*.gz_URL)" -O target/$(DOWNLOADED_DOCKER_IMAGES) $(LOG)
 
 	$(FOOTER)
 
