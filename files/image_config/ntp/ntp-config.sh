@@ -26,7 +26,7 @@ function modify_ntp_default
 sonic-cfggen -d -t /usr/share/sonic/templates/ntp.conf.j2 >/etc/ntp.conf
 
 get_database_reboot_type
-echo "Disabling NTP long jump for reboot type ${reboot_type} ..."
-modify_ntp_default "s/NTPD_OPTS='-g'/NTPD_OPTS='-x'/"
+echo "Enabling NTP long jump for reboot type ${reboot_type} ..."
+modify_ntp_default "s/NTPD_OPTS='-x'/NTPD_OPTS='-g'/"
 
 systemctl --no-block restart ntp
