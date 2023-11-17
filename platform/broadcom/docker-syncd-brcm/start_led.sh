@@ -36,7 +36,7 @@ if [[ -r "$LED_PROC_INIT_SOC" && ! -f /var/warmboot/warm-starting ]]; then
     /usr/bin/bcmcmd -t 60 "rcload $LED_PROC_INIT_SOC"
 fi
 
-
+wait_syncd
 # Run the command and store the output in a variable, ignoring errors
 output=$(/usr/bin/bcmcmd -t 1 "show unit" 2>/dev/null | grep BCM)
 
