@@ -847,6 +847,8 @@ def is_frontend_port_present_in_host():
 
 
 def get_num_dpus():
+    # Todo: we should use platform api to get the dpu number
+    # instead of rely on the platform env config.
     num_dpus = 0
     platform_env_conf_file_path = get_platform_env_conf_file_path()
 
