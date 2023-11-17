@@ -36,3 +36,11 @@ if [[ -r "$LED_PROC_INIT_SOC" && ! -f /var/warmboot/warm-starting ]]; then
     /usr/bin/bcmcmd -t 60 "rcload $LED_PROC_INIT_SOC"
 fi
 
+
+# Run the command and store the output in a variable, ignoring errors
+output=$(/usr/bin/bcmcmd -t 1 "show unit" 2>/dev/null | grep BCM)
+
+# Check if the output contains either "BCM56960" or "BCM56970" or "BCM56971"
+if [[ $output == *"BCM56960"* || $output == *"BCM56970"* || $output == *"BCM56971"* ]]; then
+    /usr/bin/bcmcmd "mod RTAG7_PORT_BASED_HASH 0 391 OFFSET_ECMP=0xa" >/dev/null 2>&1
+fi
