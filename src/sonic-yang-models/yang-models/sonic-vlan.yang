@@ -160,7 +160,7 @@ module sonic-vlan {
 				}
 
 				leaf secondary	{
-					description "Optional field to specify if the prefix is secondary subnet"
+					description "Optional field to specify if the prefix is secondary subnet";
 					type boolean;
 				}
 			}
