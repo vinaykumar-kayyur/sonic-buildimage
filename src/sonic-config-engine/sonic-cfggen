@@ -142,7 +142,7 @@ def get_primary_addr(value):
     if not value:
         return ""
     table = pfx_filter(value)
-    returnTable = OrderedDict()
+    primary_gateways = OrderedDict()
     intf_with_secondary = set()
     for key, val in table.items():
         name, prefix = key
@@ -155,9 +155,9 @@ def get_primary_addr(value):
                 network_def = ipaddress.ip_network(prefix, strict=False)
             else:
                 network_def = ipaddress.ip_network(unicode(prefix), strict=False)
-            returnTable[(name, network_def[1])] = {}
+            primary_gateways[(name, network_def[1])] = {}
             intf_with_secondary.remove(name)
-    return returnTable
+    return primary_gateways
 
 def load_namespace_config(asic_name):
     if not SonicDBConfig.isInit():
