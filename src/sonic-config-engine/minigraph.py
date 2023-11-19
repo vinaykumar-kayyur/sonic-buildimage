@@ -645,7 +645,9 @@ def parse_dpg(dpg, hname):
         for vintf in vlanintfs.findall(str(QName(ns, "VlanInterface"))):
             vintfname = vintf.find(str(QName(ns, "Name"))).text
             vlanid = vintf.find(str(QName(ns, "VlanID"))).text
-            vintfmbr = vintf.find(str(QName(ns, "AttachTo"))).text
+            vintfmbr = vintf.find(str(QName(ns, "AttachTo")))
+            if 
+
             vlantype = vintf.find(str(QName(ns, "Type")))
             if vlantype is None:
                 vlantype_name = ""
@@ -1848,12 +1850,17 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         port['mtu'] = '9100'
         port['tpid'] = '0x8100'
     # mode check for vlan membership
+    vlan_members = ['Ethernet4', 'Ethernet8']
     for port_name, port in ports.items():
         if 'mode' not in port:
             if port_name in list(vlan_members.keys()):
                 port['mode'] = 'trunk'
             else:
                 port['mode'] = 'routed'
+        print(f"Port Name: {port_name}, Mode: {port.get('mode', 'N/A')}")
+    
+    for port_name, port in ports.items():
+        print(f"Port Name: {port_name}, Mode: {port.get('mode', 'N/A')}")
 
     # asymmetric PFC is disabled by default
     for port in ports.values():
@@ -1926,12 +1933,17 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         pc['tpid'] = '0x8100'
         pc['admin_status'] = 'up'
     # mode check for vlan membership in portchannel
+    vlan_members = ['Ethernet4', 'Ethernet8']
     for pc_name, pc in pcs.items():
         if 'mode' not in pc:
             if pc_name in list(vlan_members.keys()):
                  pc['mode'] = 'trunk'
             else:
                  pc['mode'] = 'routed'
+        print(f"Port Name: {pc_name}, Mode: {pc.get('mode', 'N/A')}")
+    
+    for port_name, port in ports.items():
+        print(f"PortChannel Name: {pc_name}, Mode: {pc.get('mode', 'N/A')}")
 
     results['PORTCHANNEL'] = pcs
     results['PORTCHANNEL_MEMBER'] = pc_members
