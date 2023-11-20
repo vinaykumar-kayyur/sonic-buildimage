@@ -86,7 +86,7 @@ while /bin/true; do
   done
 
   # Flush neighbor entries with MAC mismatch between kernel and APPL_DB
-  KERNEL_NEIGH=$(ip neigh show | grep -v "FAILED\|INCOMPLETE" | cut -d ' ' -f 1,3,5 --output-delimiter=',' | tr -d ' ')
+  KERNEL_NEIGH=$(ip neigh show | grep -v "fe80" | grep -v "FAILED\|INCOMPLETE" | cut -d ' ' -f 1,3,5 --output-delimiter=',' | tr -d ' ')
   for neigh in $KERNEL_NEIGH; do
         ip="$( cut -d ',' -f 1 <<< "$neigh" )"
         intf="$( cut -d ',' -f 2 <<< "$neigh" )"
