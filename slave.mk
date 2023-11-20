@@ -1096,15 +1096,6 @@ $(addprefix $(TARGET_PATH)/,$(DOWNLOADED_DOCKER_IMAGES)) : $(TARGET_PATH)/%.gz :
 
 	$(FOOTER)
 
-DOCKER_LOAD_DOWNLOADED_TARGETS = $(addsuffix -load,$(addprefix $(TARGET_PATH)/, \
-		      $(DOWNLOADED_DOCKER_IMAGES)))
-
-$(DOCKER_LOAD_DOWNLOADED_TARGETS) : $(TARGET_PATH)/%.gz-load : .platform docker-start $$(TARGET_PATH)/$$*.gz
-	$(HEADER)
-	$(call docker-image-load,$*)
-	$(FOOTER)
-
-
 # Targets for building docker images
 $(addprefix $(TARGET_PATH)/, $(DOCKER_IMAGES)) : $(TARGET_PATH)/%.gz : .platform docker-start \
 		$$(addprefix $$($$*.gz_DEBS_PATH)/,$$($$*.gz_DEPENDS)) \
@@ -1264,6 +1255,7 @@ SONIC_TARGET_LIST += $(addprefix $(TARGET_PATH)/, $(DOCKER_DBG_IMAGES))
 
 DOCKER_LOAD_TARGETS = $(addsuffix -load,$(addprefix $(TARGET_PATH)/, \
 		      $(SONIC_SIMPLE_DOCKER_IMAGES) \
+		      $(DOWNLOADED_DOCKER_IMAGES) \
 		      $(DOCKER_IMAGES) \
 		      $(DOCKER_DBG_IMAGES)))
 
