@@ -47,10 +47,10 @@ function updateSyslogConf()
     {%- if docker_container_name == "database" %}
     python -c "import jinja2, os; paths=['/usr/share/sonic/templates']; loader = jinja2.FileSystemLoader(paths); env = jinja2.Environment(loader=loader, trim_blocks=True); template_file='/usr/share/sonic/templates/rsyslog-container.conf.j2'; template = env.get_template(os.path.basename(template_file)); data=template.render({\"target_ip\":\"$TARGET_IP\",\"container_name\":\"$CONTAINER_NAME\"}); print(data)" > $TMP_FILE
     {%- else %}
-    sonic-cfggen -d -t /usr/share/sonic/templates/rsyslog-container.conf.j2 -a "{\"target_ip\": \"$TARGET_IP\", \"container_name\": \"$CONTAINER_NAME\" }"  > $TMP_FILE
+    sonic-cfggen -d -t /usr/share/sonic/templates/rsyslog-container.conf.j2 -a "{\"target_ip\": \"$TARGET_IP\", \"container_name\": \"$CONTAINER_NAME\", \"platform\": \"$PLATFORM\" }"  > $TMP_FILE
     if [ $? -ne 0 ]; then
       echo "Error: Execute sonic-cfggen -d failed. Execute without '-d'."
-      sonic-cfggen -t /usr/share/sonic/templates/rsyslog-container.conf.j2 -a "{\"target_ip\": \"$TARGET_IP\", \"container_name\": \"$CONTAINER_NAME\" }"  > $TMP_FILE
+      sonic-cfggen -t /usr/share/sonic/templates/rsyslog-container.conf.j2 -a "{\"target_ip\": \"$TARGET_IP\", \"container_name\": \"$CONTAINER_NAME\", \"platform\": \"$PLATFORM\" }"  > $TMP_FILE
     fi
     {%- endif %}
     docker cp $TMP_FILE ${DOCKERNAME}:/etc/rsyslog.conf
@@ -157,7 +157,7 @@ function postStartAction()
 {%- if docker_container_name == "database" %}
     CHASSISDB_CONF="/usr/share/sonic/device/$PLATFORM/chassisdb.conf"
     [ -f $CHASSISDB_CONF ] && source $CHASSISDB_CONF
-    if [ "$DEV" ]; then
+    if [[ "$DEV" && $DATABASE_TYPE != "dpudb" ]]; then
         # Enable the forwarding on eth0 interface in namespace.
         SYSCTL_NET_CONFIG="/etc/sysctl.d/sysctl-net.conf"
         docker exec -i database$DEV sed -i -e "s/^net.ipv4.conf.eth0.forwarding=0/net.ipv4.conf.eth0.forwarding=1/;
@@ -179,6 +179,9 @@ function postStartAction()
                    ip link add name ns-eth1"$NET_NS" type veth peer name eth1@"$NET_NS"
                    ip link set dev eth1@"$NET_NS" master br1
                    ip link set dev eth1@"$NET_NS" up
+                   # For chassis system where Linux bridge is used on supervisor for midplane communication
+                   # assign alternate name as eth1-midplane for generic design
+                   ip link property add dev br1 altname eth1-midplane
            else
                    ip link add name ns-eth1"$NET_NS" link eth1-midplane type macvlan mode bridge
            fi
@@ -208,7 +211,7 @@ function postStartAction()
     # databases are not availbale until database container is ready.
     # also chassisdb doesn't support warm/fast reboot, its dump.rdb is deleted
     # at service startup time, nothing need to be done here.
-    if [ "$DATABASE_TYPE" != "chassisdb" ]; then
+    if [[ "$DATABASE_TYPE" != "chassisdb" ]]; then
         # Wait until supervisord and redis starts. This change is needed
         # because now database_config.json is jinja2 templated based
         # and by the time file gets generated if we do redis ping
@@ -236,6 +239,12 @@ function postStartAction()
                 else
                     $SONIC_CFGGEN -j /etc/sonic/config_db$DEV.json --write-to-db
                 fi
+            fi
+
+            if [[ "$BOOT_TYPE" == "fast" ]]; then
+                # this is the case when base OS version does not support fast-reboot with reconciliation logic (dump.rdb is absent)
+                # In this case, we need to set the flag to indicate fast-reboot is in progress. Set the key to expire in 3 minutes
+                $SONIC_DB_CLI STATE_DB SET "FAST_REBOOT|system" "1" "EX" "180"
             fi
         fi
 
@@ -366,6 +375,18 @@ start() {
         MOUNTPATH="$MOUNTPATH/$DEV"
     fi
     {%- endif %}
+
+    {%- if docker_container_name == "swss" %}
+    # Insert "create_only_config_db_buffers" attribute
+    HWSKU_FOLDER="/usr/share/sonic/device/$PLATFORM/$HWSKU"
+    if [ -d "$HWSKU_FOLDER" ]; then
+        CREATE_ONLY_CONFIG_DB_BUFFERS_JSON="$HWSKU_FOLDER/create_only_config_db_buffers.json"
+        if [ -f "$CREATE_ONLY_CONFIG_DB_BUFFERS_JSON" ]; then
+            $SONIC_CFGGEN -j $CREATE_ONLY_CONFIG_DB_BUFFERS_JSON --write-to-db
+        fi
+    fi
+    {%- endif %}
+
     DOCKERCHECK=`docker inspect --type container ${DOCKERNAME} 2>/dev/null`
     if [ "$?" -eq "0" ]; then
         {%- if docker_container_name == "database" %}
@@ -470,7 +491,7 @@ start() {
     fi
     {%- endif %}
 
-    if [ -z "$DEV" ]; then
+    if [[ -z "$DEV" || $DATABASE_TYPE == "dpudb" ]]; then
         NET="host"
 
         # For Multi-ASIC platform we have to mount the redis paths for database instances running in different
@@ -495,6 +516,11 @@ start() {
             DB_OPT=$DB_OPT" --env DATABASE_TYPE=$DATABASE_TYPE"
         else
             DB_OPT=$DB_OPT" -v /var/run/redis$DEV:/var/run/redis:rw "
+            DB_OPT=$DB_OPT" --env DATABASE_TYPE=$DATABASE_TYPE "
+            DB_OPT=$DB_OPT" --env NUM_DPU=$NUM_DPU "
+            if [[ "$DEV" ]]; then
+                DB_OPT=$DB_OPT" -v /var/run/redis$DEV:/var/run/redis$DEV:rw "
+            fi
         fi
         {%- endif %}
     else
@@ -524,6 +550,12 @@ start() {
         fi
     fi
 {%- endif %}
+
+    NAMESPACE_ID="$DEV"
+    if [[ $DATABASE_TYPE == "dpudb" ]]; then
+        NAMESPACE_ID=""
+    fi
+
 {%- if sonic_asic_platform == "mellanox" %}
     # TODO: Mellanox will remove the --tmpfs exception after SDK socket path changed in new SDK version
 {%- endif %}
@@ -597,9 +629,10 @@ start() {
 {%- if mount_default_tmpfs|default("n") == "y" %}
         --tmpfs /var/tmp \
 {%- endif %}
-        --env "NAMESPACE_ID"="$DEV" \
+        --env "NAMESPACE_ID"="$NAMESPACE_ID" \
         --env "NAMESPACE_PREFIX"="$NAMESPACE_PREFIX" \
-        --env "NAMESPACE_COUNT"=$NUM_ASIC \
+        --env "NAMESPACE_COUNT"="$NUM_ASIC" \
+        --env "DEV"="$DEV" \
         --env "CONTAINER_NAME"=$DOCKERNAME \
         --name=$DOCKERNAME \
 {%- if docker_container_name == "gbsyncd" %}
@@ -635,7 +668,7 @@ wait() {
 stop() {
     {%- if docker_container_name == "database" %}
     docker stop $DOCKERNAME
-    if [ "$DEV" ]; then
+    if [[ "$DEV" && $DATABASE_TYPE != "dpudb" ]]; then
         ip netns delete "$NET_NS"
     fi
     {%- elif docker_container_name == "teamd" %}
@@ -651,7 +684,7 @@ stop() {
 kill() {
     {%- if docker_container_name == "database" %}
     docker kill $DOCKERNAME
-    if [ "$DEV" ]; then
+    if [[ "$DEV" && $DATABASE_TYPE != "dpudb" ]]; then
         ip netns delete "$NET_NS"
     fi
     {%- else %}
@@ -668,11 +701,16 @@ if [ "$DEV" == "chassisdb" ]; then
       DOCKERNAME=$DOCKERNAME"-chassis"
       unset DEV
 fi
+
+if [[ "$DEV" == *"dpu"* ]]; then
+    DATABASE_TYPE="dpudb"
+fi
+
 {%- endif %}
 NAMESPACE_PREFIX="asic"
 DOCKERNAME=$DOCKERNAME$DEV
 CONTAINER_EXISTS="no"
-if [ "$DEV" ]; then
+if [[ "$DEV" && $DATABASE_TYPE != "dpudb" ]]; then
     NET_NS="$NAMESPACE_PREFIX$DEV" #name of the network namespace
 
     SONIC_CFGGEN="sonic-cfggen -n $NET_NS"

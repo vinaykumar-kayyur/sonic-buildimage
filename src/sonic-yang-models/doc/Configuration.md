@@ -343,7 +343,7 @@ and migration plan
             ],
             "BIND_POINTS": [
                 "PORT",
-                "LAG"
+                "PORTCHANNEL"
             ]
         }
     },
@@ -954,12 +954,14 @@ instance is supported in SONiC.
 {
 "DEVICE_NEIGHBOR_METADATA": {
     "ARISTA01T1": {
+        "cluster": "AAA00PrdStr00",
         "lo_addr": "None",
         "mgmt_addr": "10.11.150.45",
         "hwsku": "Arista-VM",
         "type": "LeafRouter"
     },
     "ARISTA02T1": {
+        "cluster": "AAA00PrdStr00",
         "lo_addr": "None",
         "mgmt_addr": "10.11.150.46",
         "hwsku": "Arista-VM",
@@ -1855,7 +1857,7 @@ SFLOW
 
 | Field            | Description                                                                             | Mandatory   | Default   | Reference                                 |
 |------------------|-----------------------------------------------------------------------------------------|-------------|-----------|-------------------------------------------|
-| admin_state      | Global sflow admin state                                                                |             | down      |    
+| admin_state      | Global sflow admin state                                                                |             | down      |
 | sample_direction | Global sflow sample direction                                                           |             | rx        |                                        |
 | polling_interval | The interval within which sFlow data is collected and sent to the configured collectors |             | 20        |                                           |
 | agent_id         | Interface name                                                                          |             |           | PORT:name,PORTCHANNEL:name,MGMT_PORT:name, VLAN:name |

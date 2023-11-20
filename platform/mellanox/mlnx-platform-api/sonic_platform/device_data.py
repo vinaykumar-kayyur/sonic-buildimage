@@ -28,6 +28,17 @@ DEVICE_DATA = {
             }
         }
     },
+    'x86_64-mlnx_msn2700a1-r0': {
+         'thermal': {
+            'minimum_table': {
+                "unk_trust":   {"-127:30":13, "31:40":14 , "41:120":15},
+                "unk_untrust": {"-127:25":13, "26:30":14 , "31:35":15, "36:120":16}
+            },
+             "capability": {
+                 "comex_amb": True
+             }
+         }
+     },
     'x86_64-mlnx_msn2740-r0': {
         'thermal': {
             "capability": {
@@ -56,6 +67,13 @@ DEVICE_DATA = {
             "capability": {
                 "cpu_pack": False,
                 "comex_amb": False
+            }
+        }
+    },
+    'x86_64-mlnx_msn4700_simx-r0': {
+        'thermal': {
+            "capability": {
+                "cpu_pack": False
             }
         }
     },
