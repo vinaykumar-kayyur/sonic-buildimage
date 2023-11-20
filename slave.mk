@@ -47,6 +47,8 @@ BUILD_WORKDIR = /sonic
 DPKG_ADMINDIR_PATH = $(BUILD_WORKDIR)/dpkg
 SLAVE_DIR ?= sonic-slave-$(BLDENV)
 
+SONIC_DEFAULT_HOSTNAME=sonic
+SONIC_LINUX_KERNEL_VERSION=5.10.0-23-2
 CONFIGURED_PLATFORM := $(shell [ -f .platform ] && cat .platform || echo generic)
 PLATFORM_PATH = platform/$(CONFIGURED_PLATFORM)
 CONFIGURED_ARCH := $(shell [ -f .arch ] && cat .arch || echo amd64)
@@ -87,7 +89,6 @@ export DOCKER_BASE_ARCH
 export CROSS_BUILD_ENVIRON
 export BLDENV
 export BUILD_WORKDIR
-export GZ_COMPRESS_PROGRAM
 export MIRROR_SNAPSHOT
 export SONIC_OS_VERSION
 
@@ -447,7 +448,6 @@ ifeq ($(CONFIGURED_PLATFORM),vs)
 $(info "BUILD_MULTIASIC_KVM"             : "$(BUILD_MULTIASIC_KVM)")
 endif
 $(info "CROSS_BUILD_ENVIRON"             : "$(CROSS_BUILD_ENVIRON)")
-$(info "GZ_COMPRESS_PROGRAM"             : "$(GZ_COMPRESS_PROGRAM)")
 $(info "LEGACY_SONIC_MGMT_DOCKER"        : "$(LEGACY_SONIC_MGMT_DOCKER)")
 $(info )
 else
@@ -467,6 +467,7 @@ define rfs_define_target
 $(eval rfs_target=$(call rfs_build_target_name,$(1),$($(1)_MACHINE)))
 $(eval $(rfs_target)_INSTALLER=$(1))
 $(eval $(rfs_target)_MACHINE=$($(1)_MACHINE))
+$(eval $(rfs_target)_DEPENDS=$(DEBOOTSTRAP) $(INITRAMFS_TOOLS) $(INITRAMFS_TOOLS_CORE) $(LINUX_KERNEL))
 $(eval SONIC_RFS_TARGETS+=$(rfs_target))
 
 $(if $($(1)_DEPENDENT_MACHINE),\
@@ -537,7 +538,7 @@ define docker-image-save
     @echo "Tagging docker image $(1)-$(DOCKER_USERNAME):$(DOCKER_USERTAG) as $(1):$(call docker-get-tag,$(1))" $(LOG)
     docker tag $(1)-$(DOCKER_USERNAME):$(DOCKER_USERTAG) $(1):$(call docker-get-tag,$(1)) $(LOG)
     @echo "Saving docker image $(1):$(call docker-get-tag,$(1))" $(LOG)
-        docker save $(1):$(call docker-get-tag,$(1)) | $(GZ_COMPRESS_PROGRAM) -c > $(2)
+        docker save $(1):$(call docker-get-tag,$(1)) | pigz -c > $(2)
     if [ x$(SONIC_CONFIG_USE_NATIVE_DOCKERD_FOR_BUILD) == x"y" ]; then
         @echo "Removing docker image $(1):$(call docker-get-tag,$(1))" $(LOG)
         docker rmi -f $(1):$(call docker-get-tag,$(1)) $(LOG)
@@ -1246,53 +1247,31 @@ $(DOCKER_LOAD_TARGETS) : $(TARGET_PATH)/%.gz-load : .platform docker-start $$(TA
 
 $(addprefix $(TARGET_PATH)/, $(SONIC_RFS_TARGETS)) : $(TARGET_PATH)/% : \
         .platform \
-        build_debian.sh \
+        build_rfs.sh \
         $(addprefix $(IMAGE_DISTRO_DEBS_PATH)/,$(INITRAMFS_TOOLS) $(LINUX_KERNEL)) \
         $(addsuffix -install,$(addprefix $(IMAGE_DISTRO_DEBS_PATH)/,$(DEBOOTSTRAP))) \
         $$(addprefix $(TARGET_PATH)/,$$($$*_DEPENDENT_RFS)) \
         $(call dpkg_depend,$(TARGET_PATH)/%.dep)
 	$(HEADER)
 
-	# $(call LOAD_CACHE,$*,$@)
+	$(call LOAD_CACHE,$*,$@)
 
 	# Skip building the target if it is already loaded from cache
 	if [ -z '$($*_CACHE_LOADED)' ] ; then
 
 		$(eval installer=$($*_INSTALLER))
-		$(eval machine=$($*_MACHINE))
 
 		export debs_path="$(IMAGE_DISTRO_DEBS_PATH)"
-		export initramfs_tools="$(IMAGE_DISTRO_DEBS_PATH)/$(INITRAMFS_TOOLS)"
-		export linux_kernel="$(IMAGE_DISTRO_DEBS_PATH)/$(LINUX_KERNEL)"
-		export kversion="$(KVERSION)"
-		export image_type="$($(installer)_IMAGE_TYPE)"
-		export sonicadmin_user="$(USERNAME)"
-		export sonic_asic_platform="$(patsubst %-$(CONFIGURED_ARCH),%,$(CONFIGURED_PLATFORM))"
-		export RFS_SPLIT_FIRST_STAGE=y
-		export RFS_SPLIT_LAST_STAGE=n
-
-		j2 -f env files/initramfs-tools/union-mount.j2 onie-image.conf > files/initramfs-tools/union-mount
-		j2 -f env files/initramfs-tools/arista-convertfs.j2 onie-image.conf > files/initramfs-tools/arista-convertfs
 
 		RFS_SQUASHFS_NAME=$* \
-		USERNAME="$(USERNAME)" \
-		PASSWORD="$(PASSWORD)" \
-		CHANGE_DEFAULT_PASSWORD="$(CHANGE_DEFAULT_PASSWORD)" \
-		TARGET_MACHINE=$(machine) \
-		IMAGE_TYPE=$($(installer)_IMAGE_TYPE) \
 		TARGET_PATH=$(TARGET_PATH) \
-		TRUSTED_GPG_URLS=$(TRUSTED_GPG_URLS) \
-		SONIC_ENABLE_SECUREBOOT_SIGNATURE="$(SONIC_ENABLE_SECUREBOOT_SIGNATURE)" \
-		SIGNING_KEY="$(SIGNING_KEY)" \
-		SIGNING_CERT="$(SIGNING_CERT)" \
-		PACKAGE_URL_PREFIX=$(PACKAGE_URL_PREFIX) \
 		DBGOPT='$(DBGOPT)' \
-		SONIC_VERSION_CACHE=$(SONIC_VERSION_CACHE) \
+		SONIC_DEFAULT_HOSTNAME=$(SONIC_DEFAULT_HOSTNAME) \
+		SONIC_LINUX_KERNEL_VERSION=$(SONIC_LINUX_KERNEL_VERSION) \
+		IMAGE_TYPE=$($(installer)_IMAGE_TYPE) \
 		MULTIARCH_QEMU_ENVIRON=$(MULTIARCH_QEMU_ENVIRON) \
 		CROSS_BUILD_ENVIRON=$(CROSS_BUILD_ENVIRON) \
-		MASTER_KUBERNETES_VERSION=$(MASTER_KUBERNETES_VERSION) \
-		MASTER_CRI_DOCKERD=$(MASTER_CRI_DOCKERD) \
-			./build_debian.sh $(LOG)
+			./build_rfs.sh $(LOG)
 
 		$(call SAVE_CACHE,$*,$@)
 
@@ -1513,9 +1492,6 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 		chmod +x sonic_debian_extension.sh,
 	)
 
-	export RFS_SPLIT_FIRST_STAGE=n
-	export RFS_SPLIT_LAST_STAGE=y
-
 	# Build images for the MACHINE, DEPENDENT_MACHINE defined.
 	$(foreach dep_machine, $($*_MACHINE) $($*_DEPENDENT_MACHINE), \
 		DEBUG_IMG="$(INSTALL_DEBUG_TOOLS)" \
@@ -1555,6 +1531,8 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 		MASTER_MDM_VERSION=$(MASTER_MDM_VERSION) \
 		MASTER_MDS_VERSION=$(MASTER_MDS_VERSION) \
 		MASTER_FLUENTD_VERSION=$(MASTER_FLUENTD_VERSION) \
+		SONIC_DEFAULT_HOSTNAME=$(SONIC_DEFAULT_HOSTNAME) \
+		SONIC_LINUX_KERNEL_VERSION=$(SONIC_LINUX_KERNEL_VERSION) \
 			./build_debian.sh $(LOG)
 
 		USERNAME="$(USERNAME)" \

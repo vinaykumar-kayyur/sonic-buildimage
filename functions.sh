@@ -66,3 +66,11 @@ sonic_get_version() {
         echo "${branch_name}.${BUILD_NUMBER}${dirty:--$(git rev-parse --short HEAD)}" | sed 's/\//_/g'
     fi
 }
+
+## RUN command in chroot environment
+## 1st argument is path to new root
+run_in_chroot() {
+    sudo LC_ALL=C LANGUAGE=C LANG=C \
+        DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true \
+        http_proxy=$http_proxy https_proxy=$https_proxy chroot "$@"
+}

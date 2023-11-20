@@ -15,24 +15,28 @@ SYMBOL_LINK_PATH = $(BUILD_ROOT_DIR)/usr/sbin
 SCRIPTS_PATH = $(INSTALL_PATH)/scripts
 HOOKS_PATH = $(INSTALL_PATH)/hooks
 DPKGTOOL = $(shell which dpkg-deb)
+# To make sonic-build-hooks reproducible
+# use time of the last commit that modified files in sonic-build-hooks directory
+# as a build time for deb package
+BUILD_TIME = $(shell git log -1 --pretty=%ct .)
 
 
 # If the depk-deb not installed, use the docker container to make the debian package
 ifeq ($(shell which dpkg-deb),)
-BUILD_COMMAND=docker run --user $(shell id -u):$(shell id -g) --rm -v $(shell pwd):/build debian:buster bash -c 'cd /build; dpkg-deb --build $(TMP_DIR)/$(SONIC_BUILD_HOOKS) $(SONIC_BUILD_HOOKS_TARGET)'
+BUILD_COMMAND=docker run --user $(shell id -u):$(shell id -g) --rm -v $(shell pwd):/build debian:bullseye bash -c 'cd /build; SOURCE_DATE_EPOCH=$(BUILD_TIME) dpkg-deb -Zxz --root-owner-group --build $(TMP_DIR)/$(SONIC_BUILD_HOOKS) $(SONIC_BUILD_HOOKS_TARGET)'
 else
-BUILD_COMMAND=dpkg-deb -Zxz --build $(TMP_DIR)/$(SONIC_BUILD_HOOKS) $(SONIC_BUILD_HOOKS_TARGET)
+BUILD_COMMAND=SOURCE_DATE_EPOCH=$(BUILD_TIME) dpkg-deb -Zxz --root-owner-group --build $(TMP_DIR)/$(SONIC_BUILD_HOOKS) $(SONIC_BUILD_HOOKS_TARGET)
 endif
 
 DEPENDS := $(shell find scripts hooks debian -type f)
 $(SONIC_BUILD_HOOKS_TARGET): $(DEPENDS)
 	@rm -rf $(BUILDINFO_DIR)/$(SONIC_BUILD_HOOKS) $(TMP_DIR)
-	@mkdir -p $(DEBIAN_DIR) $(SCRIPTS_PATH) $(HOOKS_PATH) $(SYMBOL_LINK_PATH) $(TRUSTED_GPG_PATH) $(BUILDINFO_DIR)
-	@chmod 0775 $(DEBIAN_DIR)
-	@cp debian/* $(DEBIAN_DIR)/
-	@cp scripts/* $(SCRIPTS_PATH)/
-	@cp hooks/* $(HOOKS_PATH)/
+	@install -m 755 -d $(DEBIAN_DIR) $(SCRIPTS_PATH) $(HOOKS_PATH) $(SYMBOL_LINK_PATH) $(TRUSTED_GPG_PATH) $(BUILDINFO_DIR)
+	@install -m 644 debian/* $(DEBIAN_DIR)
+	@install -m 755 scripts/* $(SCRIPTS_PATH)
+	@install -m 755 hooks/* $(HOOKS_PATH)
 	@for url in $$(echo $(TRUSTED_GPG_URLS) | sed 's/[,;]/ /g'); do wget -q "$$url" -P "$(TRUSTED_GPG_PATH)/"; done
+	@find $(TRUSTED_GPG_PATH) -type f -exec chmod 644 {} \;
 	@for f in $(SYMBOL_LINKS); do ln -s $(SYMBOL_LINKS_SRC_DIR)/$$f $(SYMBOL_LINK_PATH)/$$f; done
 	@$(BUILD_COMMAND)
 
