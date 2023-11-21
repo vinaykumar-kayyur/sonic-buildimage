@@ -51,8 +51,6 @@ SX_PORT_MODULE_STATUS_PLUGGED = 1
 SX_PORT_MODULE_STATUS_UNPLUGGED = 2
 SX_PORT_MODULE_STATUS_PLUGGED_WITH_ERROR = 3
 SX_PORT_MODULE_STATUS_PLUGGED_DISABLED = 4
-SX_PORT_ADMIN_STATUS_UP = True
-SX_PORT_ADMIN_STATUS_DOWN = False
 
 # identifier value of xSFP module which is in the first byte of the EEPROM
 # if the identifier value falls into SFP_TYPE_CODE_LIST the module is treated as a SFP module and parsed according to 8472
