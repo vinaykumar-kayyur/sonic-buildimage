@@ -646,8 +646,6 @@ def parse_dpg(dpg, hname):
             vintfname = vintf.find(str(QName(ns, "Name"))).text
             vlanid = vintf.find(str(QName(ns, "VlanID"))).text
             vintfmbr = vintf.find(str(QName(ns, "AttachTo")))
-            if 
-
             vlantype = vintf.find(str(QName(ns, "Type")))
             if vlantype is None:
                 vlantype_name = ""
