@@ -1,0 +1,11 @@
+Source: tacplus-probe
+Section: admin
+Priority: extra
+Maintainer: Liu Hua <liuh@microsoft.com>
+Build-Depends: autoconf-archive
+Description: Bash TACACS+ plugin.
+
+Package: tacplus-probe
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libtac2
+Description: TACACS+ server network probe utility.
