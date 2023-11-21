@@ -1,6 +1,6 @@
-From 4b7ca0f0063b7ddb85c0b6fb3ce6bfeaa26e460f Mon Sep 17 00:00:00 2001
+From 41b759505afb261211f40e386a30f6cf3870a094 Mon Sep 17 00:00:00 2001
 From: dgsudharsan <sudharsand@nvidia.com>
-Date: Tue, 14 Nov 2023 23:21:42 +0000
+Date: Tue, 21 Nov 2023 17:55:24 +0000
 Subject: [PATCH] zebra: Fix non-notification of better admin won If there
  happens to be a entry in the zebra rib that has a lower admin distance then a
  newly received re, zebra would not notify the upper level protocol about this
@@ -14,7 +14,7 @@ Subject: [PATCH] zebra: Fix non-notification of better admin won If there
 
 
 diff --git a/zebra/zebra_rib.c b/zebra/zebra_rib.c
-index 039c44cc0..1c0da1df8 100644
+index 039c44cc09..f2f20bcf7b 100644
 --- a/zebra/zebra_rib.c
 +++ b/zebra/zebra_rib.c
 @@ -1209,6 +1209,7 @@ static void rib_process(struct route_node *rn)
@@ -33,7 +33,16 @@ index 039c44cc0..1c0da1df8 100644
  			if (!nexthop_active_update(rn, re)) {
  				const struct prefix *p;
  				struct rib_table_info *info;
-@@ -1417,6 +1419,22 @@ static void rib_process(struct route_node *rn)
+@@ -1363,6 +1365,8 @@ static void rib_process(struct route_node *rn)
+ 	 * new_selected --- RE entry that is newly SELECTED
+ 	 * old_fib      --- RE entry currently in kernel FIB
+ 	 * new_fib      --- RE entry that is newly to be in kernel FIB
++	 * proto_re_changed -- RE that is the last changed entry in the
++	 *                     list of RE's.
+ 	 *
+ 	 * new_selected will get SELECTED flag, and is going to be redistributed
+ 	 * the zclients. new_fib (which can be new_selected) will be installed
+@@ -1417,6 +1421,22 @@ static void rib_process(struct route_node *rn)
  		}
  	}
  
