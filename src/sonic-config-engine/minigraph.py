@@ -1848,7 +1848,6 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         port['mtu'] = '9100'
         port['tpid'] = '0x8100'
     # mode check for vlan membership
-    vlan_members = ['Ethernet4', 'Ethernet8']
     for port_name, port in ports.items():
         if 'mode' not in port:
             if port_name in vlan_members:
@@ -1929,7 +1928,6 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         pc['tpid'] = '0x8100'
         pc['admin_status'] = 'up'
     # mode check for vlan membership in portchannel
-    vlan_members = ['Ethernet4', 'Ethernet8']
     for pc_name, pc in pcs.items():
         if 'mode' not in pc:
             if pc_name in vlan_members:
