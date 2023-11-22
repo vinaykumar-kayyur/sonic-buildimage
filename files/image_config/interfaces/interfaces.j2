@@ -81,16 +81,28 @@ iface {{ name }} {{ 'inet' if prefix | ipv4 else 'inet6' }} static
 {% endif %}
     ########## management network policy routing rules
     # management port up rules
+{% if (MGMT_VRF_CONFIG) and (MGMT_VRF_CONFIG['vrf_global']['mgmtVrfEnabled'] == "true") %}
     up ip {{ '-4' if prefix | ipv4 else '-6' }} route add default via {{ MGMT_INTERFACE[(name, prefix)]['gwaddr'] }} dev {{ name }} table {{ vrf_table }} metric 201
     up ip {{ '-4' if prefix | ipv4 else '-6' }} route add {{ prefix | network }}/{{ prefix | prefixlen }} dev {{ name }} table {{ vrf_table }}
     up ip {{ '-4' if prefix | ipv4 else '-6' }} rule add pref 32765 from {{ prefix | ip }}/{{ '32' if prefix | ipv4 else '128' }} table {{ vrf_table }}
+{% else %}
+    up ip {{ '-4' if prefix | ipv4 else '-6' }} route add default via {{ MGMT_INTERFACE[(name, prefix)]['gwaddr'] }} dev {{ name }} metric 201
+    up ip {{ '-4' if prefix | ipv4 else '-6' }} route add {{ prefix | network }}/{{ prefix | prefixlen }} dev {{ name }}
+    up ip {{ '-4' if prefix | ipv4 else '-6' }} rule add pref 32765 from {{ prefix | ip }}/{{ '32' if prefix | ipv4 else '128' }}
+{% endif %}
 {% for route in MGMT_INTERFACE[(name, prefix)]['forced_mgmt_routes'] %}
     up ip rule add pref 32764 to {{ route }} table {{ vrf_table }}
 {% endfor %}
     # management port down rules
+{% if (MGMT_VRF_CONFIG) and (MGMT_VRF_CONFIG['vrf_global']['mgmtVrfEnabled'] == "true") %}
     pre-down ip {{ '-4' if prefix | ipv4 else '-6' }} route delete default via {{ MGMT_INTERFACE[(name, prefix)]['gwaddr'] }} dev {{ name }} table {{ vrf_table }}
     pre-down ip {{ '-4' if prefix | ipv4 else '-6' }} route delete {{ prefix | network }}/{{ prefix | prefixlen }} dev {{ name }} table {{ vrf_table }}
     pre-down ip {{ '-4' if prefix | ipv4 else '-6' }} rule delete pref 32765 from {{ prefix | ip }}/{{ '32' if prefix | ipv4 else '128' }} table {{ vrf_table }}
+{% else %}
+    pre-down ip {{ '-4' if prefix | ipv4 else '-6' }} route delete default via {{ MGMT_INTERFACE[(name, prefix)]['gwaddr'] }} dev {{ name }}
+    pre-down ip {{ '-4' if prefix | ipv4 else '-6' }} route delete {{ prefix | network }}/{{ prefix | prefixlen }} dev {{ name }}
+    pre-down ip {{ '-4' if prefix | ipv4 else '-6' }} rule delete pref 32765 from {{ prefix | ip }}/{{ '32' if prefix | ipv4 else '128' }}
+{% endif %}
 {% for route in MGMT_INTERFACE[(name, prefix)]['forced_mgmt_routes'] %}
     pre-down ip rule delete pref 32764 to {{ route }} table {{ vrf_table }}
 {% endfor %}
