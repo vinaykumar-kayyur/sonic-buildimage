@@ -29,5 +29,4 @@ cross-compile-changes.patch
 0027-bgpd-Check-mandatory-attributes-more-carefully-for-U.patch
 0028-bgpd-Handle-MP_REACH_NLRI-malformed-packets-with-ses.patch
 0029-bgpd-Treat-EOR-as-withdrawn-to-avoid-unwanted-handli.patch
-0030-bgpd-Treat-EOR-as-withdrawn-to-avoid-unwanted-handli.patch
-
+0030-bgpd-Ignore-handling-NLRIs-if-we-received-MP_UNREACH.patch
