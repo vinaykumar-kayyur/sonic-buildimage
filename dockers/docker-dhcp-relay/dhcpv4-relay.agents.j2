@@ -25,7 +25,7 @@ command=/usr/sbin/dhcrelay -d -m discard -a %%h:%%p %%P --name-alias-map-file /t
 {% if prefix | ipv4 %} -iu {{ name }}{% endif -%}
 {% endfor %}
 {% for (name, gateway) in VLAN_INTERFACE|get_primary_addr %}
-{% if gateway | ipv4 %} -pg {{ gateway }}{% endif -%}
+{% if gateway | ipv4 and name == vlan_name %} -pg {{ gateway }}{% endif -%}
 {% endfor %}
 {% for dhcp_server in VLAN[vlan_name]['dhcp_servers'] %}
 {%- if dhcp_server | ipv4 %} {{ dhcp_server }}{% endif -%}
