@@ -80,6 +80,13 @@ RUN PATH=/python_virtualenv/env3/bin/:$PATH python3 -m pip uninstall -y enum34
 RUN PATH=/python_virtualenv/env3/bin/:$PATH pip3 install --force-reinstall --no-cache-dir coverage
 {%- endif %}
 
+{%- if CONFIGURED_ARCH == "arm64" and MULTIARCH_QEMU_ENVIRON == "y" %}
+# multiarch/debian-debootstrap:arm64-bullseye is too old. It needs to install keys
+RUN apt-get update || apt-get install -y gnupg
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 0E98404D386FA1D9
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 6ED0E7B82643E131
+{%- endif %}
+
 RUN apt-get update && apt-get install -y eatmydata && eatmydata apt-get install -y \
         apt-utils \
         default-jre-headless \
@@ -500,6 +507,11 @@ RUN patch -p1 -i /disable-non-manylinux.patch /usr/local/lib/python3.9/dist-pack
 
 # For building sonic-utilities
 RUN pip3 install fastentrypoints mock
+
+# For building sonic_ycabled
+# Note: upstream build breaks with old version of setuptools
+# ref: https://github.com/grpc/grpc/issues/34569
+RUN pip3 install grpcio==1.58.0 grpcio-tools==1.58.0
 
 # For running Python unit tests
 RUN pip3 install pytest-runner==5.2
