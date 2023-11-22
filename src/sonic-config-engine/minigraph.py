@@ -1854,8 +1854,6 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
                 port['mode'] = 'trunk'
             else:
                 port['mode'] = 'routed'
-        print("Port Name: {}, Mode: {}".format(port_name, port.get('mode', 'N/A')))
-    
 
     # asymmetric PFC is disabled by default
     for port in ports.values():
@@ -1934,8 +1932,6 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
                  pc['mode'] = 'trunk'
             else:
                  pc['mode'] = 'routed'
-        print("Port Name: {}, Mode: {}".format(pc_name, pc.get('mode', 'N/A')))
-
 
     results['PORTCHANNEL'] = pcs
     results['PORTCHANNEL_MEMBER'] = pc_members
