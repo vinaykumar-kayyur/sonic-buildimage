@@ -25,6 +25,7 @@ import netaddr
 import os
 import sys
 import yaml
+import ipaddress
 import base64
 
 from collections import OrderedDict
@@ -138,7 +139,6 @@ def ip_network(value):
         return "Invalid ip address %s" % value
     return r_v.network
 
-
 def b64encode(value):
     """Base64 encoder
     Return:
@@ -162,6 +162,26 @@ def b64decode(value):
         return value
     return ret
 
+def get_primary_addr(value):
+    if not value:
+        return ""
+    table = pfx_filter(value)
+    primary_gateways = OrderedDict()
+    intf_with_secondary = set()
+    for key, val in table.items():
+        name, prefix = key
+        if "secondary" in val:
+            intf_with_secondary.add(name)
+    for key, val in table.items():
+        name, prefix = key
+        if name in intf_with_secondary and "secondary" not in val:
+            if PY3x:
+                network_def = ipaddress.ip_network(prefix, strict=False)
+            else:
+                network_def = ipaddress.ip_network(unicode(prefix), strict=False)
+            primary_gateways[(name, network_def[1])] = {}
+            intf_with_secondary.remove(name)
+    return primary_gateways
 
 def load_namespace_config(asic_name):
     if not SonicDBConfig.isInit():
@@ -273,6 +293,7 @@ def _get_jinja2_env(paths):
     env.filters['unique_name'] = unique_name
     env.filters['pfx_filter'] = pfx_filter
     env.filters['ip_network'] = ip_network
+    env.filters['get_primary_addr'] = get_primary_addr
     for attr in ['ip', 'network', 'prefixlen', 'netmask', 'broadcast']:
         env.filters[attr] = partial(prefix_attr, attr)
 
