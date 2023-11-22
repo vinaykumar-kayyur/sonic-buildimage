@@ -8,7 +8,7 @@
       "pfc_asym": "off",
       "speed": "25000",
       "tpid": "0x8100",
-      "mode": "routed"
+      "mode": "trunk"
   },
   "Ethernet9": {
       "index": "3",
@@ -78,7 +78,7 @@
       "pfc_asym": "off",
       "speed": "50000",
       "tpid": "0x8100",
-      "mode": "routed"
+      "mode": "trunk"
   },
   "Ethernet109": {
       "index": "28",
