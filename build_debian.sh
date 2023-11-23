@@ -396,13 +396,11 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     auditd                  \
     linux-perf              \
     resolvconf              \
-	lsof                    \
-	sysstat                 \
-	xxd                     \
-	zstd
-    ethtool                 \
     lsof                    \
-    sysstat
+    sysstat                 \
+    xxd                     \
+    zstd                    \
+    ethtool
 
 # default rsyslog version is 8.2110.0 which has a bug on log rate limit,
 # use backport version

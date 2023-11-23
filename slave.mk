@@ -1151,7 +1151,10 @@ $(addprefix $(TARGET_PATH)/, $(DOCKER_IMAGES)) : $(TARGET_PATH)/%.gz : .platform
 		DBGOPT='$(DBGOPT)' \
 		scripts/prepare_docker_buildinfo.sh $* $($*.gz_PATH)/Dockerfile $(CONFIGURED_ARCH) $(LOG)
 		docker info $(LOG)
-		docker build --squash --no-cache \
+		docker build --no-cache \
+ifneq($($*.gz_SQUASH, n))
+			--squash \
+endif
 			--build-arg http_proxy=$(HTTP_PROXY) \
 			--build-arg https_proxy=$(HTTPS_PROXY) \
 			--build-arg no_proxy=$(NO_PROXY) \
