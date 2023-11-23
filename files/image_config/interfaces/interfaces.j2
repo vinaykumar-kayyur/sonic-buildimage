@@ -94,7 +94,7 @@ iface {{ name }} {{ 'inet' if prefix | ipv4 else 'inet6' }} static
 {% for route in MGMT_INTERFACE[(name, prefix)]['forced_mgmt_routes'] %}
     pre-down ip rule delete pref 32764 to {{ route }} table {{ vrf_table }}
 {% endfor %}
-{% if prefix | ipv6 %}
+{% if prefix | ipv6 and vrf_table == 'default'%}
     # IPV6 default table not add to lookup by default, management server need this to access IPV6 address when BGP shutdown
     up ip -6 rule add pref 32767 lookup {{ vrf_table }}
     pre-down ip -6 rule delete pref 32767 lookup {{ vrf_table }}
