@@ -13,8 +13,6 @@ iface lo inet loopback
    pre-down ip addr add 127.0.0.1/8 dev lo
 
 # The management network interface
-# IPV6 default table not add to lookup by default, management server need this to access IPV6 address when BGP shutdown
-ip -6 rule add pref 32767 lookup default
 auto eth0
 iface eth0 inet static
     address 10.0.0.100
