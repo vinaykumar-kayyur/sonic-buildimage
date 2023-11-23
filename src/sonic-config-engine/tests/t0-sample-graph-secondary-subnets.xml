@@ -261,7 +261,7 @@
           <Tag>1000</Tag>
           <Subnets>192.168.0.0/27</Subnets>
           <MacAddress i:nil="true"/>
-          <SecondarySubnets>192.168.1.0/27<SecondarySubnets/>
+          <SecondarySubnets>192.168.1.0/27</SecondarySubnets>
         </VlanInterface>
         <VlanInterface>
           <Name>Vlan2000</Name>
