@@ -105,6 +105,9 @@ module sonic-ntp {
                         type leafref {
                             path /mprt:sonic-mgmt_port/mprt:MGMT_PORT/mprt:MGMT_PORT_LIST/mprt:name;
                         }
+                        type string {
+                            pattern 'eth0';
+                        }
                     }
 
                     description
