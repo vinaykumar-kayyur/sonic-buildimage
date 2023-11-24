@@ -1152,7 +1152,7 @@ $(addprefix $(TARGET_PATH)/, $(DOCKER_IMAGES)) : $(TARGET_PATH)/%.gz : .platform
 		scripts/prepare_docker_buildinfo.sh $* $($*.gz_PATH)/Dockerfile $(CONFIGURED_ARCH) $(LOG)
 		docker info $(LOG)
 		docker build --no-cache \
-ifneq($($*.gz_SQUASH, n))
+ifneq($($*.gz_SQUASH), n)
 			--squash \
 endif
 			--build-arg http_proxy=$(HTTP_PROXY) \
