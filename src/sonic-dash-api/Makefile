@@ -11,6 +11,7 @@ BUILD_DIR := build
 PYPKG_DIR := pypkg
 DESTDIR := 
 DASH_API_PROTO_DIR := sonic-dash-api/proto
+MISC_DIR := sonic-dash-api/misc
 INSTALLED_HEADER_DIR := $(DESTDIR)/usr/include/dash_api
 INSTALLED_LIB_DIR := $(DESTDIR)/usr/lib
 INSTALLED_PYTHON_DIR := $(DESTDIR)/usr/lib/python3/dist-packages/dash_api
@@ -22,7 +23,7 @@ compile_cpp_proto:
 	protoc -I=$(DASH_API_PROTO_DIR) --cpp_out=$(BUILD_DIR) $(DASH_API_PROTO_DIR)/*.proto
 
 dashapi.so: compile_cpp_proto
-	g++ -std=c++14 -fPIC -shared -o $(BUILD_DIR)/$(LIBDASHAPI) $(wildcard $(BUILD_DIR)/*.pb.cc) -lprotobuf
+	g++ -std=c++14 -fPIC -shared -o $(BUILD_DIR)/$(LIBDASHAPI) $(wildcard $(BUILD_DIR)/*.pb.cc) $(wildcard $(MISC_DIR)/*.cpp) -lprotobuf
 
 compile_py_proto:
 	protoc -I=$(DASH_API_PROTO_DIR) --python_out=$(PYPKG_DIR) $(DASH_API_PROTO_DIR)/*.proto
@@ -34,6 +35,7 @@ clean:
 install:
 	$(MKDIR) -p $(INSTALLED_HEADER_DIR)
 	$(CP) $(BUILD_DIR)/*.pb.h $(INSTALLED_HEADER_DIR)
+	$(CP) $(MISC_DIR)/*.h $(INSTALLED_HEADER_DIR)
 	$(MKDIR) -p $(INSTALLED_LIB_DIR)
 	$(CP) $(BUILD_DIR)/$(LIBDASHAPI) $(INSTALLED_LIB_DIR)
 	$(MKDIR) -p $(INSTALLED_PYTHON_DIR)
