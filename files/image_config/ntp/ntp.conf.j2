@@ -141,11 +141,6 @@ interface listen 127.0.0.1
 {# Access control options -#}
 {% set options = '' -%}
 
-{# Allow additional servers mobilization from the pool. Otherwise we don't need
-that -#}
-{% if ns.is_pools == false -%}
-    {% set options = options ~ ' nopeer' -%}
-{% endif -%}
 {# Disable NTP server functionality. Should stay on when dhcp is enabled -#}
 {# {% if global.server_role == 'disabled' and global.dhcp == 'disabled' -%}
     {% set options = options ~ ' ignore' -%}
