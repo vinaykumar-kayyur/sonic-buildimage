@@ -109,8 +109,8 @@ THERMAL_NAMING_RULE = {
         {
             "name": "Gearbox {} Temp",
             "temperature": "gearbox{}_temp_input",
-            "high_threshold": "mlxsw-gearbox{}/temp_trip_hot",
-            "high_critical_threshold": "mlxsw-gearbox{}/temp_trip_crit",
+            "high_threshold": "gearbox{}_temp_emergency",
+            "high_critical_threshold": "gearbox{}_temp_trip_crit",
             "type": "indexable"
         },
         {
@@ -139,8 +139,8 @@ THERMAL_NAMING_RULE = {
     'linecard thermals': {
         "name": "Gearbox {} Temp",
         "temperature": "gearbox{}_temp_input",
-        "high_threshold": "mlxsw-gearbox{}/temp_trip_hot",
-        "high_critical_threshold": "mlxsw-gearbox{}/temp_trip_crit",
+        "high_threshold": "gearbox{}_temp_emergency",
+        "high_critical_threshold": "gearbox{}_temp_trip_crit",
         "type": "indexable"
     }
 }
@@ -280,16 +280,6 @@ def _check_thermal_sysfs_existence(file_path):
 
 
 class Thermal(ThermalBase):
-    thermal_algorithm_status = False
-    # Expect cooling level, used for caching the cooling level value before commiting to hardware
-    expect_cooling_level = None
-    # Expect cooling state
-    expect_cooling_state = None
-    # Last committed cooling level
-    last_set_cooling_level = None
-    last_set_cooling_state = None
-    last_set_psu_cooling_level = None
-
     def __init__(self, name, temp_file, high_th_file, high_crit_th_file, high_th_default, high_crit_th_default, scale, position):
         """
         index should be a string for category ambient and int for other categories
