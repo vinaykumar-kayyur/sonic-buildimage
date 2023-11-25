@@ -25,8 +25,6 @@ function modify_ntp_default
 
 sonic-cfggen -d -t /usr/share/sonic/templates/ntp.conf.j2 >/etc/ntpsec/ntp.conf
 sonic-cfggen -d -t /usr/share/sonic/templates/ntp.keys.j2 >/etc/ntpsec/ntp.keys
-
-chown root:ntp /etc/ntp.keys
 chmod o-r /etc/ntp.keys
 
 get_database_reboot_type

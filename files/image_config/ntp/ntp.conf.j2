@@ -71,7 +71,7 @@ restrict {{ config_as }} kod limited nomodify notrap noquery{{ aoptions }}
 {% endfor %}
 
 {% if global.authentication == 'enabled' %}
-keys /etc/ntp.keys
+keys /etc/ntpsec/ntp.keys
 {% if trusted_keys_arr != [] %}
 trustedkey {{ trusted_keys_arr|join(' ') }}
 {% endif %}
