@@ -19,7 +19,7 @@
         "PORT_TABLE:Ethernet4": {
             "speed": "25000",
             "description": "fortyGigE0/4",
-            "mode": "routed"
+            "mode": "trunk"
         },
         "OP": "SET"
     },

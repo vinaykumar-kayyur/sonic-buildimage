@@ -5,7 +5,7 @@
             "alias": "fortyGigE0/8",
             "lanes": "37,38,39,40",
             "admin_status": "up",
-            "mode" : "trunk"
+            "mode" : "routed"
         },
         "Ethernet0": {
             "alias": "fortyGigE0/0",
