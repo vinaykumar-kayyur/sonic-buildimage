@@ -277,6 +277,19 @@
             }
         }
     },
+    "NTP_SERVER_WITH_EQUAL_MINPOLL_MAXPOLL": {
+        "sonic-ntp:sonic-ntp": {
+            "sonic-ntp:NTP_SERVER": {
+                "NTP_SERVER_LIST": [
+                    {
+                        "server_address": "10.11.12.13",
+                        "minpoll": "8",
+                        "maxpoll": "8"
+                    }
+                ]
+            }
+        }
+    },
     "NTP_SERVER_NEG_WITHOUT_MINPOLL": {
         "sonic-ntp:sonic-ntp": {
             "sonic-ntp:NTP_SERVER": {

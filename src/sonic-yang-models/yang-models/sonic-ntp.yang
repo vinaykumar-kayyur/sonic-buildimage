@@ -114,8 +114,8 @@ module sonic-ntp {
                 }
 
                 leaf minpoll {
-                    must "(current()/../maxpoll > current())" {
-                        error-message "maxpoll has to be larger than minpoll.";
+                    must "(current()/../maxpoll >= current())" {
+                        error-message "maxpoll has to be larger than or equal to minpoll.";
                     }
                     default 6;
                     type uint8 {
@@ -128,8 +128,8 @@ module sonic-ntp {
                 }
 
                 leaf maxpoll {
-                    must "(current()/../minpoll < current())" {
-                        error-message "maxpoll has to be larger than minpoll.";
+                    must "(current()/../minpoll <= current())" {
+                        error-message "maxpoll has to be larger than or equal to minpoll.";
                     }
                     default 10;
                     type uint8 {
