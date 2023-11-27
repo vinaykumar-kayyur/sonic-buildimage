@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES.
+# Copyright (c) 2021-2023 NVIDIA CORPORATION & AFFILIATES.
 # Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,6 +37,7 @@ class TestSfp:
     @mock.patch('sonic_platform.device_data.DeviceDataManager.get_linecard_max_port_count')
     def test_sfp_index(self, mock_max_port):
         sfp = SFP(0)
+        assert sfp.is_replaceable()
         assert sfp.sdk_index == 0
         assert sfp.index == 1
 
@@ -54,7 +55,6 @@ class TestSfp:
         assert sfp.index == 5
 
     @mock.patch('sonic_platform.sfp.SFP.read_eeprom', mock.MagicMock(return_value=None))
-    @mock.patch('sonic_platform.sfp.SFP.shared_sdk_handle', mock.MagicMock(return_value=2))
     @mock.patch('sonic_platform.sfp.SFP._get_module_info')
     @mock.patch('sonic_platform.chassis.Chassis.get_num_sfps', mock.MagicMock(return_value=2))
     @mock.patch('sonic_platform.chassis.extract_RJ45_ports_index', mock.MagicMock(return_value=[]))
@@ -267,3 +267,25 @@ class TestSfp:
 
         assert sfp.set_lpmode(True)
         mock_write.assert_called_with('/sys/module/sx_core/asic0/module0/power_mode_policy', '2')
+
+    @mock.patch('sonic_platform.sfp.SFP.read_eeprom')
+    def test_get_xcvr_api(self, mock_read):
+        sfp = SFP(0)
+        api = sfp.get_xcvr_api()
+        assert api is None
+        mock_read.return_value = bytearray([0x18])
+        api = sfp.get_xcvr_api()
+        assert api is not None
+
+    def test_rj45_basic(self):
+        sfp = RJ45Port(0)
+        assert not sfp.get_lpmode()
+        assert not sfp.reset()
+        assert not sfp.set_lpmode(True)
+        assert not sfp.get_error_description()
+        assert not sfp.get_reset_status()
+        assert sfp.read_eeprom(0, 0) is None
+        assert sfp.get_transceiver_info()
+        assert sfp.get_transceiver_bulk_status()
+        assert sfp.get_transceiver_threshold_info()
+        sfp.reinit()

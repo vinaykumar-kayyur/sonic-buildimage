@@ -29,6 +29,7 @@ Table of Contents
          * [Device Metadata](#device-metadata)
          * [Device neighbor metada](#device-neighbor-metada)
          * [DHCP_RELAY](#dhcp_relay)
+         * [DHCP Server IPV4](#dhcp_server_ipv4)
          * [DSCP_TO_TC_MAP](#dscp_to_tc_map)
          * [FG_NHG](#fg_nhg)
          * [FG_NHG_MEMBER](#fg_nhg_member)
@@ -342,7 +343,7 @@ and migration plan
             ],
             "BIND_POINTS": [
                 "PORT",
-                "LAG"
+                "PORTCHANNEL"
             ]
         }
     },
@@ -953,12 +954,14 @@ instance is supported in SONiC.
 {
 "DEVICE_NEIGHBOR_METADATA": {
     "ARISTA01T1": {
+        "cluster": "AAA00PrdStr00",
         "lo_addr": "None",
         "mgmt_addr": "10.11.150.45",
         "hwsku": "Arista-VM",
         "type": "LeafRouter"
     },
     "ARISTA02T1": {
+        "cluster": "AAA00PrdStr00",
         "lo_addr": "None",
         "mgmt_addr": "10.11.150.46",
         "hwsku": "Arista-VM",
@@ -984,6 +987,50 @@ instance is supported in SONiC.
     "interface_id": "true"
 }
 
+```
+
+### DHCP_SERVER_IPV4
+IPV4 DHPC Server related configuration are defined in **DHCP_SERVER_IPV4**, **DHCP_SERVER_IPV4_CUSTOMIZED_OPTIONS**, **DHCP_SERVER_IPV4_RANGE**, **DHCP_SERVER_IPV4_PORT** tables.
+```
+{
+    "DHCP_SERVER_IPV4": {
+        "Vlan100": {
+            "gateway": "100.1.1.1",
+            "lease_time": 3600,
+            "mode": "PORT",
+            "netmask": "255.255.255.0",
+            "customized_options": [
+                "option60"
+            ],
+            "state": "enabled"
+        }
+    },
+    "DHCP_SERVER_IPV4_CUSTOMIZED_OPTIONS": {
+        "option60": {
+            "id": 60,
+            "type": "text",
+            "value": "dummy_value"
+        }
+    },
+    "DHCP_SERVER_IPV4_RANGE": {
+        "range1": {
+            "ip_start": "100.1.1.3",
+            "ip_end": "100.1.1.5"
+        }
+    },
+    "DHCP_SERVER_IPV4_PORT": {
+        "Vlan100|PortChannel0003": {
+            "ips": [
+                "100.1.1.10"
+            ]
+        },
+        "Vlan100|PortChannel2": {
+            "ranges": [
+                "range1"
+            ]
+        }
+    }
+}
 ```
 
 ### DSCP_TO_TC_MAP
@@ -1147,7 +1194,7 @@ The FG_NHG_PREFIX table provides the FG_NHG_PREFIX for which FG behavior is desi
 
 ### Hash
 
-Generic hash allows user to configure which hash fields are suppose to be used by a hashing algorithm.
+Generic hash allows user to configure various aspects of hashing algorithm.  
 The configuration is applied globally for each ECMP and LAG on a switch.
 
 ***ECMP/LAG HASH***
@@ -1191,7 +1238,9 @@ The configuration is applied globally for each ECMP and LAG on a switch.
                 "INNER_SRC_IP",
                 "INNER_L4_DST_PORT",
                 "INNER_L4_SRC_PORT"
-            ]
+            ],
+            "ecmp_hash_algorithm": "CRC",
+            "lag_hash_algorithm": "CRC"
         }
     }
 }
@@ -1449,6 +1498,9 @@ The **MUX_LINKMGR** table is used for dualtor device configuration.
         },
         "MUXLOGGER": {
             "log_verbosity": "debug"
+        },
+        "SERVICE_MGMT": {
+            "kill_radv": "True"
         }
     }
 }
@@ -1807,7 +1859,7 @@ SFLOW
 
 | Field            | Description                                                                             | Mandatory   | Default   | Reference                                 |
 |------------------|-----------------------------------------------------------------------------------------|-------------|-----------|-------------------------------------------|
-| admin_state      | Global sflow admin state                                                                |             | down      |    
+| admin_state      | Global sflow admin state                                                                |             | down      |
 | sample_direction | Global sflow sample direction                                                           |             | rx        |                                        |
 | polling_interval | The interval within which sFlow data is collected and sent to the configured collectors |             | 20        |                                           |
 | agent_id         | Interface name                                                                          |             |           | PORT:name,PORTCHANNEL:name,MGMT_PORT:name, VLAN:name |

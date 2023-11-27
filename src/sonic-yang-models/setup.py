@@ -63,12 +63,18 @@ setup(
     ],
     tests_require = [
         'pytest',
-        'ijson==2.6.1'
+        'ijson==3.2.3'
     ],
     setup_requires = [
         'pytest-runner',
         'wheel'
     ],
+    extras_require = {
+        "testing": [
+            'pytest',
+            'ijson==3.2.3'
+        ],
+    },
     include_package_data=True,
     keywords='sonic-yang-models',
     name='sonic-yang-models',
@@ -178,6 +184,7 @@ setup(
                          './yang-models/sonic-dscp-fc-map.yang',
                          './yang-models/sonic-exp-fc-map.yang',
                          './yang-models/sonic-dscp-tc-map.yang',
+                         './yang-models/sonic-dhcp-server-ipv4.yang',
                          './yang-models/sonic-dot1p-tc-map.yang',
                          './yang-models/sonic-storm-control.yang',
                          './yang-models/sonic-tc-priority-group-map.yang',
