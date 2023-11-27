@@ -335,7 +335,7 @@ class TestCfgGen(TestCase):
         output = self.run_script(argument)
         self.assertEqual(
             utils.to_dict(output.strip()),
-            utils.to_dict("{'PortChannel1': {'admin_status': 'up', 'min_links': '1', 'mtu': '9100', 'tpid': '0x8100','mode': 'routed',  'lacp_key': 'auto'}}")
+            utils.to_dict("{'PortChannel1': {'admin_status': 'up', 'min_links': '1', 'mtu': '9100', 'tpid': '0x8100','mode': 'routed', 'lacp_key': 'auto'}}")
         )
 
     def test_minigraph_portchannel_with_more_member(self):
@@ -343,7 +343,7 @@ class TestCfgGen(TestCase):
         output = self.run_script(argument)
         self.assertEqual(
             utils.to_dict(output.strip()),
-            utils.to_dict("{'PortChannel01': {'admin_status': 'up', 'min_links': '3', 'mode':'trunk', 'mtu': '9100','tpid': '0x8100', 'lacp_key': 'auto'}}"))
+            utils.to_dict("{'PortChannel01': {'admin_status': 'up', 'min_links': '3', 'mode':'routed', 'mtu': '9100','tpid': '0x8100', 'lacp_key': 'auto'}}"))
 
     def test_minigraph_portchannel_members(self):
         argument = ['-m', self.sample_graph_pc_test, '-p', self.port_config, '-v', "PORTCHANNEL_MEMBER.keys()|list"]
@@ -400,7 +400,7 @@ class TestCfgGen(TestCase):
         output = self.run_script(argument)
         self.assertEqual(
             utils.to_dict(output.strip()),
-            utils.to_dict("{'lanes': '25,26,27,28', 'description': 'Servers0:eth0', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'trunk', 'alias': 'fortyGigE0/4', 'admin_status': 'up', 'speed': '100000', 'autoneg': 'on', 'fec': 'none'}")
+            utils.to_dict("{'lanes': '25,26,27,28', 'description': 'Servers0:eth0', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'routed', 'alias': 'fortyGigE0/4', 'admin_status': 'up', 'speed': '100000', 'autoneg': 'on', 'fec': 'none'}")
         )
 
     def test_minigraph_port_autonegotiation(self):
@@ -411,8 +411,8 @@ class TestCfgGen(TestCase):
             utils.to_dict(output.strip()),
             utils.to_dict(
                 "{'Ethernet0': {'alias': 'fortyGigE0/0', 'pfc_asym': 'off', 'lanes': '29,30,31,32', 'description': 'fortyGigE0/0', 'mtu': '9100', 'tpid': '0x8100','mode': 'routed', 'speed': '40000'}, "
-                "'Ethernet4': {'lanes': '25,26,27,28', 'description': 'Servers0:eth0', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'trunk','alias': 'fortyGigE0/4', 'admin_status': 'up', 'autoneg': 'on', 'speed': '100000', 'fec': 'none'}, "
-                "'Ethernet8': {'lanes': '37,38,39,40', 'description': 'fortyGigE0/8', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'trunk', 'alias': 'fortyGigE0/8', 'admin_status': 'up', 'autoneg': 'off', 'fec': 'none', 'speed': '40000'}, "
+                "'Ethernet4': {'lanes': '25,26,27,28', 'description': 'Servers0:eth0', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'routed','alias': 'fortyGigE0/4', 'admin_status': 'up', 'autoneg': 'on', 'speed': '100000', 'fec': 'none'}, "
+                "'Ethernet8': {'lanes': '37,38,39,40', 'description': 'fortyGigE0/8', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'routed', 'alias': 'fortyGigE0/8', 'admin_status': 'up', 'autoneg': 'off', 'fec': 'none', 'speed': '40000'}, "
                 "'Ethernet12': {'lanes': '33,34,35,36', 'description': 'fortyGigE0/12', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100',  'mode': 'routed','alias': 'fortyGigE0/12', 'admin_status': 'up', 'speed': '40000'}, "
                 "'Ethernet16': {'lanes': '41,42,43,44', 'description': 'fortyGigE0/16', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'routed', 'alias': 'fortyGigE0/16', 'admin_status': 'up', 'speed': '40000'}, "
                 "'Ethernet20': {'lanes': '45,46,47,48', 'description': 'fortyGigE0/20', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'routed', 'alias': 'fortyGigE0/20', 'admin_status': 'up', 'speed': '40000'}, "
@@ -542,7 +542,7 @@ class TestCfgGen(TestCase):
         output = self.run_script(argument)
         self.assertEqual(
             utils.to_dict(output.strip()),
-            utils.to_dict("{'lanes': '37,38,39,40', 'description': 'Interface description', 'pfc_asym': 'off', 'mtu': '9100', 'alias': 'fortyGigE0/8', 'admin_status': 'up', 'speed': '1000', 'tpid': '0x8100', 'mode': 'trunk' }")
+            utils.to_dict("{'lanes': '37,38,39,40', 'description': 'Interface description', 'pfc_asym': 'off', 'mtu': '9100', 'alias': 'fortyGigE0/8', 'admin_status': 'up', 'speed': '1000', 'tpid': '0x8100', 'mode': 'routed' }")
         )
         argument = ['-m', graph_file, '-p', self.port_config, '-v', "PORT[\'Ethernet12\']"]
         output = self.run_script(argument)
