@@ -5,4 +5,5 @@ After=database.service determine-reboot-cause.service
 
 [Service]
 Type=simple
+RemainAfterExit=yes
 ExecStart=/usr/local/bin/process-reboot-cause
