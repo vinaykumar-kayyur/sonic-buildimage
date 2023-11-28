@@ -29,79 +29,79 @@
             "alias": "fortyGigE0/16",
             "lanes": "41,42,43,44",
             "admin_status": "up",
-            "mode": "routed"
+            "mode": "trunk"
         },
         "Ethernet20": {
             "alias": "fortyGigE0/20",
             "lanes": "45,46,47,48",
             "admin_status": "up",
-            "mode": "routed"
+            "mode": "trunk"
         },
         "Ethernet24": {
             "alias": "fortyGigE0/24",
             "lanes": "5,6,7,8",
             "admin_status": "up",
-            "mode": "routed"
+            "mode": "trunk"
         },
         "Ethernet28": {
             "alias": "fortyGigE0/28",
             "lanes": "1,2,3,4",
             "admin_status": "up",
-            "mode": "routed"
+            "mode": "trunk"
         },
         "Ethernet32": {
             "alias": "fortyGigE0/32",
             "lanes": "9,10,11,12",
             "admin_status": "up",
-            "mode": "routed"
+            "mode": "trunk"
         },
         "Ethernet36": {
             "alias": "fortyGigE0/36",
             "lanes": "13,14,15,16",
             "admin_status": "up",
-            "mode": "routed"
+            "mode": "trunk"
         },
         "Ethernet40": {
             "alias": "fortyGigE0/40",
             "lanes": "21,22,23,24",
             "admin_status": "up",
-            "mode": "routed"
+            "mode": "trunk"
         },
         "Ethernet44": {
             "alias": "fortyGigE0/44",
             "lanes": "17,18,19,20",
             "admin_status": "up",
-            "mode": "routed"
+            "mode": "trunk"
         },
         "Ethernet48": {
             "alias": "fortyGigE0/48",
             "lanes": "49,50,51,52",
             "admin_status": "up",
-            "mode": "routed"
+            "mode": "trunk"
         },
         "Ethernet52": {
             "alias": "fortyGigE0/52",
             "lanes": "53,54,55,56",
             "admin_status": "up",
-            "mode": "routed"
+            "mode": "trunk"
         },
         "Ethernet56": {
             "alias": "fortyGigE0/56",
             "lanes": "61,62,63,64",
             "admin_status": "up",
-            "mode": "routed"
+            "mode": "trunk"
         },
         "Ethernet60": {
             "alias": "fortyGigE0/60",
             "lanes": "57,58,59,60",
             "admin_status": "up",
-            "mode": "routed"
+            "mode": "trunk"
         },
         "Ethernet64": {
             "alias": "fortyGigE0/64",
             "lanes": "65,66,67,68",
             "admin_status": "up",
-            "mode": "routed"
+            "mode": "trunk"
         },
         "Ethernet68": {
             "alias": "fortyGigE0/68",
