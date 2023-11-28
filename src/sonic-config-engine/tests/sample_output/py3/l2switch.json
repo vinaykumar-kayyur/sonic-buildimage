@@ -11,13 +11,13 @@
             "alias": "fortyGigE0/4",
             "lanes": "25,26,27,28",
             "admin_status": "up",
-            "mode": "routed"
+            "mode": "trunk"
         },
         "Ethernet8": {
             "alias": "fortyGigE0/8",
             "lanes": "37,38,39,40",
             "admin_status": "up",
-            "mode": "routed"
+            "mode": "trunk"
         },
         "Ethernet12": {
             "alias": "fortyGigE0/12",
