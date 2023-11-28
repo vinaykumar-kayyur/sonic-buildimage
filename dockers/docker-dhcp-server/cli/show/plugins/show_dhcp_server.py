@@ -58,9 +58,16 @@ def range(db, range_name):
     table = []
     dbconn = db.db
     for key in dbconn.keys("CONFIG_DB", "DHCP_SERVER_IPV4_RANGE|" + range_name):
-        entry = dbconn.get_all("CONFIG_DB", key)
-        start, end = entry["range"].split(",")
         name = key.split("|")[1]
+        entry = dbconn.get_all("CONFIG_DB", key)
+        range_ = entry["range"].split(",")
+        if len(range_) == 1:
+            start, end = range_[0], range_[0]
+        elif len(range_) == 2:
+            start, end = range_
+        else:
+            table.append([name, "", "", "range value is illegal"])
+            continue
         count = count_ipv4(start, end)
         if count < 1:
             count = "range value is illegal"

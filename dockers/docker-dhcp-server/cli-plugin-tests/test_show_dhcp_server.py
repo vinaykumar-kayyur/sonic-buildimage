@@ -95,3 +95,17 @@ range2   100.1.1.9   100.1.1.8  range value is illegal
         result = runner.invoke(show_dhcp_server.dhcp_server.commands["ipv4"].commands["range"], ["range2"], obj=db)
         assert result.exit_code == 0, "exit code: {}, Exception: {}, Traceback: {}".format(result.exit_code, result.exception, result.exc_info)
         assert result.stdout == expected_stdout
+
+    def test_show_dhcp_server_ipv4_range_single_ip(self, mock_db):
+        expected_stdout = """\
+Range    IP Start    IP End       IP Count
+-------  ----------  ---------  ----------
+range1   100.1.1.3   100.1.1.5           3
+"""
+        runner = CliRunner()
+        db = clicommon.Db()
+        db.db = mock_db
+        result = runner.invoke(show_dhcp_server.dhcp_server.commands["ipv4"].commands["range"], ["range3"], obj=db)
+        assert result.exit_code == 0, "exit code: {}, Exception: {}, Traceback: {}".format(result.exit_code, result.exception, result.exc_info)
+        assert result.stdout == expected_stdout
+
