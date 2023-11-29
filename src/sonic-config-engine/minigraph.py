@@ -1718,6 +1718,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
             results['LOOPBACK_INTERFACE'][host_lo_intf[0]] = {}
 
     results['MGMT_VRF_CONFIG'] = mvrf
+
     # Update SNMP_AGENT_ADDRESS_CONFIG with Management IP and Loopback IP
     # if available.
     if not is_multi_asic() and asic_name is None:
