@@ -653,9 +653,7 @@ def parse_dpg(dpg, hname):
                 vlantype_name = vlantype.text
             vmbr_list = vintfmbr.split(';')
             for i, member in enumerate(vmbr_list):
-                # There is no alias for portchannel so we need to check this
-                if "PortChannel" not in vmbr_list[i]:
-                    vmbr_list[i] = port_alias_map.get(member, member)
+                vmbr_list[i] = port_alias_map.get(member, member)
                 sonic_vlan_member_name = "Vlan%s" % (vlanid)
                 if vlantype_name == "Tagged":
                     vlan_members[(sonic_vlan_member_name, vmbr_list[i])] = {'tagging_mode': 'tagged'}
@@ -1869,7 +1867,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     # mode check for vlan membership
     for port_name, port in ports.items():
         if 'mode' not in port:
-            if port_name in vlan_members:
+            if port_name in [key[1] for key in vlan_members.keys()]:
                 port['mode'] = 'trunk'
             else:
                 port['mode'] = 'routed'
@@ -1947,7 +1945,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     # mode check for vlan membership in portchannel
     for pc_name, pc in pcs.items():
         if 'mode' not in pc:
-            if pc_name in vlan_members:
+            if pc_name in [key[1] for key in vlan_members.keys()]:
                  pc['mode'] = 'trunk'
             else:
                  pc['mode'] = 'routed'
