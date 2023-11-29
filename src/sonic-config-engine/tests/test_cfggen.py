@@ -491,7 +491,7 @@ class TestCfgGen(TestCase):
         output = self.run_script(argument)
         self.assertEqual(
             utils.to_dict(output.strip()),
-            utils.to_dict("{'lanes': '101,102,103,104', 'fec': 'rs', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100', 'mode' : 'routed', 'alias': 'fortyGigE0/124', 'admin_status': 'up', 'speed': '100000', 'description': 'ARISTA04T1:Ethernet1/1'}")
+            utils.to_dict("{'lanes': '101,102,103,104', 'fec': 'rs', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100', 'mode' : 'trunk', 'alias': 'fortyGigE0/124', 'admin_status': 'up', 'speed': '100000', 'description': 'ARISTA04T1:Ethernet1/1'}")
         )
 
     def test_minigraph_default_vxlan(self):
