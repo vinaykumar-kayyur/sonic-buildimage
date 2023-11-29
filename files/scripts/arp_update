@@ -81,7 +81,7 @@ while /bin/true; do
         ip="$( cut -d ',' -f 1 <<< "$neigh" )"
         mac="$( cut -d ',' -f 2 <<< "$neigh" )"
         if [[ -z $(sonic-db-cli ASIC_DB keys "ASIC_STATE:SAI_OBJECT_TYPE_FDB_ENTRY*${mac}*") ]]; then
-            timeout 1 ping -c1 -w1 $ip > /dev/null
+            timeout 0.2 ping -c1 -w1 $ip > /dev/null
         fi
   done
 
@@ -95,6 +95,7 @@ while /bin/true; do
         if [[ $kernel_mac != $appl_db_mac ]]; then
             logger -p warning "MAC mismatch for ${ip} on ${intf} - kernel: ${kernel_mac}, APPL_DB: ${appl_db_mac}"
             ip neigh flush $ip
+            timeout 0.2 ping -c1 -w1 $ip > /dev/null
         fi
   done
 
