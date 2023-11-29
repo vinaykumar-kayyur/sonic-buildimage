@@ -653,7 +653,9 @@ def parse_dpg(dpg, hname):
                 vlantype_name = vlantype.text
             vmbr_list = vintfmbr.split(';')
             for i, member in enumerate(vmbr_list):
-                vmbr_list[i] = port_alias_map.get(member, member)
+                # There is no alias for portchannel so we need to check this
+                if "PortChannel" not in vmbr_list[i]:
+                    vmbr_list[i] = port_alias_map.get(member, member)
                 sonic_vlan_member_name = "Vlan%s" % (vlanid)
                 if vlantype_name == "Tagged":
                     vlan_members[(sonic_vlan_member_name, vmbr_list[i])] = {'tagging_mode': 'tagged'}
