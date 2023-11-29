@@ -1723,14 +1723,13 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     if not is_multi_asic() and asic_name is None:
         results['SNMP_AGENT_ADDRESS_CONFIG'] = {}
         port = '161'
-        for mgmt_intf in results['MGMT_INTERFACE'].keys():
+        for mgmt_intf in mgmt_intf.keys():
             snmp_key = mgmt_intf[1].split('/')[0] + '|' + port + '|'
             results['SNMP_AGENT_ADDRESS_CONFIG'][snmp_key] = {}
         # Add Loopback IP as agent address for single asic
-        for loip in results['LOOPBACK_INTERFACE']:
-            if len(loip) == 2:
-                snmp_key = loip[1].split('/')[0] + '|' + port + '|'
-                results['SNMP_AGENT_ADDRESS_CONFIG'][snmp_key] = {}
+        for loip in lo_intfs.keys():
+            snmp_key = loip[1].split('/')[0] + '|' + port + '|'
+            results['SNMP_AGENT_ADDRESS_CONFIG'][snmp_key] = {}
     else:
         results['SNMP_AGENT_ADDRESS_CONFIG'] = {}
 
