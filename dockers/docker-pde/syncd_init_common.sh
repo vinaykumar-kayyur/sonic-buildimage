@@ -216,6 +216,10 @@ config_syncd_innovium()
     mkdir -p $II_ROOT
 }
 
+config_syncd_pensando()
+{
+    echo "pensando"
+}
 config_syncd()
 {
     check_warm_boot

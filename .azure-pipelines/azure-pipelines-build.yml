@@ -99,6 +99,11 @@ jobs:
           variables:
             PLATFORM_ARCH: arm64
 
+        - name: pensando
+          pool: sonicbld-arm64
+          variables:
+            PLATFORM_ARCH: arm64
+
         - name: marvell
 
         - name: mellanox
@@ -119,52 +124,6 @@ jobs:
       - template: .azure-pipelines/template-daemon.yml@buildimage
       - bash: |
           set -ex
-          if [ $(GROUP_NAME) == vs ]; then
-            if [ $(dbg_image) == yes ]; then
-              make $BUILD_OPTIONS INSTALL_DEBUG_TOOLS=y target/sonic-vs.img.gz
-              mv target/sonic-vs.img.gz target/sonic-vs-dbg.img.gz
-            fi
-            if [ $(asan_image) == yes ]; then
-              make $BUILD_OPTIONS ENABLE_ASAN=y target/docker-sonic-vs.gz
-              mv target/docker-sonic-vs.gz target/docker-sonic-vs-asan.gz
-            fi
-            if [ "$(K8S_OPTIONS)" == 'INCLUDE_KUBERNETES_MASTER=y' ]; then
-              make $BUILD_OPTIONS $(K8S_OPTIONS) target/sonic-vs.img.gz
-              mv target/sonic-vs.img.gz target/sonic-vs-k8s.img.gz
-            fi
-            make $BUILD_OPTIONS target/docker-sonic-vs.gz target/sonic-vs.img.gz target/docker-ptf.gz
-            make $BUILD_OPTIONS target/docker-ptf-sai.gz
-            if [ $(Build.Reason) != 'PullRequest' ];then
-              gzip -kd target/sonic-vs.img.gz
-              SONIC_RUN_CMDS="qemu-img convert target/sonic-vs.img -O vhdx -o subformat=dynamic target/sonic-vs.vhdx" make $BUILD_OPTIONS sonic-slave-run
-              rm target/sonic-vs.img
-            fi
-          else
-            if [ $(dbg_image) == yes ]; then
-              make  $BUILD_OPTIONS INSTALL_DEBUG_TOOLS=y target/sonic-$(GROUP_NAME).bin
-              mv target/sonic-$(GROUP_NAME).bin target/sonic-$(GROUP_NAME)-dbg.bin
-            fi
-            if [ $(swi_image) == yes ]; then
-              make $BUILD_OPTIONS ENABLE_IMAGE_SIGNATURE=y target/sonic-aboot-$(GROUP_NAME).swi
-            fi
-            if [ $(docker_syncd_rpc_image) == yes ]; then
-              # workaround for issue in rules/sairedis.dep, git ls-files will list un-exist files for cache
-              make $BUILD_OPTIONS ENABLE_SYNCD_RPC=y target/docker-syncd-$(platform_rpc)-rpc.gz
-              pushd ./src/sonic-sairedis/SAI
-              git stash
-              popd
-              if [ $(GROUP_NAME) == broadcom ]; then
-                make $BUILD_OPTIONS ENABLE_SYNCD_RPC=y target/docker-syncd-$(platform_rpc)-dnx-rpc.gz
-                pushd ./src/sonic-sairedis/SAI
-                git stash
-                popd 
-              fi
-            fi
-            if [ $(syncd_rpc_image) == yes ]; then
-              make $BUILD_OPTIONS ENABLE_SYNCD_RPC=y target/sonic-$(GROUP_NAME).bin
-              mv target/sonic-mellanox.bin target/sonic-$(GROUP_NAME)-rpc.bin
-            fi
-            make $BUILD_OPTIONS target/sonic-$(GROUP_NAME).bin
-          fi
+          make $BUILD_OPTIONS target/sonic-pensando.tar NOBUSTER=0 NOBULLSEYE=0
         displayName: "Build sonic image"
       - template: .azure-pipelines/check-dirty-version.yml@buildimage
