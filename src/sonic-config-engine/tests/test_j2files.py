@@ -268,6 +268,7 @@ class TestJ2Files(TestCase):
 
         self.assertTrue(json.dumps(sample_output_json, sort_keys=True) == json.dumps(output_json, sort_keys=True))
 
+
     def test_l3_ports_template(self):
         argument = ['-k', '32x1000Gb', '--preset', 'l3', '-p', self.l1_l3_port_config]
         output = self.run_script(argument)
