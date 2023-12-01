@@ -12,6 +12,7 @@ def ts_to_str(ts):
 
 
 @click.group(cls=clicommon.AliasedGroup)
+@click.pass_context
 @clicommon.pass_db
 def dhcp_server(db):
     """Show dhcp_server related info"""
@@ -19,7 +20,7 @@ def dhcp_server(db):
     dbconn = db.db
     if dbconn.get("CONFIG_DB", "FEATURE|dhcp_server", "state") != "enabled":
         ctx.fail("Feature dhcp_server is not enabled")
-    ctx.obj = dbconn
+    ctx.dbconn = dbconn
 
 
 @dhcp_server.group(cls=clicommon.AliasedGroup)
@@ -36,7 +37,7 @@ def lease(dhcp_interface):
         dhcp_interface = "*"
     headers = ["Interface", "MAC Address", "IP", "Lease Start", "Lease End"]
     table = []
-    dbconn = ctx.obj
+    dbconn = ctx.dbconn
     for key in dbconn.keys("STATE_DB", "DHCP_SERVER_IPV4_LEASE|" + dhcp_interface + "|*"):
         entry = dbconn.get_all("STATE_DB", key)
         interface, mac = key.split("|")[1:]
@@ -61,7 +62,7 @@ def range(range_name):
         range_name = "*"
     headers = ["Range", "IP Start", "IP End", "IP Count"]
     table = []
-    dbconn = ctx.obj
+    dbconn = ctx.dbconn
     for key in dbconn.keys("CONFIG_DB", "DHCP_SERVER_IPV4_RANGE|" + range_name):
         name = key.split("|")[1]
         entry = dbconn.get_all("CONFIG_DB", key)
