@@ -55,7 +55,7 @@ def count_ipv4(start, end):
 
 @ipv4.command()
 @click.argument('range_name', required=False)
-def range(db, range_name):
+def range(range_name):
     ctx = click.get_current_context()
     if not range_name:
         range_name = "*"
