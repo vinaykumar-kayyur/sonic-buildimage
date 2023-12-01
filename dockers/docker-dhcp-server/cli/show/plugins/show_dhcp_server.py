@@ -12,14 +12,13 @@ def ts_to_str(ts):
 
 
 @click.group(cls=clicommon.AliasedGroup)
-@click.pass_context
 @clicommon.pass_db
-def dhcp_server(ctx, db):
+def dhcp_server(db):
     """Show dhcp_server related info"""
+    ctx = click.get_current_context()
     dbconn = db.db
     if dbconn.get("CONFIG_DB", "FEATURE|dhcp_server", "state") != "enabled":
         ctx.fail("Feature dhcp_server is not enabled")
-    ctx.dbconn = dbconn
 
 
 @dhcp_server.group(cls=clicommon.AliasedGroup)
@@ -30,13 +29,13 @@ def ipv4():
 
 @ipv4.command()
 @click.argument('dhcp_interface', required=False)
-def lease(dhcp_interface):
-    ctx = click.get_current_context()
+@clicommon.pass_db
+def lease(db, dhcp_interface):
     if not dhcp_interface:
         dhcp_interface = "*"
     headers = ["Interface", "MAC Address", "IP", "Lease Start", "Lease End"]
     table = []
-    dbconn = ctx.dbconn
+    dbconn = db.db
     for key in dbconn.keys("STATE_DB", "DHCP_SERVER_IPV4_LEASE|" + dhcp_interface + "|*"):
         entry = dbconn.get_all("STATE_DB", key)
         interface, mac = key.split("|")[1:]
@@ -55,13 +54,13 @@ def count_ipv4(start, end):
 
 @ipv4.command()
 @click.argument('range_name', required=False)
-def range(range_name):
-    ctx = click.get_current_context()
+@clicommon.pass_db
+def range(db, range_name):
     if not range_name:
         range_name = "*"
     headers = ["Range", "IP Start", "IP End", "IP Count"]
     table = []
-    dbconn = ctx.dbconn
+    dbconn = db.db
     for key in dbconn.keys("CONFIG_DB", "DHCP_SERVER_IPV4_RANGE|" + range_name):
         name = key.split("|")[1]
         entry = dbconn.get_all("CONFIG_DB", key)
