@@ -14,9 +14,8 @@ def ts_to_str(ts):
 @click.group(cls=clicommon.AliasedGroup)
 @click.pass_context
 @clicommon.pass_db
-def dhcp_server(db):
+def dhcp_server(ctx, db):
     """Show dhcp_server related info"""
-    ctx = click.get_current_context()
     dbconn = db.db
     if dbconn.get("CONFIG_DB", "FEATURE|dhcp_server", "state") != "enabled":
         ctx.fail("Feature dhcp_server is not enabled")
