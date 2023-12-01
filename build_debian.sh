@@ -31,9 +31,9 @@ set -x -e
 CONFIGURED_ARCH=$([ -f .arch ] && cat .arch || echo amd64)
 
 ## docker engine version (with platform)
-DOCKER_VERSION=5:24.0.2-1~debian.11~$IMAGE_DISTRO
+DOCKER_VERSION=5:24.0.2-1~debian.12~$IMAGE_DISTRO
 CONTAINERD_IO_VERSION=1.6.21-1
-LINUX_KERNEL_VERSION=5.10.0-18-2
+LINUX_KERNEL_VERSION=6.1.0-11-2
 
 ## Working directory to prepare the file system
 FILESYSTEM_ROOT=./fsroot
@@ -59,22 +59,29 @@ TRUSTED_GPG_DIR=$BUILD_TOOL_PATH/trusted.gpg.d
     exit 1
 }
 
+if [ "$IMAGE_TYPE" = "aboot" ]; then
+    TARGET_BOOTLOADER="aboot"
+fi
+
+## Check if not a last stage of RFS build
+if [[ $RFS_SPLIT_LAST_STAGE != y ]]; then
+
 ## Prepare the file system directory
 if [[ -d $FILESYSTEM_ROOT ]]; then
     sudo rm -rf $FILESYSTEM_ROOT || die "Failed to clean chroot directory"
 fi
 mkdir -p $FILESYSTEM_ROOT
 mkdir -p $FILESYSTEM_ROOT/$PLATFORM_DIR
-mkdir -p $FILESYSTEM_ROOT/$PLATFORM_DIR/grub
 touch $FILESYSTEM_ROOT/$PLATFORM_DIR/firsttime
+
+bootloader_packages=""
+if [ "$TARGET_BOOTLOADER" != "aboot" ]; then
+    mkdir -p $FILESYSTEM_ROOT/$PLATFORM_DIR/grub
+    bootloader_packages="grub2-common"
+fi
 
 ## ensure proc is mounted
 sudo mount proc /proc -t proc || true
-
-## make / as a mountpoint in chroot env, needed by dockerd
-pushd $FILESYSTEM_ROOT
-sudo mount --bind . .
-popd
 
 ## Build the host debian base system
 echo '[INFO] Build host debian base system...'
@@ -113,7 +120,8 @@ sudo LANG=C chroot $FILESYSTEM_ROOT mount
 ## Pointing apt to public apt mirrors and getting latest packages, needed for latest security updates
 scripts/build_mirror_config.sh files/apt $CONFIGURED_ARCH $IMAGE_DISTRO
 sudo cp files/apt/sources.list.$CONFIGURED_ARCH $FILESYSTEM_ROOT/etc/apt/sources.list
-sudo cp files/apt/apt.conf.d/{81norecommends,apt-{clean,gzip-indexes,no-languages},no-check-valid-until,apt-multiple-retries} $FILESYSTEM_ROOT/etc/apt/apt.conf.d/
+sudo cp files/apt/apt-retries-count $FILESYSTEM_ROOT/etc/apt/apt.conf.d/
+sudo cp files/apt/apt.conf.d/{81norecommends,apt-{clean,gzip-indexes,no-languages},no-check-valid-until} $FILESYSTEM_ROOT/etc/apt/apt.conf.d/
 
 ## Note: set lang to prevent locale warnings in your chroot
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y update
@@ -248,23 +256,18 @@ sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install apparmor
 sudo cp files/image_config/ntp/ntp-apparmor $FILESYSTEM_ROOT/etc/apparmor.d/local/usr.sbin.ntpd
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install apt-transport-https \
                                                        ca-certificates \
-                                                       curl \
-                                                       gnupg2 \
-                                                       software-properties-common
+                                                       curl
 if [[ $CONFIGURED_ARCH == armhf ]]; then
     # update ssl ca certificates for secure pem
     sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT c_rehash
 fi
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT curl -o /tmp/docker.asc -fsSL https://download.docker.com/linux/debian/gpg
 sudo LANG=C chroot $FILESYSTEM_ROOT mv /tmp/docker.asc /etc/apt/trusted.gpg.d/
-sudo LANG=C chroot $FILESYSTEM_ROOT add-apt-repository \
-                                    "deb [arch=$CONFIGURED_ARCH] https://download.docker.com/linux/debian $IMAGE_DISTRO stable"
+sudo tee $FILESYSTEM_ROOT/etc/apt/sources.list.d/docker.list >/dev/null <<EOF
+deb [arch=$CONFIGURED_ARCH] https://download.docker.com/linux/debian $IMAGE_DISTRO stable
+EOF
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get update
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install docker-ce=${DOCKER_VERSION} docker-ce-cli=${DOCKER_VERSION} containerd.io=${CONTAINERD_IO_VERSION}
-
-# Uninstall 'python3-gi' installed as part of 'software-properties-common' to remove debian version of 'PyGObject'
-# pip version of 'PyGObject' will be installed during installation of 'sonic-host-services'
-sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y remove software-properties-common gnupg2 python3-gi
 
 install_kubernetes () {
     local ver="$1"
@@ -296,7 +299,7 @@ then
     install_kubernetes ${MASTER_KUBERNETES_VERSION}
 
     sudo LANG=C chroot $FILESYSTEM_ROOT apt-get update
-    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install hyperv-daemons gnupg xmlstarlet
+    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install hyperv-daemons gnupg xmlstarlet parted netcat
     sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y remove gnupg
     sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT curl -o /tmp/cri-dockerd.deb -fsSL \
         https://github.com/Mirantis/cri-dockerd/releases/download/v${MASTER_CRI_DOCKERD}/cri-dockerd_${MASTER_CRI_DOCKERD}.3-0.debian-${IMAGE_DISTRO}_amd64.deb
@@ -366,7 +369,8 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     gdisk                   \
     sysfsutils              \
     squashfs-tools          \
-    grub2-common            \
+    $bootloader_packages    \
+    rsyslog                 \
     screen                  \
     hping3                  \
     tcptraceroute           \
@@ -382,9 +386,9 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     python3-pip             \
     python-is-python3       \
     cron                    \
-    libprotobuf23           \
+    libprotobuf32           \
     libgrpc++1              \
-    libgrpc10               \
+    libgrpc29               \
     haveged                 \
     fdisk                   \
     gpg                     \
@@ -393,11 +397,9 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     linux-perf              \
     resolvconf              \
 	lsof                    \
-	sysstat
-
-# default rsyslog version is 8.2110.0 which has a bug on log rate limit,
-# use backport version
-sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -t bullseye-backports -y install rsyslog
+	sysstat                 \
+	xxd                     \
+	zstd
 
 # Have systemd create the auditd log directory
 sudo mkdir -p ${FILESYSTEM_ROOT}/etc/systemd/system/auditd.service.d
@@ -406,6 +408,10 @@ sudo tee ${FILESYSTEM_ROOT}/etc/systemd/system/auditd.service.d/log-directory.co
 LogsDirectory=audit
 LogsDirectoryMode=0750
 EOF
+
+# latest tcpdump control resource access with AppArmor.
+# override tcpdump profile to allow tcpdump access TACACS config file.
+sudo cp files/apparmor/usr.bin.tcpdump $FILESYSTEM_ROOT/etc/apparmor.d/local/usr.bin.tcpdump
 
 if [[ $CONFIGURED_ARCH == amd64 ]]; then
 ## Pre-install the fundamental packages for amd64 (x86)
@@ -439,14 +445,6 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     systemd-sysv \
     ntp
 
-# Workaround for issue: The udev rule may fail to be executed because the
-#                       daemon-reload command is executed in parallel
-# Github issue: https://github.com/systemd/systemd/issues/24668
-# Github PR: https://github.com/systemd/systemd/pull/24673
-# This workaround should be removed after a upstream already contains the fixes
-sudo patch $FILESYSTEM_ROOT/lib/systemd/system/systemd-udevd.service \
-    files/image_config/systemd/systemd-udevd/fix-udev-rule-may-fail-if-daemon-reload-command-runs.patch
-
 if [[ $TARGET_BOOTLOADER == grub ]]; then
     if [[ $CONFIGURED_ARCH == amd64 ]]; then
         GRUB_PKG=grub-pc-bin
@@ -462,6 +460,10 @@ fi
 
 ## Disable kexec supported reboot which was installed by default
 sudo sed -i 's/LOAD_KEXEC=true/LOAD_KEXEC=false/' $FILESYSTEM_ROOT/etc/default/kexec
+
+# Ensure that 'logrotate-config.service' is set as a dependency to start before 'logrotate.service'.
+sudo mkdir $FILESYSTEM_ROOT/etc/systemd/system/logrotate.service.d
+sudo cp files/image_config/logrotate/logrotateOverride.conf $FILESYSTEM_ROOT/etc/systemd/system/logrotate.service.d/logrotateOverride.conf
 
 ## Remove sshd host keys, and will regenerate on first sshd start
 sudo rm -f $FILESYSTEM_ROOT/etc/ssh/ssh_host_*_key*
@@ -523,13 +525,11 @@ done < files/image_config/sysctl/sysctl-net.conf
 
 sudo augtool --autosave "$sysctl_net_cmd_string" -r $FILESYSTEM_ROOT
 
-# Upgrade pip via PyPI and uninstall the Debian version
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install --upgrade pip
-sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get purge -y python3-pip
+# Specify that we want to explicitly install Python packages into the system environment, and risk breakages
+sudo cp files/image_config/pip/pip.conf $FILESYSTEM_ROOT/etc/pip.conf
 
 # For building Python packages
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install 'setuptools==49.6.00'
-sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install 'wheel==0.35.1'
+sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install python3-setuptools python3-wheel
 
 # docker Python API package is needed by Ansible docker module as well as some SONiC applications
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install 'docker==6.1.1'
@@ -562,33 +562,19 @@ sudo cp files/dhcp/sethostname6 $FILESYSTEM_ROOT/etc/dhcp/dhclient-exit-hooks.d/
 sudo cp files/dhcp/graphserviceurl $FILESYSTEM_ROOT/etc/dhcp/dhclient-exit-hooks.d/
 sudo cp files/dhcp/snmpcommunity $FILESYSTEM_ROOT/etc/dhcp/dhclient-exit-hooks.d/
 sudo cp files/dhcp/vrf $FILESYSTEM_ROOT/etc/dhcp/dhclient-exit-hooks.d/
-if [ -f files/image_config/ntp/ntp ]; then
-    sudo cp ./files/image_config/ntp/ntp $FILESYSTEM_ROOT/etc/init.d/
+if [ -f files/image_config/ntp/ntpsec ]; then
+    sudo cp ./files/image_config/ntp/ntpsec $FILESYSTEM_ROOT/etc/init.d/
 fi
 
 if [ -f files/image_config/ntp/ntp-systemd-wrapper ]; then
-    sudo mkdir -p $FILESYSTEM_ROOT/usr/lib/ntp/
-    sudo cp ./files/image_config/ntp/ntp-systemd-wrapper $FILESYSTEM_ROOT/usr/lib/ntp/
+    sudo cp ./files/image_config/ntp/ntp-systemd-wrapper $FILESYSTEM_ROOT/usr/libexec/ntpsec/
 fi
 
-## Version file
+## Version file part 1
 sudo mkdir -p $FILESYSTEM_ROOT/etc/sonic
 if [ -f files/image_config/sonic_release ]; then
     sudo cp files/image_config/sonic_release $FILESYSTEM_ROOT/etc/sonic/
 fi
-export build_version="${SONIC_IMAGE_VERSION}"
-export debian_version="$(cat $FILESYSTEM_ROOT/etc/debian_version)"
-export kernel_version="${kversion}"
-export asic_type="${sonic_asic_platform}"
-export asic_subtype="${TARGET_MACHINE}"
-export commit_id="$(git rev-parse --short HEAD)"
-export branch="$(git rev-parse --abbrev-ref HEAD)"
-export release="$(if [ -f $FILESYSTEM_ROOT/etc/sonic/sonic_release ]; then cat $FILESYSTEM_ROOT/etc/sonic/sonic_release; fi)"
-export build_date="$(date -u)"
-export build_number="${BUILD_NUMBER:-0}"
-export built_by="$USER@$BUILD_HOSTNAME"
-export sonic_os_version="${SONIC_OS_VERSION}"
-j2 files/build_templates/sonic_version.yml.j2 | sudo tee $FILESYSTEM_ROOT/etc/sonic/sonic_version.yml
 
 # Default users info
 export password_expire="$( [[ "$CHANGE_DEFAULT_PASSWORD" == "y" ]] && echo true || echo false )"
@@ -609,6 +595,60 @@ if [[ ! -f './asic_config_checksum' ]]; then
     exit 1
 fi
 sudo cp ./asic_config_checksum $FILESYSTEM_ROOT/etc/sonic/asic_config_checksum
+
+## Check if not a last stage of RFS build
+fi
+
+if [[ $RFS_SPLIT_FIRST_STAGE == y ]]; then
+    echo '[INFO] Finished with RFS first stage'
+    echo '[INFO] Umount all'
+
+    ## Display all process details access /proc
+    sudo LANG=C chroot $FILESYSTEM_ROOT fuser -vm /proc
+    ## Kill the processes
+    sudo LANG=C chroot $FILESYSTEM_ROOT fuser -km /proc || true
+    ## Wait fuser fully kill the processes
+    sudo timeout 15s bash -c 'until LANG=C chroot $0 umount /proc; do sleep 1; done' $FILESYSTEM_ROOT || true
+
+    sudo rm -f $TARGET_PATH/$RFS_SQUASHFS_NAME
+    sudo mksquashfs $FILESYSTEM_ROOT $TARGET_PATH/$RFS_SQUASHFS_NAME -Xcompression-level 1
+
+    exit 0
+fi
+
+if [[ $RFS_SPLIT_LAST_STAGE == y ]]; then
+    echo '[INFO] RFS build: second stage'
+
+    ## ensure proc is mounted
+    sudo mount proc /proc -t proc || true
+
+    sudo fuser -vm $FILESYSTEM_ROOT || true
+    sudo rm -rf $FILESYSTEM_ROOT
+    sudo unsquashfs -d $FILESYSTEM_ROOT $TARGET_PATH/$RFS_SQUASHFS_NAME
+
+    ## make / as a mountpoint in chroot env, needed by dockerd
+    pushd $FILESYSTEM_ROOT
+    sudo mount --bind . .
+    popd
+
+    trap_push 'sudo LANG=C chroot $FILESYSTEM_ROOT umount /proc || true'
+    sudo LANG=C chroot $FILESYSTEM_ROOT mount proc /proc -t proc
+fi
+
+## Version file part 2
+export build_version="${SONIC_IMAGE_VERSION}"
+export debian_version="$(cat $FILESYSTEM_ROOT/etc/debian_version)"
+export kernel_version="${kversion}"
+export asic_type="${sonic_asic_platform}"
+export asic_subtype="${TARGET_MACHINE}"
+export commit_id="$(git rev-parse --short HEAD)"
+export branch="$(git rev-parse --abbrev-ref HEAD)"
+export release="$(if [ -f $FILESYSTEM_ROOT/etc/sonic/sonic_release ]; then cat $FILESYSTEM_ROOT/etc/sonic/sonic_release; fi)"
+export build_date="$(date -u)"
+export build_number="${BUILD_NUMBER:-0}"
+export built_by="$USER@$BUILD_HOSTNAME"
+export sonic_os_version="${SONIC_OS_VERSION}"
+j2 files/build_templates/sonic_version.yml.j2 | sudo tee $FILESYSTEM_ROOT/etc/sonic/sonic_version.yml
 
 if [ -f sonic_debian_extension.sh ]; then
     ./sonic_debian_extension.sh $FILESYSTEM_ROOT $PLATFORM_DIR $IMAGE_DISTRO
@@ -755,8 +795,7 @@ sudo LANG=C chroot $FILESYSTEM_ROOT fuser -vm /proc
 ## Kill the processes
 sudo LANG=C chroot $FILESYSTEM_ROOT fuser -km /proc || true
 ## Wait fuser fully kill the processes
-sleep 15
-sudo LANG=C chroot $FILESYSTEM_ROOT umount /proc || true
+sudo timeout 15s bash -c 'until LANG=C chroot $0 umount /proc; do sleep 1; done' $FILESYSTEM_ROOT || true
 
 ## Prepare empty directory to trigger mount move in initramfs-tools/mount_loop_root, implemented by patching
 sudo mkdir $FILESYSTEM_ROOT/host
@@ -781,6 +820,17 @@ sudo mkdir -p $FILESYSTEM_ROOT/var/lib/docker
 ## Clear DNS configuration inherited from the build server
 sudo rm -f $FILESYSTEM_ROOT/etc/resolvconf/resolv.conf.d/original
 sudo cp files/image_config/resolv-config/resolv.conf.head $FILESYSTEM_ROOT/etc/resolvconf/resolv.conf.d/head
+
+## Optimize filesystem size
+if [ "$BUILD_REDUCE_IMAGE_SIZE" = "y" ]; then
+   sudo scripts/build-optimize-fs-size.py "$FILESYSTEM_ROOT" \
+      --image-type "$IMAGE_TYPE" \
+      --hardlinks var/lib/docker \
+      --hardlinks usr/share/sonic/device \
+      --remove-docs \
+      --remove-mans \
+      --remove-licenses
+fi
 
 sudo mksquashfs $FILESYSTEM_ROOT $FILESYSTEM_SQUASHFS -comp zstd -b 1M -e boot -e var/lib/docker -e $PLATFORM_DIR
 

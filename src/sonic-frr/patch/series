@@ -21,3 +21,13 @@ cross-compile-changes.patch
 0019-zebra-Abstract-dplane_ctx_route_init-to-init-route-w.patch
 0020-zebra-Fix-crash-when-dplane_fpm_nl-fails-to-process-.patch
 0021-zebra-remove-duplicated-nexthops-when-sending-fpm-msg.patch
+0022-bgpd-Don-t-read-the-first-byte-of-ORF-header-if-we-a.patch
+0023-bgpd-Make-sure-we-have-enough-data-to-read-two-bytes.patch
+0024-bgpd-Do-not-process-NLRIs-if-the-attribute-length-is.patch
+0025-bgpd-Use-treat-as-withdraw-for-tunnel-encapsulation-.patch
+0026-zebra-Add-encap-type-when-building-packet-for-FPM.patch
+0027-zebra-Fix-non-notification-of-better-admin-won.patch
+0028-bgpd-Check-mandatory-attributes-more-carefully-for-U.patch
+0029-bgpd-Handle-MP_REACH_NLRI-malformed-packets-with-ses.patch
+0030-bgpd-Treat-EOR-as-withdrawn-to-avoid-unwanted-handli.patch
+0031-bgpd-Ignore-handling-NLRIs-if-we-received-MP_UNREACH.patch
