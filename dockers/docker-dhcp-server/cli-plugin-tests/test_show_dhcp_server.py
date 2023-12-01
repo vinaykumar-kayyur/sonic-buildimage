@@ -59,7 +59,7 @@ Vlan1001|<Unknown>  10:70:fd:b6:13:02  192.168.0.3  2023-03-01 03:16:21  2023-03
     def test_show_dhcp_server_ipv4_range_without_name(self, mock_db):
         expected_stdout = """\
 Range    IP Start    IP End      IP Count
--------  ----------  ---------   ----------------------
+-------  ----------  ----------  ----------------------
 range1   100.1.1.3   100.1.1.5   3
 range2   100.1.1.9   100.1.1.8   range value is illegal
 range3   100.1.1.10  100.1.1.10  1
