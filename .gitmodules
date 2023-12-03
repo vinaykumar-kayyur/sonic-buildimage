@@ -113,7 +113,7 @@
 	path = src/dhcpmon
 	url = https://github.com/sonic-net/sonic-dhcpmon.git
 [submodule "src/sonic-dash-api/sonic-dash-api"]
-	path = src/sonic-dash-api/sonic-dash-api
+	path = src/sonic-dash-api
 	url = https://github.com/sonic-net/sonic-dash-api.git
 [submodule "platform/marvell-arm64/mrvl-prestera"]
 	path = platform/marvell-arm64/mrvl-prestera
