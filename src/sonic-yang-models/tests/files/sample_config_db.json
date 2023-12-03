@@ -483,8 +483,14 @@
         },
         "NTP_SERVER": {
             "0.debian.pool.ntp.org": {},
-            "23.92.29.245": {},
-            "2001:aa:aa::aa": {}
+            "23.92.29.245": {
+                "minpoll": "8",
+                "maxpoll": "8"},
+            "2001:aa:aa::aa": {},
+            "122.22.22.22": {
+                "minpoll": "7",
+                "maxpoll": "12"
+            }
         },
         "SYSLOG_SERVER" : {
             "10.13.14.17": {

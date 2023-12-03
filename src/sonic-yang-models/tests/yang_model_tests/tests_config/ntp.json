@@ -237,5 +237,157 @@
                 ]
             }
         }
+    },
+    "NTP_SERVER_WITH_DEFAULT_MINPOLL_MAXPOLL": {
+        "sonic-ntp:sonic-ntp": {
+            "sonic-ntp:NTP_SERVER": {
+                "NTP_SERVER_LIST": [
+                    {
+                        "server_address": "10.11.12.13",
+                        "minpoll": "6",
+                        "maxpoll": "10"
+                    }
+                ]
+            }
+        }
+    },
+    "NTP_SERVER_WITH_MIN_MINPOLL_MAXPOLL": {
+        "sonic-ntp:sonic-ntp": {
+            "sonic-ntp:NTP_SERVER": {
+                "NTP_SERVER_LIST": [
+                    {
+                        "server_address": "10.11.12.13",
+                        "minpoll": "3",
+                        "maxpoll": "4"
+                    }
+                ]
+            }
+        }
+    },
+    "NTP_SERVER_WITH_MINPOLL_MAX_MAXPOLL": {
+        "sonic-ntp:sonic-ntp": {
+            "sonic-ntp:NTP_SERVER": {
+                "NTP_SERVER_LIST": [
+                    {
+                        "server_address": "10.11.12.13",
+                        "minpoll": "12",
+                        "maxpoll": "17"
+                    }
+                ]
+            }
+        }
+    },
+    "NTP_SERVER_WITH_EQUAL_MINPOLL_MAXPOLL": {
+        "sonic-ntp:sonic-ntp": {
+            "sonic-ntp:NTP_SERVER": {
+                "NTP_SERVER_LIST": [
+                    {
+                        "server_address": "10.11.12.13",
+                        "minpoll": "8",
+                        "maxpoll": "8"
+                    }
+                ]
+            }
+        }
+    },
+    "NTP_SERVER_NEG_WITHOUT_MINPOLL": {
+        "sonic-ntp:sonic-ntp": {
+            "sonic-ntp:NTP_SERVER": {
+                "NTP_SERVER_LIST": [
+                    {
+                        "server_address": "10.11.12.13",
+                        "maxpoll": "11"
+                    }
+                ]
+            }
+        }
+    },
+    "NTP_SERVER_NEG_WITHOUT_MINPOLL_INVALID_MAXPOLL": {
+        "sonic-ntp:sonic-ntp": {
+            "sonic-ntp:NTP_SERVER": {
+                "NTP_SERVER_LIST": [
+                    {
+                        "server_address": "10.11.12.13",
+                        "maxpoll": "5"
+                    }
+                ]
+            }
+        }
+    },
+    "NTP_SERVER_NEG_WITHOUT_MAXPOLL": {
+        "sonic-ntp:sonic-ntp": {
+            "sonic-ntp:NTP_SERVER": {
+                "NTP_SERVER_LIST": [
+                    {
+                        "server_address": "10.11.12.13",
+                        "minpoll": "7"
+                    }
+                ]
+            }
+        }
+    },
+    "NTP_SERVER_NEG_WITHOUT_MAXPOLL_INVALID_MINPOLL": {
+        "sonic-ntp:sonic-ntp": {
+            "sonic-ntp:NTP_SERVER": {
+                "NTP_SERVER_LIST": [
+                    {
+                        "server_address": "10.11.12.13",
+                        "minpoll": "12"
+                    }
+                ]
+            }
+        }
+    },
+    "NTP_SERVER_NEG_MINPOLL_EQUAL_MAXPOLL": {
+        "sonic-ntp:sonic-ntp": {
+            "sonic-ntp:NTP_SERVER": {
+                "NTP_SERVER_LIST": [
+                    {
+                        "server_address": "10.11.12.13",
+                        "minpoll": "7",
+                        "maxpoll": "7"
+                    }
+                ]
+            }
+        }
+    },
+    "NTP_SERVER_NEG_MINPOLL_LARGER_THAN_MAXPOLL": {
+        "sonic-ntp:sonic-ntp": {
+            "sonic-ntp:NTP_SERVER": {
+                "NTP_SERVER_LIST": [
+                    {
+                        "server_address": "10.11.12.13",
+                        "minpoll": "17",
+                        "maxpoll": "16"
+                    }
+                ]
+            }
+        }
+    },
+    "NTP_SERVER_NEG_INVALID_MINPOLL": {
+        "sonic-ntp:sonic-ntp": {
+            "sonic-ntp:NTP_SERVER": {
+                "NTP_SERVER_LIST": [
+                    {
+                        "server_address": "10.11.12.13",
+                        "minpoll": "1",
+                        "maxpoll": "16"
+                    }
+                ]
+            }
+        }
+    },
+    "NTP_SERVER_NEG_INVALID_MAXPOLL": {
+        "sonic-ntp:sonic-ntp": {
+            "sonic-ntp:NTP_SERVER": {
+                "NTP_SERVER_LIST": [
+                    {
+                        "server_address": "10.11.12.13",
+                        "minpoll": "17",
+                        "maxpoll": "18"
+                    }
+                ]
+            }
+        }
     }
 }

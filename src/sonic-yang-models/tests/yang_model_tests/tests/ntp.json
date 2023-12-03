@@ -58,5 +58,49 @@
         "desc": "CONFIGURE NON-EXISTING MGMT INTERFACE AS NTP SOURCE INTERFACE.",
         "eStrKey": "InvalidValue",
         "eStr": ["src"]
+    },
+    "NTP_SERVER_WITH_DEFAULT_MINPOLL_MAXPOLL": {
+        "desc": "CONFIGURE NTP SERVER WITH DEFAULT VALUES OF MINPOLL AND MAXPOLL."
+    },
+    "NTP_SERVER_WITH_MIN_MINPOLL_MAXPOLL": {
+        "desc": "CONFIGURE NTP SERVER WITH MIN VALUE FOR MINPOLL."
+    },
+    "NTP_SERVER_WITH_MINPOLL_MAX_MAXPOLL": {
+        "desc": "CONFIGURE NTP SERVER WITH MAX VALUE FOR MAXPOLL."
+    },
+    "NTP_SERVER_WITH_EQUAL_MINPOLL_MAXPOLL": {
+        "desc: "CONFIGURE NTP SERVER WITH EQUAL MINPOLL AND MAXPOLL."
+    },
+    "NTP_SERVER_NEG_WITHOUT_MINPOLL": {
+        "desc": "CONFIGURE NTP SERVER WITH MAXPOLL BUT WITHOUT MINPOLL."
+    },
+    "NTP_SERVER_NEG_WITHOUT_MINPOLL_INVALID_MAXPOLL": {
+        "desc": "CONFIGURE NTP SERVER WITHOUT MINPOLL AND INVALID MAXPOLL.",
+        "eStr": ["maxpoll has to be larger than minpoll."]
+    },
+    "NTP_SERVER_NEG_WITHOUT_MAXPOLL": {
+        "desc": "CONFIGURE NTP SERVER WITH MINPOLL BUT WITHOUT MAXPOLL."
+    },
+    "NTP_SERVER_NEG_WITHOUT_MAXPOLL_INVALID_MINPOLL": {
+        "desc": "CONFIGURE NTP SERVER WITHOUT MAXPOLL AND INVALID MINPOLL.",
+        "eStr": ["maxpoll has to be larger than minpoll."]
+    },
+    "NTP_SERVER_NEG_MINPOLL_EQUAL_MAXPOLL": {
+        "desc": "CONFIGURE NTP SERVER WITH MINPOLL EQUAL TO MAXPOLL.",
+        "eStr": ["maxpoll has to be larger than minpoll."]
+    },
+    "NTP_SERVER_NEG_MINPOLL_LARGER_THAN_MAXPOLL": {
+        "desc": "CONFIGURE NTP SERVER WITH MINPOLL LARGER THAN MAXPOLL.",
+        "eStr": ["maxpoll has to be larger than minpoll."]
+    },
+    "NTP_SERVER_NEG_INVALID_MINPOLL": {
+        "desc": "CONFIGURE NTP SERVER WITH INVALID MINPOLL VALUE.",
+        "eStrKey": "Range",
+        "eStr": "3..17"
+    },
+    "NTP_SERVER_NEG_INVALID_MAXPOLL": {
+        "desc": "CONFIGURE NTP SERVER WITH INVALID MAXPOLL VALUE.",
+        "eStrKey": "Range",
+        "eStr": "3..17"
     }
 }

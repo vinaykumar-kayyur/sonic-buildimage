@@ -112,6 +112,35 @@ module sonic-ntp {
                 leaf server_address {
                     type inet:host;
                 }
+
+                leaf minpoll {
+                    must "(current()/../maxpoll >= current())" {
+                        error-message "maxpoll has to be larger than or equal to minpoll.";
+                    }
+                    default 6;
+                    type uint8 {
+                        range "3..17";
+                    }
+                    description
+		        "The minimum poll interval used in this association.";
+                    reference
+                        "RFC 5905: Network Time Protocol Version 4: Protocol and Algorithms Specification";
+                }
+
+                leaf maxpoll {
+                    must "(current()/../minpoll <= current())" {
+                        error-message "maxpoll has to be larger than or equal to minpoll.";
+                    }
+                    default 10;
+                    type uint8 {
+                        range "3..17";
+                    }
+                    description
+                        "The maximum poll interval used in this association.";
+                    reference
+                        "RFC 5905: Network Time Protocol Version 4: Protocol and Algorithms Specification";
+                }
+
             } /* end of list NTP_SERVER_LIST */
 
         } /* end of container NTP_SERVER */
