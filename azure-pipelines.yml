@@ -80,6 +80,7 @@ stages:
         timeoutInMinutes: 1200
         variables:
           PLATFORM_ARCH: armhf
+          INCLUDE_RESTAPI: y
 
 - stage: Test
   dependsOn: BuildVS
