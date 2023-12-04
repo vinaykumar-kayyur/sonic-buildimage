@@ -1,0 +1,4 @@
+DEP_FILES := rules/ubuntu.dep rules/ubuntu.mk
+
+$(DOCKER_UBUNTU)_CACHE_MODE  := none
+$(DOCKER_UBUNTU)_DEP_FILES   := $(DEP_FILES)
