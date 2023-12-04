@@ -343,7 +343,7 @@ and migration plan
             ],
             "BIND_POINTS": [
                 "PORT",
-                "LAG"
+                "PORTCHANNEL"
             ]
         }
     },
@@ -954,12 +954,14 @@ instance is supported in SONiC.
 {
 "DEVICE_NEIGHBOR_METADATA": {
     "ARISTA01T1": {
+        "cluster": "AAA00PrdStr00",
         "lo_addr": "None",
         "mgmt_addr": "10.11.150.45",
         "hwsku": "Arista-VM",
         "type": "LeafRouter"
     },
     "ARISTA02T1": {
+        "cluster": "AAA00PrdStr00",
         "lo_addr": "None",
         "mgmt_addr": "10.11.150.46",
         "hwsku": "Arista-VM",
@@ -1192,7 +1194,7 @@ The FG_NHG_PREFIX table provides the FG_NHG_PREFIX for which FG behavior is desi
 
 ### Hash
 
-Generic hash allows user to configure which hash fields are suppose to be used by a hashing algorithm.
+Generic hash allows user to configure various aspects of hashing algorithm.  
 The configuration is applied globally for each ECMP and LAG on a switch.
 
 ***ECMP/LAG HASH***
@@ -1236,7 +1238,9 @@ The configuration is applied globally for each ECMP and LAG on a switch.
                 "INNER_SRC_IP",
                 "INNER_L4_DST_PORT",
                 "INNER_L4_SRC_PORT"
-            ]
+            ],
+            "ecmp_hash_algorithm": "CRC",
+            "lag_hash_algorithm": "CRC"
         }
     }
 }
@@ -1855,7 +1859,7 @@ SFLOW
 
 | Field            | Description                                                                             | Mandatory   | Default   | Reference                                 |
 |------------------|-----------------------------------------------------------------------------------------|-------------|-----------|-------------------------------------------|
-| admin_state      | Global sflow admin state                                                                |             | down      |    
+| admin_state      | Global sflow admin state                                                                |             | down      |
 | sample_direction | Global sflow sample direction                                                           |             | rx        |                                        |
 | polling_interval | The interval within which sFlow data is collected and sent to the configured collectors |             | 20        |                                           |
 | agent_id         | Interface name                                                                          |             |           | PORT:name,PORTCHANNEL:name,MGMT_PORT:name, VLAN:name |

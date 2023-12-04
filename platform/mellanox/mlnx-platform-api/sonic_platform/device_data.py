@@ -70,6 +70,13 @@ DEVICE_DATA = {
             }
         }
     },
+    'x86_64-mlnx_msn4700_simx-r0': {
+        'thermal': {
+            "capability": {
+                "cpu_pack": False
+            }
+        }
+    },
     'x86_64-mlnx_msn3700-r0': {
     },
     'x86_64-mlnx_msn3700c-r0': {
@@ -160,7 +167,7 @@ class DeviceDataManager:
     @classmethod
     @utils.read_only_cache()
     def get_sfp_count(cls):
-        return utils.read_int_from_file('/run/hw-management/config/sfp_counter')
+        return utils.read_int_from_file('/run/hw-management/config/module_counter')
 
     @classmethod
     def get_linecard_sfp_count(cls, lc_index):
