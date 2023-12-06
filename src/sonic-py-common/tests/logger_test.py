@@ -11,6 +11,7 @@ from sonic_py_common import logger
 
 
 class TestLogger:
+    @mock.patch('sonic_py_common.logger.SwssLogger.getInstance', mock.MagicMock())
     def test_log(self):
         log = logger.Logger()
         mock_log = mock.MagicMock()
@@ -44,6 +45,7 @@ class TestLogger:
         log.log_info('info message')
         mock_log.write.assert_called_with(logger.Logger.LOG_PRIORITY_INFO, 'info message')
 
+    @mock.patch('sonic_py_common.logger.SwssLogger.getInstance', mock.MagicMock())
     def test_set_log_level(self):
         log = logger.Logger()
         log.set_min_log_priority_error()

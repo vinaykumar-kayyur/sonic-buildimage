@@ -2,7 +2,7 @@ import os
 import sys
 import syslog
 try:
-    from swsscommon.swsscommon import Logger
+    from swsscommon.swsscommon import Logger as SwssLogger
 except ImportError:
     # Workaround for unit test. In some SONiC Python package, it mocked
     # swsscommon lib for unit test purpose, but it does not contain Logger
@@ -13,9 +13,9 @@ except ImportError:
         # Expect the 'mock' package for python 2
         # https://pypi.python.org/pypi/mock
         import mock
-    Logger = mock.MagicMock()
+    SwssLogger = mock.MagicMock()
     instance = mock.MagicMock()
-    Logger.getInstance = instance
+    SwssLogger.getInstance = instance
     instance.getMinPrio.return_value = syslog.LOG_NOTICE
 
 
@@ -51,7 +51,7 @@ class Logger(object):
         # Initialize syslog
         syslog.openlog(ident=log_identifier, logoption=log_option, facility=log_facility)
 
-        self._log = Logger.getInstance()
+        self._log = SwssLogger.getInstance()
         # Set the default minimum log priority to LOG_PRIORITY_NOTICE
         self.set_min_log_priority(self.LOG_PRIORITY_NOTICE)
         if enable_set_log_level_on_fly:
