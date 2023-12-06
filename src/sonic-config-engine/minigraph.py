@@ -1458,24 +1458,27 @@ def select_mmu_profiles(profile, platform, hwsku):
                 base_file = os.path.join(path, file_item)
                 exec_cmd(["sudo", "cp", file_in_dir, base_file])
 
-###############################################################################
-#
-# Update forced management route to management interface
-#
-###############################################################################
 def update_forced_mgmt_route(mgmt_intf, mgmt_routes):
     for mgmt_intf_key in mgmt_intf.keys():
-        mgmt_intf[mgmt_intf_key]['forced_mgmt_routes'] = []
+        forced_mgmt_routes = []
+
+        # get mgmt interface type
         mgmt_intf_addr = mgmt_intf_key[1]
         mgmt_is_ipv4 = True
         if ":" in mgmt_intf_addr:
             mgmt_is_ipv4 = False
+
+        # add mgmt route to different mgmt interface by address type
         for mgmt_route in mgmt_routes:
             route_is_ipv4 = True
             if ":" in mgmt_route:
                 route_is_ipv4 = False
             if mgmt_is_ipv4 == route_is_ipv4:
-                mgmt_intf[mgmt_intf_key]['forced_mgmt_routes'].append(mgmt_route)
+                forced_mgmt_routes.append(mgmt_route)
+
+        # forced_mgmt_routes yang model not support empty list
+        if len(forced_mgmt_routes) > 0:
+            mgmt_intf[mgmt_intf_key]['forced_mgmt_routes'] = forced_mgmt_routes
 
 ###############################################################################
 #
