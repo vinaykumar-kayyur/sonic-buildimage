@@ -15,7 +15,7 @@ except ImportError:
         import mock
     SwssLogger = mock.MagicMock()
     instance = mock.MagicMock()
-    SwssLogger.getInstance = instance
+    SwssLogger.getInstance.return_value = instance
     instance.getMinPrio.return_value = syslog.LOG_NOTICE
 
 
