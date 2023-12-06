@@ -1460,6 +1460,25 @@ def select_mmu_profiles(profile, platform, hwsku):
 
 ###############################################################################
 #
+# Update forced management route to management interface
+#
+###############################################################################
+def update_forced_mgmt_route(mgmt_intf, mgmt_routes):
+    for mgmt_intf_key in mgmt_intf.keys():
+        mgmt_intf[mgmt_intf_key]['forced_mgmt_routes'] = []
+        mgmt_intf_addr = mgmt_intf_key[1]
+        mgmt_is_ipv4 = True
+        if ":" in mgmt_intf_addr:
+            mgmt_is_ipv4 = False
+        for mgmt_route in mgmt_routes:
+            route_is_ipv4 = True
+            if ":" in mgmt_route:
+                route_is_ipv4 = False
+            if mgmt_is_ipv4 == route_is_ipv4:
+                mgmt_intf[mgmt_intf_key]['forced_mgmt_routes'].append(mgmt_route)
+
+###############################################################################
+#
 # Main functions
 #
 ###############################################################################
@@ -1699,8 +1718,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     results['BGP_VOQ_CHASSIS_NEIGHBOR'] = bgp_voq_chassis_sessions
     results['BGP_SENTINELS'] = bgp_sentinel_sessions
     if mgmt_routes:
-        # TODO: differentiate v4 and v6
-        next(iter(mgmt_intf.values()))['forced_mgmt_routes'] = mgmt_routes
+        update_forced_mgmt_route(mgmt_intf, mgmt_routes)
     results['MGMT_PORT'] = {}
     results['MGMT_INTERFACE'] = {}
     mgmt_intf_count = 0
