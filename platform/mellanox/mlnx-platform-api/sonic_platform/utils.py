@@ -19,6 +19,7 @@ import functools
 import subprocess
 import json
 import sys
+import threading
 import time
 import os
 from sonic_py_common import device_info
@@ -289,17 +290,23 @@ def wait_until(predict, timeout, interval=1, *args, **kwargs):
 
 
 class DbUtils:
-    db_instances = {}
+    lock = threading.Lock()
+    db_instances = threading.local()
 
     @classmethod
     def get_db_instance(cls, db_name, **kargs):
         try:
-            if db_name not in cls.db_instances:
+            if not hasattr(cls.db_instances, 'data'):
+                with cls.lock:
+                    if not hasattr(cls.db_instances, 'data'):
+                        cls.db_instances.data = {}
+
+            if db_name not in cls.db_instances.data:
                 from swsscommon.swsscommon import SonicV2Connector
                 db = SonicV2Connector(use_unix_socket_path=True)
                 db.connect(db_name)
-                cls.db_instances[db_name] = db
-            return cls.db_instances[db_name]
+                cls.db_instances.data[db_name] = db
+            return cls.db_instances.data[db_name]
         except Exception as e:
             logger.log_error(f'Failed to get DB instance for DB {db_name} - {e}')
             raise e
