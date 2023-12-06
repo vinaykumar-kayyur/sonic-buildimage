@@ -192,6 +192,10 @@ class TestUtils:
         with mock.patch('sonic_platform.utils.open', mock_os_open):
             assert utils.read_key_value_file('some_file') == {'a':'b'}
 
+        mock_os_open = mock.mock_open(read_data='a=b')
+        with mock.patch('sonic_platform.utils.open', mock_os_open):
+            assert utils.read_key_value_file('some_file', delimeter='=') == {'a':'b'}
+
     def test_timer(self):
         timer = utils.Timer()
         timer.start()
