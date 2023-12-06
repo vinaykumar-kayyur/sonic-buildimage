@@ -11,15 +11,16 @@ root_val=""
 set -- $(cat /proc/cmdline)
 for x in "$@"; do
     case "$x" in
-        root=*)
-            root_val="${x#root=}"
+        root=UUID=*)
+            root_val="${x#root=UUID=}"
             ;;
     esac
 done
 
 # Check the filesystem we are using
 if [ ! -z $root_val ]; then
-    fstype=$(blkid -o value -s TYPE $root_val)
+    dev=$(blkid --uuid $root_val)
+    fstype=$(blkid -o value -s TYPE $dev)
     case "$fstype" in
         ext4)
             cmd="fsck.ext4 -v -p"
@@ -29,6 +30,6 @@ if [ ! -z $root_val ]; then
             ;;
     esac
     if [ ! -z "$cmd" ]; then
-        $cmd $root_val 2>&1 | gzip -c > /tmp/fsck.log.gz
+        $cmd $dev 2>&1 | gzip -c > /tmp/fsck.log.gz
     fi
 fi
