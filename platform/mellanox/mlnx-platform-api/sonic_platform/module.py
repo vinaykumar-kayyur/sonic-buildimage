@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES.
+# Copyright (c) 2021-2023 NVIDIA CORPORATION & AFFILIATES.
 # Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -35,7 +35,11 @@ class Module(ModuleBase):
     STATE_DB = 6
     STATE_MODULAR_CHASSIS_SLOT_TABLE = 'MODULAR_CHASSIS_SLOT|{}'
     FIELD_SEQ_NO = 'seq_no'
-    redis_client = redis.Redis(db = STATE_DB)
+    USERNAME = 'admin'
+    PASSWORD = utils.read_str_from_file('/etc/shadow_redis_dir/shadow_redis_admin')
+    REDIS_SHADOW_TLS_CA="/etc/shadow_redis_dir/certs_redis/ca.crt"
+    redis_client = redis.Redis(port=6379, db=STATE_DB, username=USERNAME, password=PASSWORD, ssl=True, ssl_cert_reqs=None, ssl_ca_certs=REDIS_SHADOW_TLS_CA)
+
 
     def __init__(self, slot_id):
         super(Module, self).__init__()

@@ -7,10 +7,17 @@ import minigraph
 
 from unittest import TestCase
 
+import sys
+if sys.version_info.major == 3:
+    from unittest import mock
+else:
+    import mock
+
 TOR_ROUTER = 'ToRRouter'
 BACKEND_TOR_ROUTER = 'BackEndToRRouter'
 BMC_MGMT_TOR_ROUTER = 'BmcMgmtToRRouter'
 
+@mock.patch('swsssdk.util.read_from_file', mock.MagicMock(return_value='mock_password'))
 class TestCfgGenCaseInsensitive(TestCase):
 
     def setUp(self):

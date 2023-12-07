@@ -23,6 +23,7 @@ RUN pip3 install click
 {{ install_debian_packages(docker_database_debs.split(' ')) }}
 {%- endif %}
 
+ENV REDIS_SHADOW_TLS=/etc/ssl/certs_redis/certs/tls/
 # Clean up
 RUN apt-get clean -y                                  && \
     apt-get autoclean -y                              && \
@@ -30,11 +31,19 @@ RUN apt-get clean -y                                  && \
     rm -rf /debs ~/.cache                             && \
     sed -ri 's/^(save .*$)/# \1/g;                       \
              s/^daemonize yes$/daemonize no/;            \
-             s/^logfile .*$/logfile ""/;                 \
+             s|^logfile .*$|logfile /etc/redis/redis-server.log|;                 \
              s/^# syslog-enabled no$/syslog-enabled no/; \
              s/^# unixsocket/unixsocket/;                \
              s/redis-server.sock/redis.sock/g;           \
              s/^client-output-buffer-limit pubsub [0-9]+mb [0-9]+mb [0-9]+/client-output-buffer-limit pubsub 0 0 0/; \
+             s/^port 6379/# port 6379/;                                 \
+             s/^# port 0/port 0/;                                           \
+             s/^# tls-port 6379/tls-port 6379/;                                     \
+             /tls-auth-clients no/s/^# //;                              \
+             s|# tls-cert-file .*|tls-cert-file '"$REDIS_SHADOW_TLS"'/redis.crt|;    \
+             s|# tls-key-file .*|tls-key-file '"$REDIS_SHADOW_TLS"'/redis.key|;      \
+             s|# tls-ca-cert-file .*|tls-ca-cert-file '"$REDIS_SHADOW_TLS"'/ca.crt|; \
+             /aclfile \/etc\/redis\/users.acl/s/^# //;       \
              s/^notify-keyspace-events ""$/notify-keyspace-events AKE/; \
              s/^databases [0-9]+$/databases 100/ \
             ' /etc/redis/redis.conf
@@ -48,5 +57,6 @@ COPY ["files/supervisor-proc-exit-listener", "/usr/bin"]
 COPY ["files/sysctl-net.conf", "/etc/sysctl.d/"]
 COPY ["files/update_chassisdb_config", "/usr/local/bin/"]
 COPY ["flush_unused_database", "/usr/local/bin/"]
+COPY ["users.acl.template", "/etc/redis/"]
 
 ENTRYPOINT ["/usr/local/bin/docker-database-init.sh"]

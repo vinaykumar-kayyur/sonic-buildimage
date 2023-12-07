@@ -240,6 +240,37 @@ fi
 
 program_console_speed
 
+# Generate password for Redis DB
+echo "Redis PW generation"
+set +x
+REDIS_SHADOW_PATH=/etc/shadow_redis_dir
+openssl_random_cmd=$(openssl rand -base64 32)
+ADMIN_PASSWORD=''
+ADMIN_PASSWORD=$(echo "$openssl_random_cmd" | tr -d '\n')
+REDIS_SHADOW_ADMIN_PATH=$REDIS_SHADOW_PATH/shadow_redis_admin
+touch "$REDIS_SHADOW_ADMIN_PATH"
+chown admin:admin "$REDIS_SHADOW_ADMIN_PATH"
+chmod 640 "$REDIS_SHADOW_ADMIN_PATH"
+echo "$ADMIN_PASSWORD" > "$REDIS_SHADOW_ADMIN_PATH"
+MONITOR_PASSWORD=''
+MONITOR_PASSWORD=$(echo "$openssl_random_cmd" | tr -d '\n')
+echo "$MONITOR_PASSWORD" > $REDIS_SHADOW_PATH/shadow_redis_monitor
+
+# TLS support
+ETC_SSL=/etc/ssl/certs_redis
+REDIS_CERTS=$ETC_SSL/certs
+REDIS_CERTS_TLS=$REDIS_CERTS/tls
+
+# Check if the directory exists and remove it if it does
+[ -d "$REDIS_CERTS" ] && rm -rf "$REDIS_CERTS"
+
+(cd $ETC_SSL && ./gen-redis-certs.sh)
+
+# Copy CA cert to host share location for Redis client usage
+cp  $REDIS_CERTS_TLS/ca.crt $REDIS_SHADOW_PATH/certs_redis
+
+set -x
+
 if [ -f $FIRST_BOOT_FILE ]; then
 
     echo "First boot detected. Performing first boot tasks..."

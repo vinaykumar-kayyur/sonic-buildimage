@@ -1,0 +1,3 @@
+user admin on +@all -DEBUG ~* >${USER_COUNTER_PASSWORD}
+user monitor on +hgetall +keys +select +get +mget +hget -DEBUG ~* >${MONITOR_PASSWORD}
+user default off

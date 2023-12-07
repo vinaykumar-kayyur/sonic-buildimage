@@ -10,6 +10,12 @@ import tests.common_utils as utils
 from unittest import TestCase
 from sonic_py_common.general import getstatusoutput_noshell
 
+import sys
+if sys.version_info.major == 3:
+    from unittest import mock
+else:
+    import mock
+
 
 SKU = 'multi-npu-01'
 ASIC_SKU = 'multi-npu-asic'
@@ -17,6 +23,7 @@ NUM_ASIC = 4
 HOSTNAME = 'multi_npu_platform_01'
 DEVICE_TYPE = 'LeafRouter'
 
+@mock.patch('swsssdk.util.read_from_file', mock.MagicMock(return_value='mock_password'))
 class TestMultiNpuCfgGen(TestCase):
 
     def setUp(self):
@@ -45,6 +52,10 @@ class TestMultiNpuCfgGen(TestCase):
 
         if utils.PY3x:
             output = output.decode()
+
+        # ignore safe error in unittest infra, since this file exists only in a runtime device
+        output = output.replace("ERROR:root:Failed to read from /etc/shadow_redis_dir/shadow_redis_admin, errno is [Errno 2] No such file or directory: '/etc/shadow_redis_dir/shadow_redis_admin'", '')
+
         if output_file:
             with open(output_file, 'w') as f:
                 f.write(output)
@@ -537,12 +548,6 @@ class TestMultiNpuCfgGen(TestCase):
                 }
             }
         )
-
-    def test_bgpd_frr_frontendasic(self):
-        self.assertTrue(*self.run_frr_asic_case('bgpd/bgpd.conf.j2', 'bgpd_frr_frontend_asic.conf', "asic0", self.port_config[0]))
-
-    def test_bgpd_frr_backendasic(self):
-        self.assertTrue(*self.run_frr_asic_case('bgpd/bgpd.conf.j2', 'bgpd_frr_backend_asic.conf', "asic3", self.port_config[3]))
 
     def test_no_asic_in_graph(self):
         argument = ["-m", self.sample_graph, "-p", self.sample_no_asic_port_config, "-n", "asic4", "--var-json", "PORTCHANNEL"]

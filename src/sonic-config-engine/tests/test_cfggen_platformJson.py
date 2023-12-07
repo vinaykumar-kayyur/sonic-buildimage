@@ -17,6 +17,7 @@ else:
 # Global Variable
 PLATFORM_OUTPUT_FILE = "platform_output.json"
 
+@mock.patch('swsssdk.util.read_from_file', mock.MagicMock(return_value='mock_password'))
 class TestCfgGenPlatformJson(TestCase):
 
     def setUp(self):

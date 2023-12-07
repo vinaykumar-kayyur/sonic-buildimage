@@ -25,7 +25,7 @@ def test_DefaultRoute(dvs, testlog):
 
     time.sleep(10)
 
-    (exit_code, output) = dvs.runcmd(["redis-cli", "hgetall", "ROUTE_TABLE:0.0.0.0/0"])
+    (exit_code, output) = dvs.runcmd(["sonic-db-cli", "APPL_DB", "hgetall", "ROUTE_TABLE:0.0.0.0/0"])
     print(exit_code, output)
 
     # make sure 10.10.10.1 is the correct next hop for default route
@@ -34,7 +34,7 @@ def test_DefaultRoute(dvs, testlog):
     # insert default route for table default
     dvs.runcmd("ip route add default via 172.17.0.1 table default")
 
-    (exit_code, output) = dvs.runcmd(["redis-cli", "hgetall", "ROUTE_TABLE:0.0.0.0/0"])
+    (exit_code, output) = dvs.runcmd(["sonic-db-cli", "APPL_DB", "hgetall", "ROUTE_TABLE:0.0.0.0/0"])
     print(exit_code, output)
 
     time.sleep(10)

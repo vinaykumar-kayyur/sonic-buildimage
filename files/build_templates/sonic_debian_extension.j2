@@ -113,6 +113,12 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
 # Install j2cli for handling jinja template
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install j2cli
 
+# Create an empty Redis dir for the generation of Redis ACL passwords
+sudo mkdir $FILESYSTEM_ROOT/etc/shadow_redis_dir
+
+# Create an empty Redis dir for the public cacert of Redis TLS
+sudo mkdir $FILESYSTEM_ROOT/etc/shadow_redis_dir/certs_redis
+
 # Install Python client for Redis
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install "redis==3.5.3"
 
@@ -931,6 +937,13 @@ sudo LANG=C cp $SCRIPTS_DIR/gnmi.sh $FILESYSTEM_ROOT/usr/local/bin/gnmi.sh
 sudo LANG=C cp $SCRIPTS_DIR/mgmt-framework.sh $FILESYSTEM_ROOT/usr/local/bin/mgmt-framework.sh
 sudo LANG=C cp $SCRIPTS_DIR/asic_status.sh $FILESYSTEM_ROOT/usr/local/bin/asic_status.sh
 sudo LANG=C cp $SCRIPTS_DIR/asic_status.py $FILESYSTEM_ROOT/usr/local/bin/asic_status.py
+
+# Copy Redis Certificate generator script
+FSROOT_ETC_SSL_CERTS_REDIS=$FILESYSTEM_ROOT/etc/ssl/certs_redis
+sudo LANG=C mkdir $FSROOT_ETC_SSL_CERTS_REDIS
+sudo LANG=C cp $SCRIPTS_DIR/gen-redis-certs.sh $FSROOT_ETC_SSL_CERTS_REDIS/gen-redis-certs.sh
+sudo chroot $FILESYSTEM_ROOT chown admin:admin /etc/ssl/certs_redis/gen-redis-certs.sh
+sudo chmod 770 $FSROOT_ETC_SSL_CERTS_REDIS/gen-redis-certs.sh
 
 # Copy sonic-netns-exec script
 sudo LANG=C cp $SCRIPTS_DIR/sonic-netns-exec $FILESYSTEM_ROOT/usr/bin/sonic-netns-exec

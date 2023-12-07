@@ -5,11 +5,18 @@ import tests.common_utils as utils
 
 from unittest import TestCase
 
+import sys
+if sys.version_info.major == 3:
+    from unittest import mock
+else:
+    import mock
+
 TOR_ROUTER = 'ToRRouter'
 BACKEND_TOR_ROUTER = 'BackEndToRRouter'
 LEAF_ROUTER = 'LeafRouter'
 BACKEND_LEAF_ROUTER = 'BackEndLeafRouter'
 
+@mock.patch('swsssdk.util.read_from_file', mock.MagicMock(return_value='mock_password'))
 class TestCfgGen(TestCase):
 
     def setUp(self):
@@ -219,6 +226,8 @@ class TestCfgGen(TestCase):
     def test_minigraph_acl(self):
         argument = ['-m', self.sample_graph_t0, '-p', self.port_config, '-v', 'ACL_TABLE']
         output = self.run_script(argument, True, True)
+        # ignore safe error in unittest infra, since this file exists only in a runtime device
+        output = output.strip().replace("ERROR:root:Failed to read from /etc/shadow_redis_dir/shadow_redis_admin, errno is [Errno 2] No such file or directory: '/etc/shadow_redis_dir/shadow_redis_admin'", '')
         self.assertEqual(
             utils.to_dict(output.strip().replace("Warning: Ignoring Control Plane ACL NTP_ACL without type\n", '')),
             utils.to_dict(
