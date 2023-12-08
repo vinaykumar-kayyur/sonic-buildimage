@@ -845,7 +845,7 @@ class SFP(NvidiaSFPCommon):
             return False
 
         db = utils.DbUtils.get_db_instance('STATE_DB')
-        logical_port = NvidiaSFPCommon.get_logical_port_by_sfp_index(self.sdk_index + 1)
+        logical_port = NvidiaSFPCommon.get_logical_port_by_sfp_index(self.sdk_index)
         if not logical_port:
             raise Exception(f'Module {self.sdk_index} is not present or in initialization')
         
