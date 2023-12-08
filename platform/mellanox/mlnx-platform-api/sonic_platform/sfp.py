@@ -849,7 +849,7 @@ class SFP(NvidiaSFPCommon):
         if not logical_port:
             raise Exception(f'Module {self.sdk_index} is not present or in initialization')
         
-        initialized = db.exists('STATE_DB', f'TRANSCEIVER_INFO|{logical_port}')
+        initialized = db.exists('STATE_DB', f'TRANSCEIVER_STATUS|{logical_port}')
         if not initialized:
             raise Exception(f'Module {self.sdk_index} is not present or in initialization')
         
