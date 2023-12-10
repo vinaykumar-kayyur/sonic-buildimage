@@ -125,9 +125,9 @@ Vlan100      PORT    100.1.1.1  255.255.255.0             3600  enabled
 
     def test_show_dhcp_server_ipv4_info_with_intf(self, mock_db):
         expected_stdout = """\
-Interface    Mode    Gateway    Netmask          Lease Time(s)  IP Bind    Customized Options
------------  ------  ---------  -------------  ---------------  ---------  --------------------
-Vlan100      PORT    100.1.1.1  255.255.255.0             3600  enabled    ['option60']
+Interface    Mode    Gateway    Netmask          Lease Time(s)  IP Bind
+-----------  ------  ---------  -------------  ---------------  ---------
+Vlan100      PORT    100.1.1.1  255.255.255.0             3600  enabled
 """
         runner = CliRunner()
         db = clicommon.Db()
@@ -138,9 +138,9 @@ Vlan100      PORT    100.1.1.1  255.255.255.0             3600  enabled    ['opt
 
     def test_show_dhcp_server_ipv4_info_with_customized_options(self, mock_db):
         expected_stdout = """\
-Range    IP Start    IP End        IP Count
--------  ----------  ----------  ----------
-range3   100.1.1.10  100.1.1.10           1
+Interface    Mode    Gateway    Netmask          Lease Time(s)  IP Bind    Customized Options
+-----------  ------  ---------  -------------  ---------------  ---------  --------------------
+Vlan100      PORT    100.1.1.1  255.255.255.0             3600  enabled    option60
 """
         runner = CliRunner()
         db = clicommon.Db()
