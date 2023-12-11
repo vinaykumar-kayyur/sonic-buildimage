@@ -686,6 +686,12 @@ class SFP(NvidiaSFPCommon):
         Returns:
             The error description
         """
+        try:
+            if self.is_sw_control():
+                return 'Not supported'
+        except:
+            return self.SFP_STATUS_INITIALIZING
+
         oper_status, error_code = self._get_module_info(self.sdk_index)
         if oper_status == SX_PORT_MODULE_STATUS_INITIALIZING:
             error_description = self.SFP_STATUS_INITIALIZING
