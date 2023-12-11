@@ -60,6 +60,12 @@ class TestDeviceData:
         mock_read.return_value = {'SAI_INDEPENDENT_MODULE_MODE': '1'}
         assert DeviceDataManager.is_independent_mode()
 
-
-
-
+    @mock.patch('sonic_py_common.device_info.get_path_to_platform_dir', mock.MagicMock(return_value='/tmp'))
+    @mock.patch('sonic_platform.device_data.utils.load_json_file')
+    def test_get_sfp_count(self, mock_load_json):
+        mock_load_json.return_value = {
+            'chassis': {
+                'sfps': [1,2,3]
+            }
+        }
+        assert DeviceDataManager.get_sfp_count() == 3

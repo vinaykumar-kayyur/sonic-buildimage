@@ -167,8 +167,11 @@ class DeviceDataManager:
     @classmethod
     @utils.read_only_cache()
     def get_sfp_count(cls):
-        sfp_count = utils.read_int_from_file('/run/hw-management/config/sfp_counter')
-        return sfp_count if sfp_count > 0 else len(glob.glob('/sys/module/sx_core/asic0/module*'))
+        from sonic_py_common import device_info
+        platform_path = device_info.get_path_to_platform_dir()
+        platform_json_path = os.path.join(platform_path, 'platform.json')
+        platform_data = utils.load_json_file(platform_json_path)
+        return len(platform_data['chassis']['sfps'])
 
     @classmethod
     def get_linecard_sfp_count(cls, lc_index):
