@@ -106,7 +106,7 @@ def info(db, dhcp_interface, with_customized_options):
 def option(db, option_name):
     if not option_name:
         option_name = "*"
-    headers = ["Option Name", "Option", "Value", "Type"]
+    headers = ["Option Name", "Option ID", "Value", "Type"]
     table = []
     dbconn = db.db
     for key in dbconn.keys("CONFIG_DB", "DHCP_SERVER_IPV4_CUSTOMIZED_OPTIONS|" + option_name):
