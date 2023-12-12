@@ -86,7 +86,7 @@ def range(db, range_name):
 def info(db, dhcp_interface, with_customized_options):
     if not dhcp_interface:
         dhcp_interface = "*"
-    headers = ["Interface", "Mode", "Gateway", "Netmask", "Lease Time(s)", "IP Bind"]
+    headers = ["Interface", "Mode", "Gateway", "Netmask", "Lease Time(s)", "State"]
     if with_customized_options:
         headers.append("Customized Options")
     table = []
