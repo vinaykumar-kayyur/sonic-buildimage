@@ -292,7 +292,7 @@ class TestSfp:
         assert sfp.get_transceiver_threshold_info()
         sfp.reinit()
 
-    @mock.patch('sonic_platform.SFP.NvidiaSFPCommon.get_logical_port_by_sfp_index')
+    @mock.patch('sonic_platform.sfp.NvidiaSFPCommon.get_logical_port_by_sfp_index')
     @mock.patch('sonic_platform.utils.read_int_from_file')
     @mock.patch('sonic_platform.device_data.DeviceDataManager.is_independent_mode')
     @mock.patch('sonic_platform.utils.DbUtils.get_db_instance')
