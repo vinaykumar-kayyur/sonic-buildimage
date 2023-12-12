@@ -24,6 +24,7 @@
 
 try:
     import ctypes
+    import subprocess
     import os
     import threading
     from sonic_py_common.logger import Logger
