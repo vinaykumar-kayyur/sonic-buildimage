@@ -1,23 +1,6 @@
 import os
 import sys
 import syslog
-try:
-    from swsscommon.swsscommon import Logger as SwssLogger
-except ImportError:
-    # Workaround for unit test. In some SONiC Python package, it mocked
-    # swsscommon lib for unit test purpose, but it does not contain Logger
-    # class. To make those unit test happy, here provides a MagicMock object.
-    if sys.version_info.major == 3:
-        from unittest import mock
-    else:
-        # Expect the 'mock' package for python 2
-        # https://pypi.python.org/pypi/mock
-        import mock
-    SwssLogger = mock.MagicMock()
-    instance = mock.MagicMock()
-    SwssLogger.getInstance.return_value = instance
-    instance.getMinPrio.return_value = syslog.LOG_NOTICE
-
 
 """
 Logging functionality for SONiC Python applications
@@ -51,16 +34,37 @@ class Logger(object):
         # Initialize syslog
         syslog.openlog(ident=log_identifier, logoption=log_option, facility=log_facility)
 
-        self._log = SwssLogger.getInstance()
-        # Set the default minimum log priority to LOG_PRIORITY_NOTICE
-        self.set_min_log_priority(self.LOG_PRIORITY_NOTICE)
+        self._logger = None
+
         if enable_set_log_level_on_fly:
             # Performance warning: linkToDbNative will potentially create a new thread.
             # The thread listens to CONFIG DB for log level changes.
-            self._log.linkToDbNative(log_identifier, 'NOTICE')
+            self.logger.linkToDbNative(log_identifier, 'NOTICE')
 
     def __del__(self):
         syslog.closelog()
+        
+    @property
+    def logger(self):
+        if self._logger is None:
+            try:
+                from swsscommon.swsscommon import Logger as SwssLogger
+            except ImportError:
+                # Workaround for unit test. In some SONiC Python package, it mocked
+                # swsscommon lib for unit test purpose, but it does not contain Logger
+                # class. To make those unit test happy, here provides a MagicMock object.
+                if sys.version_info.major == 3:
+                    from unittest import mock
+                else:
+                    # Expect the 'mock' package for python 2
+                    # https://pypi.python.org/pypi/mock
+                    import mock
+                SwssLogger = mock.MagicMock()
+                instance = mock.MagicMock()
+                SwssLogger.getInstance.return_value = instance
+                instance.getMinPrio.return_value = syslog.LOG_NOTICE
+            self._logger = SwssLogger.getInstance()
+        return self._logger
 
     #
     # Methods for setting minimum log priority
@@ -74,7 +78,7 @@ class Logger(object):
         Args:
             priority: The minimum priority at which to log messages
         """
-        self._log.setMinPrio(priority)
+        self.logger.setMinPrio(priority)
 
     def set_min_log_priority_error(self):
         """
@@ -111,9 +115,9 @@ class Logger(object):
     #
 
     def log(self, priority, msg, also_print_to_console=False):
-        if self._log.getMinPrio() >= priority:
+        if self.logger.getMinPrio() >= priority:
             # Send message to syslog
-            self._log.write(priority, msg)
+            self.logger.write(priority, msg)
 
             # Send message to console
             if also_print_to_console:
