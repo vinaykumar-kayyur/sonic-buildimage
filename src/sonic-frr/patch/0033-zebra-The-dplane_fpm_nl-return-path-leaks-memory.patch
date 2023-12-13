@@ -1,10 +1,13 @@
-From d3e22a5fe94422304f008e44962ca56086f96414 Mon Sep 17 00:00:00 2001
-From: dgsudharsan <sudharsand@nvidia.com>
-Date: Mon, 11 Dec 2023 22:41:23 +0000
-Subject: [PATCH] zebra: The dplane_fpm_nl return path leaks memory The route
- entry created when using a ctx to pass route entry data backup to the master
- pthread in zebra is being leaked.  Prevent this from happening.
+From c13964525dae96299dc54daf635609971576a09e Mon Sep 17 00:00:00 2001
+From: Donald Sharp <sharpd@nvidia.com>
+Date: Mon, 11 Dec 2023 13:41:36 -0500
+Subject: [PATCH] zebra: The dplane_fpm_nl return path leaks memory
 
+The route entry created when using a ctx to pass route
+entry data backup to the master pthread in zebra is
+being leaked.  Prevent this from happening.
+
+Signed-off-by: Donald Sharp <sharpd@nvidia.com>
 
 diff --git a/zebra/rib.h b/zebra/rib.h
 index 016106312..e99eee67c 100644
