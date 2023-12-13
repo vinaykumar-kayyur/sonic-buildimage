@@ -86,7 +86,7 @@ def dhcp_server_ipv4_add(db, mode, lease_time, dup_gw_nm, gateway, netmask, dhcp
             gateway, netmask = network.ip, network.netmask
         if not dup_success:
             ctx.fail("failed to found gateway and netmask for Vlan interface {}".format(dhcp_interface))
-    elif not validate_str_type("ipv4-address", gateway) or validate_str_type("ipv4-address", netmask):
+    elif not validate_str_type("ipv4-address", gateway) or not validate_str_type("ipv4-address", netmask):
         ctx.fail("gateway and netmask must be valid ipv4 string")
     key = "DHCP_SERVER_IPV4|" + dhcp_interface
     if dbconn.exists("CONFIG_DB", key):
