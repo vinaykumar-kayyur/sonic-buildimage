@@ -57,7 +57,7 @@ def dhcp_server_ipv4():
     pass
 
 
-@ipv4.command(name="add")
+@dhcp_server_ipv4.command(name="add")
 @click.argument("dhcp_interface", required=True)
 @click.option("--mode", required=True)
 @click.option("--lease_time", required=False, default="900")
