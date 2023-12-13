@@ -74,7 +74,7 @@ def dhcp_server_ipv4_add(db, mode, lease_time, dup_gw_nm, gateway, netmask, dhcp
     if not validate_str_type("uint32", lease_time):
         ctx.fail("lease_time is required and must be nonnegative integer")
     dbconn = db.db
-    if dbconn.exists("CONFIG_DB", "VLAN_INTERFACE|" + dhcp_interface):
+    if not dbconn.exists("CONFIG_DB", "VLAN_INTERFACE|" + dhcp_interface):
         ctx.fail("dhcp_interface {} does not exist".format(dhcp_interface))
     if dup_gw_nm:
         dup_success = False
@@ -87,7 +87,7 @@ def dhcp_server_ipv4_add(db, mode, lease_time, dup_gw_nm, gateway, netmask, dhcp
         if not dup_success:
             ctx.fail("failed to found gateway and netmask for Vlan interface {}".format(dhcp_interface))
     elif not validate_str_type("ipv4-address", gateway) or validate_str_type("ipv4-address", netmask):
-            ctx.fail("gateway and netmask must be valid ipv4 string")
+        ctx.fail("gateway and netmask must be valid ipv4 string")
     key = "DHCP_SERVER_IPV4|" + dhcp_interface
     if dbconn.exists("CONFIG_DB", key):
         ctx.fail("Dhcp_interface %s already exist".format(dhcp_interface))
