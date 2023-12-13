@@ -178,11 +178,10 @@ option60                60  dummy_value  string
 
     def test_show_dhcp_server_ipv4_port_without_intf(self, mock_db):
         expected_stdout = """\
-Interface            MAC Address        IP           Lease Start          Lease End
--------------------  -----------------  -----------  -------------------  -------------------
-Vlan1000|Ethernet10  10:70:fd:b6:13:00  192.168.0.1  2023-03-01 03:16:21  2023-03-01 03:31:21
-Vlan1000|Ethernet11  10:70:fd:b6:13:01  192.168.0.2  2023-03-01 03:16:21  2023-03-01 03:31:21
-Vlan1001|<Unknown>   10:70:fd:b6:13:02  192.168.0.3  2023-03-01 03:16:21  2023-03-01 03:31:21
+Interface          Bind
+-----------------  --------------------
+Vlan100|Ethernet4  100.1.1.10,10.1.1.11
+Vlan100|Ethernet7  range1,range2
 """
         runner = CliRunner()
         db = clicommon.Db()
@@ -193,11 +192,9 @@ Vlan1001|<Unknown>   10:70:fd:b6:13:02  192.168.0.3  2023-03-01 03:16:21  2023-0
 
     def test_show_dhcp_server_ipv4_port_with_intf(self, mock_db):
         expected_stdout = """\
-Interface            MAC Address        IP           Lease Start          Lease End
--------------------  -----------------  -----------  -------------------  -------------------
-Vlan1000|Ethernet10  10:70:fd:b6:13:00  192.168.0.1  2023-03-01 03:16:21  2023-03-01 03:31:21
-Vlan1000|Ethernet11  10:70:fd:b6:13:01  192.168.0.2  2023-03-01 03:16:21  2023-03-01 03:31:21
-Vlan1001|<Unknown>   10:70:fd:b6:13:02  192.168.0.3  2023-03-01 03:16:21  2023-03-01 03:31:21
+Interface          Bind
+-----------------  -------------
+Vlan100|Ethernet7  range1,range2
 """
         runner = CliRunner()
         db = clicommon.Db()
