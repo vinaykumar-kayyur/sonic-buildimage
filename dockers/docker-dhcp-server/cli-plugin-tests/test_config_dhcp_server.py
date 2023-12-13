@@ -32,7 +32,7 @@ class TestConfigDHCPServer(object):
 
     def test_config_dhcp_server_ipv4_add_dup_gw_nm(self, mock_db):
         expected_value = {
-            "gateway": "100.10.10.10",
+            "gateway": "100.1.1.2",
             "lease_time": "1000",
             "mode": "PORT",
             "netmask": "255.255.255.0",
