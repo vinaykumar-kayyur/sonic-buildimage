@@ -126,7 +126,7 @@ def port(db, interface):
     table = []
     dbconn = db.db
     for key in dbconn.keys("CONFIG_DB", "DHCP_SERVER_IPV4_PORT|*|" + interface):
-        intf = key.lstrip("DHCP_SERVER_IPV4_PORT|")
+        intf = key[len("DHCP_SERVER_IPV4_PORT|"):]
         entry = dbconn.get_all("CONFIG_DB", key)
         if "ranges" in entry:
             table.append([intf, entry["ranges"]])
