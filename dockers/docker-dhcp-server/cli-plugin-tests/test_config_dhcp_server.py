@@ -16,7 +16,7 @@ class TestConfigDHCPServer(object):
 
     def test_config_dhcp_server_ipv4_add(self, mock_db):
         expected_value = {
-            "gateway": "100.10.10.10",
+            "gateway": "10.10.10.10",
             "lease_time": "1000",
             "mode": "PORT",
             "netmask": "255.255.254.0",
