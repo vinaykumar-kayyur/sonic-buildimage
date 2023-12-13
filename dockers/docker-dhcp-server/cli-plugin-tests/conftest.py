@@ -51,9 +51,9 @@ def mock_db():
     def hmset(table, key, value):
         assert table == "CONFIG_DB" or table == "STATE_DB"
         if table == "CONFIG_DB":
-            return mock_config_db[key] = value
+            mock_config_db[key] = value
         if table == "STATE_DB":
-            return mock_state_db[key] = value
+            mock_state_db[key] = value
 
     db.keys = mock.Mock(side_effect=keys)
     db.get_all = mock.Mock(side_effect=get_all)
