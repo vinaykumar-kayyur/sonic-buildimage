@@ -79,11 +79,11 @@ def dhcp_server_ipv4_add(db, mode, lease_time, dup_gw_nm, gateway, netmask, dhcp
     if dup_gw_nm:
         dup_success = False
         for key in dbconn.keys("CONFIG_DB", "VLAN_INTERFACE|" + dhcp_interface + "|*"):
-            network = ipaddress.ip_network(key.lstrip("VLAN_INTERFACE|" + dhcp_interface + "|"))
-            if network.version != 4:
+            intf = ipaddress.ip_interface(key.lstrip("VLAN_INTERFACE|" + dhcp_interface + "|"))
+            if intf.version != 4:
                 continue
             dup_success = True
-            gateway, netmask = network.ip, network.netmask
+            gateway, netmask = str(intf.ip), str(intf.netmask)
         if not dup_success:
             ctx.fail("failed to found gateway and netmask for Vlan interface {}".format(dhcp_interface))
     elif not validate_str_type("ipv4-address", gateway) or not validate_str_type("ipv4-address", netmask):
