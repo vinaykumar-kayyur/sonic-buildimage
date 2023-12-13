@@ -70,6 +70,13 @@ DEVICE_DATA = {
             }
         }
     },
+    'x86_64-mlnx_msn4700_simx-r0': {
+        'thermal': {
+            "capability": {
+                "cpu_pack": False
+            }
+        }
+    },
     'x86_64-mlnx_msn3700-r0': {
     },
     'x86_64-mlnx_msn3700c-r0': {
@@ -160,7 +167,8 @@ class DeviceDataManager:
     @classmethod
     @utils.read_only_cache()
     def get_sfp_count(cls):
-        return utils.read_int_from_file('/run/hw-management/config/sfp_counter')
+        sfp_count = utils.read_int_from_file('/run/hw-management/config/sfp_counter')
+        return sfp_count if sfp_count > 0 else len(glob.glob('/sys/module/sx_core/asic0/module*'))
 
     @classmethod
     def get_linecard_sfp_count(cls, lc_index):
@@ -227,3 +235,12 @@ class DeviceDataManager:
             # Currently, only fetching BIOS version is supported
             return ComponentCPLDSN2201.get_component_list()
         return ComponentCPLD.get_component_list()
+
+    @classmethod
+    @utils.read_only_cache()
+    def is_independent_mode(cls):
+        from sonic_py_common import device_info
+        _, hwsku_dir = device_info.get_paths_to_platform_and_hwsku_dirs()
+        sai_profile_file = os.path.join(hwsku_dir, 'sai.profile')
+        data = utils.read_key_value_file(sai_profile_file, delimeter='=')
+        return data.get('SAI_INDEPENDENT_MODULE_MODE') == '1'
