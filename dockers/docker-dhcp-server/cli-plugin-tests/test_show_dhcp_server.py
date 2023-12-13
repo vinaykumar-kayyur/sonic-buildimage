@@ -175,3 +175,33 @@ option60                60  dummy_value  string
         result = runner.invoke(show_dhcp_server.dhcp_server.commands["ipv4"].commands["option"], ["option60"], obj=db)
         assert result.exit_code == 0, "exit code: {}, Exception: {}, Traceback: {}".format(result.exit_code, result.exception, result.exc_info)
         assert result.stdout == expected_stdout
+
+    def test_show_dhcp_server_ipv4_port_without_intf(self, mock_db):
+        expected_stdout = """\
+Interface            MAC Address        IP           Lease Start          Lease End
+-------------------  -----------------  -----------  -------------------  -------------------
+Vlan1000|Ethernet10  10:70:fd:b6:13:00  192.168.0.1  2023-03-01 03:16:21  2023-03-01 03:31:21
+Vlan1000|Ethernet11  10:70:fd:b6:13:01  192.168.0.2  2023-03-01 03:16:21  2023-03-01 03:31:21
+Vlan1001|<Unknown>   10:70:fd:b6:13:02  192.168.0.3  2023-03-01 03:16:21  2023-03-01 03:31:21
+"""
+        runner = CliRunner()
+        db = clicommon.Db()
+        db.db = mock_db
+        result = runner.invoke(show_dhcp_server.dhcp_server.commands["ipv4"].commands["port"], [], obj=db)
+        assert result.exit_code == 0, "exit code: {}, Exception: {}, Traceback: {}".format(result.exit_code, result.exception, result.exc_info)
+        assert result.stdout == expected_stdout
+
+    def test_show_dhcp_server_ipv4_port_with_intf(self, mock_db):
+        expected_stdout = """\
+Interface            MAC Address        IP           Lease Start          Lease End
+-------------------  -----------------  -----------  -------------------  -------------------
+Vlan1000|Ethernet10  10:70:fd:b6:13:00  192.168.0.1  2023-03-01 03:16:21  2023-03-01 03:31:21
+Vlan1000|Ethernet11  10:70:fd:b6:13:01  192.168.0.2  2023-03-01 03:16:21  2023-03-01 03:31:21
+Vlan1001|<Unknown>   10:70:fd:b6:13:02  192.168.0.3  2023-03-01 03:16:21  2023-03-01 03:31:21
+"""
+        runner = CliRunner()
+        db = clicommon.Db()
+        db.db = mock_db
+        result = runner.invoke(show_dhcp_server.dhcp_server.commands["ipv4"].commands["port"], ["Ethernet7"], obj=db)
+        assert result.exit_code == 0, "exit code: {}, Exception: {}, Traceback: {}".format(result.exit_code, result.exception, result.exc_info)
+        assert result.stdout == expected_stdout

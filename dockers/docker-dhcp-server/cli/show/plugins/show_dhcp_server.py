@@ -116,5 +116,24 @@ def option(db, option_name):
     click.echo(tabulate(table, headers=headers))
 
 
+@ipv4.command()
+@click.argument('interface', required=False)
+@clicommon.pass_db
+def port(db, interface):
+    if not interface:
+        interface = "*"
+    headers = ["Interface", "Bind"]
+    table = []
+    dbconn = db.db
+    for key in dbconn.keys("CONFIG_DB", "DHCP_SERVER_IPV4_PORT|*|" + interface):
+        intf = key.lstrip("DHCP_SERVER_IPV4_PORT|")
+        entry = dbconn.get_all("CONFIG_DB", key)
+        if "ranges" in entry:
+            table.append([intf, entry["ranges"]])
+        if "ips" in entry:
+            table.append([intf, entry["ips"]])
+    click.echo(tabulate(table, headers=headers))
+
+
 def register(cli):
     cli.add_command(dhcp_server)
