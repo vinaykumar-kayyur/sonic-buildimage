@@ -79,7 +79,7 @@ def dhcp_server_ipv4_add(db, mode, lease_time, dup_gw_nm, gateway, netmask, dhcp
     if dup_gw_nm:
         dup_success = False
         for key in dbconn.keys("CONFIG_DB", "VLAN_INTERFACE|" + dhcp_interface + "|*"):
-            intf = ipaddress.ip_interface(key.lstrip("VLAN_INTERFACE|" + dhcp_interface + "|"))
+            intf = ipaddress.ip_interface(key.split("|")[2])
             if intf.version != 4:
                 continue
             dup_success = True
