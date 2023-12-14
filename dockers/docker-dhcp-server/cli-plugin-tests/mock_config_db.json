@@ -10,6 +10,8 @@
     },
     "VLAN_INTERFACE|Vlan200|100.1.1.2/24": {
     },
+    "VLAN_INTERFACE|Vlan300": {
+    },
     "DHCP_SERVER_IPV4|Vlan100": {
         "gateway": "100.1.1.1",
         "lease_time": "3600",
