@@ -17,6 +17,7 @@
 # HISTORY:
 #    mm/dd/yyyy (A.D.)#
 #    07/12/2022: Michael_Shih create for as9736_64d thermal plan
+#    12/12/2023: Add detect temp of xcvr, and implement shutdown function.
 # ------------------------------------------------------------------
 
 try:
@@ -29,11 +30,18 @@ try:
     import time  # this is only being used as part of the example
     from as9736_64d.fanutil import FanUtil
     from as9736_64d.thermalutil import ThermalUtil
+    from swsscommon import swsscommon
+    from sonic_platform import platform
+    from sonic_py_common.general import getstatusoutput_noshell
 except ImportError as e:
     raise ImportError('%s - required module not found' % str(e))
 
 VERSION = '1.0'
 FUNCTION_NAME = '/usr/local/bin/accton_as9736_64d_monitor'
+
+STATE_DB = 'STATE_DB'
+TRANSCEIVER_DOM_SENSOR_TABLE = 'TRANSCEIVER_DOM_SENSOR'
+TEMPERATURE_FIELD_NAME = 'temperature'
 
 class switch(object):
     def __init__(self, value):
@@ -163,9 +171,49 @@ cpu_fan_policy_state = 0
 
 exit_by_sigterm=0
 
-def power_off_dut():
-    # Need to implement!!
-    return True
+send_mac_shutdown_warning = 0
+send_cpu_shutdown_warning = 0
+
+thermal_min_to_mid_waring_flag = [0]
+
+platform_chassis= None
+
+def stop_syncd_service():
+    cmd_str = ["systemctl", "disable", "syncd"]
+    (status, output) = getstatusoutput_noshell(cmd_str)
+    if status:
+        logging.warning("Disable syncd.service failed")
+        return False
+
+    cmd_str = ["systemctl", "stop", "syncd"]
+    (status, output) = getstatusoutput_noshell(cmd_str)
+    if status:
+        logging.warning("Stop syncd.service failed")
+        return False
+
+    cmd_str = ["systemctl", "mask", "syncd"]
+    (status, output) = getstatusoutput_noshell(cmd_str)
+    if status:
+        logging.warning("Mask syncd.service failed")
+        return False
+
+    return (status == 0)
+
+def shutdown_mac():
+    cmd_str = ["i2cset", "-f", "-y", "6", "0x60", "0x7", "0x1"]
+    (status, output) = getstatusoutput_noshell(cmd_str)
+    if status:
+        logging.warning("Shutdown MAC failed.")
+
+    return (status == 0)
+
+def shutdown_except_cpu():
+    cmd_str = ["i2cset", "-f", "-y", "6", "0x60", "0x7", "0x2"]
+    (status, output) = getstatusoutput_noshell(cmd_str)
+    if status:
+        logging.warning("Shutdown DUT failed.")
+
+    return (status == 0)
 
 # Make a class we can use to capture stdout and sterr in the log
 class device_monitor(object):
@@ -197,16 +245,32 @@ class device_monitor(object):
             logging.getLogger('').addHandler(console)
 
         sys_handler = logging.handlers.SysLogHandler(address = '/dev/log')
-        sys_handler.setLevel(logging.WARNING)
+        sys_handler.setLevel(logging.INFO)
         logging.getLogger('').addHandler(sys_handler)
         #logging.debug('SET. logfile:%s / loglevel:%d', log_file, log_level)
+
+        self.transceiver_dom_sensor_table = None
 
     def set_fan_duty_cycle(self, fan_level, duty_cycle_percentage):
         logging.debug("- [Fan]: fan_policy_state = %d, set new_duty_cycle = %d", fan_level, duty_cycle_percentage)
         self.fan.set_fan_duty_cycle(duty_cycle_percentage)
 
+    def get_transceiver_temperature(self, iface_name):
+        if self.transceiver_dom_sensor_table is None:
+            return 0.0
+
+        (status, ret) = self.transceiver_dom_sensor_table.hget(iface_name, TEMPERATURE_FIELD_NAME)
+        if status:
+            try:
+                return float(ret)
+            except (TypeError, ValueError):
+                pass
+
+        return 0.0
+
     def manage_fans(self):
 
+        global platform_chassis
         global fan_policy_state
         global fan_fail
         global count_check
@@ -215,8 +279,9 @@ class device_monitor(object):
         global thermal_fan_policy_state
         global cpu_fan_policy_state
         global mac_fan_policy_state
-
-        CHECK_TIMES=3
+        global send_mac_shutdown_warning
+        global send_cpu_shutdown_warning
+        global thermal_min_to_mid_waring_flag
 
         LEVEL_FAN_INIT=0
         FAN_LEVEL_1 = 1
@@ -226,29 +291,63 @@ class device_monitor(object):
 
         fan_speed_policy = {
             FAN_LEVEL_1: [50],
-            FAN_LEVEL_2: [70],
+            FAN_LEVEL_2: [75],
             FAN_LEVEL_3: [100]
         }
-
-        thermal_spec={
-            "min_to_mid_temp" : [59000, 59000, 50000, 50000, 45000, 45000, 58000, 51000, 54000, 54000, 94000],
-            "mid_to_min_temp" : [54000, 54000, 45000, 45000, 40000, 40000, 53000, 44000, 47000, 47000, 83000],
-            "shutdown_temp"   : [76000, 76000, 67000, 67000, 62000, 62000, 70000, 61000, 67000, 67000, 105000],
-            "cpu_temp"        : [ 80000, 99000],
-            "mac_temp"        : [ 85000, 105000]
-        }
-
-        board_thermal_val   = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        board_thermal_or_chk_min_to_mid  = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        board_thermal_and_chk_mid_to_min = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        cpucore_thermal_val = [0, 0, 0, 0, 0, 0, 0, 0]
-        mactemp_thermal_val = [0]
 
         fan = self.fan
         thermal = self.thermal
 
+        TYPE_SENSOR = 1
+        TYPE_TRANSCEIVER = 2
+
+        TRANSCEIVER_NUM_MAX = 64
+        TOTAL_DETECT_SENSOR_NUM = thermal.THERMAL_NUM_BD_SENSOR + TRANSCEIVER_NUM_MAX
+
+        thermal_spec={
+            "min_to_mid_temp": [(TYPE_SENSOR, 59000), (TYPE_SENSOR, 59000),
+                                (TYPE_SENSOR, 50000), (TYPE_SENSOR, 50000),
+                                (TYPE_SENSOR, 45000), (TYPE_SENSOR, 45000),
+                                (TYPE_SENSOR, 58000), (TYPE_SENSOR, 51000),
+                                (TYPE_SENSOR, 54000), (TYPE_SENSOR, 54000), (TYPE_SENSOR, 94000)],
+            "mid_to_min_temp": [(TYPE_SENSOR, 54000), (TYPE_SENSOR, 54000),
+                                (TYPE_SENSOR, 45000), (TYPE_SENSOR, 45000),
+                                (TYPE_SENSOR, 40000), (TYPE_SENSOR, 40000),
+                                (TYPE_SENSOR, 53000), (TYPE_SENSOR, 44000),
+                                (TYPE_SENSOR, 47000), (TYPE_SENSOR, 47000), (TYPE_SENSOR, 83000)],
+            "shutdown_temp"  : [(TYPE_SENSOR, 76000), (TYPE_SENSOR, 76000),
+                                (TYPE_SENSOR, 67000), (TYPE_SENSOR, 67000),
+                                (TYPE_SENSOR, 62000), (TYPE_SENSOR, 62000),
+                                (TYPE_SENSOR, 70000), (TYPE_SENSOR, 61000),
+                                (TYPE_SENSOR, 67000), (TYPE_SENSOR, 67000), (TYPE_SENSOR, 105000)],
+            "cpu_temp"       : [(TYPE_SENSOR, 80000), (TYPE_SENSOR, 99000)],
+            "mac_temp"       : [(TYPE_SENSOR, 85000), (TYPE_SENSOR, 105000)]
+        }
+
+        thermal_spec["min_to_mid_temp"] += [(TYPE_TRANSCEIVER, 70000)]
+        thermal_spec["mid_to_min_temp"] += [(TYPE_TRANSCEIVER, 60000)]
+
+        board_thermal_val   = []
+        board_thermal_or_chk_min_to_mid  = [0] * (TOTAL_DETECT_SENSOR_NUM)
+        board_thermal_and_chk_mid_to_min = [0] * (TOTAL_DETECT_SENSOR_NUM)
+        cpucore_thermal_val = [0, 0, 0, 0, 0, 0, 0, 0]
+        mactemp_thermal_val = [0]
+
+        # After booting, the database might not be ready for
+        # connection. So, it should try to connect to the database
+        # if self.transceiver_dom_sensor_table is None.
+        if self.transceiver_dom_sensor_table is None:
+            try:
+                state_db = swsscommon.DBConnector(STATE_DB, 0, False)
+                self.transceiver_dom_sensor_table = swsscommon.Table(state_db, TRANSCEIVER_DOM_SENSOR_TABLE)
+            except Exception as e:
+                logging.debug("{}".format(e))
+
         # Get duty_cycle at init:
         if fan_policy_state == LEVEL_FAN_INIT:
+            # Init sensors record warning flag:
+            thermal_min_to_mid_waring_flag = thermal_min_to_mid_waring_flag * TOTAL_DETECT_SENSOR_NUM
+
             self.init_duty_cycle = fan.get_fan_duty_cycle()
             for i in range (FAN_LEVEL_1, FAN_LEVEL_3 + 1):
                 if self.init_duty_cycle == fan_speed_policy[i][0]:
@@ -310,21 +409,54 @@ class device_monitor(object):
 
         #2-1 Board Sensors get value:
         for i in range (thermal.THERMAL_NUM_1_IDX, thermal.THERMAL_NUM_11_IDX+1):
-            board_thermal_val[i-1] = thermal._get_thermal_val(i)
-
-            if board_thermal_val[i-1] >= thermal_spec["min_to_mid_temp"][i-1]:
+            board_thermal_val.append((TYPE_SENSOR, None, thermal._get_thermal_val(i)))
+            #index: 0~10(11 thermal sensor)
+            if board_thermal_val[i-1][2] >= thermal_spec["min_to_mid_temp"][i-1][1]:
                 board_thermal_or_chk_min_to_mid[i-1] = 1
+                # During this fan-speed rise, each sensors can only send warning log on syslog once
+                if thermal_min_to_mid_waring_flag[i-1] == 0:
+                    logging.warning('- Monitor %s, temperature is %d. Temperature is over %d.',
+                                    thermal.get_thermal_name(i),
+                                    board_thermal_val[i-1][2]/1000,
+                                    thermal_spec["min_to_mid_temp"][i-1][1]/1000)
+                    thermal_min_to_mid_waring_flag[i-1] = 1
             else:
                 board_thermal_or_chk_min_to_mid[i-1] = 0
 
-            if board_thermal_val[i-1] <= thermal_spec["mid_to_min_temp"][i-1]:
+            if board_thermal_val[i-1][2] <= thermal_spec["mid_to_min_temp"][i-1][1]:
                 board_thermal_and_chk_mid_to_min[i-1] = 1
             else:
                 board_thermal_and_chk_mid_to_min[i-1] = 0
 
+        for port_num in range(TRANSCEIVER_NUM_MAX):
+            sfp = platform_chassis.get_sfp(port_num+1)
+            board_thermal_val.append((TYPE_TRANSCEIVER, sfp,
+                                      self.get_transceiver_temperature(sfp.get_name()) * 1000))
+            #index: 11~74(64 port)
+            if board_thermal_val[thermal.THERMAL_NUM_11_IDX + port_num][2] >= thermal_spec["min_to_mid_temp"][thermal.THERMAL_NUM_BD_SENSOR][1]:
+                board_thermal_or_chk_min_to_mid[thermal.THERMAL_NUM_11_IDX + port_num] = 1
+                # During this fan-speed rise, each xcvr can only send warning log on syslog once
+                if thermal_min_to_mid_waring_flag[thermal.THERMAL_NUM_11_IDX + port_num] == 0:
+                    logging.warning('- Monitor port %d, temperature is %d. Temperature is over %d.',
+                                    port_num+1,
+                                    board_thermal_val[thermal.THERMAL_NUM_11_IDX + port_num][2]/1000,
+                                    thermal_spec["min_to_mid_temp"][thermal.THERMAL_NUM_BD_SENSOR][1]/1000)
+                    thermal_min_to_mid_waring_flag[thermal.THERMAL_NUM_11_IDX + port_num] = 1
+            else:
+                board_thermal_or_chk_min_to_mid[thermal.THERMAL_NUM_11_IDX + port_num] = 0
+
+            if board_thermal_val[thermal.THERMAL_NUM_11_IDX + port_num][2] <= thermal_spec["mid_to_min_temp"][thermal.THERMAL_NUM_BD_SENSOR][1]:
+                board_thermal_and_chk_mid_to_min[thermal.THERMAL_NUM_11_IDX + port_num] = 1
+            else:
+                board_thermal_and_chk_mid_to_min[thermal.THERMAL_NUM_11_IDX + port_num] = 0
+
         for i in range (thermal.THERMAL_NUM_1_IDX, thermal.THERMAL_NUM_10_IDX+1): #Not include TH4-TMP422(0x4c)
-            if board_thermal_val[i-1] >= thermal_spec["shutdown_temp"][i-1]:
+            if board_thermal_val[i-1][2] >= thermal_spec["shutdown_temp"][i-1][1]:
                 broad_thermal_need_shutdown = 1
+                logging.warning('- Monitor %s, temperature is %d. Temperature is over %d. Need shutdown DUT.',
+                                thermal.get_thermal_name(i),
+                                board_thermal_val[i-1][2]/1000,
+                                thermal_spec["shutdown_temp"][i-1][1]/1000)
                 break
 
         #2-2 CPU Sensors get value:
@@ -332,15 +464,15 @@ class device_monitor(object):
             cpucore_thermal_val[i-1] = thermal._get_thermal_val(i + thermal.THERMAL_NUM_BD_SENSOR)
 
         #2-3 MAC Sensors get value:
-        mactemp_thermal_val[0] = board_thermal_val[thermal.THERMAL_NUM_11_IDX-1]
+        mactemp_thermal_val[0] = board_thermal_val[thermal.THERMAL_NUM_11_IDX-1][2]
 
         #3-1 Decide the board thermal policy:
         if broad_thermal_need_shutdown == 1:
             thermal_fan_policy_state = POLICY_NEED_SHUTDOWN
         else:
-            for i in range (thermal.THERMAL_NUM_1_IDX, thermal.THERMAL_NUM_BD_SENSOR+1):
-                board_thermal_min_to_mid |= board_thermal_or_chk_min_to_mid[i-1]
-                board_thermal_mid_to_min &= board_thermal_and_chk_mid_to_min[i-1]
+            for i in range (TOTAL_DETECT_SENSOR_NUM):
+                board_thermal_min_to_mid |= board_thermal_or_chk_min_to_mid[i]
+                board_thermal_mid_to_min &= board_thermal_and_chk_mid_to_min[i]
 
             if board_thermal_min_to_mid == 0 and board_thermal_mid_to_min == 1:
                 thermal_fan_policy_state = FAN_LEVEL_1
@@ -355,46 +487,37 @@ class device_monitor(object):
         #3-2 Decide the CPU thermal policy:
         for i in range (thermal.THERMAL_NUM_1_IDX, thermal.THERMAL_NUM_CPU_CORE+1):
 
-            if cpucore_thermal_val[i-1] < thermal_spec["cpu_temp"][0]:      #Case of duty_cycle = 50%
-
-                if cpu_fan_policy_state <= FAN_LEVEL_1:
-                    # One of cpu-core is level_3, policy is level_3
-                    cpu_fan_policy_state = FAN_LEVEL_1
-
-            elif cpucore_thermal_val[i-1] >= thermal_spec["cpu_temp"][0] and cpucore_thermal_val[i-1] < thermal_spec["cpu_temp"][1]:
-
-                if cpu_fan_policy_state <= FAN_LEVEL_3:
-                    cpu_fan_policy_state = FAN_LEVEL_3                      #Case of duty_cycle = 100%
-
-            elif cpucore_thermal_val[i-1] >= thermal_spec["cpu_temp"][1] :  #Case of shutdown
-
-                logging.debug('CPU core%d, temperature is %d. Warning!!! Temperature is over %d', i-1, cpucore_thermal_val[i-1]/1000, thermal_spec["cpu_temp"][1]/1000)
+            if cpucore_thermal_val[i-1] >= thermal_spec["cpu_temp"][1][1] :  #Case of shutdown
+                if send_cpu_shutdown_warning == 0:
+                    logging.warning('Monitor %s, temperature is %d. Temperature is over %d',
+                                     thermal.get_thermal_name(thermal.THERMAL_NUM_BD_SENSOR+i),
+                                     cpucore_thermal_val[i-1]/1000,
+                                     thermal_spec["cpu_temp"][1][1]/1000)
                 cpu_fan_policy_state = POLICY_NEED_SHUTDOWN
 
         #3-3 Decide the MAC thermal policy:
-        if mactemp_thermal_val[0] < thermal_spec["mac_temp"][0]:
-            mac_fan_policy_state = FAN_LEVEL_1
-        elif mactemp_thermal_val[0] >= thermal_spec["mac_temp"][0] and mactemp_thermal_val[0] < thermal_spec["mac_temp"][1]:
-            mac_fan_policy_state = FAN_LEVEL_3
-        elif mactemp_thermal_val[0] >= thermal_spec["mac_temp"][1] :  #Case of shutdown
-            logging.debug('Monitor MAC, temperature is %d. Warning!!! Temperature is over %d', mactemp_thermal_val[0]/1000, thermal_spec["mac_temp"][1]/1000)
+        if mactemp_thermal_val[0] >= thermal_spec["mac_temp"][1][1] :  #Case of shutdown
+            if send_mac_shutdown_warning == 0:
+                logging.warning('Monitor MAC, temperature is %d. Temperature is over %d', mactemp_thermal_val[0]/1000, thermal_spec["mac_temp"][1][1]/1000)
             mac_fan_policy_state = POLICY_NEED_SHUTDOWN
 
 
         #4 Condition of change fan speed by sensors policy:
         if ori_state == FAN_LEVEL_3:
             if thermal_fan_policy_state == POLICY_NEED_SHUTDOWN or cpu_fan_policy_state == POLICY_NEED_SHUTDOWN:
-                # Need to implement Shutdown!!!!!!!!!!!!!
-                print("shutdown except to CPU!!")
-                return False
+                if send_cpu_shutdown_warning == 0:
+                    send_cpu_shutdown_warning = 1
+                    stop_syncd_service()
+                    logging.critical("CPU sensor for temperature high is detected, shutdown DUT.")
+                    shutdown_except_cpu()
+                    return True
 
             elif mac_fan_policy_state == POLICY_NEED_SHUTDOWN:
-                # Need to implement Shutdown!!!!!!!!!!!!!
-                print("MAC shutdown!!")
-                return False
-
-            elif cpu_fan_policy_state == FAN_LEVEL_3 or mac_fan_policy_state == FAN_LEVEL_3: #Case of protect function
-                current_state = FAN_LEVEL_3
+                if send_mac_shutdown_warning == 0:
+                    send_mac_shutdown_warning =1
+                    stop_syncd_service()
+                    logging.critical("MAC sensor for temperature high is detected, shutdown MAC chip.")
+                    shutdown_mac()  # No return, keep monitoring.
 
             else:
                 current_state = FAN_LEVEL_2
@@ -403,12 +526,11 @@ class device_monitor(object):
             if thermal_fan_policy_state == POLICY_NEED_SHUTDOWN or cpu_fan_policy_state == POLICY_NEED_SHUTDOWN or mac_fan_policy_state == POLICY_NEED_SHUTDOWN:
                 current_state = FAN_LEVEL_3
 
-            elif cpu_fan_policy_state == FAN_LEVEL_3 or mac_fan_policy_state == FAN_LEVEL_3: #Case of protect function
-                current_state = FAN_LEVEL_3
-
             elif thermal_fan_policy_state == FAN_LEVEL_1:
                 current_state = FAN_LEVEL_1
-
+                logging.info('- Monitor all sensors, temperature is less than threshold. Decrease fan duty_cycle from %d to %d.', fan_speed_policy[FAN_LEVEL_2][0], fan_speed_policy[FAN_LEVEL_1][0])
+                # Clear sensors send-syslog-warning record
+                thermal_min_to_mid_waring_flag = [0] * TOTAL_DETECT_SENSOR_NUM
             else:
                 current_state = FAN_LEVEL_2
 
@@ -416,11 +538,9 @@ class device_monitor(object):
             if thermal_fan_policy_state == POLICY_NEED_SHUTDOWN or cpu_fan_policy_state == POLICY_NEED_SHUTDOWN or mac_fan_policy_state == POLICY_NEED_SHUTDOWN:
                 current_state = FAN_LEVEL_2
 
-            elif cpu_fan_policy_state == FAN_LEVEL_3 or mac_fan_policy_state == FAN_LEVEL_3: #Case of protect function
-                current_state = FAN_LEVEL_2
-
             elif thermal_fan_policy_state == FAN_LEVEL_2:
                 current_state = FAN_LEVEL_2
+                logging.warning('- Increase fan duty_cycle from %d to %d.', fan_speed_policy[FAN_LEVEL_1][0], fan_speed_policy[FAN_LEVEL_2][0])
 
             else:
                 current_state = FAN_LEVEL_1
@@ -470,10 +590,15 @@ def main(argv):
                 log_file = arg
 
     monitor = device_monitor(log_file, log_level)
+
+    global platform_chassis
+    platform_chassis = platform.Platform().get_chassis()
+
     # Loop forever, doing something useful hopefully:
     while True:
         monitor.manage_fans()
-        time.sleep(5)
+        # HW recommends checking the temperature every 10 seconds
+        time.sleep(10)
         if exit_by_sigterm == 1:
             break
 

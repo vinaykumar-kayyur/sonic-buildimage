@@ -280,32 +280,62 @@ static u32 reg_val_to_duty_cycle(u8 reg_val)
         case 0:
             duty_cycle = 0;
             break;
-        case 25: /*0x19*/
+        case 13: /*0xC*/
+            duty_cycle = 5;
+            break;
+        case 26: /*0x19*/
             duty_cycle = 10;
+            break;
+        case 38: /*0x26*/
+            duty_cycle = 15;
             break;
         case 51: /*0x33*/
             duty_cycle = 20;
             break;
-        case 76: /*0x4c*/
+        case 64: /*0x3F*/
+            duty_cycle = 25;
+            break;
+        case 76: /*0x4C*/
             duty_cycle = 30;
+            break;
+        case 89: /*0x59*/
+            duty_cycle = 35;
             break;
         case 102: /*0x66*/
             duty_cycle = 40;
             break;
+        case 115: /*0x72*/
+            duty_cycle = 45;
+            break;
         case 127: /*0x7F*/
             duty_cycle = 50;
+            break;
+        case 140: /*0x8C*/
+            duty_cycle = 55;
             break;
         case 153: /*0x99*/
             duty_cycle = 60;
             break;
+        case 166: /*0xA5*/
+            duty_cycle = 65;
+            break;
         case 179: /*0xB3*/
             duty_cycle = 70;
+            break;
+        case 191: /*0xBF*/
+            duty_cycle = 75;
             break;
         case 204: /*0xCC*/
             duty_cycle = 80;
             break;
-        case 229: /*0xE5*/
+        case 217: /*0xD8*/
+            duty_cycle = 85;
+            break;
+        case 239: /*0xEF*/
             duty_cycle = 90;
+            break;
+        case 242: /*0xF2*/
+            duty_cycle = 95;
             break;
         default: /*0xFF*/
             duty_cycle = 100;
@@ -388,32 +418,62 @@ static ssize_t set_duty_cycle(struct device *dev, struct device_attribute *da,
         case 0:
             duty_cycle = 0;
             break;
-        case 1 ... 10:
-            duty_cycle = 25;
+        case 1 ... 5:
+            duty_cycle = 13;
             break;
-        case 11 ... 20:
+        case 6 ... 10:
+            duty_cycle = 26;
+            break;
+        case 11 ... 15:
+            duty_cycle = 38;
+            break;
+        case 16 ... 20:
             duty_cycle = 51;
             break;
-        case 21 ... 30:
+        case 21 ... 25:
+            duty_cycle = 64;
+            break;
+        case 26 ... 30:
             duty_cycle = 76;
             break;
-        case 31 ... 40:
+        case 31 ... 35:
+            duty_cycle = 89;
+            break;
+        case 36 ... 40:
             duty_cycle = 102;
             break;
-        case 41 ... 50:
+        case 41 ... 45:
+            duty_cycle = 115;
+            break;
+        case 46 ... 50:
             duty_cycle = 127;
             break;
-        case 51 ... 60:
+        case 51 ... 55:
+            duty_cycle = 140;
+            break;
+        case 56 ... 60:
             duty_cycle = 153;
             break;
-        case 61 ... 70:
+        case 61 ... 65:
+            duty_cycle = 166;
+            break;
+        case 66 ... 70:
             duty_cycle = 179;
             break;
-        case 71 ... 80:
+        case 71 ... 75:
+            duty_cycle = 191;
+            break;
+        case 76 ... 80:
             duty_cycle = 204;
             break;
-        case 81 ... 90:
-            duty_cycle = 229;
+        case 81 ... 85:
+            duty_cycle = 217;
+            break;
+        case 86 ... 90:
+            duty_cycle = 239;
+            break;
+        case 91 ... 95:
+            duty_cycle = 242;
             break;
         default:
             duty_cycle = 255;
