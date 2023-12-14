@@ -9,6 +9,8 @@ import utilities_common.cli as clicommon
 sys.path.append('../cli/config/plugins/')
 import dhcp_server
 
+import string
+
 
 class TestConfigDHCPServer(object):
     def test_plugin_registration(self):
@@ -86,7 +88,7 @@ class TestConfigDHCPServer(object):
         db = clicommon.Db()
         db.db = mock_db
         result = runner.invoke(dhcp_server.dhcp_server.commands["ipv4"].commands["add"], \
-                ["Vlan300", "--mode=PORT", "--lease_time=1000", "--gateway=10.10.10.10", "--netmask=255.255.254.0"], obj=db)
+                ["Vlan400", "--mode=PORT", "--lease_time=1000", "--gateway=10.10.10.10", "--netmask=255.255.254.0"], obj=db)
         assert result.exit_code == 2, "exit code: {}, Exception: {}, Traceback: {}".format(result.exit_code, result.exception, result.exc_info)
 
     def test_config_dhcp_server_ipv4_add_no_vlan_ip(self, mock_db):
