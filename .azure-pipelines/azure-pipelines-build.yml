@@ -124,6 +124,7 @@ jobs:
       - template: .azure-pipelines/template-daemon.yml@buildimage
       - bash: |
           set -ex
+          if [ $(GROUP_NAME) == pensando ];then make $BUILD_OPTIONS target/sonic-pensando.tar; exit $?; fi
           if [ $(GROUP_NAME) == vs ]; then
             if [ $(dbg_image) == yes ]; then
               make $BUILD_OPTIONS INSTALL_DEBUG_TOOLS=y target/sonic-vs.img.gz
