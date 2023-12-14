@@ -31,7 +31,7 @@ class TestConfigDHCPServer(object):
 
     @pytest.mark.parametrize("type, value, result", str_type)
     def test_validate_str_type(self, type, value, result):
-        assert validate_str_type(type, value) == result
+        assert dhcp_server.validate_str_type(type, value) == result
 
     def test_config_dhcp_server_ipv4_add(self, mock_db):
         expected_value = {
