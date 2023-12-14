@@ -9,8 +9,6 @@ import utilities_common.cli as clicommon
 sys.path.append('../cli/config/plugins/')
 import dhcp_server
 
-import string
-
 
 class TestConfigDHCPServer(object):
     def test_plugin_registration(self):

@@ -2,6 +2,7 @@ import click
 import utilities_common.cli as clicommon
 
 import ipaddress
+import string
 
 
 SUPPORT_TYPE = ["binary", "boolean", "ipv4-address", "string", "uint8", "uint16", "uint32"]
