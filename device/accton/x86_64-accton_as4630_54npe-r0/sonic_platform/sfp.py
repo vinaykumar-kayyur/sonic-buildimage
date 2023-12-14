@@ -233,16 +233,20 @@ class Sfp(SfpOptoeBase):
             A boolean, True if tx_disable is set successfully, False if not
         """
         if self.port_num < 49: #Copper port, no sysfs
-            return False
+            return [False]
 
         if self.port_num < 53:
+            tx_disable = False
+
             tx_path = "{}{}{}".format(CPLD_I2C_PATH, '/module_tx_disable_', self.port_num)
-            ret = self._api_helper.write_txt_file(tx_path, 1 if tx_disable else 0)
-            if ret is not None:
-                time.sleep(0.01)
-                return ret
+            tx_disable = self._api_helper.read_txt_file(tx_path)
+            if tx_disable is not None:
+                if tx_disable == '1':
+                    return [True]
+                else:
+                    return [False]
             else:
-                return False
+                return [False]
 
         else:
             if not self.get_presence():
