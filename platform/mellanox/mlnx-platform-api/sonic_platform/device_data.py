@@ -17,6 +17,7 @@
 
 import glob
 import os
+import time
 
 from . import utils
 
@@ -247,3 +248,23 @@ class DeviceDataManager:
         sai_profile_file = os.path.join(hwsku_dir, 'sai.profile')
         data = utils.read_key_value_file(sai_profile_file, delimeter='=')
         return data.get('SAI_INDEPENDENT_MODULE_MODE') == '1'
+    
+    @classmethod
+    def wait_platform_ready(cls):
+        """
+        Wait for Nvidia platform related services(SDK, hw-management) ready
+        Returns:
+            bool: True if wait success else timeout
+        """
+        conditions = []
+        sysfs_nodes = ['power_mode', 'power_mode_policy', 'present', 'reset', 'status', 'statuserror']
+        if cls.is_independent_mode():
+            sysfs_nodes.extend(['control', 'frequency', 'frequency_support', 'hw_present', 'hw_reset',
+                                'power_good', 'power_limit', 'power_on', 'temperature/input'])
+        else:
+            conditions.append(lambda: utils.read_int_from_file('/var/run/hw-management/config/asics_init_done') == 1)
+        sfp_count = cls.get_sfp_count()
+        for sfp_index in range(sfp_count):
+            for sysfs_node in sysfs_nodes:
+                conditions.append(lambda: os.path.exists(f'/sys/module/sx_core/asic0/module{sfp_index}/{sysfs_node}'))
+        return utils.wait_until_conditions(conditions, 300, 1)

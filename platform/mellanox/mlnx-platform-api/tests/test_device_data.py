@@ -69,3 +69,17 @@ class TestDeviceData:
             }
         }
         assert DeviceDataManager.get_sfp_count() == 3
+
+    @mock.patch('sonic_platform.device_data.time.sleep', mock.MagicMock())
+    @mock.patch('sonic_platform.device_data.DeviceDataManager.get_sfp_count', mock.MagicMock(return_value=3))
+    @mock.patch('sonic_platform.device_data.utils.read_int_from_file', mock.MagicMock(return_value=1))
+    @mock.patch('sonic_platform.device_data.os.path.exists')
+    @mock.patch('sonic_platform.device_data.DeviceDataManager.is_independent_mode')
+    def test_wait_platform_ready(self, mock_is_indep, mock_exists):
+        mock_exists.return_value = True
+        mock_is_indep.return_value = True
+        assert DeviceDataManager.wait_platform_ready()
+        mock_is_indep.return_value = False
+        assert DeviceDataManager.wait_platform_ready()
+        mock_exists.return_value = False
+        assert not DeviceDataManager.wait_platform_ready()
