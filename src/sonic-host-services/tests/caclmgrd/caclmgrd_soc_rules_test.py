@@ -29,26 +29,27 @@ class TestCaclmgrdSoc(TestCase):
         
     @parameterized.expand(CACLMGRD_SOC_TEST_VECTOR)
     @patchfs
-    @patch('caclmgrd.get_ipv4_networks_from_interface_table', MagicMock(return_value=[IPv4Network('10.10.10.18/24', strict=False), IPv4Network('10.10.11.18/24', strict=False)]))
+    @patch('caclmgrd.get_ipv4_networks_from_interface_table', MagicMock(return_value={IPv4Network('10.10.11.18/24', strict=False): IPv4Address('10.10.11.18') , IPv4Network('10.10.10.18/24', strict=False) : IPv4Address('10.10.10.18')  }))
     def test_caclmgrd_soc(self, test_name, test_data, fs):
         if not os.path.exists(DBCONFIG_PATH):
             fs.create_file(DBCONFIG_PATH) # fake database_config.json
 
         MockConfigDb.set_config_db(test_data["config_db"])
 
-        with mock.patch("caclmgrd.subprocess") as mocked_subprocess:
-            popen_mock = mock.Mock()
-            popen_attrs = test_data["popen_attributes"]
-            popen_mock.configure_mock(**popen_attrs)
-            mocked_subprocess.Popen.return_value = popen_mock
-            mocked_subprocess.PIPE = -1
+        with mock.patch("caclmgrd.ControlPlaneAclManager.run_commands_pipe", return_value='sonic'):
+            with mock.patch("caclmgrd.subprocess") as mocked_subprocess:
+                popen_mock = mock.Mock()
+                popen_attrs = test_data["popen_attributes"]
+                popen_mock.configure_mock(**popen_attrs)
+                mocked_subprocess.Popen.return_value = popen_mock
+                mocked_subprocess.PIPE = -1
 
-            call_rc = test_data["call_rc"]
-            mocked_subprocess.call.return_value = call_rc
+                call_rc = test_data["call_rc"]
+                mocked_subprocess.call.return_value = call_rc
 
-            caclmgrd_daemon = self.caclmgrd.ControlPlaneAclManager("caclmgrd")
-            caclmgrd_daemon.update_control_plane_nat_acls('', {}, MockConfigDb())
-            mocked_subprocess.Popen.assert_has_calls(test_data["expected_subprocess_calls"], any_order=True)
+                caclmgrd_daemon = self.caclmgrd.ControlPlaneAclManager("caclmgrd")
+                caclmgrd_daemon.update_control_plane_nat_acls('', {}, MockConfigDb())
+                mocked_subprocess.Popen.assert_has_calls(test_data["expected_subprocess_calls"], any_order=True)
 
 
     @parameterized.expand(CACLMGRD_SOC_TEST_VECTOR_EMPTY)
@@ -60,43 +61,45 @@ class TestCaclmgrdSoc(TestCase):
 
         MockConfigDb.set_config_db(test_data["config_db"])
 
-        with mock.patch("caclmgrd.subprocess") as mocked_subprocess:
-            popen_mock = mock.Mock()
-            popen_attrs = test_data["popen_attributes"]
-            popen_mock.configure_mock(**popen_attrs)
-            mocked_subprocess.Popen.return_value = popen_mock
-            mocked_subprocess.PIPE = -1
+        with mock.patch("caclmgrd.ControlPlaneAclManager.run_commands_pipe", return_value='sonic'):
+            with mock.patch("caclmgrd.subprocess") as mocked_subprocess:
+                popen_mock = mock.Mock()
+                popen_attrs = test_data["popen_attributes"]
+                popen_mock.configure_mock(**popen_attrs)
+                mocked_subprocess.Popen.return_value = popen_mock
+                mocked_subprocess.PIPE = -1
 
-            call_rc = test_data["call_rc"]
-            mocked_subprocess.call.return_value = call_rc
+                call_rc = test_data["call_rc"]
+                mocked_subprocess.call.return_value = call_rc
 
-            caclmgrd_daemon = self.caclmgrd.ControlPlaneAclManager("caclmgrd")
-            caclmgrd_daemon.update_control_plane_nat_acls('', {}, MockConfigDb())
-            mocked_subprocess.Popen.assert_has_calls(test_data["expected_subprocess_calls"], any_order=True)
+                caclmgrd_daemon = self.caclmgrd.ControlPlaneAclManager("caclmgrd")
+                caclmgrd_daemon.update_control_plane_nat_acls('', {}, MockConfigDb())
+                mocked_subprocess.Popen.assert_has_calls(test_data["expected_subprocess_calls"], any_order=True)
 
 
     @parameterized.expand(CACLMGRD_SOC_TEST_VECTOR_EMPTY)
     @patchfs
-    @patch('caclmgrd.get_ipv4_networks_from_interface_table', MagicMock(return_value=['10.10.10.10']))
+    @patch('caclmgrd.get_ipv4_networks_from_interface_table', MagicMock(return_value={'10.10.10.10': '10.10.10.1'}))
     def test_caclmgrd_soc_ip_string(self, test_name, test_data, fs):
         if not os.path.exists(DBCONFIG_PATH):
             fs.create_file(DBCONFIG_PATH) # fake database_config.json
 
         MockConfigDb.set_config_db(test_data["config_db"])
 
-        with mock.patch("caclmgrd.subprocess") as mocked_subprocess:
-            popen_mock = mock.Mock()
-            popen_attrs = test_data["popen_attributes"]
-            popen_mock.configure_mock(**popen_attrs)
-            mocked_subprocess.Popen.return_value = popen_mock
-            mocked_subprocess.PIPE = -1
+        with mock.patch("caclmgrd.ControlPlaneAclManager.run_commands_pipe", return_value='sonic'):
+            with mock.patch("caclmgrd.subprocess") as mocked_subprocess:
+                popen_mock = mock.Mock()
+                popen_attrs = test_data["popen_attributes"]
+                popen_mock.configure_mock(**popen_attrs)
+                mocked_subprocess.Popen.return_value = popen_mock
+                mocked_subprocess.PIPE = -1
 
-            call_rc = test_data["call_rc"]
-            mocked_subprocess.call.return_value = call_rc
+                call_rc = test_data["call_rc"]
+                mocked_subprocess.call.return_value = call_rc
 
-            caclmgrd_daemon = self.caclmgrd.ControlPlaneAclManager("caclmgrd")
-            caclmgrd_daemon.update_control_plane_nat_acls('', {}, MockConfigDb())
-            mocked_subprocess.Popen.assert_has_calls(test_data["expected_subprocess_calls"], any_order=True)
+                caclmgrd_daemon = self.caclmgrd.ControlPlaneAclManager("caclmgrd")
+                caclmgrd_daemon.update_control_plane_nat_acls('', {}, MockConfigDb())
+                mocked_subprocess.Popen.assert_has_calls(test_data["expected_subprocess_calls"], any_order=True)
 
 
     def test_get_ipv4_networks_from_interface_table(self):
@@ -106,4 +109,4 @@ class TestCaclmgrdSoc(TestCase):
         table = {("Vlan1000","10.10.10.1/32"): "val"}
         ip_addr = self.caclmgrd.get_ipv4_networks_from_interface_table(table, "Vlan")
 
-        assert (ip_addr == [IPv4Network('10.10.10.1/32')])
+        assert (ip_addr == {IPv4Network('10.10.10.1/32'): IPv4Address('10.10.10.1')})
