@@ -315,17 +315,16 @@ start() {
     # Obtain our platform as we will mount directories with these names in each docker
     PLATFORM=${PLATFORM:-`$SONIC_CFGGEN -H -v DEVICE_METADATA.localhost.platform`}
 
-    # Default rsyslog target IP for single ASIC platform
-    SYSLOG_TARGET_IP=127.0.0.1
-    if [[ ($NUM_ASIC -gt 1) ]]; then
-        SYSLOG_TARGET_IP=$(docker network inspect bridge --format={{ "'{{(index .IPAM.Config 0).Gateway}}'" }})
-    fi
-
-
     # Parse the device specific asic conf file, if it exists
     ASIC_CONF=/usr/share/sonic/device/$PLATFORM/asic.conf
     if [ -f "$ASIC_CONF" ]; then
         source $ASIC_CONF
+    fi
+
+    # Default rsyslog target IP for single ASIC platform
+    SYSLOG_TARGET_IP=127.0.0.1
+    if [[ ($NUM_ASIC -gt 1) ]]; then
+        SYSLOG_TARGET_IP=$(docker network inspect bridge --format={{ "'{{(index .IPAM.Config 0).Gateway}}'" }})
     fi
 
     PLATFORM_ENV_CONF=/usr/share/sonic/device/$PLATFORM/platform_env.conf
