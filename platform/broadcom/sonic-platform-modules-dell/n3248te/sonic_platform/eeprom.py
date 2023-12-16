@@ -10,7 +10,6 @@
 #############################################################################
 try:
     import os.path
-    import os.geteuid
     from sonic_eeprom import eeprom_tlvinfo
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
