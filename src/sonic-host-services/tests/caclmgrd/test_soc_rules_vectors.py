@@ -35,8 +35,8 @@ CACLMGRD_SOC_TEST_VECTOR = [
                 },
             },
             "expected_subprocess_calls": [
-                  call('iptables -t nat -A POSTROUTING --destination 10.10.10.7 --source 10.10.11.18 -j SNAT --to-source 10.10.11.18', shell=True, universal_newlines=True, stdout=-1)
-            ],
+                call('iptables -t nat -A POSTROUTING --destination 10.10.10.7 --source 10.10.11.18 -j SNAT --to-source 10.10.11.18', shell=True, universal_newlines=True, stdout=-1)
+                ],
             "popen_attributes": {
                 'communicate.return_value': ('output', 'error'),
             },
