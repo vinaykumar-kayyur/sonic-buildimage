@@ -182,6 +182,8 @@ Interface          Bind
 -----------------  --------------------
 Vlan100|Ethernet4  100.1.1.10,10.1.1.11
 Vlan100|Ethernet7  range1,range2
+Vlan200|Ethernet8  range3,range4
+Ethernet9          range5,range6
 """
         runner = CliRunner()
         db = clicommon.Db()
@@ -206,7 +208,8 @@ Vlan100|Ethernet7  range1,range2
     def test_show_dhcp_server_ipv4_port_with_vlan(self, mock_db):
         expected_stdout = """\
 Interface          Bind
------------------  -------------
+-----------------  --------------------
+Vlan100|Ethernet4  100.1.1.10,10.1.1.11
 Vlan100|Ethernet7  range1,range2
 """
         runner = CliRunner()
@@ -231,9 +234,9 @@ Vlan100|Ethernet7  range1,range2
 
     def test_show_dhcp_server_ipv4_port_with_single_port(self, mock_db):
         expected_stdout = """\
-Interface          Bind
------------------  -------------
-Vlan100|Ethernet7  range1,range2
+Interface    Bind
+-----------  -------------
+Ethernet9    range5,range6
 """
         runner = CliRunner()
         db = clicommon.Db()
