@@ -223,7 +223,7 @@ Vlan100|Ethernet7  range1,range2
         expected_stdout = """\
 Interface          Bind
 -----------------  -------------
-Vlan100|Ethernet7  range1,range2
+Vlan200|Ethernet8  range3,range4
 """
         runner = CliRunner()
         db = clicommon.Db()
