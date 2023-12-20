@@ -5,11 +5,8 @@ import utilities_common.cli as clicommon
 
 import ipaddress
 from datetime import datetime
-        import fnmatch
-        import re
-
-        regex = fnmatch.translate(pattern)
-        regex = re.compile(regex)
+import fnmatch
+import re
 
 
 def ts_to_str(ts):
