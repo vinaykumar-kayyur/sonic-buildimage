@@ -115,15 +115,13 @@ exit_free:
 	return status;
 }
 
-static int wistron_syseeprom_remove(struct i2c_client *client)
+static void wistron_syseeprom_remove(struct i2c_client *client)
 {
 	struct wistron_syseeprom_data *data = i2c_get_clientdata(client);
 
 	hwmon_device_unregister(data->hwmon_dev);
 	sysfs_remove_group(&client->dev.kobj, &wistron_syseeprom_group);
 	kfree(data);
-
-	return 0;
 }
 
 static const struct i2c_device_id wistron_syseeprom_id[] = {

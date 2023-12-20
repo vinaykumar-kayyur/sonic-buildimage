@@ -153,15 +153,13 @@ exit_free:
 	return status;
 }
 
-static int wistron_thermal_remove(struct i2c_client *client)
+static void wistron_thermal_remove(struct i2c_client *client)
 {
 	struct wistron_thermal_data *data = i2c_get_clientdata(client);
 
 	hwmon_device_unregister(data->hwmon_dev);
 	sysfs_remove_group(&client->dev.kobj, &wistron_thermal_group);
 	kfree(data);
-
-	return 0;
 }
 
 
