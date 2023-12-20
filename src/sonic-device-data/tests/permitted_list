@@ -346,3 +346,4 @@ core_clock_to_pm_clock_factor
 flowtracker_ipfix_observation_domain_id
 flowtracker_num_unique_user_entry_keys
 sai_stats_support_mask
+oversubscribe_mixed_sister_25_50_enable
