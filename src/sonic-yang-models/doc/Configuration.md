@@ -70,6 +70,7 @@ Table of Contents
          * [TC to Priority group map](#tc-to-priority-group-map)
          * [TC to Queue map](#tc-to-queue-map)
          * [Telemetry](#telemetry)
+         * [Telemetry client](#telemetry-client)
          * [Tunnel](#tunnel)
          * [Versions](#versions)
          * [VLAN](#vlan)
@@ -2221,6 +2222,31 @@ and is listed in this table.
 }
 ```
 
+### Telemetry client
+
+```
+{
+    "TELEMETRY_CLIENT": {
+        "Global": {
+            "encoding": "JSON_IETF",
+            "retry_interval": "30",
+            "src_ip": "30.57.185.38",
+            "unidirectional": "true"
+        },
+        "DestinationGroup|HS": {
+            "dst_addr": "30.57.186.214:8081,30.57.185.39:8081"
+        },
+        "Subscription|HS_RDMA": {
+            "dst_group": "HS",
+            "path_target": "COUNTERS_DB",
+            "paths": "COUNTERS/Ethernet*,COUNTERS_PORT_NAME_MAP",
+            "report_interval": "5000",
+            "report_type": "periodic"
+        }
+    }
+}
+```
+
 ### Tunnel
 
 This table configures the MUX tunnel for Dual-ToR setup
@@ -2688,6 +2714,37 @@ The FIPS table introduces FIPS  configuration.
         "global" : {
             "enable": "true",
             "enforce": "false"
+        }
+    }
+}
+```
+### MID_PLANE_BRIDGE"
+
+The MID_PLANE_BRIDGE" table introduces the configuration for the midplane bridge interface for Smart Switch.
+
+```json
+{
+    "MID_PLANE_BRIDGE": {
+        "GLOBAL" : {
+            "bridge": "bridge_midplane",
+            "ip_prefix": "169.254.200.254/24"
+        }
+    }
+}
+```
+
+### DPUS
+
+The DPUS table introduces the information on the DPUs (Data Processing Unit) available on the platform.
+
+```json
+{
+    "DPUS": {
+        "dpu0": {
+            "midplane_interface": "dpu0"
+        },
+        "dpu1": {
+            "midplane_interface": "dpu1"
         }
     }
 }
