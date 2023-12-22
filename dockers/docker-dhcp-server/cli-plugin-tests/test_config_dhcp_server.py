@@ -134,7 +134,7 @@ class TestConfigDHCPServer(object):
         db.db = mock_db
         result = runner.invoke(dhcp_server.dhcp_server.commands["ipv4"].commands["enable"], ["Vlan300"], obj=db)
         assert result.exit_code == 0, "exit code: {}, Exception: {}, Traceback: {}".format(result.exit_code, result.exception, result.exc_info)
-        assert mock_db.get("CONFIG_DB", "DHCP_SERVER_IPV4|Vlan300") == "enabled"
+        assert mock_db.get("CONFIG_DB", "DHCP_SERVER_IPV4|Vlan300", "state") == "enabled"
 
     def test_config_dhcp_server_ipv4_enable_does_not_exist(self, mock_db):
         runner = CliRunner()
