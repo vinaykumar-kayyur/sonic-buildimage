@@ -606,7 +606,6 @@ devices = {
             "desc": "Used for system power",
             "slot": 0,
             "warm": 0,
-            
         },
         {
             "name": "CONNECT_CPLD",

@@ -34,7 +34,6 @@ extern int io_device_func_read(const char *path, uint32_t pos, uint8_t *val, siz
 extern int spi_device_func_read(const char *path, uint32_t offset, uint8_t *buf, size_t count);
 extern int spi_device_func_write(const char *path, uint32_t offset, uint8_t *buf, size_t count);
 
-
 #define FPGA_I2C_STRETCH_TIMEOUT  (0x01)
 #define FPGA_I2C_DEADLOCK_FAILED  (0x02)
 #define FPGA_I2C_SLAVE_NO_RESPOND (0x03)

@@ -147,7 +147,6 @@ class Component(ComponentBase):
         """
         if not os.path.isfile(image_path):
             raise RuntimeError("ERROR: %s not found" % image_path)
-
         if self.get_warm_upgrade_flag() == 1:  # use warm upgrade
             cmdstr = "upgrade.py warm %s %d" % (image_path, self.get_slot())
         else:
