@@ -40,9 +40,9 @@
 {% elif var_log_kb <= 409600 %}
     size 2M
 {% else %}
-    size 16M
+    size 4M
 {% endif %}
-    rotate 5000
+    rotate 20
     missingok
     notifempty
     compress
