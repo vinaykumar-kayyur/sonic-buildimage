@@ -65,9 +65,9 @@ def mock_db():
     def delete(table, key):
         assert table == "CONFIG_DB" or table == "STATE_DB"
         if table == "CONFIG_DB":
-            mock_config_db.delete(key)
+            del mock_config_db[key]
         if table == "STATE_DB":
-            mock_state_db.delete(key)
+            del mock_state_db[key]
 
 
     db.keys = mock.Mock(side_effect=keys)
