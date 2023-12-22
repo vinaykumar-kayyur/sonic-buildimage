@@ -1,5 +1,6 @@
 
 =======
+=======
 # SONiC Configuration Database Manual
 
 Table of Contents
@@ -71,6 +72,7 @@ Table of Contents
          * [TC to Priority group map](#tc-to-priority-group-map)
          * [TC to Queue map](#tc-to-queue-map)
          * [Telemetry](#telemetry)
+         * [Telemetry client](#telemetry-client)
          * [Tunnel](#tunnel)
          * [Versions](#versions)
          * [VLAN](#vlan)
@@ -1539,6 +1541,35 @@ These configuration options are used to modify the way that
 ntp binds to the ports on the switch and which port it uses to
 make ntp update requests from.
 
+***NTP Admin state***
+
+If this option is set to `enabled` then ntp client will try to sync system time with configured NTP servers.
+Otherwise, NTP client feature will be disabled.
+```
+{
+    "NTP": {
+        "global": {
+            "admin_state": "enabled"
+        }
+    }
+}
+```
+
+***NTP Server role***
+
+This option is used to control NTP server state on the switch.
+If this option is set to `enabled` switch will act as NTP server.
+By default `server_role` is `disabled`.
+```
+{
+    "NTP": {
+        "global": {
+            "server_role": "enabled"
+        }
+    }
+}
+```
+
 ***NTP VRF***
 
 If this option is set to `default` then ntp will run within the default vrf
@@ -1576,6 +1607,36 @@ for that address.
 }
 ```
 
+***NTP Authentication***
+
+If this option is set to `enabled` then ntp will try to verify NTP servers it connects to.
+This option **has no effect** if key is not set for NTP server.
+By default it is `disabled`
+```
+{
+    "NTP": {
+        "global": {
+            "authentication": "enabled"
+        }
+    }
+}
+```
+
+***NTP DHCP leases***
+
+If this option is set to `enabled` then ntp client will try to use NTP servers provided by DHCP server.
+If this option is set to `disabled` you will be able to use the user-configured NTP servers.
+By default it is `enabled`
+```
+{
+    "NTP": {
+        "global": {
+            "dhcp": "enabled"
+        }
+    }
+}
+```
+
 ### NTP servers
 
 These information are configured in individual tables. Domain name or IP
@@ -1586,18 +1647,77 @@ attributes in those objects.
 ```
 {
     "NTP_SERVER": {
-        "2.debian.pool.ntp.org": {},
-        "1.debian.pool.ntp.org": {},
-        "3.debian.pool.ntp.org": {},
-        "0.debian.pool.ntp.org": {}
+        "2.debian.pool.ntp.org": {
+            "association_type": "pool",
+            "iburst": "on",
+            "admin_state": "enabled",
+            "version": 4
+        },
+        "1.debian.pool.ntp.org": {
+            "association_type": "pool",
+            "iburst": "off",
+            "admin_state": "enabled",
+            "version": 3
+        },
+        "3.debian.pool.ntp.org": {
+            "association_type": "pool",
+            "iburst": "on",
+            "admin_state": "disabled",
+            "version": 4
+        },
+        "0.debian.pool.ntp.org": {
+            "association_type": "pool",
+            "iburst": "off",
+            "admin_state": "disabled",
+            "version": 3
+        }
     },
 
     "NTP_SERVER": {
-        "23.92.29.245": {},
-        "204.2.134.164": {}
+        "23.92.29.245": {
+            "association_type": "server",
+            "iburst": "on",
+            "admin_state": "enabled",
+            "version": 4,
+            "key": 3,
+            "trusted": "yes"
+        },
+        "204.2.134.164": {
+            "association_type": "server",
+            "iburst": "on",
+            "admin_state": "enabled",
+            "version": 3
+        }
     }
 }
 ```
+* `association_type` - is used to control the type of the server. It can be `server` or `pool`.
+* `iburst` - agressive server polling `{on, off}`.
+* `version` - NTP protool version to use `[3..4]`.
+* `key` - authentication key id `[1..65535]` to use to auth the server.
+* `admin_state` - enable or disable specific server.
+* `trusted` - trust this server when auth is enabled.
+
+***NTP keys***
+```
+{
+    "NTP_KEY": {
+        "1": {
+            "type": "md5",
+            "value": "bXlwYXNzd29yZA==",
+            "trusted": "yes"
+        },
+        "42": {
+            "type": "sha1",
+            "value": "dGhlYW5zd2Vy",
+            "trusted": "no"
+        }
+    }
+}
+```
+* `type` - key type to use `{md5, sha1, sha256, sha384, sha512}`.
+* `value` - base64 encoded key value.
+* `trusted` - trust this NTP key `{yes, no}`.
 
 ### Peer Switch
 
@@ -2104,6 +2224,31 @@ and is listed in this table.
 }
 ```
 
+### Telemetry client
+
+```
+{
+    "TELEMETRY_CLIENT": {
+        "Global": {
+            "encoding": "JSON_IETF",
+            "retry_interval": "30",
+            "src_ip": "30.57.185.38",
+            "unidirectional": "true"
+        },
+        "DestinationGroup|HS": {
+            "dst_addr": "30.57.186.214:8081,30.57.185.39:8081"
+        },
+        "Subscription|HS_RDMA": {
+            "dst_group": "HS",
+            "path_target": "COUNTERS_DB",
+            "paths": "COUNTERS/Ethernet*,COUNTERS_PORT_NAME_MAP",
+            "report_interval": "5000",
+            "report_type": "periodic"
+        }
+    }
+}
+```
+
 ### Tunnel
 
 This table configures the MUX tunnel for Dual-ToR setup
@@ -2575,6 +2720,37 @@ The FIPS table introduces FIPS  configuration.
     }
 }
 ```
+### MID_PLANE_BRIDGE"
+
+The MID_PLANE_BRIDGE" table introduces the configuration for the midplane bridge interface for Smart Switch.
+
+```json
+{
+    "MID_PLANE_BRIDGE": {
+        "GLOBAL" : {
+            "bridge": "bridge_midplane",
+            "ip_prefix": "169.254.200.254/24"
+        }
+    }
+}
+```
+
+### DPUS
+
+The DPUS table introduces the information on the DPUs (Data Processing Unit) available on the platform.
+
+```json
+{
+    "DPUS": {
+        "dpu0": {
+            "midplane_interface": "dpu0"
+        },
+        "dpu1": {
+            "midplane_interface": "dpu1"
+        }
+    }
+}
+```
 
 #### 5.2.3 Update value directly in db memory
 
@@ -2589,6 +2765,6 @@ To be added.
 Incremental Configuration by Subscribing to ConfigDB
 ----------------------------------------------------
 
-Detail instruction to be added. A sample could be found in this
+Detail instructionGPr rtnc  to be added. A sample could be found in this
 [PR](https://github.com/Azure/sonic-buildimage/pull/861) that
 implemented dynamic configuration for BGP.

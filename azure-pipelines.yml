@@ -50,7 +50,7 @@ stages:
   jobs:
   - template: .azure-pipelines/azure-pipelines-build.yml
     parameters:
-      buildOptions: 'USERNAME=admin SONIC_BUILD_JOBS=$(nproc) BUILD_MULTIASIC_KVM=y ${{ variables.VERSION_CONTROL_OPTIONS }}'
+      buildOptions: 'USERNAME=admin SONIC_BUILD_JOBS=$(nproc) BUILD_MULTIASIC_KVM=y INCLUDE_DHCP_SERVER=y ${{ variables.VERSION_CONTROL_OPTIONS }}'
       jobGroups:
       - name: vs
 
@@ -65,6 +65,7 @@ stages:
       - name: broadcom
         variables:
           swi_image: yes
+          INCLUDE_RESTAPI: y
       - name: mellanox
         variables:
           dbg_image: yes
@@ -79,6 +80,7 @@ stages:
         timeoutInMinutes: 1200
         variables:
           PLATFORM_ARCH: armhf
+          INCLUDE_RESTAPI: y
 
 - stage: Test
   dependsOn: BuildVS

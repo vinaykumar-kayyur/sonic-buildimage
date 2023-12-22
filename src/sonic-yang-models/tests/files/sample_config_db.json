@@ -481,14 +481,36 @@
         },
         "NTP": {
             "global": {
+                "authentication": "disabled",
+                "dhcp": "enabled",
+                "server_role": "disabled",
+                "admin_state": "enabled",
                 "vrf": "mgmt",
                 "src_intf": "eth0;Loopback0"
             }
         },
         "NTP_SERVER": {
-            "0.debian.pool.ntp.org": {},
-            "23.92.29.245": {},
-            "2001:aa:aa::aa": {}
+            "0.debian.pool.ntp.org": {
+                "association_type": "pool",
+                "resolve_as": "0.debian.pool.ntp.org"
+            },
+            "time.google.com": {
+                "association_type": "server",
+                "resolve_as": "216.239.35.4"
+            },
+            "23.92.29.245": {
+                "admin_state": "enabled",
+                "association_type": "server",
+                "resolve_as": "23.92.29.245",
+                "iburst": "off",
+                "trusted": "yes"
+            },
+            "2001:aa:aa::aa": {
+                "admin_state": "disabled",
+                "iburst": "on",
+                "association_type": "server",
+                "resolve_as": "2001:aa:aa::aa"
+            }
         },
         "SYSLOG_SERVER" : {
             "10.13.14.17": {
@@ -1258,10 +1280,10 @@
                 "src_ip": "30.57.185.38",
                 "unidirectional": "true"
             },
-            "DestinationGroup_HS": {
+            "DestinationGroup|HS": {
                 "dst_addr": "30.57.186.214:8081,30.57.185.39:8081"
             },
-            "Subscription_HS_RDMA": {
+            "Subscription|HS_RDMA": {
                 "dst_group": "HS",
                 "path_target": "COUNTERS_DB",
                 "paths": "COUNTERS/Ethernet*,COUNTERS_PORT_NAME_MAP",
@@ -2580,6 +2602,20 @@
                 "FG_NHG": "nhg2",
                 "bank": "1",
                 "link": "PortChannel2"
+            }
+        },
+        "MID_PLANE_BRIDGE": {
+            "GLOBAL" : {
+                "bridge": "bridge_midplane",
+                "ip_prefix": "169.254.200.254/24"
+            }
+        },
+        "DPUS": {
+            "dpu0": {
+                "midplane_interface": "dpu0"
+            },
+            "dpu1": {
+                "midplane_interface": "dpu1"
             }
         }
     },
