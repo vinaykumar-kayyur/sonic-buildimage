@@ -9,6 +9,7 @@
 
 import os
 import os.path
+import subprocess
 
 try:
     from sonic_platform_base.thermal_base import ThermalBase
@@ -26,20 +27,29 @@ class Thermal(ThermalBase):
                          "/sys/bus/i2c/devices/0-004c/",
                          "/sys/bus/i2c/devices/0-004f/",
                          "/sys/bus/i2c/devices/0-0048/",
-                         "/sys/bus/i2c/devices/0-004d/"]
+                         "/sys/bus/i2c/devices/0-004d/",
+                         "/sys/bus/i2c/devices/0-005a/",
+                         "/sys/bus/i2c/devices/0-0059/",
+                         "/sys/devices/platform/coretemp.0/hwmon/",
+                         "/sys/devices/platform/coretemp.0/hwmon/",
+                         ]
 
     def __init__(self, thermal_index):
         self.index = thermal_index
 
         # Add thermal name
-        self.THERMAL_NAME_LIST.append("Switch")
-        self.THERMAL_NAME_LIST.append("UFRNT1")
-        self.THERMAL_NAME_LIST.append("UFRNT2")
-        self.THERMAL_NAME_LIST.append("UFRNT3")
-        self.THERMAL_NAME_LIST.append("UFRNT4")
-        self.THERMAL_NAME_LIST.append("UREAR1")
-        self.THERMAL_NAME_LIST.append("UCPUB")
-        self.THERMAL_NAME_LIST.append("UFANB")
+        self.THERMAL_NAME_LIST.append("Ambient ASIC Temp")
+        self.THERMAL_NAME_LIST.append("Top-Right")
+        self.THERMAL_NAME_LIST.append("Top-Left")
+        self.THERMAL_NAME_LIST.append("Top-Center")
+        self.THERMAL_NAME_LIST.append("Top-Front")
+        self.THERMAL_NAME_LIST.append("Ambient Port Side Temp")
+        self.THERMAL_NAME_LIST.append("CPU Pack Temp")
+        self.THERMAL_NAME_LIST.append("Ambient Fan Side Temp")
+        self.THERMAL_NAME_LIST.append("PSU-1 Temp")
+        self.THERMAL_NAME_LIST.append("PSU-2 Temp")
+        self.THERMAL_NAME_LIST.append("CPU Core 0 Temp")
+        self.THERMAL_NAME_LIST.append("CPU Core 1 Temp")
         ThermalBase.__init__(self)
         self.minimum_thermal = self.get_temperature()
         self.maximum_thermal = self.get_temperature()
@@ -53,9 +63,25 @@ class Thermal(ThermalBase):
             pass
         return None
 
+    def __search_hwmon_dir_name(self, directory):
+        try:
+            dirs = os.listdir(directory)
+            for file in dirs:
+                if file.startswith("hwmon"):
+                    return file
+        except:
+            pass
+        return ''
+
     def __get_temp(self, temp_file):
-        temp_file_path = os.path.join(self.SYSFS_THERMAL_DIR[self.index], temp_file)
-        raw_temp = self.__read_txt_file(temp_file_path)
+        if self.index > 9:
+            hwmon_dir = self.__search_hwmon_dir_name(self.SYSFS_THERMAL_DIR[self.index])
+            temp_file_path = os.path.join(self.SYSFS_THERMAL_DIR[self.index], hwmon_dir, temp_file)
+            raw_temp = self.__read_txt_file(temp_file_path)
+        else:
+            temp_file_path = os.path.join(self.SYSFS_THERMAL_DIR[self.index], temp_file)
+            raw_temp = self.__read_txt_file(temp_file_path)
+
         if raw_temp is not None:
             return float(raw_temp)/1000
         else:
@@ -78,6 +104,10 @@ class Thermal(ThermalBase):
             of one degree Celsius, e.g. 30.125
         """
         temp_file = "temp1_input"
+        if (self.index == 10):
+            temp_file = "temp2_input"
+        elif (self.index == 11):
+            temp_file = "temp3_input"
         return float(self.__get_temp(temp_file))
 
     def get_low_threshold(self):
@@ -107,6 +137,13 @@ class Thermal(ThermalBase):
         """
 
         temp_file = "temp1_max"
+        if (self.index >= 10):
+            cmd = ["ipmitool", "raw", "0x4", "0x27", "0x38"]
+            p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+            out, err = p.communicate()
+            unc = float(int(out.split()[4],16))
+            return unc
+
         return float(self.__get_temp(temp_file))
 
     def get_high_critical_threshold(self):
@@ -117,6 +154,10 @@ class Thermal(ThermalBase):
         """
 
         temp_file = "temp1_crit"
+        if (self.index == 10):
+            temp_file = "temp2_crit"
+        elif (self.index == 11):
+            temp_file = "temp3_crit"
         return float(self.__get_temp(temp_file))
 
     def get_name(self):
@@ -133,9 +174,26 @@ class Thermal(ThermalBase):
         Returns:
             bool: True if PSU is present, False if not
         """
-        temp_file = "temp1_input"
-        temp_file_path = os.path.join(self.SYSFS_THERMAL_DIR[self.index], temp_file)
-        return os.path.isfile(temp_file_path)
+        if (self.index != 8 and self.index != 9):
+            temp_file = "temp1_input"
+            if (self.index == 10):
+                temp_file = "temp2_input"
+            elif (self.index == 11):
+                temp_file = "temp3_input"
+            temp_file_path = os.path.join(self.SYSFS_THERMAL_DIR[self.index], temp_file)
+            return os.path.isfile(temp_file_path)
+        else:
+            attr_file ='present'
+            attr_path = self.SYSFS_THERMAL_DIR[self.index] +'/' + attr_file
+            status = 0
+            try:
+                with open(attr_path, 'r') as psu_prs:
+                    status = int(psu_prs.read())
+            except IOError:
+                return False
+
+            return status == 1
+
 
     def get_status(self):
         """

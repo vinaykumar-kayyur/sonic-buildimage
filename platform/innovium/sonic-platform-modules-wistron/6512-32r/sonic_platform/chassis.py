@@ -17,7 +17,7 @@ except ImportError as e:
 NUM_FAN = 14
 NUM_FANTRAY = 7
 NUM_PSU = 2
-NUM_THERMAL = 8
+NUM_THERMAL = 12
 NUM_SFP = 32
 NUM_COMPONENT = 6
 HOST_REBOOT_CAUSE_PATH = "/host/reboot-cause/"
@@ -184,9 +184,9 @@ class Chassis(ChassisBase):
     def get_sfp(self, index):
         sfp = None
         try:
-            sfp = self._sfp_list[index]
+            sfp = self._sfp_list[index - 1]
         except IndexError:
-            sys.stderr.write("SFP index {} out of range (0-{})\n".format(index, len(self._sfp_list)-1))
+            sys.stderr.write("SFP index {} out of range (1-{})\n".format(index, len(self._sfp_list)))
 
         return sfp
 

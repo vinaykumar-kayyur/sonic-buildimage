@@ -180,9 +180,9 @@ class Chassis(ChassisBase):
     def get_sfp(self, index):
         sfp = None
         try:
-            sfp = self._sfp_list[index]
+            sfp = self._sfp_list[index - 1]
         except IndexError:
-            sys.stderr.write("SFP index {} out of range (0-{})\n".format(index, len(self._sfp_list)-1))
+            sys.stderr.write("SFP index {} out of range (1-{})\n".format(index, len(self._sfp_list)))
 
         return sfp
 
