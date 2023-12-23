@@ -235,16 +235,11 @@ static int xdpe132g5c_probe(struct i2c_client *client,
     return status;
 }
 
-static int xdpe132g5c_remove(struct i2c_client *client)
+static void xdpe132g5c_remove(struct i2c_client *client)
 {
-    int ret;
-
     sysfs_remove_group(&client->dev.kobj, &xdpe132g5c_sysfs_attrs_group);
-    ret = wb_pmbus_do_remove(client);
-    if (ret != 0){
-        DBG_ERROR("fail remove xdpe132g5c %d\n", ret);
-    }
-    return ret;
+    wb_pmbus_do_remove(client);
+    return;
 }
 
 static const struct i2c_device_id xdpe132g5c_id[] = {

@@ -53,7 +53,7 @@
  *  Features supported by this driver:
  *  Hardware PEC                     yes
  *  Block buffer                     yes
- *  Block process call transaction   no
+ *  Block process call transaction   yes
  *  Slave mode                       no
  */
 
@@ -66,23 +66,11 @@
 #include <linux/i2c.h>
 #include <linux/acpi.h>
 #include <linux/interrupt.h>
-#include <linux/delay.h>
 
 #include <linux/io-64-nonatomic-lo-hi.h>
-#include <linux/string.h>
-
-#define mem_clear(data, size) memset((data), 0, (size))
 
 /* PCI Address Constants */
 #define SMBBAR		0
-
-#define ISMT_DBCTRL		0x388	/* ISMT PIN Control Register */
-#define ISMT_DBSTS		0X38C	/* ISMT PIN Status Register */
-
-#define ISMT_DBSTS_CLK_STS	(1<<9)	/* bit9 SMBCLK_CUR_STS */
-#define ISMT_DBSTS_SDA_STS	(1<<8)	/* bit8 SMBDATA_CUR_STS */
-#define ISMT_DBCTRL_CLK_CTL	(1<<1)	/* bit1 SMBCLK_CTL */
-#define ISMT_DBCTRL_ENABLE	(1<<31)	/* bit31 EN */
 
 /* PCI DIDs for the Intel SMBus Message Transport (SMT) Devices */
 #define PCI_DEVICE_ID_INTEL_S1200_SMT0	0x0c59
@@ -94,6 +82,7 @@
 
 #define ISMT_DESC_ENTRIES	2	/* number of descriptor entries */
 #define ISMT_MAX_RETRIES	3	/* number of SMBus retries to attempt */
+#define ISMT_LOG_ENTRIES	3	/* number of interrupt cause log entries */
 
 /* Hardware Descriptor Constants - Control Field */
 #define ISMT_DESC_CWRL	0x01	/* Command/Write Length */
@@ -157,8 +146,9 @@
 #define ISMT_SPGT_SPD_MASK	0xc0000000	/* SMBus Speed mask */
 #define ISMT_SPGT_SPD_80K	0x00		/* 80 kHz */
 #define ISMT_SPGT_SPD_100K	(0x1 << 30)	/* 100 kHz */
-#define ISMT_SPGT_SPD_400K	(0x2 << 30)	/* 400 kHz */
-#define ISMT_SPGT_SPD_1M	(0x3 << 30)	/* 1 MHz */
+#define ISMT_SPGT_SPD_400K	(0x2U << 30)	/* 400 kHz */
+#define ISMT_SPGT_SPD_1M	(0x3U << 30)	/* 1 MHz */
+
 
 /* MSI Control Register (MSICTL) bit definitions */
 #define ISMT_MSICTL_MSIE	0x01	/* MSI Enable */
@@ -186,6 +176,8 @@ struct ismt_priv {
 	u8 head;				/* ring buffer head pointer */
 	struct completion cmp;			/* interrupt completion */
 	u8 buffer[I2C_SMBUS_BLOCK_MAX + 16];	/* temp R/W data buffer */
+	dma_addr_t log_dma;
+	u32 *log;
 };
 
 static const struct pci_device_id ismt_ids[] = {
@@ -201,17 +193,9 @@ static const struct pci_device_id ismt_ids[] = {
 MODULE_DEVICE_TABLE(pci, ismt_ids);
 
 /* Bus speed control bits for slow debuggers - refer to the docs for usage */
-static unsigned int bus_speed = 100;
-static unsigned int delay = 1000;
+static unsigned int bus_speed;
 module_param(bus_speed, uint, S_IRUGO);
-MODULE_PARM_DESC(bus_speed, "Bus Speed in kHz (100 by default)");
-module_param(delay, uint, S_IRUGO);
-MODULE_PARM_DESC(delay, "Delay in microsecs before access (1000 by default)");
-
-static unsigned int dma_reset_timeout = 1000;
-module_param(dma_reset_timeout, uint, S_IRUGO);
-
-static void ismt_hw_init(struct ismt_priv *priv);
+MODULE_PARM_DESC(bus_speed, "Bus Speed in kHz (0 = BIOS default)");
 
 /**
  * __ismt_desc_dump() - dump the contents of a specific descriptor
@@ -244,39 +228,6 @@ static void ismt_desc_dump(struct ismt_priv *priv)
 
 	dev_dbg(dev, "Dump of the descriptor struct:  0x%X\n", priv->head);
 	__ismt_desc_dump(dev, desc);
-}
-
-static void ismt_reset_dma(struct ismt_priv *priv)
-{
-    uint val;
-    u16 ctrl;
-    struct pci_dev *pdev;
-    u32 addr_lo, addr_hi;
-
-    /* save msiaddr */
-    pdev = priv->pci_dev;
-    pci_read_config_dword(pdev, pdev->msi_cap + PCI_MSI_ADDRESS_LO, &addr_lo);
-    pci_read_config_dword(pdev, pdev->msi_cap + PCI_MSI_ADDRESS_HI, &addr_hi);
-
-    /* Clear the start bit */
-    val = readl(priv->smba + ISMT_MSTR_MCTRL);
-    val &= ~ISMT_MCTRL_SS;
-    writel(val, priv->smba + ISMT_MSTR_MCTRL);
-
-    val = readl(priv->smba + ISMT_GR_GCTRL);
-    writel(val | ISMT_GCTRL_KILL | ISMT_GCTRL_TRST | ISMT_GCTRL_SRST, priv->smba + ISMT_GR_GCTRL);
-
-    if (dma_reset_timeout > 0) {
-        usleep_range(dma_reset_timeout, dma_reset_timeout + 1);
-    }
-
-    ismt_hw_init(priv);
-    pci_write_config_dword(pdev, pdev->msi_cap + PCI_MSI_ADDRESS_LO, addr_lo);
-    pci_write_config_dword(pdev, pdev->msi_cap + PCI_MSI_ADDRESS_HI, addr_hi);
-    /* enable msi */
-    pci_read_config_word(pdev, pdev->msi_cap + PCI_MSI_FLAGS, &ctrl);
-    ctrl |= PCI_MSI_FLAGS_ENABLE;
-    pci_write_config_word(pdev, pdev->msi_cap + PCI_MSI_FLAGS, ctrl);
 }
 
 /**
@@ -384,7 +335,8 @@ static int ismt_process_desc(const struct ismt_desc *desc,
 
 	if (desc->status & ISMT_DESC_SCS) {
 		if (read_write == I2C_SMBUS_WRITE &&
-		    size != I2C_SMBUS_PROC_CALL)
+		    size != I2C_SMBUS_PROC_CALL &&
+		    size != I2C_SMBUS_BLOCK_PROC_CALL)
 			return 0;
 
 		switch (size) {
@@ -397,6 +349,7 @@ static int ismt_process_desc(const struct ismt_desc *desc,
 			data->word = dma_buffer[0] | (dma_buffer[1] << 8);
 			break;
 		case I2C_SMBUS_BLOCK_DATA:
+		case I2C_SMBUS_BLOCK_PROC_CALL:
 			if (desc->rxbytes != dma_buffer[0] + 1)
 				return -EMSGSIZE;
 
@@ -428,94 +381,6 @@ static int ismt_process_desc(const struct ismt_desc *desc,
 	return -EIO;
 }
 
-static void ismt_setscl(struct ismt_priv *priv, unsigned int level)
-{
-    int pin_status;
-
-    pin_status = readl(priv->smba + ISMT_DBCTRL);
-    if (level == 0) {
-        pin_status &= (~ISMT_DBCTRL_CLK_CTL);
-    } else {
-        pin_status |= ISMT_DBCTRL_CLK_CTL;
-    }
-    writel(pin_status, priv->smba + ISMT_DBCTRL);
-    pin_status = readl(priv->smba + ISMT_DBCTRL);
-    dev_dbg(&priv->pci_dev->dev, "dbctrl status = 0x%04x\r\n", pin_status);
-    return;
-}
-
-static void ismt_i2c_unblock(struct ismt_priv *priv)
-{
-    int i;
-    int pin_status, ori_status;
-
-    pin_status = readl(priv->smba + ISMT_DBCTRL);
-    ori_status = pin_status;
-    if ((pin_status & ISMT_DBCTRL_ENABLE) == 0) {
-        pin_status |= ISMT_DBCTRL_ENABLE;
-        writel(pin_status, priv->smba + ISMT_DBCTRL);
-        pin_status = readl(priv->smba + ISMT_DBCTRL);
-        dev_dbg(&priv->pci_dev->dev, "enable dbctrl pin status = 0x%04x\r\n", pin_status);
-    }
-
-    for (i = 0; i < 10; i++) {
-        ismt_setscl(priv, 0);
-        udelay(5);
-        ismt_setscl(priv, 1);
-        udelay(5);
-    }
-
-    pin_status = readl(priv->smba + ISMT_DBCTRL);
-    if (pin_status != ori_status) {
-        writel(ori_status, priv->smba + ISMT_DBCTRL);
-        pin_status = readl(priv->smba + ISMT_DBCTRL);
-        dev_dbg(&priv->pci_dev->dev, "reback dbctrl pin status = 0x%04x\r\n", pin_status);
-    }
-
-    return;
-}
-
-static int ismt_check_i2c_unblock(struct ismt_priv *priv)
-{
-    int pin_status;
-
-    pin_status = readl(priv->smba + ISMT_DBSTS);
-
-    if ( (!(pin_status & ISMT_DBSTS_SDA_STS) ) && (pin_status & ISMT_DBSTS_CLK_STS) ) {
-        dev_dbg(&priv->pci_dev->dev, "SDA is low, send 9 clock to device!\n");
-        ismt_i2c_unblock(priv);
-    }
-    return 0;
-}
-
-static int ismt_check_i2c_scl(struct ismt_priv *priv)
-{
-    int pin_status;
-
-    pin_status = readl(priv->smba + ISMT_DBSTS);
-
-    if ( (pin_status & ISMT_DBSTS_SDA_STS) && (pin_status & ISMT_DBSTS_CLK_STS) ) {
-        return 0;
-    }
-
-    dev_warn(&priv->pci_dev->dev, "SDA or SCL is low.pin_status:0x%x\n", pin_status);
-    return -1;
-}
-
-/* Make sure the SMBus host is ready to start transmitting.
-   Return 0 if it is, -EIO if it is not. */
-static int ismt_check_pre(struct ismt_priv *priv)
-{
-    ismt_check_i2c_unblock(priv);
-
-    /* SDA or SCL is low, return -EIO */
-    if (ismt_check_i2c_scl(priv)) {
-        return -EIO;
-    }
-
-    return 0;
-}
-
 /**
  * ismt_access() - process an SMBus command
  * @adap: the i2c host adapter
@@ -540,23 +405,17 @@ static int ismt_access(struct i2c_adapter *adap, u16 addr,
 	struct device *dev = &priv->pci_dev->dev;
 	u8 *dma_buffer = PTR_ALIGN(&priv->buffer[0], 16);
 
-	if (delay > 0) {
-        usleep_range(delay, delay + 1);
-    }
-
-	ret = ismt_check_pre(priv);
-	if (ret < 0) {
-		return ret;
-	}
-
 	desc = &priv->hw[priv->head];
 
 	/* Initialize the DMA buffer */
-	mem_clear(priv->buffer, sizeof(priv->buffer));
+	memset(priv->buffer, 0, sizeof(priv->buffer));
 
 	/* Initialize the descriptor */
-	mem_clear(desc, sizeof(struct ismt_desc));
+	memset(desc, 0, sizeof(struct ismt_desc));
 	desc->tgtaddr_rw = ISMT_DESC_ADDR_RW(addr, read_write);
+
+	/* Always clear the log entries */
+	memset(priv->log, 0, ISMT_LOG_ENTRIES * sizeof(u32));
 
 	/* Initialize common control bits */
 	if (likely(pci_dev_msi_enabled(priv->pci_dev)))
@@ -650,6 +509,9 @@ static int ismt_access(struct i2c_adapter *adap, u16 addr,
 		if (read_write == I2C_SMBUS_WRITE) {
 			/* Block Write */
 			dev_dbg(dev, "I2C_SMBUS_BLOCK_DATA:  WRITE\n");
+			if (data->block[0] < 1 || data->block[0] > I2C_SMBUS_BLOCK_MAX)
+				return -EINVAL;
+
 			dma_size = data->block[0] + 1;
 			dma_direction = DMA_TO_DEVICE;
 			desc->wr_len_cmd = dma_size;
@@ -665,6 +527,21 @@ static int ismt_access(struct i2c_adapter *adap, u16 addr,
 			desc->wr_len_cmd = command;
 			desc->control |= (ISMT_DESC_BLK | ISMT_DESC_CWRL);
 		}
+		break;
+
+	case I2C_SMBUS_BLOCK_PROC_CALL:
+		dev_dbg(dev, "I2C_SMBUS_BLOCK_PROC_CALL\n");
+		if (data->block[0] > I2C_SMBUS_BLOCK_MAX)
+			return -EINVAL;
+
+		dma_size = I2C_SMBUS_BLOCK_MAX;
+		desc->tgtaddr_rw = ISMT_DESC_ADDR_RW(addr, 1);
+		desc->wr_len_cmd = data->block[0] + 1;
+		desc->rd_len = dma_size;
+		desc->control |= ISMT_DESC_BLK;
+		dma_direction = DMA_BIDIRECTIONAL;
+		dma_buffer[0] = command;
+		memcpy(&dma_buffer[1], &data->block[1], data->block[0]);
 		break;
 
 	case I2C_SMBUS_I2C_BLOCK_DATA:
@@ -746,16 +623,15 @@ static int ismt_access(struct i2c_adapter *adap, u16 addr,
 		dma_unmap_single(dev, dma_addr, dma_size, dma_direction);
 
 	if (unlikely(!time_left)) {
-		dev_warn(dev, "completion wait timed out:addr[%d-0x%x], read_write[%d], command[0x%x], size[%d]\n",
-					adap->nr, addr, read_write, command, size);
-		ismt_reset_dma(priv);
+		dev_err(dev, "completion wait timed out\n");
 		ret = -ETIMEDOUT;
-		priv->head = 0;
-		return ret;
+		goto out;
 	}
 
 	/* do any post processing of the descriptor here */
 	ret = ismt_process_desc(desc, data, priv, size, read_write);
+
+out:
 	/* Update the ring pointer */
 	priv->head++;
 	priv->head %= ISMT_DESC_ENTRIES;
@@ -774,6 +650,7 @@ static u32 ismt_func(struct i2c_adapter *adap)
 	       I2C_FUNC_SMBUS_BYTE_DATA		|
 	       I2C_FUNC_SMBUS_WORD_DATA		|
 	       I2C_FUNC_SMBUS_PROC_CALL		|
+	       I2C_FUNC_SMBUS_BLOCK_PROC_CALL	|
 	       I2C_FUNC_SMBUS_BLOCK_DATA	|
 	       I2C_FUNC_SMBUS_I2C_BLOCK		|
 	       I2C_FUNC_SMBUS_PEC;
@@ -794,6 +671,7 @@ static irqreturn_t ismt_handle_isr(struct ismt_priv *priv)
 
 	return IRQ_HANDLED;
 }
+
 
 /**
  * ismt_do_interrupt() - IRQ interrupt handler
@@ -841,6 +719,8 @@ static void ismt_hw_init(struct ismt_priv *priv)
 
 	/* initialize the Master Descriptor Base Address (MDBA) */
 	writeq(priv->io_rng_dma, priv->smba + ISMT_MSTR_MDBA);
+
+	writeq(priv->log_dma, priv->smba + ISMT_GR_SMTICL);
 
 	/* initialize the Master Control Register (MCTRL) */
 	writel(ISMT_MCTRL_MEIE, priv->smba + ISMT_MSTR_MCTRL);
@@ -908,7 +788,7 @@ static void ismt_hw_init(struct ismt_priv *priv)
 		bus_speed = 1000;
 		break;
 	}
-	dev_info(dev, "SMBus clock is running at %d kHz with delay %d us\n", bus_speed, delay);
+	dev_dbg(dev, "SMBus clock is running at %d kHz\n", bus_speed);
 }
 
 /**
@@ -928,6 +808,12 @@ static int ismt_dev_init(struct ismt_priv *priv)
 
 	priv->head = 0;
 	init_completion(&priv->cmp);
+
+	priv->log = dmam_alloc_coherent(&priv->pci_dev->dev,
+					ISMT_LOG_ENTRIES * sizeof(u32),
+					&priv->log_dma, GFP_KERNEL);
+	if (!priv->log)
+		return -ENOMEM;
 
 	return 0;
 }
@@ -1052,15 +938,10 @@ ismt_probe(struct pci_dev *pdev, const struct pci_device_id *id)
 		return -ENODEV;
 	}
 
-	if ((pci_set_dma_mask(pdev, DMA_BIT_MASK(64)) != 0) ||
-	    (pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(64)) != 0)) {
-		if ((pci_set_dma_mask(pdev, DMA_BIT_MASK(32)) != 0) ||
-		    (pci_set_consistent_dma_mask(pdev,
-						 DMA_BIT_MASK(32)) != 0)) {
-			dev_err(&pdev->dev, "pci_set_dma_mask fail %p\n",
-				pdev);
-			return -ENODEV;
-		}
+	err = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(64));
+	if (err) {
+		dev_err(&pdev->dev, "dma_set_mask fail\n");
+		return -ENODEV;
 	}
 
 	err = ismt_dev_init(priv);

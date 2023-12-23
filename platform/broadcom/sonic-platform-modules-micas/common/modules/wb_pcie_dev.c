@@ -25,6 +25,9 @@
 #define PCIE_BUS_WIDTH_2         (2)
 #define PCIE_BUS_WIDTH_4         (4)
 
+#define KERNEL_SPASE         (0)
+#define USER_SPASE           (1)
+
 static int g_pcie_dev_debug = 0;
 static int g_pcie_dev_error = 0;
 
@@ -216,7 +219,7 @@ static int pci_dev_read_tmp(wb_pci_dev_t *wb_pci_dev, uint32_t offset, uint8_t *
     return count;
 }
 
-static ssize_t pci_dev_read(struct file *file, char __user *buf, size_t count, loff_t *offset)
+static ssize_t pci_dev_read(struct file *file, char __user *buf, size_t count, loff_t *offset, int flag)
 {
     wb_pci_dev_t *wb_pci_dev;
     int ret, read_len;
@@ -244,7 +247,8 @@ static ssize_t pci_dev_read(struct file *file, char __user *buf, size_t count, l
         PCIE_DEV_DEBUG_ERROR("pci_dev_read_tmp failed, ret:%d.\n", read_len);
         return read_len;
     }
-    if (access_ok(buf, read_len)) {
+    /* check flag is user spase or kernel spase */
+    if (flag == USER_SPASE) {
         PCIE_DEV_DEBUG_VERBOSE("user space read, buf: %p, offset: %lld, read count %lu.\n",
             buf, *offset, count);
         if (copy_to_user(buf, buf_tmp, read_len)) {
@@ -261,13 +265,23 @@ static ssize_t pci_dev_read(struct file *file, char __user *buf, size_t count, l
     return ret;
 }
 
+static ssize_t pci_dev_read_user(struct file *file, char __user *buf, size_t count, loff_t *offset)
+{
+    int ret;
+
+    PCIE_DEV_DEBUG_VERBOSE("pci_dev_read_user, file: %p, count: %lu, offset: %lld\n",
+        file, count, *offset);
+    ret = pci_dev_read(file, buf, count, offset, USER_SPASE);
+    return ret;
+}
+
 static ssize_t pci_dev_read_iter(struct kiocb *iocb, struct iov_iter *to)
 {
     int ret;
 
     PCIE_DEV_DEBUG_VERBOSE("pci_dev_read_iter, file: %p, count: %lu, offset: %lld\n",
         iocb->ki_filp, to->count, iocb->ki_pos);
-    ret = pci_dev_read(iocb->ki_filp, to->kvec->iov_base, to->count, &iocb->ki_pos);
+    ret = pci_dev_read(iocb->ki_filp, to->kvec->iov_base, to->count, &iocb->ki_pos, KERNEL_SPASE);
     return ret;
 }
 
@@ -307,7 +321,7 @@ static int pci_dev_write_tmp(wb_pci_dev_t *wb_pci_dev, uint32_t offset, uint8_t 
 }
 
 static ssize_t pci_dev_write(struct file *file, const char __user *buf, size_t count,
-                   loff_t *offset)
+                   loff_t *offset, int flag)
 {
     wb_pci_dev_t *wb_pci_dev;
     u8 buf_tmp[PCI_RDWR_MAX_LEN];
@@ -330,7 +344,8 @@ static ssize_t pci_dev_write(struct file *file, const char __user *buf, size_t c
     }
 
     mem_clear(buf_tmp, sizeof(buf_tmp));
-    if (access_ok(buf, count)) {
+    /* check flag is user spase or kernel spase */
+    if (flag == USER_SPASE) {
         PCIE_DEV_DEBUG_VERBOSE("user space write, buf: %p, offset: %lld, write count %lu.\n",
             buf, *offset, count);
         if (copy_from_user(buf_tmp, buf, count)) {
@@ -353,13 +368,23 @@ static ssize_t pci_dev_write(struct file *file, const char __user *buf, size_t c
     return write_len;
 }
 
+static ssize_t pci_dev_write_user(struct file *file, const char __user *buf, size_t count, loff_t *offset)
+{
+    int ret;
+
+    PCIE_DEV_DEBUG_VERBOSE("pci_dev_write_user, file: %p, count: %lu, offset: %lld\n",
+        file, count, *offset);
+    ret = pci_dev_write(file, buf, count, offset, USER_SPASE);
+    return ret;
+}
+
 static ssize_t pci_dev_write_iter(struct kiocb *iocb, struct iov_iter *from)
 {
     int ret;
 
     PCIE_DEV_DEBUG_VERBOSE("pci_dev_write_iter, file: %p, count: %lu, offset: %lld\n",
         iocb->ki_filp, from->count, iocb->ki_pos);
-    ret = pci_dev_write(iocb->ki_filp, from->kvec->iov_base, from->count, &iocb->ki_pos);
+    ret = pci_dev_write(iocb->ki_filp, from->kvec->iov_base, from->count, &iocb->ki_pos, KERNEL_SPASE);
     return ret;
 }
 
@@ -464,6 +489,8 @@ static long pci_dev_ioctl(struct file *file, unsigned int cmd, unsigned long arg
 static const struct file_operations pcie_dev_fops = {
     .owner      = THIS_MODULE,
     .llseek     = pci_dev_llseek,
+    .read       = pci_dev_read_user,
+    .write      = pci_dev_write_user,
     .read_iter  = pci_dev_read_iter,
     .write_iter = pci_dev_write_iter,
     .unlocked_ioctl = pci_dev_ioctl,

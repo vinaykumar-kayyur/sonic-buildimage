@@ -60,7 +60,6 @@ static void switch_obj_release(struct kobject *kobj)
 static struct kobj_type switch_ktype = {
     .sysfs_ops = &switch_sysfs_ops,
     .release = switch_obj_release,
-    .default_attrs = NULL,
 };
 
 static struct kset *switch_kset;

@@ -56,6 +56,9 @@ class openloop(object):
         pwm_max = openloop_para["pwm_max"]
         flag = openloop_para["flag"]
 
+        openloop_debug("linear openloop: flag: %s, k: %s, tin_min: %s, pwm_min: 0x%x, pwm_max: 0x%x"
+            % (flag, K, tin_min, pwm_min, pwm_max))
+
         if flag != 1:
             openloop_debug("linear openloop: flag == 0")
             return None
@@ -86,6 +89,9 @@ class openloop(object):
         pwm_min = openloop_para["pwm_min"]
         pwm_max = openloop_para["pwm_max"]
         flag = openloop_para["flag"]
+
+        openloop_debug("curve openloop: flag: %s, a: %s, b: %s, c: %s, tin_min: %s, pwm_min: 0x%x, pwm_max: 0x%x"
+            % (flag, a, b, c, tin_min, pwm_min, pwm_max))
 
         if flag != 1:
             openloop_debug("curve openloop: flag == 0")

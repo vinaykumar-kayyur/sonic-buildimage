@@ -534,7 +534,7 @@ static int xdpe132g5c_probe(struct i2c_client *client, const struct i2c_device_i
     return 0;
 }
 
-static int xdpe132g5c_remove(struct i2c_client *client)
+static void xdpe132g5c_remove(struct i2c_client *client)
 {
     struct xdpe_data *data;
 
@@ -542,7 +542,7 @@ static int xdpe132g5c_remove(struct i2c_client *client)
     data = i2c_get_clientdata(client);
     hwmon_device_unregister(data->hwmon_dev);
     sysfs_remove_group(&client->dev.kobj, &xdpe132g5c_sysfs_attrs_group);
-    return 0;
+    return;
 }
 
 static const struct i2c_device_id xdpe132g5c_id[] = {

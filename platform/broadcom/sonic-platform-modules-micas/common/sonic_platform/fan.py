@@ -298,7 +298,7 @@ class Fan(FanBase):
             string: Vendor name of fan
         """
         if not self.is_psu_fan:
-            return "WB"
+            return "Micas"
         return 'N/A'
 
     def get_revision(self):
