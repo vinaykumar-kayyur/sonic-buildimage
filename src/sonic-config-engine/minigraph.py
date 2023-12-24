@@ -1880,7 +1880,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     for port in ports.values():
         port['mtu'] = '9100'
         port['tpid'] = '0x8100'
-    # mode check for vlan membership in PORT table
+    # mode check for vlan membership in PORT table default mode is routed and for vlan membership it is trunk
     for port_name, port in ports.items():
         if 'mode' not in port:
             if port_name in [key[1] for key in vlan_members.keys()]:
