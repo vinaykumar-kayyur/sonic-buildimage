@@ -115,11 +115,16 @@ $RepeatedMsgReduction on
 
 {% if source -%}
     {% set options = options ~ ' Address="' ~ source ~ '"'-%}
+    {% set device = device if device != 'eth0' else '' -%}
+{% endif -%}
+
+{% if device -%}
+    {% set options = options ~ ' Device="' ~ device ~ '"'-%}
 {% endif -%}
 
 {% if filter %}
 :msg, {{ fmodifier }}ereregex, "{{ regex }}"
 {% endif %}
 *.{{ severity }}
-action(type="omfwd" Target="{{ server }}" Port="{{ port }}" Protocol="{{ proto }}" Device="{{ device }}" Template="{{ template }}"{{ options }})
+action(type="omfwd" Target="{{ server }}" Port="{{ port }}" Protocol="{{ proto }}" Template="{{ template }}"{{ options }})
 {% endfor %}
