@@ -20,12 +20,12 @@ module sonic-bgp-bbr {
     container sonic-bgp-bbr {
         container BGP_BBR {
 
-            description "BGP_BBR table part of config_db.json"
+            description "BGP_BBR table part of config_db.json";
 
             container all {
                 leaf status {
                     type string {
-                        pattern "enabled|disabled"
+                        pattern "enabled|disabled";
                     }
                 }
             }
