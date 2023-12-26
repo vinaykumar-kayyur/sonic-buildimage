@@ -279,8 +279,8 @@ class ModulesMgmtTask(threading.Thread):
                     module_fd_path = module_obj.module_power_good_fd_path
                 self.fds_events_count_dict[module_obj.port_num][fd_name] += 1
                 try:
-                    val = module_fd.read()
                     module_fd.seek(0)
+                    val = module_fd.read()
                     logger.log_info("dynamic detection got module_obj {} with port {} from fd number {} path {} val {} count {}"
                                   .format(module_obj, module_obj.port_num, fd, module_fd_path
                                           , val, self.fds_events_count_dict[module_obj.port_num]))
