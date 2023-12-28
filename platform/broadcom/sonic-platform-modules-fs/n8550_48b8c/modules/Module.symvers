@@ -1,0 +1,2 @@
+0x580e7dfc	n8550_48b8c_cpld_read	/sonic/platform/broadcom/sonic-platform-modules-fs/n8550_48b8c/modules/fs_i2c_cpld	EXPORT_SYMBOL	
+0x58eccfdc	n8550_48b8c_cpld_write	/sonic/platform/broadcom/sonic-platform-modules-fs/n8550_48b8c/modules/fs_i2c_cpld	EXPORT_SYMBOL	

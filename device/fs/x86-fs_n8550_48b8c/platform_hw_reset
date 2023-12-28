@@ -1,0 +1,7 @@
+#!/bin/bash
+
+function platform_hw_reset() {
+    echo -ne '\xe\' | dd of=/dev/port bs=1 seek=$((0xcf9))
+}
+
+platform_hw_reset

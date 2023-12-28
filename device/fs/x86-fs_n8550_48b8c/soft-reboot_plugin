@@ -1,0 +1,3 @@
+#!/bin/bash
+
+systemctl stop n8550-platform-init.service
