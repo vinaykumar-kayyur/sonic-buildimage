@@ -21,7 +21,7 @@ class TestCfgGen(TestCase):
         self.sample_graph_simple = os.path.join(self.test_dir, 'simple-sample-graph.xml')
         self.sample_graph_simple_case = os.path.join(self.test_dir, 'simple-sample-graph-case.xml')
         self.sample_graph_metadata = os.path.join(self.test_dir, 'simple-sample-graph-metadata.xml')
-        self.sample_sgraph_pc_test = os.path.join(self.test_dir, 'pc-test-graph.xml')
+        self.sample_graph_pc_test = os.path.join(self.test_dir, 'pc-test-graph.xml')
         self.sample_graph_bgp_speaker = os.path.join(self.test_dir, 't0-sample-bgp-speaker.xml')
         self.sample_graph_deployment_id = os.path.join(self.test_dir, 't0-sample-deployment-id.xml')
         self.sample_graph_voq = os.path.join(self.test_dir, 'sample-voq-graph.xml')
@@ -329,22 +329,20 @@ class TestCfgGen(TestCase):
                                          " 'Vlan31|200:200:200:200::2', 'Vlan31|200:200:200:200::3', 'Vlan31|200:200:200:200::4', 'Vlan31|200:200:200:200::5', "
                                          "'Vlan31|200:200:200:200::6', 'Vlan31|200:200:200:200::7', 'Vlan31|200:200:200:200::8', 'Vlan31|200:200:200:200::9']")
 
-    def test_minigraph_portchannels(self, **kwargs):
+        def test_minigraph_portchannels(self, **kwargs):
         graph_file = kwargs.get('graph_file', self.sample_graph_simple)
         argument = ['-m', graph_file, '-p', self.port_config, '-v', 'PORTCHANNEL']
         output = self.run_script(argument)
         self.assertEqual(
             utils.to_dict(output.strip()),
-            utils.to_dict("{'PortChannel1': {'admin_status': 'up', 'min_links': '1', 'mtu': '9100', 'tpid': '0x8100','mode': 'routed', 'lacp_key': 'auto'}}")
-
-        )
+            utils.to_dict("{'PortChannel1': {'admin_status': 'up', 'min_links': '1', 'mtu': '9100', 'tpid': '0x8100', 'lacp_key': 'auto', 'mode': 'routed'}}"))
 
     def test_minigraph_portchannel_with_more_member(self):
         argument = ['-m', self.sample_graph_pc_test, '-p', self.port_config, '-v', 'PORTCHANNEL']
         output = self.run_script(argument)
         self.assertEqual(
             utils.to_dict(output.strip()),
-            utils.to_dict("{'PortChannel01': {'admin_status': 'up', 'min_links': '3', 'mode':'routed', 'mtu': '9100','tpid': '0x8100', 'lacp_key': 'auto'}}"))
+            utils.to_dict("{'PortChannel01': {'admin_status': 'up', 'min_links': '3', 'mtu': '9100', 'tpid': '0x8100', 'lacp_key': 'auto', 'mode': 'routed'}}"))
 
     def test_minigraph_portchannel_members(self):
         argument = ['-m', self.sample_graph_pc_test, '-p', self.port_config, '-v', "PORTCHANNEL_MEMBER.keys()|list"]
