@@ -329,7 +329,7 @@ class TestCfgGen(TestCase):
                                          " 'Vlan31|200:200:200:200::2', 'Vlan31|200:200:200:200::3', 'Vlan31|200:200:200:200::4', 'Vlan31|200:200:200:200::5', "
                                          "'Vlan31|200:200:200:200::6', 'Vlan31|200:200:200:200::7', 'Vlan31|200:200:200:200::8', 'Vlan31|200:200:200:200::9']")
 
-        def test_minigraph_portchannels(self, **kwargs):
+    def test_minigraph_portchannels(self, **kwargs):
         graph_file = kwargs.get('graph_file', self.sample_graph_simple)
         argument = ['-m', graph_file, '-p', self.port_config, '-v', 'PORTCHANNEL']
         output = self.run_script(argument)
