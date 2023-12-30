@@ -1876,17 +1876,10 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
                 # for the ports w/o neighbor info, set it to port alias
                 port['description'] = port.get('alias', port_name)
 
-    # set default port MTU as 9100 and default TPID 0x8100 and default value for mode is trunk for vlan membership
+    # set default port MTU as 9100 and default TPID 0x8100
     for port in ports.values():
         port['mtu'] = '9100'
         port['tpid'] = '0x8100'
-    # mode check for vlan membership in PORT table default mode is routed and for vlan membership it is trunk
-    for port_name, port in ports.items():
-        if 'mode' not in port:
-            if port_name in [key[1] for key in vlan_members.keys()]:
-                port['mode'] = 'trunk'
-            else:
-                port['mode'] = 'routed'
 
     # asymmetric PFC is disabled by default
     for port in ports.values():
@@ -1919,13 +1912,13 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         if inband_port in ports.keys():
             ports[inband_port]['admin_status'] = 'up'
 
-    # bring up the recirc port for voq chassis, Set it as trunk interface
+    # bring up the recirc port for voq chassis, Set it as routed interface
     for port, port_attributes in ports.items():
         port_role = port_attributes.get('role', None)
         if port_role == 'Rec':
             ports[port]['admin_status'] = 'up'
 
-            #Add the Recirc ports to the INTERFACES table to make it trunk intf
+            #Add the Recirc ports to the INTERFACES table to make it routed intf
             results['INTERFACE'].update({port : {}})
 
     results['PORT'] = ports
@@ -1953,18 +1946,11 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
                 for pc_mbr_del_key in pc_mbr_del_keys:
                     del pc_members[pc_mbr_del_key]
 
-    # set default port channel MTU as 9100 and admin status up and default TPID 0x8100 and default value for mode is trunk when port has  no vlan membership
-    for pc in pcs.values(): 
+    # set default port channel MTU as 9100 and admin status up and default TPID 0x8100
+    for pc in pcs.values():
         pc['mtu'] = '9100'
         pc['tpid'] = '0x8100'
         pc['admin_status'] = 'up'
-    # mode check for vlan membership in portchannel
-    for pc_name, pc in pcs.items():
-        if 'mode' not in pc:
-            if pc_name in [key[1] for key in vlan_members.keys()]:
-                 pc['mode'] = 'trunk'
-            else:
-                 pc['mode'] = 'routed'
 
     results['PORTCHANNEL'] = pcs
     results['PORTCHANNEL_MEMBER'] = pc_members
