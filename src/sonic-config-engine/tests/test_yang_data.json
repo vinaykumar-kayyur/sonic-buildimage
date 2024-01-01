@@ -12,7 +12,6 @@
                     "pfc_asym": "on",
                     "name": "Ethernet0",
                     "speed": 40000
-
                 },
                 {
                     "admin_status": "up",

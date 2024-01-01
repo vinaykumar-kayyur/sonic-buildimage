@@ -206,7 +206,6 @@
         "PORT_TABLE:Ethernet60": {
             "speed": "100000",
             "description": "fortyGigE0/60"
-            
         },
         "OP": "SET"
     },

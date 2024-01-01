@@ -64,3 +64,4 @@ class TestJ2FilesT2ChassisFe(TestCase):
     # Test bgpd.conf in FRR docker for a T2 chassis frontend (fe)
     def test_t2_chassis_frontend_bgpd_frr(self):
         self.assertTrue(*self.run_case(self.t2_chassis_fe_minigraph, 'bgpd/bgpd.conf.j2', 't2-chassis-fe-bgpd.conf'))
+
