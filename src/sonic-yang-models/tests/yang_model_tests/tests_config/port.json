@@ -73,6 +73,21 @@
             }
         }
     },
+    "PORT_INVLAID_MODE_TEST": {
+        "sonic-port:sonic-port": {
+            "sonic-port:PORT": {
+                "PORT_LIST": [
+                    {
+                        "name": "Ethernet8",
+                        "alias": "eth8",
+                        "lanes": "65",
+                        "speed": 25000,
+                        "mode" : "off"
+                    }
+                ]
+            }
+        }
+    },
     "PORT_VALID_AUTONEG_TEST_1": {
         "sonic-port:sonic-port": {
             "sonic-port:PORT": {
