@@ -64,9 +64,18 @@ elif [ "$platform" == "mellanox" ]; then
     ORCHAGENT_ARGS+=""
 elif [ "$platform" == "innovium" ]; then
     ORCHAGENT_ARGS+="-m $MAC_ADDRESS"
+elif [ "$platform" == "pensando" ]; then
+    MAC_ADDRESS=$(ip link property add dev oob_mnic0 altname eth0; ip link show oob_mnic0 | grep ether | awk '{print $2}')
+    ORCHAGENT_ARGS+="-m $MAC_ADDRESS"
 else
     # Should we use the fallback MAC in case it is not found in Device.Metadata
     ORCHAGENT_ARGS+="-m $MAC_ADDRESS"
+fi
+
+# Enable ZMQ for SmartSwitch
+LOCALHOST_SUBTYPE=`sonic-db-cli CONFIG_DB hget localhost "subtype"`
+if [[ x"${LOCALHOST_SUBTYPE}" == x"SmartSwitch" ]]; then
+    ORCHAGENT_ARGS+=" -q tcp://127.0.0.1:8100"
 fi
 
 exec /usr/bin/orchagent ${ORCHAGENT_ARGS}

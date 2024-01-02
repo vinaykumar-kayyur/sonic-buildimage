@@ -63,12 +63,18 @@ setup(
     ],
     tests_require = [
         'pytest',
-        'ijson==2.6.1'
+        'ijson==3.2.3'
     ],
     setup_requires = [
         'pytest-runner',
         'wheel'
     ],
+    extras_require = {
+        "testing": [
+            'pytest',
+            'ijson==3.2.3'
+        ],
+    },
     include_package_data=True,
     keywords='sonic-yang-models',
     name='sonic-yang-models',
@@ -191,7 +197,8 @@ setup(
                          './yang-models/sonic-static-route.yang',
                          './yang-models/sonic-system-port.yang',
                          './yang-models/sonic-macsec.yang',
-                         './yang-models/sonic-bgp-sentinel.yang']),
+                         './yang-models/sonic-bgp-sentinel.yang',
+                         './yang-models/sonic-smart-switch.yang',]),
         ('cvlyang-models', ['./cvlyang-models/sonic-acl.yang',
                          './cvlyang-models/sonic-bgp-common.yang',
                          './cvlyang-models/sonic-bgp-global.yang',
