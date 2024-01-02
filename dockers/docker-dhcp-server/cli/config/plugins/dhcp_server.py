@@ -119,7 +119,7 @@ def dhcp_server_ipv4_del(db, dhcp_interface):
 @dhcp_server_ipv4.command(name="update")
 @click.argument("dhcp_interface", required=True)
 @click.option("--mode", required=False)
-@click.option("--lease_time", required=False, default="900")
+@click.option("--lease_time", required=False)
 @click.option("--dup_gw_nm", required=False, default=False, is_flag=True)
 @click.option("--gateway", required=False)
 @click.option("--netmask", required=False)
