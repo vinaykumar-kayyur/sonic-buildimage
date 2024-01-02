@@ -284,7 +284,7 @@ function postStartAction()
     chgrp -f redis $REDIS_SOCK && chmod -f 0760 $REDIS_SOCK
 {%- elif docker_container_name == "swss" %}
     # Wait until swss container state is Running
-    until [[ ($(docker inspect -f {{"'{{.State.Running}}'"}} swss) == "true") ]]; do
+    until [[ ($(docker inspect -f {{"'{{.State.Running}}'"}} swss$DEV) == "true") ]]; do
         sleep 0.1
     done
     echo "swss container is up and running"
