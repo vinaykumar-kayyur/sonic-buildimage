@@ -178,6 +178,8 @@ thermal_min_to_mid_waring_flag = [0]
 
 platform_chassis= None
 
+int_port_mapping = []
+
 def stop_syncd_service():
     cmd_str = ["systemctl", "disable", "syncd"]
     (status, output) = getstatusoutput_noshell(cmd_str)
@@ -282,6 +284,7 @@ class device_monitor(object):
         global send_mac_shutdown_warning
         global send_cpu_shutdown_warning
         global thermal_min_to_mid_waring_flag
+        global int_port_mapping
 
         LEVEL_FAN_INIT=0
         FAN_LEVEL_1 = 1
@@ -347,6 +350,11 @@ class device_monitor(object):
         if fan_policy_state == LEVEL_FAN_INIT:
             # Init sensors record warning flag:
             thermal_min_to_mid_waring_flag = thermal_min_to_mid_waring_flag * TOTAL_DETECT_SENSOR_NUM
+
+            # Record port mapping to interface
+            for port_num in range(TRANSCEIVER_NUM_MAX):
+                sfp = platform_chassis.get_sfp(port_num+1)
+                int_port_mapping.append( (port_num+1, sfp, sfp.get_name()) )
 
             self.init_duty_cycle = fan.get_fan_duty_cycle()
             for i in range (FAN_LEVEL_1, FAN_LEVEL_3 + 1):
@@ -429,9 +437,8 @@ class device_monitor(object):
                 board_thermal_and_chk_mid_to_min[i-1] = 0
 
         for port_num in range(TRANSCEIVER_NUM_MAX):
-            sfp = platform_chassis.get_sfp(port_num+1)
-            board_thermal_val.append((TYPE_TRANSCEIVER, sfp,
-                                      self.get_transceiver_temperature(sfp.get_name()) * 1000))
+            board_thermal_val.append((TYPE_TRANSCEIVER, int_port_mapping[port_num][1],
+                                      self.get_transceiver_temperature(int_port_mapping[port_num][2]) * 1000))
             #index: 11~74(64 port)
             if board_thermal_val[thermal.THERMAL_NUM_11_IDX + port_num][2] >= thermal_spec["min_to_mid_temp"][thermal.THERMAL_NUM_BD_SENSOR][1]:
                 board_thermal_or_chk_min_to_mid[thermal.THERMAL_NUM_11_IDX + port_num] = 1
