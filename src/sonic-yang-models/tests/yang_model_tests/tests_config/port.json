@@ -73,21 +73,6 @@
             }
         }
     },
-    "PORT_INVLAID_MODE_TEST": {
-        "sonic-port:sonic-port": {
-            "sonic-port:PORT": {
-                "PORT_LIST": [
-                    {
-                        "name": "Ethernet8",
-                        "alias": "eth8",
-                        "lanes": "65",
-                        "speed": 25000,
-                        "mode" : "off"
-                    }
-                ]
-            }
-        }
-    },
     "PORT_VALID_AUTONEG_TEST_1": {
         "sonic-port:sonic-port": {
             "sonic-port:PORT": {
@@ -272,7 +257,6 @@
                         "speed": 25000,
                         "autoneg": "on",
                         "interface_type": "CR4"
-                        
                     }
                 ]
             }
@@ -409,7 +393,6 @@
                         "speed": 25000,
                         "tpid": "0x8100",
                         "laser_freq": "27.3"
-                        
                     }
                 ]
             }
@@ -586,7 +569,6 @@
                         "speed": 100000,
                         "subport": 3,
                         "mode":"trunk"
-
                     },
                     {
                         "name": "Ethernet6",

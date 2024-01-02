@@ -1,5 +1,3 @@
-
-=======
 =======
 # SONiC Configuration Database Manual
 
@@ -2765,6 +2763,6 @@ To be added.
 Incremental Configuration by Subscribing to ConfigDB
 ----------------------------------------------------
 
-Detail instructionGPr rtnc  to be added. A sample could be found in this
+Detail instruction to be added. A sample could be found in this
 [PR](https://github.com/Azure/sonic-buildimage/pull/861) that
 implemented dynamic configuration for BGP.

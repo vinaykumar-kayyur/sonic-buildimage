@@ -130,7 +130,6 @@ module sonic-vlan {
 					type leafref {
 						path "/vlan:sonic-vlan/vlan:VLAN/vlan:VLAN_LIST/vlan:name";
 					}
-
 				}
 
 				leaf ip-prefix {
@@ -189,7 +188,6 @@ module sonic-vlan {
 					}
 				}
 
-
 				leaf alias {
 					type string;
 				}
@@ -199,7 +197,7 @@ module sonic-vlan {
 						length 1..255;
 					}
 				}
-               
+
 				leaf-list dhcp_servers {
 					description "Configure the dhcp v4 servers";
 					type inet:ip-address;
@@ -209,7 +207,6 @@ module sonic-vlan {
 					description "Configure the dhcp v6 servers";
 					type inet:ipv6-address;
 				}
-                
 
 				leaf mtu {
 					type uint16 {
@@ -224,8 +221,6 @@ module sonic-vlan {
 				leaf mac {
 					type yang:mac-address;
 				}
-				
-
 			}
 			/* end of VLAN_LIST */
 		}
@@ -244,36 +239,23 @@ module sonic-vlan {
 						path "/vlan:sonic-vlan/vlan:VLAN/vlan:VLAN_LIST/vlan:name";
 					}
 				}
-             
-			
 
-				leaf port 
-				{
+				leaf port {
 					/* key elements are mandatory by default */
 					type union {
-						type leafref 
-						{
+						type leafref {
 							path "/port:sonic-port/port:PORT/port:PORT_LIST/port:name";
-							
-
 						}
-						type leafref
-						{
+						type leafref {
 							path "/lag:sonic-portchannel/lag:PORTCHANNEL/lag:PORTCHANNEL_LIST/lag:name";
-                            
-					
 						}
 					}
+				}
 
-                }
-				
 				leaf tagging_mode {
 					mandatory true;
 					type stypes:vlan_tagging_mode;
 				}
-
-				 
-
 			}
             /* end of list VLAN_MEMBER_LIST */
 		}

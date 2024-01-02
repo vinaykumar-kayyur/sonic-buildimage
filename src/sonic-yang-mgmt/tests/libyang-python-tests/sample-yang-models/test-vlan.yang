@@ -128,9 +128,8 @@ module test-vlan {
 					type leafref {
 						path /port:port/port:PORT/port:PORT_LIST/port:port_name;
 					}
-				
 				}
-                    
+
 				leaf tagging_mode {
 					mandatory true;
 					type head:vlan_tagging_mode;
