@@ -53,7 +53,7 @@ module sonic-port{
 				}
                 
 				leaf mode {
-					description "SwitchPort Modes possible values are routed|access|trunk. Default value is routed."; 
+					description "SwitchPort Modes possible values are routed|access|trunk. Default value  for mode is routed"; 
 					type stypes:switchport_mode; 
 					default "routed";
 				}

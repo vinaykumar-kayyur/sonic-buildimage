@@ -130,6 +130,7 @@ module sonic-vlan {
 					type leafref {
 						path "/vlan:sonic-vlan/vlan:VLAN/vlan:VLAN_LIST/vlan:name";
 					}
+
 				}
 
 				leaf ip-prefix {
@@ -188,6 +189,7 @@ module sonic-vlan {
 					}
 				}
 
+
 				leaf alias {
 					type string;
 				}
@@ -208,6 +210,7 @@ module sonic-vlan {
 					type inet:ipv6-address;
 				}
 
+
 				leaf mtu {
 					type uint16 {
 						range 1..9216;
@@ -221,6 +224,8 @@ module sonic-vlan {
 				leaf mac {
 					type yang:mac-address;
 				}
+
+
 			}
 			/* end of VLAN_LIST */
 		}
@@ -240,22 +245,29 @@ module sonic-vlan {
 					}
 				}
 
-				leaf port {
+				leaf port
+				{
 					/* key elements are mandatory by default */
 					type union {
-						type leafref {
+						type leafref
+						{
 							path "/port:sonic-port/port:PORT/port:PORT_LIST/port:name";
+
 						}
-						type leafref {
+						type leafref
+						{
 							path "/lag:sonic-portchannel/lag:PORTCHANNEL/lag:PORTCHANNEL_LIST/lag:name";
+
 						}
 					}
-				}
+
+                }
 
 				leaf tagging_mode {
 					mandatory true;
 					type stypes:vlan_tagging_mode;
 				}
+
 			}
             /* end of list VLAN_MEMBER_LIST */
 		}
