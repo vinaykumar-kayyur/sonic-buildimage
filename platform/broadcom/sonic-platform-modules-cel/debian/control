@@ -28,11 +28,10 @@ Description: kernel modules for platform devices such as led, sfp.
 
 Package: platform-modules-belgite
 Architecture: amd64
-Depends: linux-image-5.10.0-18-2-amd64-unsigned
-Description: kernel modules for platform devices such as led, sfpi
+Depends: linux-image-6.1.0-11-2-amd64-unsigned
+Description: kernel modules for platform devices such as led, sfp
 
 Package: platform-modules-silverstone-v2
 Architecture: amd64
-Depends: linux-image-5.10.0-18-2-amd64-unsigned
 Depends: linux-image-6.1.0-11-2-amd64-unsigned
 Description: kernel modules for platform devices such as led, sfp
