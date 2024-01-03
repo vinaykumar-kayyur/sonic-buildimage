@@ -44,5 +44,4 @@ touch $first_boot_flag_file
 init_file_name="entrance.sh"
 init_file=${mount_point}/${init_file_name}
 chmod +x $init_file
-
 source $init_file
