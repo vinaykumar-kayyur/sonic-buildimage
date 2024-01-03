@@ -2,7 +2,7 @@
 
 # This script is for kubernetes master image usage
 # Will mount kubernetes master disk and execute kubernetes entrance script
-# making git diff to test the changes
+
 set -x
 
 # Mount disk from host
@@ -32,6 +32,7 @@ fi
 disk="${disk_by_path_dir}/${disk_path_file}"
 mkdir -p $mount_point
 mount $disk $mount_point
+
 
 # Check whether it is the first time to boot
 first_boot_flag_file="/from_host/first_boot_flag"
