@@ -1464,15 +1464,11 @@ def update_forced_mgmt_route(mgmt_intf, mgmt_routes):
 
         # get mgmt interface type
         mgmt_intf_addr = mgmt_intf_key[1]
-        mgmt_is_ipv4 = True
-        if ":" in mgmt_intf_addr:
-            mgmt_is_ipv4 = False
+        mgmt_is_ipv4 = ipaddress.ip_network(mgmt_intf_addr) is ipaddress.IPv4Network
 
         # add mgmt route to different mgmt interface by address type
         for mgmt_route in mgmt_routes:
-            route_is_ipv4 = True
-            if ":" in mgmt_route:
-                route_is_ipv4 = False
+            route_is_ipv4 = ipaddress.ip_network(mgmt_route) is ipaddress.IPv4Network
             if mgmt_is_ipv4 == route_is_ipv4:
                 forced_mgmt_routes.append(mgmt_route)
 
