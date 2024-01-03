@@ -33,7 +33,6 @@ disk="${disk_by_path_dir}/${disk_path_file}"
 mkdir -p $mount_point
 mount $disk $mount_point
 
-
 # Check whether it is the first time to boot
 first_boot_flag_file="/from_host/first_boot_flag"
 if [ -f $first_boot_flag_file ]; then
@@ -45,4 +44,5 @@ touch $first_boot_flag_file
 init_file_name="entrance.sh"
 init_file=${mount_point}/${init_file_name}
 chmod +x $init_file
+
 source $init_file
