@@ -1,14 +1,14 @@
-From bbe464bf31b8eece14b0ced730c4bc049d7527d7 Mon Sep 17 00:00:00 2001
+From 1e48c59b9aad5215d16cd7b80bfcdaf54d6dbe77 Mon Sep 17 00:00:00 2001
 From: liuh <liuh@microsoft.com>
 Date: Fri, 8 Dec 2023 15:03:06 +0800
 Subject: [PATCH] Connect all TACACS server in parallel
 
 ---
- nss_tacplus.c | 274 ++++++++++++++++++++++++++++++++++++--------------
- 1 file changed, 201 insertions(+), 73 deletions(-)
+ nss_tacplus.c | 281 +++++++++++++++++++++++++++++++++++++-------------
+ 1 file changed, 208 insertions(+), 73 deletions(-)
 
 diff --git a/nss_tacplus.c b/nss_tacplus.c
-index d954f03..3e8670a 100644
+index d954f03..e269c17 100644
 --- a/nss_tacplus.c
 +++ b/nss_tacplus.c
 @@ -34,8 +34,10 @@
@@ -109,7 +109,7 @@ index d954f03..3e8670a 100644
      if(!ret && debug)
          syslog(LOG_DEBUG, "%s: pw_name=%s, pw_passwd=%s, pw_shell=%s, dir=%s",
                  nssname, pb->pw->pw_name, pb->pw->pw_passwd, pb->pw->pw_shell,
-@@ -836,13 +867,143 @@ int get_remote_address(char* dst, socklen_t size)
+@@ -836,13 +867,147 @@ int get_remote_address(char* dst, socklen_t size)
   * Step through all servers until success or end of list, because different
   * servers can have different databases.
   */
@@ -155,9 +155,13 @@ index d954f03..3e8670a 100644
 +    // backup min_tac_srv_latency before update, delay_ns will be 0 if current server is
 +    // the first server finish connection, which means first finish connection server
 +    // no delay in following steps.
-+    uint64_t delay_ns = min_tac_srv_latency*TACACS_SERVER_DELAY_FACTOR/1000;
++    uint64_t delay_ms = min_tac_srv_latency*TACACS_SERVER_DELAY_FACTOR/1000;
 +    clock_gettime(CLOCK_MONOTONIC, &ts);
 +    uint64_t server_latency_us = ts.tv_sec * 1000000000 + ts.tv_nsec - latency_ns;
++    if (server_latency_us < 1000) {
++        // second thread atleast need delay 1 ms.
++        server_latency_us = 1000;
++    }
 +    if (server_latency_us > min_tac_srv_latency) {
 +        min_tac_srv_latency = server_latency_us;
 +    }
@@ -169,7 +173,7 @@ index d954f03..3e8670a 100644
 +        goto exit_tacacs_thread;
 +    }
 +
-+    usleep(delay_ns);
++    usleep(delay_ms);
 +    ret = tac_author_send(tac_fd, name, current_tty != NULL ? (char *)current_tty : "", remote_addr, attr);
 +    if(ret < 0) {
 +        if(debug)
@@ -257,7 +261,7 @@ index d954f03..3e8670a 100644
      char remote_addr[INET6_ADDRSTRLEN];
      const char* current_tty = getenv("SSH_TTY");
  
-@@ -851,69 +1012,36 @@ lookup_tacacs_user(struct pwbuf *pb)
+@@ -851,69 +1016,39 @@ lookup_tacacs_user(struct pwbuf *pb)
          syslog(LOG_DEBUG, "%s: can't get remote address from environment variable, result=%d", nssname, result);
      }
  
@@ -308,6 +312,9 @@ index d954f03..3e8670a 100644
 +        args->remote_addr = remote_addr;
 +        args->current_tty = current_tty;
 +        pthread_create(&thread, NULL, lookup_tacacs_user_thread, args);
++        
++        // if all server are very fast, first server will finish first and will not request authentication to multiple server.
++        usleep(1000);
 +    }
  
 -        if(arep.status == AUTHOR_STATUS_PASS_ADD ||
