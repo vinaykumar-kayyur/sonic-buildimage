@@ -108,7 +108,6 @@ module sonic-vlan {
 					default disable;
 				}
 
-
                 leaf loopback_action {
                     description "Packet action when a packet ingress and gets routed on the same IP interface";
                     type stypes:loopback_action;
@@ -130,7 +129,6 @@ module sonic-vlan {
 					type leafref {
 						path "/vlan:sonic-vlan/vlan:VLAN/vlan:VLAN_LIST/vlan:name";
 					}
-
 				}
 
 				leaf ip-prefix {
@@ -189,7 +187,6 @@ module sonic-vlan {
 					}
 				}
 
-
 				leaf alias {
 					type string;
 				}
@@ -209,7 +206,6 @@ module sonic-vlan {
 					description "Configure the dhcp v6 servers";
 					type inet:ipv6-address;
 				}
-
 
 				leaf mtu {
 					type uint16 {
