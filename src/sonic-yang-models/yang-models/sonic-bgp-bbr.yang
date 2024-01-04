@@ -3,6 +3,10 @@ module sonic-bgp-bbr {
     prefix bgpbbr;
     yang-version 1.1;
 
+    import sonic-types {
+        prefix stypes;
+    }
+
     organization
         "SONiC";
 
@@ -24,9 +28,9 @@ module sonic-bgp-bbr {
 
             container all {
                 leaf status {
-                    type string {
-                        pattern "enabled|disabled";
-                    }
+                    type stypes:admin_mode;
+                    default enabled;
+                    description "bgp bbr status";
                 }
             }
             /* end of container all */

@@ -9,7 +9,7 @@
             }
         }
     },
-    "BGP_BBR_VALID_STATUS": {
+    "BGP_BBR_INVALID_STATUS": {
         "sonic-bgp-bbr:sonic-bgp-bbr": {
             "sonic-bgp-bbr:BGP_BBR": {
                 "all":
