@@ -1,25 +1,49 @@
-From 07976a2a70e6faed026560b36e155689a9cf2d12 Mon Sep 17 00:00:00 2001
+From bbe464bf31b8eece14b0ced730c4bc049d7527d7 Mon Sep 17 00:00:00 2001
 From: liuh <liuh@microsoft.com>
 Date: Fri, 8 Dec 2023 15:03:06 +0800
 Subject: [PATCH] Connect all TACACS server in parallel
 
 ---
- nss_tacplus.c | 248 +++++++++++++++++++++++++++++++++++---------------
- 1 file changed, 175 insertions(+), 73 deletions(-)
+ nss_tacplus.c | 274 ++++++++++++++++++++++++++++++++++++--------------
+ 1 file changed, 201 insertions(+), 73 deletions(-)
 
 diff --git a/nss_tacplus.c b/nss_tacplus.c
-index d954f03..f531e8c 100644
+index d954f03..3e8670a 100644
 --- a/nss_tacplus.c
 +++ b/nss_tacplus.c
-@@ -34,6 +34,7 @@
+@@ -34,8 +34,10 @@
  #include <netdb.h>
  #include <nss.h>
  #include <limits.h>
 +#include <pthread.h>
  #include <unistd.h>
  #include <sys/wait.h>
++#include <time.h>
  
-@@ -91,6 +92,19 @@ static char vrfname[64];
+ #include <libtac/libtac.h>
+ 
+@@ -49,6 +51,12 @@
+ #define GET_REMOTE_ADDRESS_OK               0
+ #define GET_REMOTE_ADDRESS_FAILED           1
+ 
++// When parallel connection to multiple TACACS server, after first
++// server successfully connected, other server need have a slightly
++// delay to avoid authentication with multiple server factor is 4
++// because there will be 4 packets send/receve with server
++#define TACACS_SERVER_DELAY_FACTOR          4
++
+ static const char *nssname = "nss_tacplus"; /* for syslogs */
+ static const char *config_file = "/etc/tacplus_nss.conf";
+ static const char *user_conf = "/etc/tacplus_user";
+@@ -84,6 +92,7 @@ static tacplus_server_t tac_srv[TAC_PLUS_MAXSERVERS];
+ static int tac_srv_no;
+ static useradd_info_t useradd_grp_list[MAX_TACACS_USER_PRIV + 1];
+ static struct addrinfo *source_addr;
++static uint64_t min_tac_srv_latency;
+ 
+ static char *tac_service = "shell";
+ static char *tac_protocol = "ssh";
+@@ -91,6 +100,19 @@ static char vrfname[64];
  static bool debug = false;
  static bool many_to_one = false;
  
@@ -39,7 +63,7 @@ index d954f03..f531e8c 100644
  static int parse_tac_server(char *srv_buf)
  {
      char *token;
-@@ -696,15 +710,14 @@ static int lookup_user_pw(struct pwbuf *pb, int level)
+@@ -696,15 +718,14 @@ static int lookup_user_pw(struct pwbuf *pb, int level)
  }
  
  /*
@@ -60,7 +84,7 @@ index d954f03..f531e8c 100644
  
      while(attr != NULL)  {
          /* we are looking for the privilege attribute, can be in several forms,
-@@ -725,12 +738,22 @@ got_tacacs_user(struct tac_attrib *attr, struct pwbuf *pb)
+@@ -725,12 +746,22 @@ got_tacacs_user(struct tac_attrib *attr, struct pwbuf *pb)
               */
              if(debug)
                  syslog(LOG_DEBUG, "%s: privilege for %s, (%lu)",
@@ -85,7 +109,7 @@ index d954f03..f531e8c 100644
      if(!ret && debug)
          syslog(LOG_DEBUG, "%s: pw_name=%s, pw_passwd=%s, pw_shell=%s, dir=%s",
                  nssname, pb->pw->pw_name, pb->pw->pw_passwd, pb->pw->pw_shell,
-@@ -836,13 +859,126 @@ int get_remote_address(char* dst, socklen_t size)
+@@ -836,13 +867,143 @@ int get_remote_address(char* dst, socklen_t size)
   * Step through all servers until success or end of list, because different
   * servers can have different databases.
   */
@@ -108,6 +132,10 @@ index d954f03..f531e8c 100644
 -    int tac_fd, srvr;
 +    int tac_fd;
 +
++    // record tacacs server connect latency
++    struct timespec ts;
++    clock_gettime(CLOCK_MONOTONIC, &ts);
++    uint64_t latency_ns = ts.tv_sec * 1000000000 + ts.tv_nsec;
 +    arep.msg = NULL;
 +    arep.attr = NULL;
 +    arep.status = TAC_PLUS_AUTHOR_STATUS_ERROR; /* if author_send fails */
@@ -122,6 +150,18 @@ index d954f03..f531e8c 100644
 +        goto exit_tacacs_thread;
 +    }
 +
++    // use the min tac server connect latency to delay other TACACS server connection.
++    // this will make sure in most case SONiC device only AAA with single TACACS server.
++    // backup min_tac_srv_latency before update, delay_ns will be 0 if current server is
++    // the first server finish connection, which means first finish connection server
++    // no delay in following steps.
++    uint64_t delay_ns = min_tac_srv_latency*TACACS_SERVER_DELAY_FACTOR/1000;
++    clock_gettime(CLOCK_MONOTONIC, &ts);
++    uint64_t server_latency_us = ts.tv_sec * 1000000000 + ts.tv_nsec - latency_ns;
++    if (server_latency_us > min_tac_srv_latency) {
++        min_tac_srv_latency = server_latency_us;
++    }
++
 +    if (tacacs_auth_success) {
 +        if(debug)
 +            syslog(LOG_DEBUG, "%s: TACACS connect thread %d stop because other TACACS server connection finished", nssname, srvr);
@@ -129,6 +169,7 @@ index d954f03..f531e8c 100644
 +        goto exit_tacacs_thread;
 +    }
 +
++    usleep(delay_ns);
 +    ret = tac_author_send(tac_fd, name, current_tty != NULL ? (char *)current_tty : "", remote_addr, attr);
 +    if(ret < 0) {
 +        if(debug)
@@ -216,7 +257,7 @@ index d954f03..f531e8c 100644
      char remote_addr[INET6_ADDRSTRLEN];
      const char* current_tty = getenv("SSH_TTY");
  
-@@ -851,69 +987,35 @@ lookup_tacacs_user(struct pwbuf *pb)
+@@ -851,69 +1012,36 @@ lookup_tacacs_user(struct pwbuf *pb)
          syslog(LOG_DEBUG, "%s: can't get remote address from environment variable, result=%d", nssname, result);
      }
  
@@ -258,6 +299,7 @@ index d954f03..f531e8c 100644
 -            continue;
 +    // connect to all TACACS server in parallel
 +    // after any server authorized and set tacacs_auth_success to true, other connection will stop.
++    min_tac_srv_latency = 0;
 +    for(srvr=0; srvr < tac_srv_no; srvr++) {
 +        pthread_t thread;
 +        tacacs_thread_args_t* args = malloc(sizeof(tacacs_thread_args_t));
