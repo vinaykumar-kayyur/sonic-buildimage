@@ -420,7 +420,7 @@ exit:
     return status;
 }
 
-static int pddf_fan_remove(struct i2c_client *client)
+static void pddf_fan_remove(struct i2c_client *client)
 {
 	int i = 0, ret = 0;
 	struct sensor_device_attribute *ptr = NULL;
@@ -460,8 +460,6 @@ static int pddf_fan_remove(struct i2c_client *client)
         if (ret!=0)
             printk(KERN_ERR "FAN post_remove function failed\n");
     }
-
-    return 0;
 }
 
 /* Addresses to scan */
