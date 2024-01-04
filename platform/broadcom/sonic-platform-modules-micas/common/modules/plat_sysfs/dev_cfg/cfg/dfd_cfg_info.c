@@ -74,6 +74,8 @@ char *g_info_pola_str[INFO_POLA_END] = {
     "negative",
 };
 
+#define MAC_TEMP_INVALID    (99999999)
+
 static int dfd_read_info_from_cpld(int32_t addr, int read_bytes, uint8_t *val)
 {
     int i, rv;
@@ -661,8 +663,11 @@ static int dfd_info_get_cpld_temperature(int key, int *value)
         rv = DFD_RV_OK;
         break;
     }
-    
+
     DBG_DEBUG(DBG_VERBOSE, "calc temp:%d \n", temp_value);
+    if ((temp_value < -40000) || (temp_value > 120000)) {
+        temp_value = -MAC_TEMP_INVALID;
+    }
     *value = temp_value;
 
     return rv;

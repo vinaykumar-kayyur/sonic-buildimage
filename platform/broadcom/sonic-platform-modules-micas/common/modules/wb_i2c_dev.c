@@ -27,6 +27,9 @@
 #define WIDTH_2Byte          (2)
 #define WIDTH_4Byte          (4)
 
+#define KERNEL_SPASE         (0)
+#define USER_SPASE           (1)
+
 static int g_i2c_dev_debug = 0;
 static int g_i2c_dev_error = 0;
 
@@ -433,7 +436,7 @@ static int device_write(struct i2c_dev_info *i2c_dev, uint32_t offset, uint8_t *
     return count;
 }
 
-static ssize_t i2c_dev_read(struct file *file, char __user *buf, size_t count, loff_t *offset)
+static ssize_t i2c_dev_read(struct file *file, char __user *buf, size_t count, loff_t *offset, int flag)
 {
     u8 val[FPGA_MAX_LEN];
     int ret, read_len;
@@ -463,7 +466,8 @@ static ssize_t i2c_dev_read(struct file *file, char __user *buf, size_t count, l
         return read_len;
     }
 
-    if (access_ok(buf, read_len)) {
+    /* check flag is user spase or kernel spase */
+    if (flag == USER_SPASE) {
         I2C_DEV_DEBUG_DMESG("user space read, buf: %p, offset: %lld, read count %lu.\n",
             buf, *offset, count);
         if (copy_to_user(buf, val, read_len)) {
@@ -481,17 +485,27 @@ static ssize_t i2c_dev_read(struct file *file, char __user *buf, size_t count, l
     return ret;
 }
 
+static ssize_t i2c_dev_read_user(struct file *file, char __user *buf, size_t count, loff_t *offset)
+{
+    int ret;
+
+    I2C_DEV_DEBUG_DMESG("i2c_dev_read_user, file: %p, count: %lu, offset: %lld\n",
+        file, count, *offset);
+    ret = i2c_dev_read(file, buf, count, offset, USER_SPASE);
+    return ret;
+}
+
 static ssize_t i2c_dev_read_iter(struct kiocb *iocb, struct iov_iter *to)
 {
     int ret;
 
     I2C_DEV_DEBUG_DMESG("i2c_dev_read_iter, file: %p, count: %lu, offset: %lld\n",
         iocb->ki_filp, to->count, iocb->ki_pos);
-    ret = i2c_dev_read(iocb->ki_filp, to->kvec->iov_base, to->count, &iocb->ki_pos);
+    ret = i2c_dev_read(iocb->ki_filp, to->kvec->iov_base, to->count, &iocb->ki_pos, KERNEL_SPASE);
     return ret;
 }
 
-static ssize_t i2c_dev_write(struct file *file, const char __user *buf, size_t count, loff_t *offset)
+static ssize_t i2c_dev_write(struct file *file, const char __user *buf, size_t count, loff_t *offset, int flag)
 {
     u8 val[FPGA_MAX_LEN];
     int write_len;
@@ -514,7 +528,9 @@ static ssize_t i2c_dev_write(struct file *file, const char __user *buf, size_t c
     }
 
     mem_clear(val, sizeof(val));
-    if (access_ok(buf, count)) {
+
+    /* check flag is user spase or kernel spase */
+    if (flag == USER_SPASE) {
         I2C_DEV_DEBUG_DMESG("user space write, buf: %p, offset: %lld, write count %lu.\n",
             buf, *offset, count);
         if (copy_from_user(val, buf, count)) {
@@ -538,13 +554,23 @@ static ssize_t i2c_dev_write(struct file *file, const char __user *buf, size_t c
     return write_len;
 }
 
+static ssize_t i2c_dev_write_user(struct file *file, const char __user *buf, size_t count, loff_t *offset)
+{
+    int ret;
+
+    I2C_DEV_DEBUG_DMESG("i2c_dev_write_user, file: %p, count: %lu, offset: %lld\n",
+        file, count, *offset);
+    ret = i2c_dev_write(file, buf, count, offset, USER_SPASE);
+    return ret;
+}
+
 static ssize_t i2c_dev_write_iter(struct kiocb *iocb, struct iov_iter *from)
 {
     int ret;
 
     I2C_DEV_DEBUG_DMESG("i2c_dev_write_iter, file: %p, count: %lu, offset: %lld\n",
         iocb->ki_filp, from->count, iocb->ki_pos);
-    ret = i2c_dev_write(iocb->ki_filp, from->kvec->iov_base, from->count, &iocb->ki_pos);
+    ret = i2c_dev_write(iocb->ki_filp, from->kvec->iov_base, from->count, &iocb->ki_pos, KERNEL_SPASE);
     return ret;
 }
 
@@ -596,6 +622,8 @@ static loff_t i2c_dev_llseek(struct file *file, loff_t offset, int origin)
 static const struct file_operations i2c_dev_fops = {
     .owner      = THIS_MODULE,
     .llseek     = i2c_dev_llseek,
+    .read       = i2c_dev_read_user,
+    .write      = i2c_dev_write_user,
     .read_iter     = i2c_dev_read_iter,
     .write_iter    = i2c_dev_write_iter,
     .unlocked_ioctl = i2c_dev_ioctl,

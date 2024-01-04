@@ -32,6 +32,9 @@
 #define OP_READ             (0x3)
 #define OP_WRITE            (0x2)
 
+#define KERNEL_SPASE         (0)
+#define USER_SPASE           (1)
+
 static int g_spi_dev_debug = 0;
 static int g_spi_dev_error = 0;
 
@@ -312,7 +315,7 @@ static int device_write(struct spi_dev_info *spi_dev, uint32_t offset, uint8_t *
     return count;
 }
 
-static ssize_t spi_dev_read(struct file *file, char __user *buf, size_t count, loff_t *offset)
+static ssize_t spi_dev_read(struct file *file, char __user *buf, size_t count, loff_t *offset, int flag)
 {
     u8 val[MAX_RW_LEN];
     int ret, read_len;
@@ -342,7 +345,8 @@ static ssize_t spi_dev_read(struct file *file, char __user *buf, size_t count, l
         return read_len;
     }
 
-    if (access_ok(buf, read_len)) {
+    /* check flag is user spase or kernel spase */
+    if (flag == USER_SPASE) {
         SPI_DEV_DEBUG("user space read, buf: %p, offset: %lld, read count %lu.\n",
             buf, *offset, count);
         if (copy_to_user(buf, val, read_len)) {
@@ -360,18 +364,28 @@ static ssize_t spi_dev_read(struct file *file, char __user *buf, size_t count, l
     return ret;
 }
 
+static ssize_t spi_dev_read_user(struct file *file, char __user *buf, size_t count, loff_t *offset)
+{
+    int ret;
+
+    SPI_DEV_DEBUG("spi_dev_read_user, file: %p, count: %lu, offset: %lld\n",
+        file, count, *offset);
+    ret = spi_dev_read(file, buf, count, offset, USER_SPASE);
+    return ret;
+}
+
 static ssize_t spi_dev_read_iter(struct kiocb *iocb, struct iov_iter *to)
 {
     int ret;
 
     SPI_DEV_DEBUG("spi_dev_read_iter, file: %p, count: %lu, offset: %lld\n",
         iocb->ki_filp, to->count, iocb->ki_pos);
-    ret = spi_dev_read(iocb->ki_filp, to->kvec->iov_base, to->count, &iocb->ki_pos);
+    ret = spi_dev_read(iocb->ki_filp, to->kvec->iov_base, to->count, &iocb->ki_pos, KERNEL_SPASE);
     return ret;
 }
 
 static ssize_t spi_dev_write(struct file *file, const char __user *buf,
-                   size_t count, loff_t *offset)
+                   size_t count, loff_t *offset, int flag)
 {
     u8 val[MAX_RW_LEN];
     int write_len;
@@ -394,7 +408,8 @@ static ssize_t spi_dev_write(struct file *file, const char __user *buf,
     }
 
     mem_clear(val, sizeof(val));
-    if (access_ok(buf, count)) {
+    /* check flag is user spase or kernel spase */
+    if (flag == USER_SPASE) {
         SPI_DEV_DEBUG("user space write, buf: %p, offset: %lld, write count %lu.\n",
             buf, *offset, count);
         if (copy_from_user(val, buf, count)) {
@@ -418,13 +433,23 @@ static ssize_t spi_dev_write(struct file *file, const char __user *buf,
     return write_len;
 }
 
+static ssize_t spi_dev_write_user(struct file *file, const char __user *buf, size_t count, loff_t *offset)
+{
+    int ret;
+
+    SPI_DEV_DEBUG("spi_dev_write_user, file: %p, count: %lu, offset: %lld\n",
+        file, count, *offset);
+    ret = spi_dev_write(file, buf, count, offset, USER_SPASE);
+    return ret;
+}
+
 static ssize_t spi_dev_write_iter(struct kiocb *iocb, struct iov_iter *from)
 {
     int ret;
 
     SPI_DEV_DEBUG("spi_dev_write_iter, file: %p, count: %lu, offset: %lld\n",
         iocb->ki_filp, from->count, iocb->ki_pos);
-    ret = spi_dev_write(iocb->ki_filp, from->kvec->iov_base, from->count, &iocb->ki_pos);
+    ret = spi_dev_write(iocb->ki_filp, from->kvec->iov_base, from->count, &iocb->ki_pos, KERNEL_SPASE);
     return ret;
 }
 
@@ -474,6 +499,8 @@ static loff_t spi_dev_llseek(struct file *file, loff_t offset, int origin)
 static const struct file_operations spi_dev_fops = {
     .owner          = THIS_MODULE,
     .llseek         = spi_dev_llseek,
+    .read           = spi_dev_read_user,
+    .write          = spi_dev_write_user,
     .read_iter      = spi_dev_read_iter,
     .write_iter     = spi_dev_write_iter,
     .unlocked_ioctl = spi_dev_ioctl,

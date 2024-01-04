@@ -18,6 +18,8 @@ typedef struct pci_dev_device_s {
     int pci_fn;
     int pci_bar;
     int bus_width;
+    uint32_t check_pci_id;
+    uint32_t pci_id;
     int upg_ctrl_base;
     int upg_flash_base;
     int device_flag;
