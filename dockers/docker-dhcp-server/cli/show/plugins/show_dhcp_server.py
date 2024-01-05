@@ -143,9 +143,9 @@ def port(db, interface):
         if dhcp_interface_is_match(interface, intf):
             entry = dbconn.get_all("CONFIG_DB", key)
             if "ranges" in entry:
-                table.append([intf, entry["ranges"]])
+                table.append([intf, entry["ranges"].replace(",", "\n")])
             if "ips" in entry:
-                table.append([intf, entry["ips"]])
+                table.append([intf, entry["ips"].replace(",", "\n")])
     click.echo(tabulate(table, headers=headers))
 
 
