@@ -77,7 +77,6 @@ static int xdpe122_data2reg_vid(struct pmbus_data *data, int page, long val)
     return 0;
 }
 
-
 /*
  * Convert VID sensor values to milli- or micro-units
  * depending on sensor type.
@@ -161,6 +160,11 @@ static ssize_t xdpe122_avs_vout_store(struct device *dev, struct device_attribut
     ret = kstrtoint(buf, 0, &vout);
     if (ret) {
         WB_XDPE122_ERROR("%d-%04x: invalid value: %s \n", client->adapter->nr, client->addr, buf);
+        return -EINVAL;
+    }
+
+    if (vout <= 0) {
+        WB_XDPE122_ERROR("%d-%04x: invalid value: %d \n", client->adapter->nr, client->addr, vout);
         return -EINVAL;
     }
 

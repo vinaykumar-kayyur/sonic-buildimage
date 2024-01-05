@@ -82,6 +82,8 @@ typedef struct wb_pci_dev_s {
     uint32_t bus;
     uint32_t slot;
     uint32_t fn;
+    uint32_t check_pci_id;
+    uint32_t pci_id;
 } wb_pci_dev_t;
 
 /*
@@ -886,6 +888,7 @@ MODULE_DEVICE_TABLE(of, ocores_i2c_match);
 static int fpga_ocores_i2c_get_irq(struct ocores_i2c *i2c)
 {
     int devfn, irq;
+    uint32_t pci_id;
     struct device *dev;
     wb_pci_dev_t *wb_pci_dev;
     struct pci_dev *pci_dev;
@@ -907,6 +910,14 @@ static int fpga_ocores_i2c_get_irq(struct ocores_i2c *i2c)
             ret = -EINVAL;
             return ret;
         }
+        ret = of_property_read_u32(dev->of_node, "check_pci_id", &wb_pci_dev->check_pci_id);
+        if (ret == 0) {
+            ret = of_property_read_u32(dev->of_node, "pci_id", &wb_pci_dev->pci_id);
+            if (ret != 0) {
+                OCORES_I2C_ERROR("need to check pci id, but pci id not config.\n");
+                return -EINVAL;
+            }
+        }
     } else {
         if (i2c->dev->platform_data == NULL) {
             OCORES_I2C_ERROR("Failed to get platform data config.\n");
@@ -918,6 +929,8 @@ static int fpga_ocores_i2c_get_irq(struct ocores_i2c *i2c)
         wb_pci_dev->bus = i2c_ocores_device->pci_bus;
         wb_pci_dev->slot = i2c_ocores_device->pci_slot;
         wb_pci_dev->fn = i2c_ocores_device->pci_fn;
+        wb_pci_dev->check_pci_id = i2c_ocores_device->check_pci_id;
+        wb_pci_dev->pci_id = i2c_ocores_device->pci_id;
     }
 
     OCORES_I2C_VERBOSE("pci_domain:0x%x, pci_bus:0x%x, pci_slot:0x%x, pci_fn:0x%x.\n",
@@ -930,8 +943,18 @@ static int fpga_ocores_i2c_get_irq(struct ocores_i2c *i2c)
             wb_pci_dev->domain, wb_pci_dev->bus, devfn);
         return -ENODEV;
     }
+    if (wb_pci_dev->check_pci_id == 1) {
+        pci_id = (pci_dev->vendor << 16) | pci_dev->device;
+        if (wb_pci_dev->pci_id != pci_id) {
+            OCORES_I2C_ERROR("Failed to check pci id, except: 0x%x, really: 0x%x\n",
+                wb_pci_dev->pci_id, pci_id);
+            return -ENXIO;
+        }
+        OCORES_I2C_VERBOSE("pci id check ok, pci_id: 0x%x", pci_id);
+    }
+
     irq = pci_dev->irq + i2c->irq_offset;
-    OCORES_I2C_VERBOSE("get irq no:%d.\n", irq);
+    OCORES_I2C_VERBOSE("get irq no: %d.\n", irq);
     return irq;
 }
 
@@ -1073,10 +1096,10 @@ static int ocores_i2c_probe(struct platform_device *pdev)
 
                 i2c->flags |= OCORES_FLAG_POLL;
             } else {
-
+                i2c->irq_offset = i2c_ocores_device->irq_offset;
                 irq = fpga_ocores_i2c_get_irq(i2c);
                 if (irq < 0 ) {
-                    dev_err(i2c->dev, "Failed to get  ocores i2c irq number, ret: %d.\n", irq);
+                    dev_err(i2c->dev, "Failed to get ocores i2c irq number, ret: %d.\n", irq);
                     ret = irq;
                     goto out;
                 }

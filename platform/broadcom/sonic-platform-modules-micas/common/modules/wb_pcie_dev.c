@@ -63,6 +63,8 @@ typedef struct wb_pci_dev_s {
     uint32_t bar_len;
     uint32_t bar_flag;
     uint32_t bus_width;
+    uint32_t check_pci_id;
+    uint32_t pci_id;
     struct miscdevice misc;
     void (*setreg)(struct wb_pci_dev_s *wb_pci_dev, int reg, u32 value);
     u32 (*getreg)(struct wb_pci_dev_s *wb_pci_dev, int reg);
@@ -614,6 +616,7 @@ static int pci_setup_bars(wb_pci_dev_t *wb_pci_dev, struct pci_dev *dev)
 static int pci_dev_probe(struct platform_device *pdev)
 {
     int ret, devfn;
+    uint32_t pci_id;
     wb_pci_dev_t *wb_pci_dev;
     struct pci_dev *pci_dev;
     struct miscdevice *misc;
@@ -649,11 +652,19 @@ static int pci_dev_probe(struct platform_device *pdev)
         ret += of_property_read_u32(pdev->dev.of_node, "upg_flash_base", &firmware_upg->upg_flash_base);
         if (ret != 0) {
             PCIE_DEV_DEBUG_VERBOSE("dts don't adaptive fpga upg related, ret:%d.\n", ret);
-            firmware_upg->upg_ctrl_base  = -1;
+            firmware_upg->upg_ctrl_base = -1;
             firmware_upg->upg_flash_base = -1;
         } else {
             PCIE_DEV_DEBUG_VERBOSE("upg_ctrl_base:0x%04x, upg_flash_base:0x%02x.\n",
                 firmware_upg->upg_ctrl_base, firmware_upg->upg_flash_base);
+        }
+        ret = of_property_read_u32(pdev->dev.of_node, "check_pci_id", &wb_pci_dev->check_pci_id);
+        if (ret == 0) {
+            ret = of_property_read_u32(pdev->dev.of_node, "pci_id", &wb_pci_dev->pci_id);
+            if (ret != 0) {
+                dev_err(&pdev->dev, "Failed to get pci_id, ret:%d.\n", ret);
+                return -ENXIO;
+            }
         }
     } else {
         if (pdev->dev.platform_data == NULL) {
@@ -668,6 +679,8 @@ static int pci_dev_probe(struct platform_device *pdev)
         wb_pci_dev->fn = pci_dev_device->pci_fn;
         wb_pci_dev->bar = pci_dev_device->pci_bar;
         wb_pci_dev->bus_width = pci_dev_device->bus_width;
+        wb_pci_dev->check_pci_id = pci_dev_device->check_pci_id;
+        wb_pci_dev->pci_id = pci_dev_device->pci_id;
         firmware_upg->upg_ctrl_base = pci_dev_device->upg_ctrl_base;
         firmware_upg->upg_flash_base = pci_dev_device->upg_flash_base;
         PCIE_DEV_DEBUG_VERBOSE("upg_ctrl_base:0x%04x, upg_flash_base:0x%02x.\n",
@@ -684,6 +697,15 @@ static int pci_dev_probe(struct platform_device *pdev)
         dev_err(&pdev->dev, "Failed to find pci_dev, domain:0x%04x, bus:0x%02x, devfn:0x%x\n",
             wb_pci_dev->domain, wb_pci_dev->bus, devfn);
         return -ENXIO;
+    }
+    if (wb_pci_dev->check_pci_id == 1) {
+        pci_id = (pci_dev->vendor << 16) | pci_dev->device;
+        if (wb_pci_dev->pci_id != pci_id) {
+            dev_err(&pdev->dev, "Failed to check pci id, except: 0x%x, really: 0x%x\n",
+                wb_pci_dev->pci_id, pci_id);
+            return -ENXIO;
+        }
+        PCIE_DEV_DEBUG_VERBOSE("pci id check ok, pci_id: 0x%x", pci_id);
     }
     ret = pci_setup_bars(wb_pci_dev, pci_dev);
     if (ret != 0) {

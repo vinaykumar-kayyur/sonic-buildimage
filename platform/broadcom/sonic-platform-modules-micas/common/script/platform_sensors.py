@@ -91,7 +91,7 @@ def print_cputemp_sensors():
         print_info_str += toptile + '\n'
         for item in val_ret:
             print_info_str += formatstr.format(**item) + '\n'
-    print_console(print_info_str)
+        print_console(print_info_str)
 
 
 def print_boardtemp():
@@ -106,7 +106,7 @@ def print_boardtemp():
         for item in val_ret:
             realformat = formatstr if item.get('errcode', 0) == 0 else errformat
             print_info_str += realformat.format(**item) + '\n'
-    print_console(print_info_str)
+        print_console(print_info_str)
 
 
 def print_mactemp_sensors():
@@ -167,7 +167,7 @@ def print_fan_sensor():
             else:
                 realformat = fan_signle_rotor_format if item.get('errcode', 0) == 0 else errformat
             print_info_str += realformat.format(**item)
-    print_console(print_info_str)
+        print_console(print_info_str)
 
 
 def print_psu_sensor():
@@ -237,11 +237,17 @@ def print_boarddcdc():
     print_info_str = ""
     toptile = "Onboard DCDC Sensors:"
     errformat = "    {id:<26} : {errmsg}"
-    formatstr = "    {id:<26} : {dcdc_input:<6} {dcdc_unit:<1} (Min = {dcdc_min:<6} {dcdc_unit:<1}, Max = {dcdc_max:<6} {dcdc_unit:<1})"
+    ok_formatstr = "    {id:<26} : {dcdc_input:<6} {dcdc_unit:<1} (Min = {dcdc_min:<6} {dcdc_unit:<1}, Max = {dcdc_max:<6} {dcdc_unit:<1})"
+    nok_formatstr = "    {id:<26} : {dcdc_input:<6} {dcdc_unit:<1} (Min = {dcdc_min:<6} {dcdc_unit:<1}, Max = {dcdc_max:<6} {dcdc_unit:<1}) ({dcdc_status:<6})"
 
     if len(val_ret) != 0:
         print_info_str += toptile + '\n'
         for item in val_ret:
+            if float(item["dcdc_input"]) > float(item["dcdc_max"]) or float(item["dcdc_input"]) < float(item["dcdc_min"]):
+                item["dcdc_status"] = "NOT OK"
+                formatstr = nok_formatstr
+            else:
+                formatstr = ok_formatstr
             realformat = formatstr if item.get('errcode', 0) == 0 else errformat
             print_info_str += realformat.format(**item) + '\n'
         print_console(print_info_str)

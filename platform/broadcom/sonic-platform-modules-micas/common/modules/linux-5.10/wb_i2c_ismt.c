@@ -66,11 +66,23 @@
 #include <linux/i2c.h>
 #include <linux/acpi.h>
 #include <linux/interrupt.h>
+#include <linux/delay.h>
 
 #include <linux/io-64-nonatomic-lo-hi.h>
+#include <linux/string.h>
+
+#define mem_clear(data, size) memset((data), 0, (size))
 
 /* PCI Address Constants */
 #define SMBBAR		0
+
+#define ISMT_DBCTRL		0x388	/* ISMT PIN Control Register */
+#define ISMT_DBSTS		0X38C	/* ISMT PIN Status Register */
+
+#define ISMT_DBSTS_CLK_STS	(1<<9)	/* bit9 SMBCLK_CUR_STS */
+#define ISMT_DBSTS_SDA_STS	(1<<8)	/* bit8 SMBDATA_CUR_STS */
+#define ISMT_DBCTRL_CLK_CTL	(1<<1)	/* bit1 SMBCLK_CTL */
+#define ISMT_DBCTRL_ENABLE	(1<<31)	/* bit31 EN */
 
 /* PCI DIDs for the Intel SMBus Message Transport (SMT) Devices */
 #define PCI_DEVICE_ID_INTEL_S1200_SMT0	0x0c59
@@ -197,6 +209,11 @@ static unsigned int bus_speed;
 module_param(bus_speed, uint, S_IRUGO);
 MODULE_PARM_DESC(bus_speed, "Bus Speed in kHz (0 = BIOS default)");
 
+static unsigned int dma_reset_timeout = 1000;
+module_param(dma_reset_timeout, uint, S_IRUGO);
+
+static void ismt_hw_init(struct ismt_priv *priv);
+
 /**
  * __ismt_desc_dump() - dump the contents of a specific descriptor
  * @dev: the iSMT device
@@ -228,6 +245,39 @@ static void ismt_desc_dump(struct ismt_priv *priv)
 
 	dev_dbg(dev, "Dump of the descriptor struct:  0x%X\n", priv->head);
 	__ismt_desc_dump(dev, desc);
+}
+
+static void ismt_reset_dma(struct ismt_priv *priv)
+{
+    uint val;
+    u16 ctrl;
+    struct pci_dev *pdev;
+    u32 addr_lo, addr_hi;
+
+    /* save msiaddr */
+    pdev = priv->pci_dev;
+    pci_read_config_dword(pdev, pdev->msi_cap + PCI_MSI_ADDRESS_LO, &addr_lo);
+    pci_read_config_dword(pdev, pdev->msi_cap + PCI_MSI_ADDRESS_HI, &addr_hi);
+
+    /* Clear the start bit */
+    val = readl(priv->smba + ISMT_MSTR_MCTRL);
+    val &= ~ISMT_MCTRL_SS;
+    writel(val, priv->smba + ISMT_MSTR_MCTRL);
+
+    val = readl(priv->smba + ISMT_GR_GCTRL);
+    writel(val | ISMT_GCTRL_KILL | ISMT_GCTRL_TRST | ISMT_GCTRL_SRST, priv->smba + ISMT_GR_GCTRL);
+
+    if (dma_reset_timeout > 0) {
+        usleep_range(dma_reset_timeout, dma_reset_timeout + 1);
+    }
+
+    ismt_hw_init(priv);
+    pci_write_config_dword(pdev, pdev->msi_cap + PCI_MSI_ADDRESS_LO, addr_lo);
+    pci_write_config_dword(pdev, pdev->msi_cap + PCI_MSI_ADDRESS_HI, addr_hi);
+    /* enable msi */
+    pci_read_config_word(pdev, pdev->msi_cap + PCI_MSI_FLAGS, &ctrl);
+    ctrl |= PCI_MSI_FLAGS_ENABLE;
+    pci_write_config_word(pdev, pdev->msi_cap + PCI_MSI_FLAGS, ctrl);
 }
 
 /**
@@ -381,6 +431,94 @@ static int ismt_process_desc(const struct ismt_desc *desc,
 	return -EIO;
 }
 
+static void ismt_setscl(struct ismt_priv *priv, unsigned int level)
+{
+    int pin_status;
+
+    pin_status = readl(priv->smba + ISMT_DBCTRL);
+    if (level == 0) {
+        pin_status &= (~ISMT_DBCTRL_CLK_CTL);
+    } else {
+        pin_status |= ISMT_DBCTRL_CLK_CTL;
+    }
+    writel(pin_status, priv->smba + ISMT_DBCTRL);
+    pin_status = readl(priv->smba + ISMT_DBCTRL);
+    dev_dbg(&priv->pci_dev->dev, "dbctrl status = 0x%04x\r\n", pin_status);
+    return;
+}
+
+static void ismt_i2c_unblock(struct ismt_priv *priv)
+{
+    int i;
+    int pin_status, ori_status;
+
+    pin_status = readl(priv->smba + ISMT_DBCTRL);
+    ori_status = pin_status;
+    if ((pin_status & ISMT_DBCTRL_ENABLE) == 0) {
+        pin_status |= ISMT_DBCTRL_ENABLE;
+        writel(pin_status, priv->smba + ISMT_DBCTRL);
+        pin_status = readl(priv->smba + ISMT_DBCTRL);
+        dev_dbg(&priv->pci_dev->dev, "enable dbctrl pin status = 0x%04x\r\n", pin_status);
+    }
+
+    for (i = 0; i < 10; i++) {
+        ismt_setscl(priv, 0);
+        udelay(5);
+        ismt_setscl(priv, 1);
+        udelay(5);
+    }
+
+    pin_status = readl(priv->smba + ISMT_DBCTRL);
+    if (pin_status != ori_status) {
+        writel(ori_status, priv->smba + ISMT_DBCTRL);
+        pin_status = readl(priv->smba + ISMT_DBCTRL);
+        dev_dbg(&priv->pci_dev->dev, "reback dbctrl pin status = 0x%04x\r\n", pin_status);
+    }
+
+    return;
+}
+
+static int ismt_check_i2c_unblock(struct ismt_priv *priv)
+{
+    int pin_status;
+
+    pin_status = readl(priv->smba + ISMT_DBSTS);
+
+    if ( (!(pin_status & ISMT_DBSTS_SDA_STS) ) && (pin_status & ISMT_DBSTS_CLK_STS) ) {
+        dev_dbg(&priv->pci_dev->dev, "SDA is low, send 9 clock to device!\n");
+        ismt_i2c_unblock(priv);
+    }
+    return 0;
+}
+
+static int ismt_check_i2c_scl(struct ismt_priv *priv)
+{
+    int pin_status;
+
+    pin_status = readl(priv->smba + ISMT_DBSTS);
+
+    if ( (pin_status & ISMT_DBSTS_SDA_STS) && (pin_status & ISMT_DBSTS_CLK_STS) ) {
+        return 0;
+    }
+
+    dev_warn(&priv->pci_dev->dev, "SDA or SCL is low.pin_status:0x%x\n", pin_status);
+    return -1;
+}
+
+/* Make sure the SMBus host is ready to start transmitting.
+   Return 0 if it is, -EIO if it is not. */
+static int ismt_check_pre(struct ismt_priv *priv)
+{
+    ismt_check_i2c_unblock(priv);
+
+    /* SDA or SCL is low, return -EIO */
+    if (ismt_check_i2c_scl(priv)) {
+        return -EIO;
+    }
+
+    return 0;
+}
+
 /**
  * ismt_access() - process an SMBus command
  * @adap: the i2c host adapter
@@ -405,17 +543,22 @@ static int ismt_access(struct i2c_adapter *adap, u16 addr,
 	struct device *dev = &priv->pci_dev->dev;
 	u8 *dma_buffer = PTR_ALIGN(&priv->buffer[0], 16);
 
+	ret = ismt_check_pre(priv);
+	if (ret < 0) {
+		return ret;
+	}
+
 	desc = &priv->hw[priv->head];
 
 	/* Initialize the DMA buffer */
-	memset(priv->buffer, 0, sizeof(priv->buffer));
+	mem_clear(priv->buffer, sizeof(priv->buffer));
 
 	/* Initialize the descriptor */
-	memset(desc, 0, sizeof(struct ismt_desc));
+	mem_clear(desc, sizeof(struct ismt_desc));
 	desc->tgtaddr_rw = ISMT_DESC_ADDR_RW(addr, read_write);
 
 	/* Always clear the log entries */
-	memset(priv->log, 0, ISMT_LOG_ENTRIES * sizeof(u32));
+	mem_clear(priv->log, ISMT_LOG_ENTRIES * sizeof(u32));
 
 	/* Initialize common control bits */
 	if (likely(pci_dev_msi_enabled(priv->pci_dev)))
@@ -623,15 +766,17 @@ static int ismt_access(struct i2c_adapter *adap, u16 addr,
 		dma_unmap_single(dev, dma_addr, dma_size, dma_direction);
 
 	if (unlikely(!time_left)) {
-		dev_err(dev, "completion wait timed out\n");
+		dev_warn(dev, "completion wait timed out:addr[%d-0x%x], read_write[%d], command[0x%x], size[%d]\n",
+					adap->nr, addr, read_write, command, size);
+		ismt_reset_dma(priv);
 		ret = -ETIMEDOUT;
-		goto out;
+		priv->head = 0;
+		return ret;
 	}
 
 	/* do any post processing of the descriptor here */
 	ret = ismt_process_desc(desc, data, priv, size, read_write);
 
-out:
 	/* Update the ring pointer */
 	priv->head++;
 	priv->head %= ISMT_DESC_ENTRIES;

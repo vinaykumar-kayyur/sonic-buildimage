@@ -64,6 +64,9 @@
 #define I2C_RETRY_TIMES         5
 #define I2C_RETRY_WAIT_TIMES    10      /*delay 10ms*/
 
+#define WIDTH_1Byte          (1)
+#define WIDTH_4Byte          (4)
+
 typedef struct pca9548_cfg_info_s {
     uint32_t pca9548_base_nr;
     uint32_t pca9548_reset_type;
@@ -473,8 +476,11 @@ static int pca954x_do_file_reset(struct i2c_mux_core *muxc)
     struct pca954x *data;
     pca9548_cfg_info_t *reset_cfg;
     file_attr_t *file_attr;
-    u8 val;
     int udelay_cnt;
+    uint8_t read_value[4], write_reset_on_value[4], write_reset_off_value[4];
+    uint8_t tmp_read8;
+    uint32_t tmp_read32, tmp_write32;
+
 
     data = i2c_mux_priv(muxc);
     reset_cfg = &data->pca9548_cfg_info;
@@ -483,21 +489,41 @@ static int pca954x_do_file_reset(struct i2c_mux_core *muxc)
 
     PCA954X_DEBUG("rst_delay_b:%u, rst_delay:%u, rst_delay_a:%u.\n",
         reset_cfg->rst_delay_b, reset_cfg->rst_delay, reset_cfg->rst_delay_a);
-    PCA954X_DEBUG("dev_name:%s, offset:0x%x, mask:0x%x, on:0x%x, off:0x%x.\n",
+    PCA954X_DEBUG("dev_name:%s, offset:0x%x, mask:0x%x, on:0x%x, off:0x%x, width: %u\n",
         file_attr->dev_name, file_attr->offset, file_attr->mask,
-        file_attr->reset_on, file_attr->reset_off);
+        file_attr->reset_on, file_attr->reset_off, file_attr->width);
 
     if (reset_cfg->rst_delay_b) {
         usleep_range(reset_cfg->rst_delay_b, reset_cfg->rst_delay_b + 1);
     }
 
-    err = pca954x_reset_file_read(file_attr->dev_name, file_attr->offset, &val, sizeof(val));
+    mem_clear(read_value, sizeof(read_value));
+    mem_clear(write_reset_on_value, sizeof(write_reset_on_value));
+    mem_clear(write_reset_off_value, sizeof(write_reset_off_value));
+    err = pca954x_reset_file_read(file_attr->dev_name, file_attr->offset, read_value, file_attr->width);
     if (err < 0) {
         goto out;
     }
-    val &= ~(file_attr->mask);
-    val |= file_attr->reset_on;
-    err = pca954x_reset_file_write(file_attr->dev_name, file_attr->offset, &val, sizeof(val));
+
+    if (file_attr->width == WIDTH_1Byte) {
+        tmp_read8 = read_value[0];
+        write_reset_on_value[0] = ((tmp_read8 & (~file_attr->mask)) | file_attr->reset_on) & 0xFF;
+        write_reset_off_value[0] = ((tmp_read8 & (~file_attr->mask)) | file_attr->reset_off) & 0xFF;
+        PCA954X_DEBUG("1 byte write reset on val[0]: 0x%x, write reset off valu[0]: 0x%x\n",
+            write_reset_on_value[0], write_reset_off_value[0]);
+    } else {
+        memcpy((uint8_t *)&tmp_read32, read_value, 4);
+        tmp_write32 = (tmp_read32 & (~file_attr->mask)) | file_attr->reset_on;
+        memcpy(write_reset_on_value, (uint8_t *)&tmp_write32, 4);
+        tmp_write32 = (tmp_read32 & (~file_attr->mask)) | file_attr->reset_off;
+        memcpy(write_reset_off_value, (uint8_t *)&tmp_write32, 4);
+        PCA954X_DEBUG("4 byte write reset on val[0]:0x%x, val[1]:0x%x, val[2]:0x%x, val[3]:0x%x",
+            write_reset_on_value[0], write_reset_on_value[1], write_reset_on_value[2], write_reset_on_value[3]);
+        PCA954X_DEBUG("4 byte write reset off val[0]:0x%x, val[1]:0x%x, val[2]:0x%x, val[3]:0x%x",
+            write_reset_off_value[0], write_reset_off_value[1], write_reset_off_value[2], write_reset_off_value[3]);
+    }
+
+    err = pca954x_reset_file_write(file_attr->dev_name, file_attr->offset, write_reset_on_value, file_attr->width);
     if (err < 0) {
         goto out;
     }
@@ -506,9 +532,7 @@ static int pca954x_do_file_reset(struct i2c_mux_core *muxc)
         usleep_range(reset_cfg->rst_delay, reset_cfg->rst_delay + 1);
     }
 
-    val &= ~(file_attr->mask);
-    val |= file_attr->reset_off;
-    err = pca954x_reset_file_write(file_attr->dev_name, file_attr->offset, &val, sizeof(val));
+    err = pca954x_reset_file_write(file_attr->dev_name, file_attr->offset, write_reset_off_value, file_attr->width);
     if (err < 0) {
         goto out;
     }
@@ -517,12 +541,17 @@ static int pca954x_do_file_reset(struct i2c_mux_core *muxc)
     timeout = reset_cfg->rst_delay_a;
     while (timeout > 0) {
         usleep_range(1, 2);
-        err = pca954x_reset_file_read(file_attr->dev_name, file_attr->offset, &val, sizeof(val));
+        err = pca954x_reset_file_read(file_attr->dev_name, file_attr->offset, read_value, file_attr->width);
         if (err < 0) {
             goto out;
         }
-        val &= (file_attr->mask);
-        if (val == file_attr->reset_off) {
+        if (file_attr->width == WIDTH_1Byte) {
+            tmp_read32 = read_value[0];
+        } else {
+            memcpy((uint8_t *)&tmp_read32, read_value, 4);
+        }
+        tmp_read32 &= (file_attr->mask);
+        if (tmp_read32 == file_attr->reset_off) {
             ret = 0;
             PCA954X_DEBUG("pca954x_do_file_reset success.\n");
             break;
@@ -968,7 +997,7 @@ static int pca954x_irq_setup(struct i2c_mux_core *muxc)
 
 static int of_pca954x_reset_data_init(struct pca954x *data)
 {
-    int err;
+    int err, rv;
     struct device *dev = &data->client->dev;
     pca9548_cfg_info_t *reset_cfg;
 
@@ -1002,7 +1031,6 @@ static int of_pca954x_reset_data_init(struct pca954x *data)
         reset_cfg->rst_delay, reset_cfg->rst_delay_a);
 
     if (reset_cfg->pca9548_reset_type == PCA9548_RESET_I2C) {
-
         PCA954X_DEBUG("reset by i2c.\n");
         err = of_property_read_u32(dev->of_node, "i2c_bus", &reset_cfg->attr.i2c_attr.i2c_bus);
         err |=of_property_read_u32(dev->of_node, "i2c_addr", &reset_cfg->attr.i2c_attr.i2c_addr);
@@ -1018,7 +1046,6 @@ static int of_pca954x_reset_data_init(struct pca954x *data)
             reset_cfg->attr.i2c_attr.reg_offset, reset_cfg->attr.i2c_attr.mask,
             reset_cfg->attr.i2c_attr.reset_on, reset_cfg->attr.i2c_attr.reset_off);
     } else if (reset_cfg->pca9548_reset_type == PCA9548_RESET_GPIO) {
-
         PCA954X_DEBUG("reset by gpio.\n");
         err = of_property_read_u32(dev->of_node, "gpio", &reset_cfg->attr.gpio_attr.gpio);
         err |=of_property_read_u32(dev->of_node, "reset_on", &reset_cfg->attr.gpio_attr.reset_on);
@@ -1031,7 +1058,6 @@ static int of_pca954x_reset_data_init(struct pca954x *data)
             reset_cfg->attr.gpio_attr.reset_off);
         reset_cfg->attr.gpio_attr.gpio_init = 0;
     } else if (reset_cfg->pca9548_reset_type == PCA9548_RESET_IO) {
-
         PCA954X_DEBUG("reset by io.\n");
         err = of_property_read_u32(dev->of_node, "io_addr", &reset_cfg->attr.io_attr.io_addr);
         err |=of_property_read_u32(dev->of_node, "mask", &reset_cfg->attr.io_attr.mask);
@@ -1044,7 +1070,6 @@ static int of_pca954x_reset_data_init(struct pca954x *data)
             reset_cfg->attr.io_attr.io_addr, reset_cfg->attr.io_attr.mask,
             reset_cfg->attr.io_attr.reset_on, reset_cfg->attr.io_attr.reset_off);
     } else if (reset_cfg->pca9548_reset_type == PCA9548_RESET_FILE) {
-
         PCA954X_DEBUG("reset by file.\n");
         err = of_property_read_string(dev->of_node, "dev_name", &reset_cfg->attr.file_attr.dev_name);
         err |=of_property_read_u32(dev->of_node, "offset", &reset_cfg->attr.file_attr.offset);
@@ -1054,9 +1079,18 @@ static int of_pca954x_reset_data_init(struct pca954x *data)
         if (err) {
             goto dts_config_err;
         }
-        PCA954X_DEBUG("dev_name:%s, mask:0x%x, reset_on:0x%x, reset_off:0x%x.\n",
+        rv = of_property_read_u32(dev->of_node, "width", &reset_cfg->attr.file_attr.width);
+        if (rv == 0) {
+            if ((reset_cfg->attr.file_attr.width != WIDTH_1Byte) && (reset_cfg->attr.file_attr.width != WIDTH_4Byte)) {
+                PCA954X_ERROR("9548 reset config error, witdh: %u not support.\n", reset_cfg->attr.file_attr.width);
+                return -EINVAL;
+            }
+        } else {
+            reset_cfg->attr.file_attr.width = 1;
+        }
+        PCA954X_DEBUG("dev_name:%s, mask:0x%x, reset_on:0x%x, reset_off:0x%x, width: %u\n",
             reset_cfg->attr.file_attr.dev_name, reset_cfg->attr.file_attr.mask,
-            reset_cfg->attr.file_attr.reset_on, reset_cfg->attr.file_attr.reset_off);
+            reset_cfg->attr.file_attr.reset_on, reset_cfg->attr.file_attr.reset_off, reset_cfg->attr.file_attr.width);
     } else {
         PCA954X_ERROR("Unsupport reset type:%d.\n", reset_cfg->pca9548_reset_type);
         goto dts_config_err;
@@ -1097,7 +1131,6 @@ static int pca954x_reset_data_init(struct pca954x *data)
         reset_cfg->rst_delay, reset_cfg->rst_delay_a);
 
     if (reset_cfg->pca9548_reset_type == PCA9548_RESET_I2C) {
-
         PCA954X_DEBUG("reset by i2c.\n");
         reset_cfg->attr.i2c_attr.i2c_bus = i2c_mux_pca954x_device->attr.i2c_attr.i2c_bus;
         reset_cfg->attr.i2c_attr.i2c_addr = i2c_mux_pca954x_device->attr.i2c_attr.i2c_addr;
@@ -1110,7 +1143,6 @@ static int pca954x_reset_data_init(struct pca954x *data)
             reset_cfg->attr.i2c_attr.reg_offset, reset_cfg->attr.i2c_attr.mask,
             reset_cfg->attr.i2c_attr.reset_on, reset_cfg->attr.i2c_attr.reset_off);
     } else if (reset_cfg->pca9548_reset_type == PCA9548_RESET_GPIO) {
-
         PCA954X_DEBUG("reset by gpio.\n");
         reset_cfg->attr.gpio_attr.gpio = i2c_mux_pca954x_device->attr.gpio_attr.gpio;
         reset_cfg->attr.gpio_attr.reset_on = i2c_mux_pca954x_device->attr.gpio_attr.reset_on;
@@ -1120,7 +1152,6 @@ static int pca954x_reset_data_init(struct pca954x *data)
             reset_cfg->attr.gpio_attr.reset_off);
         reset_cfg->attr.gpio_attr.gpio_init = 0;
     } else if (reset_cfg->pca9548_reset_type == PCA9548_RESET_IO) {
-
         PCA954X_DEBUG("reset by io.\n");
         reset_cfg->attr.io_attr.io_addr = i2c_mux_pca954x_device->attr.io_attr.io_addr;
         reset_cfg->attr.io_attr.mask = i2c_mux_pca954x_device->attr.io_attr.mask;
@@ -1130,15 +1161,24 @@ static int pca954x_reset_data_init(struct pca954x *data)
             reset_cfg->attr.io_attr.io_addr, reset_cfg->attr.io_attr.mask,
             reset_cfg->attr.io_attr.reset_on, reset_cfg->attr.io_attr.reset_off);
     } else if (reset_cfg->pca9548_reset_type == PCA9548_RESET_FILE) {
-
+        PCA954X_DEBUG("reset by file.\n");
         reset_cfg->attr.file_attr.dev_name = i2c_mux_pca954x_device->attr.file_attr.dev_name;
         reset_cfg->attr.file_attr.offset = i2c_mux_pca954x_device->attr.file_attr.offset;
         reset_cfg->attr.file_attr.mask = i2c_mux_pca954x_device->attr.file_attr.mask;
         reset_cfg->attr.file_attr.reset_on = i2c_mux_pca954x_device->attr.file_attr.reset_on;
         reset_cfg->attr.file_attr.reset_off = i2c_mux_pca954x_device->attr.file_attr.reset_off;
-        PCA954X_DEBUG("dev_name:%s, mask:0x%x, reset_on:0x%x, reset_off:0x%x.\n",
+        reset_cfg->attr.file_attr.width = i2c_mux_pca954x_device->attr.file_attr.width;
+        if (reset_cfg->attr.file_attr.width > 0) {
+            if ((reset_cfg->attr.file_attr.width != WIDTH_1Byte) && (reset_cfg->attr.file_attr.width != WIDTH_4Byte)) {
+                PCA954X_ERROR("9548 reset config error, witdh: %u not support.\n", reset_cfg->attr.file_attr.width);
+                return -EINVAL;
+            }
+        } else {
+            reset_cfg->attr.file_attr.width = 1;
+        }
+        PCA954X_DEBUG("dev_name:%s, mask:0x%x, reset_on:0x%x, reset_off:0x%x, width: %u\n",
             reset_cfg->attr.file_attr.dev_name, reset_cfg->attr.file_attr.mask,
-            reset_cfg->attr.file_attr.reset_on, reset_cfg->attr.file_attr.reset_off);
+            reset_cfg->attr.file_attr.reset_on, reset_cfg->attr.file_attr.reset_off, reset_cfg->attr.file_attr.width);
     } else {
         PCA954X_ERROR("Unsupport reset type:%d.\n", reset_cfg->pca9548_reset_type);
         return -EINVAL;

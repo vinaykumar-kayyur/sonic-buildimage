@@ -325,9 +325,14 @@ static ssize_t xdpe_avs_vout_store(struct device *dev, struct device_attribute *
     long vout, vout_max, vout_min;
 
     client = to_i2c_client(dev);
-    ret = kstrtol(buf, 10, &vout);
+    ret = kstrtol(buf, 0, &vout);
     if (ret) {
         WB_XDPE_ERROR("%d-%04x: invalid value: %s \n", client->adapter->nr, client->addr, buf);
+        return -EINVAL;
+    }
+
+    if (vout <= 0) {
+        WB_XDPE_ERROR("%d-%04x: invalid value: %ld \n", client->adapter->nr, client->addr, vout);
         return -EINVAL;
     }
 

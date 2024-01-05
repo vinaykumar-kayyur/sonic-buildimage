@@ -281,11 +281,7 @@ class Fan(FanBase):
             # get fan rotor pwm
             pwm = int(self.int_case.get_fan_speed_pwm(self.name, self.fan_index))
         else:
-            psu_status_dict = self.int_case.get_psu_status(self.name)
-            if psu_status_dict["InputStatus"] is False:
-                pwm = 0
-            else:
-                pwm = self.get_speed()  # target equal to real pwm, to avoid alarm
+            pwm = self.get_speed()  # target equal to real pwm, to avoid alarm
         if pwm is None:
             return None
         return int(pwm)

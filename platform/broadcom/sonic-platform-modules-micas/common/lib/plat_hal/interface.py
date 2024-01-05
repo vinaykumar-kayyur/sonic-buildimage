@@ -864,8 +864,13 @@ class interface(object):
             tmp = dcdc.sensor.Value
             if tmp is not None:
                 dicttmp['Value'] = tmp
+                if tmp > dicttmp['Max'] or tmp < dicttmp['Min']:
+                    dicttmp["Status"] = "NOT OK"
+                else:
+                    dicttmp["Status"] = "OK"
             else:
                 dicttmp['Value'] = self.error_ret
+                dicttmp["Status"] = "NOT OK"
             dicttmp['Unit'] = dcdc.sensor.Unit
             val_list[sensorname] = dicttmp
         return val_list
