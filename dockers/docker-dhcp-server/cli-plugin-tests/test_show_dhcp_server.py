@@ -179,11 +179,15 @@ option60                60  dummy_value  string
     def test_show_dhcp_server_ipv4_port_without_intf(self, mock_db):
         expected_stdout = """\
 Interface          Bind
------------------  --------------------
-Vlan100|Ethernet4  100.1.1.10,10.1.1.11
-Vlan100|Ethernet7  range1,range2
-Vlan200|Ethernet8  range3,range4
-Ethernet9          range5,range6
+-----------------  ----------
+Vlan100|Ethernet4  100.1.1.10
+                   10.1.1.11
+Vlan100|Ethernet7  range1
+                   range2
+Vlan200|Ethernet8  range3
+                   range4
+Ethernet9          range5
+                   range6
 """
         runner = CliRunner()
         db = clicommon.Db()
@@ -195,8 +199,9 @@ Ethernet9          range5,range6
     def test_show_dhcp_server_ipv4_port_with_port(self, mock_db):
         expected_stdout = """\
 Interface          Bind
------------------  -------------
-Vlan100|Ethernet7  range1,range2
+-----------------  ------
+Vlan100|Ethernet7  range1
+                   range2
 """
         runner = CliRunner()
         db = clicommon.Db()
@@ -208,9 +213,11 @@ Vlan100|Ethernet7  range1,range2
     def test_show_dhcp_server_ipv4_port_with_vlan(self, mock_db):
         expected_stdout = """\
 Interface          Bind
------------------  --------------------
-Vlan100|Ethernet4  100.1.1.10,10.1.1.11
-Vlan100|Ethernet7  range1,range2
+-----------------  ----------
+Vlan100|Ethernet4  100.1.1.10
+                   10.1.1.11
+Vlan100|Ethernet7  range1
+                   range2
 """
         runner = CliRunner()
         db = clicommon.Db()
@@ -222,8 +229,9 @@ Vlan100|Ethernet7  range1,range2
     def test_show_dhcp_server_ipv4_port_with_port_and_vlan(self, mock_db):
         expected_stdout = """\
 Interface          Bind
------------------  -------------
-Vlan200|Ethernet8  range3,range4
+-----------------  ------
+Vlan200|Ethernet8  range3
+                   range4
 """
         runner = CliRunner()
         db = clicommon.Db()
@@ -235,8 +243,9 @@ Vlan200|Ethernet8  range3,range4
     def test_show_dhcp_server_ipv4_port_with_single_port(self, mock_db):
         expected_stdout = """\
 Interface    Bind
------------  -------------
-Ethernet9    range5,range6
+-----------  ------
+Ethernet9    range5
+             range6
 """
         runner = CliRunner()
         db = clicommon.Db()
