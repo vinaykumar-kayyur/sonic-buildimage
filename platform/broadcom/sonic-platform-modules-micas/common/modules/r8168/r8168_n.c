@@ -121,6 +121,8 @@
 #define FIRMWARE_8168FP_3   "rtl_nic/rtl8168fp-3.fw"
 #define FIRMWARE_8168FP_4   "rtl_nic/rtl8168fp-4.fw"
 
+#define mem_clear(data, size) memset((data), 0, (size))
+
 /* Maximum number of multicast addresses to filter (vs. Rx-all-multicast).
    The RTL chips use a 64 element hash table based on the Ethernet CRC. */
 static const int multicast_filter_limit = 32;
@@ -4700,7 +4702,7 @@ static void rtl8168_mac_loopback_test(struct rtl8168_private *tp)
         txd->addr = cpu_to_le64(mapping);
         txd->opts2 = 0;
         while (1) {
-                memset(tmpAddr, pattern++, len - 14);
+                mem_clear(tmpAddr, len - 14);
                 dma_sync_single_for_device(&tp->pci_dev->dev,
                                            le64_to_cpu(mapping),
                                            len, DMA_TO_DEVICE);
@@ -6829,7 +6831,7 @@ static void rtl8168_get_regs(struct net_device *dev, struct ethtool_regs *regs,
         if (regs->len < R8168_REGS_DUMP_SIZE)
                 return /* -EINVAL */;
 
-        memset(p, 0, regs->len);
+        mem_clear(p, regs->len);
 
         for (i = 0; i < R8168_MAC_REGS_SIZE; i++)
                 *data++ = readb(ioaddr + i);
@@ -26826,7 +26828,7 @@ static int ethtool_get_drvinfo(struct net_device *dev, void *useraddr)
         if (!ops->get_drvinfo)
                 return -EOPNOTSUPP;
 
-        memset(&info, 0, sizeof(info));
+        mem_clear(&info, sizeof(info));
         info.cmd = ETHTOOL_GDRVINFO;
         ops->get_drvinfo(dev, &info);
 
@@ -29946,7 +29948,7 @@ rtl8168_hw_config(struct net_device *dev)
 #ifdef ENABLE_LIB_SUPPORT
         /* if lib queue not exist, default use rx queue 0 */
         if (rtl8168_num_lib_rx_rings(tp) == 0)
-                memset(tp->rss_indir_tbl, 0x0, sizeof(tp->rss_indir_tbl));
+                mem_clear(tp->rss_indir_tbl, sizeof(tp->rss_indir_tbl));
 #endif //ENABLE_LIB_SUPPORT
         rtl8168_config_rss(tp);
 #endif //ENABLE_RSS_SUPPORT
@@ -30362,7 +30364,7 @@ rtl8168_tx_desc_init(struct rtl8168_private *tp)
 
         for (i = 0; i < tp->num_tx_rings; i++) {
                 struct rtl8168_tx_ring *ring = &tp->tx_ring[i];
-                memset(ring->TxDescArray, 0x0, ring->TxDescAllocSize);
+                mem_clear(ring->TxDescArray, ring->TxDescAllocSize);
 
                 ring->TxDescArray[ring->num_tx_desc - 1].opts1 = cpu_to_le32(RingEnd);
         }
@@ -30401,7 +30403,7 @@ rtl8168_rx_desc_init(struct rtl8168_private *tp)
         if (rtl8168_num_lib_rx_rings(tp) > 0)
                 return;
 
-        memset(tp->RxDescArray, 0x0, tp->RxDescAllocSize);
+        mem_clear(tp->RxDescArray, tp->RxDescAllocSize);
 }
 
 int
@@ -30417,13 +30419,13 @@ rtl8168_init_ring(struct net_device *dev)
 
         for (i = 0; i < tp->num_tx_rings; i++) {
                 struct rtl8168_tx_ring *ring = &tp->tx_ring[i];
-                memset(ring->tx_skb, 0x0, sizeof(ring->tx_skb));
+                mem_clear(ring->tx_skb, sizeof(ring->tx_skb));
         }
 
         for (i = 0; i < tp->num_rx_rings; i++) {
                 struct rtl8168_rx_ring *ring = &tp->rx_ring[i];
 
-                memset(ring->Rx_skbuff, 0x0, sizeof(ring->Rx_skbuff));
+                mem_clear(ring->Rx_skbuff, sizeof(ring->Rx_skbuff));
                 if (rtl8168_rx_fill(tp, ring, dev, 0, tp->num_rx_desc, 0) != tp->num_rx_desc)
                         goto err_out;
 
