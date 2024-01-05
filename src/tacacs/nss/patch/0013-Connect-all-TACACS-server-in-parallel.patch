@@ -314,7 +314,7 @@ index d954f03..e269c17 100644
 +        pthread_create(&thread, NULL, lookup_tacacs_user_thread, args);
 +        
 +        // if all server are very fast, first server will finish first and will not request authentication to multiple server.
-+        usleep(1000);
++        usleep(1000 * TACACS_SERVER_DELAY_FACTOR);
 +    }
  
 -        if(arep.status == AUTHOR_STATUS_PASS_ADD ||
