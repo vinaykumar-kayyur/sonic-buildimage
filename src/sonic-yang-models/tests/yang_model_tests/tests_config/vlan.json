@@ -89,7 +89,7 @@
                         "description": "Ethernet0",
                         "mtu": 9000,
                         "name": "Ethernet0",
-                        "speed": 25000   
+                        "speed": 25000
                     }
                 ]
             }
@@ -193,7 +193,7 @@
                         "description": "Ethernet1",
                         "mtu": 9000,
                         "name": "Ethernet1",
-                        "speed": 25000 
+                        "speed": 25000
                     }
                 ]
             }

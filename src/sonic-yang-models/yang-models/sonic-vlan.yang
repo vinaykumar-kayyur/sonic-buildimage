@@ -219,7 +219,7 @@ module sonic-vlan {
 
 				leaf mac {
 					type yang:mac-address;
-				}				
+				}
 			}
 			/* end of VLAN_LIST */
 		}
@@ -246,7 +246,7 @@ module sonic-vlan {
 							path "/port:sonic-port/port:PORT/port:PORT_LIST/port:name";
 						}
 						type leafref {
-							path "/lag:sonic-portchannel/lag:PORTCHANNEL/lag:PORTCHANNEL_LIST/lag:name";      
+							path "/lag:sonic-portchannel/lag:PORTCHANNEL/lag:PORTCHANNEL_LIST/lag:name";
 						}
 					}
                 }
