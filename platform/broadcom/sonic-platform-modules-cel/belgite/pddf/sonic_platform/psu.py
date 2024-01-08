@@ -71,3 +71,38 @@ class Psu(PddfPsu):
             e.g. 12.1
         """
         return 11.4
+
+    def get_voltage(self):
+        """
+        Retrieves current PSU voltage output
+
+        Returns:
+            A float number, the output voltage in volts,
+            e.g. 12.1
+        """
+        # When AC power is not plugged into one of the PSU, the FAN of
+        # that PSU is driven using the power from the alternate PSU and
+        # because of this the PSU VOUT might read a small voltage value
+        # and it is misleading. Therefore the PSU VOUT is fetched from
+        # HW only when PSU status is OK
+        if self.get_status():
+            return super().get_voltage()
+
+        return 0.0
+
+    def get_status_led(self):
+        """
+        Gets the state of the PSU status LED
+
+        Returns:
+            A string, one of the predefined STATUS_LED_COLOR_* strings above
+        """
+        # In Belgite PSU LED is controlled by the PSU firmware, so soft
+        # simulating the LED in a generic way based on the PSU status
+        if self.get_presence():
+            if self.get_powergood_status():
+                return self.STATUS_LED_COLOR_GREEN
+            else:
+                return self.STATUS_LED_COLOR_AMBER
+
+        return self.STATUS_LED_COLOR_OFF

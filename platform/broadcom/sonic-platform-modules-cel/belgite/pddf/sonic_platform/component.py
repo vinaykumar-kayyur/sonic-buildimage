@@ -9,7 +9,7 @@
 #############################################################################
 
 import subprocess
-import time
+import re
 
 try:
     from sonic_platform_base.component_base import ComponentBase
@@ -17,11 +17,14 @@ try:
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
-SWCPLD_VERSION_PATH = ['i2cget', '-y', '-f', '2', '0x32', '0']
-BIOS_VERSION_PATH = ['dmidecode', '-s', 'bios-version']
-COMPONENT_NAME_LIST = ["SWCPLD", "BIOS"]
-COMPONENT_DES_LIST = ["Used for managing the chassis and SFP+ ports (49-56)",
-                      "Basic Input/Output System"]
+COMPONENT_NAME = 0
+COMPONENT_DESC = 1
+COMPONENT_VER_CMD = 2
+COMPONENT_VER_FN = 3
+BIOS_VERSION_CMD = ['dmidecode', '-s', 'bios-version']
+ONIE_VERSION_CMD = ['cat', '/host/machine.conf']
+SWCPLD_VERSION_CMD = ['i2cget', '-y', '-f', '2', '0x32', '0']
+SSD_VERSION_CMD = ['smartctl', '-i', '/dev/sda']
 
 
 class Component(ComponentBase):
@@ -30,16 +33,21 @@ class Component(ComponentBase):
     DEVICE_TYPE = "component"
 
     def __init__(self, component_index):
+        self.component_list = [["BIOS", "Basic Input/Output System", BIOS_VERSION_CMD, self.__get_cmd_output],\
+                               ["ONIE", "Open Network Install Environment", ONIE_VERSION_CMD, self.__get_onie_version],\
+                               ["SWCPLD", "For managing the chassis and SFP+ ports (49-56)", SWCPLD_VERSION_CMD, self.__get_cpld_version],\
+                               ["SSD", "Solid State Drive - {}", SSD_VERSION_CMD, self.__get_ssd_version]]
+
         ComponentBase.__init__(self)
         self.index = component_index
         self.name = self.get_name()
 
-    def __get_bios_version(self):
-        # Retrieves the BIOS firmware version
+    def __get_cmd_output(self):
+        cmd = self.component_list[self.index][COMPONENT_VER_CMD]
         version = "N/A"
 
         try:
-            p = subprocess.Popen(BIOS_VERSION_PATH, stdout=subprocess.PIPE, universal_newlines=True)
+            p = subprocess.Popen(cmd, stdout=subprocess.PIPE, universal_newlines=True)
             data = p.communicate()
             version = data[0].strip()
         except IOError:
@@ -47,14 +55,34 @@ class Component(ComponentBase):
 
         return version
 
+    def __get_onie_version(self):
+        version = "N/A"
+
+        ret = re.search(r"(?<=onie_version=).+[^\n]", self.__get_cmd_output())
+        if ret != None:
+            version = ret.group(0)
+
+        return version
+
+    def __get_ssd_version(self):
+        version = "N/A"
+
+        ret = re.search(r"Firmware Version: +(.*)[^\\]", self.__get_cmd_output())
+        if ret != None:
+            try:
+               version = ret.group(1)
+            except (IndexError):
+                pass
+
+        return version
+
     def __get_cpld_version(self):
         version = "N/A"
+
         try:
-            p = subprocess.Popen(SWCPLD_VERSION_PATH, stdout=subprocess.PIPE, universal_newlines=True)
-            data = p.communicate()
-            ver = int(data[0].strip(), 16)
+            ver = int(self.__get_cmd_output(), 16)
             version = "{0}.{1}".format(ver >> 4, ver & 0x0F)
-        except (IOError, ValueError):
+        except (ValueError):
             pass
 
         return version
@@ -65,7 +93,19 @@ class Component(ComponentBase):
          Returns:
             A string containing the name of the component
         """
-        return COMPONENT_NAME_LIST[self.index]
+        return self.component_list[self.index][COMPONENT_NAME]
+
+    def __get_ssd_desc(self, desc_format):
+        description = "N/A"
+
+        ret = re.search(r"Device Model: +(.*)[^\\]", self.__get_cmd_output())
+        if ret != None:
+            try:
+               description = desc_format.format(ret.group(1))
+            except (IndexError):
+                pass
+
+        return description
 
     def get_description(self):
         """
@@ -73,7 +113,11 @@ class Component(ComponentBase):
             Returns:
             A string containing the description of the component
         """
-        return COMPONENT_DES_LIST[self.index]
+        # For SSD get the model name from device
+        if self.get_name() == "SSD":
+            return self.__get_ssd_desc(self.component_list[self.index][COMPONENT_DESC])
+
+        return self.component_list[self.index][COMPONENT_DESC]
 
     def get_firmware_version(self):
         """
@@ -82,12 +126,8 @@ class Component(ComponentBase):
             string: The firmware versions of the module
         """
         fw_version = None
-        
-        if self.name == "BIOS":
-            fw_version = self.__get_bios_version()
-        elif "CPLD" in self.name:
-            fw_version = self.__get_cpld_version()
-            
+        fw_version = self.component_list[self.index][COMPONENT_VER_FN]()
+
         return fw_version
 
     def install_firmware(self, image_path):

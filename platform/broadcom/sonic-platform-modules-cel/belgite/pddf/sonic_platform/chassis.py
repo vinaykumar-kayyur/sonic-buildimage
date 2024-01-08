@@ -5,21 +5,24 @@
 #############################################################################
 import os
 import time
+import sys
+import subprocess
+import re
 
 try:
     from sonic_platform_pddf_base.pddf_chassis import PddfChassis
     from sonic_platform_pddf_base.pddf_eeprom import PddfEeprom
     from sonic_platform_base.chassis_base import ChassisBase
-    from sonic_platform.fan_drawer import FanDrawer
+    from sonic_platform.thermal import Thermal
     from sonic_platform.watchdog import Watchdog
-    import sys
-    import subprocess
     from sonic_py_common import device_info
     from sonic_platform_base.sfp_base import SfpBase
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
-NUM_COMPONENT = 2
+NUM_COMPONENTS = 4
+NUM_SENSORS = 4
+HW_REBOOT_CAUSE_FILE="/host/reboot-cause/hw-reboot-cause.txt"
 
 class Chassis(PddfChassis):
     """
@@ -39,9 +42,14 @@ class Chassis(PddfChassis):
             present = self.get_sfp(port_idx).get_presence()
             self.sfp_status_dict[port_idx] = '1' if present else '0'
 
+        # PDDF doesn't support CPU internal temperature sensor
+        # Hence it is created from chassis init override and
+        # handled appropriately in thermal APIs
+        self._thermal_list.append(Thermal(NUM_SENSORS))
+
     def __initialize_components(self):
         from sonic_platform.component import Component
-        for index in range(0, NUM_COMPONENT):
+        for index in range(0, NUM_COMPONENTS):
             component = Component(index)
             self._component_list.append(component)
 
@@ -99,12 +107,18 @@ class Chassis(PddfChassis):
         with open("/sys/devices/platform/cpld_wdt/reason", "r") as f:
             hw_reboot_cause = f.read().strip()
 
-        if hw_reboot_cause == "0x77":
+        if hw_reboot_cause == "0x99":
+            reboot_cause = self.REBOOT_CAUSE_HARDWARE_OTHER
+            description = 'NPU overload reset'
+        elif hw_reboot_cause == "0x88":
+            reboot_cause = self.REBOOT_CAUSE_HARDWARE_OTHER
+            description = 'CPU overload reset'
+        elif hw_reboot_cause == "0x77":
             reboot_cause = self.REBOOT_CAUSE_WATCHDOG
             description = 'Hardware Watchdog Reset'
         elif hw_reboot_cause == "0x66":
             reboot_cause = self.REBOOT_CAUSE_HARDWARE_OTHER
-            description = 'GPIO Request Warm Reset'
+            description = 'GPIO Warm Reset'
         elif hw_reboot_cause == "0x55":
             reboot_cause = self.REBOOT_CAUSE_HARDWARE_OTHER
             description = 'CPU Cold Reset'
@@ -112,14 +126,29 @@ class Chassis(PddfChassis):
             reboot_cause = self.REBOOT_CAUSE_NON_HARDWARE
             description = 'CPU Warm Reset'
         elif hw_reboot_cause == "0x33":
-            reboot_cause = self.REBOOT_CAUSE_NON_HARDWARE
+            reboot_cause = self.REBOOT_CAUSE_HARDWARE_OTHER
             description = 'Soft-Set Cold Reset'
         elif hw_reboot_cause == "0x22":
-            reboot_cause = self.REBOOT_CAUSE_NON_HARDWARE
+            reboot_cause = self.REBOOT_CAUSE_HARDWARE_OTHER
             description = 'Soft-Set Warm Reset'
         elif hw_reboot_cause == "0x11":
             reboot_cause = self.REBOOT_CAUSE_POWER_LOSS
             description = 'Power Loss'			
+        elif hw_reboot_cause == "0x00":
+            reboot_cause = self.REBOOT_CAUSE_HARDWARE_OTHER
+            description = 'Cold Powercycle'
+            if os.path.isfile(HW_REBOOT_CAUSE_FILE):
+                with open(HW_REBOOT_CAUSE_FILE) as hw_cause_file:
+                    reboot_info = hw_cause_file.readline().rstrip('\n')
+                    match = re.search(r'Reason:(.*),Time:(.*)', reboot_info)
+                    if match is not None:
+                        if  match.group(1) == 'temp_fatal':
+                            description = 'Fatal temperature trip [Time:{}]'.format(match.group(2))
+                        elif match.group(1) == 'temp_critical':
+                            description = 'Critical temperature reboot [Time:{}]'.format(match.group(2))
+                        elif match.group(1) == 'system':
+                            reboot_cause = self.REBOOT_CAUSE_NON_HARDWARE
+                            description = 'System cold reboot'
         else:
             reboot_cause = self.REBOOT_CAUSE_NON_HARDWARE
             description = 'Unkown Reason'
@@ -143,13 +172,10 @@ class Chassis(PddfChassis):
         return False
 
     def set_status_led(self, color):
-        color_dict = {
-            'green': "STATUS_LED_COLOR_GREEN",
-            'red': "STATUS_LED_COLOR_AMBER",
-            'amber': "STATUS_LED_COLOR_AMBER",
-            'off': "STATUS_LED_COLOR_OFF"
-        }
-        return self.set_system_led("SYS_LED", color_dict.get(color, "STATUS_LED_COLOR_OFF"))
+        if color == self.get_system_led("SYS_LED"):
+            return True
+
+        return self.set_system_led("SYS_LED", color)
 
     def get_status_led(self):
         return self.get_system_led("SYS_LED")

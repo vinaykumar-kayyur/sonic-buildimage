@@ -5,14 +5,14 @@
             "controllable": true,
             "colors": ["green", "amber", "off"]
         },
-    "thermal_manager": false,
+        "thermal_manager": false,
         "components": [
-		{
-			"name": "SWCPLD"	
-		},
-		{
-			"name": "BIOS"
-		}
+            {
+                "name": "SWCPLD"
+            },
+            {
+                "name": "BIOS"
+            }
         ],
         "fans": [
             {
@@ -22,7 +22,7 @@
                 },
                 "status_led": {
                     "controllable": true,
-                    "colors": ["green", "amber","off"]
+                    "colors": ["green", "amber", "off"]
                 }
             },
             {
@@ -32,7 +32,7 @@
                 },
                 "status_led": {
                     "controllable": true,
-                    "colors": ["green", "amber","off"]
+                    "colors": ["green", "amber", "off"]
                 }
             },
             {
@@ -42,37 +42,7 @@
                 },
                 "status_led": {
                     "controllable": true,
-                    "colors": ["green", "amber","off"]
-                }
-            },
-            {
-                "name": "Fantray1_1",
-                "speed": {
-                    "controllable": true
-                },
-                "status_led": {
-                    "controllable": true,
-                    "colors": ["green", "amber","off"]
-                }
-            },
-            {
-                "name": "Fantray2_1",
-                "speed": {
-                    "controllable": true
-                },
-                "status_led": {
-                    "controllable": true,
-                    "colors": ["green", "amber","off"]
-                }
-            },
-            {
-                "name": "Fantray3_1",
-                "speed": {
-                    "controllable": true
-                },
-                "status_led": {
-                    "controllable": true,
-                    "colors": ["green", "amber","off"]
+                    "colors": ["green", "amber", "off"]
                 }
             }
         ],
@@ -85,7 +55,7 @@
                 "status_led": {
                     "controllable": false
                 },
-		"max_consumed_power": false,
+                "max_consumed_power": false,
                 "fans": [
                     {
                         "name": "Fantray1_1",
@@ -106,7 +76,7 @@
                 "status_led": {
                     "controllable": false
                 },
-		"max_consumed_power": false,
+                "max_consumed_power": false,
                 "fans": [
                     {
                         "name": "Fantray2_1",
@@ -127,7 +97,7 @@
                 "status_led": {
                     "controllable": false
                 },
-		"max_consumed_power": false,
+                "max_consumed_power": false,
                 "fans": [
                     {
                         "name": "Fantray3_1",
@@ -155,7 +125,7 @@
                         }
                     }
                 ],
-		"current": true,
+                "current": true,
                 "power": true,
                 "max_power": false,
                 "voltage_high_threshold": false,
@@ -179,7 +149,7 @@
                         }
                     }
                 ],
-		"current": true,
+                "current": true,
                 "power": true,
                 "max_power": false,
                 "voltage_high_threshold": false,
@@ -193,175 +163,31 @@
         ],
         "thermals": [
             {
-                "name": "LM75_U10",
+                "name": "Inlet U10 temp (EXHAUST)",
                 "controllable": false,
                 "low-threshold": false,
                 "low-crit-threshold": true
             },
             {
-                "name": "LM75_U4",
+                "name": "Inlet U4 temp (EXHAUST)",
                 "controllable": false,
                 "low-threshold": false,
                 "low-crit-threshold": true
             },
             {
-                "name": "LM75_U7",
+                "name": "Inlet U7 temp (INTAKE)",
                 "controllable": false,
                 "low-threshold": false,
                 "low-crit-threshold": true
             },
             {
-                "name": "LM75_U60",
+                "name": "BCM inlet U60 temp",
                 "controllable": false,
                 "low-threshold": false,
                 "low-crit-threshold": true
             }
         ],
         "sfps": [
-            {
-                "name": "PORT0"
-            },
-            {
-                "name": "PORT1"
-            },
-            {
-                "name": "PORT2"
-            },
-            {
-                "name": "PORT3"
-            },
-            {
-                "name": "PORT4"
-            },
-            {
-                "name": "PORT5"
-            },
-            {
-                "name": "PORT6"
-            },
-            {
-                "name": "PORT7"
-            },
-            {
-                "name": "PORT8"
-            },
-            {
-                "name": "PORT9"
-            },
-            {
-                "name": "PORT10"
-            },
-            {
-                "name": "PORT11"
-            },
-            {
-                "name": "PORT12"
-            },
-            {
-                "name": "PORT13"
-            },
-            {
-                "name": "PORT14"
-            },
-            {
-                "name": "PORT15"
-            },
-            {
-                "name": "PORT16"
-            },
-            {
-                "name": "PORT17"
-            },
-            {
-                "name": "PORT18"
-            },
-            {
-                "name": "PORT19"
-            },
-            {
-                "name": "PORT20"
-            },
-            {
-                "name": "PORT21"
-            },
-            {
-                "name": "PORT22"
-            },
-            {
-                "name": "PORT23"
-            },
-            {
-                "name": "PORT24"
-            },
-            {
-                "name": "PORT25"
-            },
-            {
-                "name": "PORT26"
-            },
-            {
-                "name": "PORT27"
-            },
-            {
-                "name": "PORT28"
-            },
-            {
-                "name": "PORT29"
-            },
-            {
-                "name": "PORT30"
-            },
-            {
-                "name": "PORT31"
-            },
-            {
-                "name": "PORT32"
-            },
-            {
-                "name": "PORT33"
-            },
-            {
-                "name": "PORT34"
-            },
-            {
-                "name": "PORT35"
-            },
-            {
-                "name": "PORT36"
-            },
-            {
-                "name": "PORT37"
-            },
-            {
-                "name": "PORT38"
-            },
-            {
-                "name": "PORT39"
-            },
-            {
-                "name": "PORT40"
-            },
-            {
-                "name": "PORT41"
-            },
-            {
-                "name": "PORT42"
-            },
-            {
-                "name": "PORT43"
-            },
-            {
-                "name": "PORT44"
-            },
-            {
-                "name": "PORT45"
-            },
-            {
-                "name": "PORT46"
-            },
-            {
-                "name": "PORT47"
-            },
             {
                 "name": "PORT48"
             },
