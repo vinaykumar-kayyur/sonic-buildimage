@@ -269,7 +269,7 @@ int get_install_targets(char* unit_file, char* targets[]) {
     char* token;
     char* line = NULL;
     bool first;
-    char* target_suffix;
+    char* target_suffix = NULL;
     char *instance_name;
     char *dot_ptr;
 
@@ -308,7 +308,7 @@ int get_install_targets(char* unit_file, char* targets[]) {
                     target_suffix = ".wants";
                 }
             }
-            else {
+            else if (NULL != target_suffix) {
                 found_targets = get_install_targets_from_line(token, target_suffix, targets, num_targets);
                 num_targets += found_targets;
             }

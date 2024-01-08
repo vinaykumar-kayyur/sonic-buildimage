@@ -6,4 +6,5 @@ StartLimitBurst=3
 User=root
 ExecStop=/usr/bin/test.sh stop
 [Install]
+Alias=alias
 WantedBy=multi-user.target
