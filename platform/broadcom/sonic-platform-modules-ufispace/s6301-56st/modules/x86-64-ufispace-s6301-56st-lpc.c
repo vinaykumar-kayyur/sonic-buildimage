@@ -26,7 +26,7 @@
 #include <linux/delay.h>
 #include <linux/io.h>
 #include <linux/platform_device.h>
-#include <stdbool.h>
+#include <linux/types.h>
 #include <linux/hwmon-sysfs.h>
 #include <linux/gpio.h>
 
