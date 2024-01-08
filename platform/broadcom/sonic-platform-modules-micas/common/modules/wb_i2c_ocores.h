@@ -22,6 +22,8 @@ typedef struct i2c_ocores_device_s {
     uint32_t pci_bus;
     uint32_t pci_slot;
     uint32_t pci_fn;
+    uint32_t check_pci_id;
+    uint32_t pci_id;
     int device_flag;
 } i2c_ocores_device_t;
 

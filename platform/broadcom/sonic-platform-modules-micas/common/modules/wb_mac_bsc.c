@@ -27,6 +27,7 @@
 #include <linux/err.h>
 #include <linux/mutex.h>
 #include <linux/string.h>
+#include <linux/delay.h>
 
 #define mem_clear(data, size) memset((data), 0, (size))
 
@@ -38,6 +39,9 @@
 #define MAC_BSC_MAX_TEMP_NUM (16)
 #define MAC_BSC_MAX_READ_REG_STEP (6)
 #define MAC_BSC_MAX_SETUP_NUM (1)
+
+#define MAC_BSC_MAX_RETRY (3)
+#define MAC_BSC_RETRY_SLEEP_TIME   (10000)   /* 10ms */
 
 static int g_wb_mac_bsc_debug = 0;
 static int g_wb_mac_bsc_error = 0;
@@ -416,25 +420,43 @@ static int bsc_i2c_write(struct i2c_client *client, uint32_t reg_addr, uint32_t 
     return 0;
 }
 
-static int handle_operation(struct i2c_client *client, i2c_op_t *operation)
+static int handle_operation_write(struct i2c_client *client, i2c_op_t *operation)
 {
     int ret;
     uint32_t rd_back_val;
 
-    if (operation->op == I2C_WRITE) {
-        ret = bsc_i2c_write(client, operation->reg_addr, operation->reg_val);
-        WB_MAC_BSC_DEBUG("bsc_i2c_write reg_addr: 0x%x, set val: 0x%x, ret: %d\n",
-            operation->reg_addr, operation->reg_val, ret);
-        if (operation->read_back) {
-            ret = bsc_i2c_read(client, operation->reg_addr, &rd_back_val);
-            if (rd_back_val != operation->reg_val) {
-                WB_MAC_BSC_ERROR("bsc_i2c_write failed, reg_addr: 0x%x, set val: 0x%x, read back valu: 0x%x\n",
-                    operation->reg_addr, operation->reg_val, rd_back_val);
-                return -1;
-            }
-             WB_MAC_BSC_DEBUG("bsc_i2c_write success, reg_addr: 0x%x, set val: 0x%x, read_back val: 0x%x\n",
-                 operation->reg_addr, operation->reg_val, rd_back_val);
+    ret = bsc_i2c_write(client, operation->reg_addr, operation->reg_val);
+    WB_MAC_BSC_DEBUG("bsc_i2c_write reg_addr: 0x%x, set val: 0x%x, ret: %d\n",
+        operation->reg_addr, operation->reg_val, ret);
+    if (operation->read_back) {
+        ret = bsc_i2c_read(client, operation->reg_addr, &rd_back_val);
+        if (rd_back_val != operation->reg_val) {
+            WB_MAC_BSC_ERROR("bsc_i2c_write failed, reg_addr: 0x%x, set val: 0x%x, read back valu: 0x%x\n",
+                operation->reg_addr, operation->reg_val, rd_back_val);
+            return -1;
         }
+         WB_MAC_BSC_DEBUG("bsc_i2c_write success, reg_addr: 0x%x, set val: 0x%x, read_back val: 0x%x\n",
+             operation->reg_addr, operation->reg_val, rd_back_val);
+    }
+    return 0;
+}
+
+static int handle_operation(struct i2c_client *client, i2c_op_t *operation)
+{
+    int ret, i;
+
+    if (operation->op == I2C_WRITE) {
+        for (i = 0; i < MAC_BSC_MAX_RETRY; i++) {
+            ret = handle_operation_write(client, operation);
+            if (ret == 0) {
+                WB_MAC_BSC_DEBUG("handle_operation_write success, retry: %d\n", i);
+                return 0;
+            }
+            if ((i + 1) < MAC_BSC_MAX_RETRY) {
+                usleep_range(MAC_BSC_RETRY_SLEEP_TIME, MAC_BSC_RETRY_SLEEP_TIME + 1);
+            }
+        }
+        WB_MAC_BSC_DEBUG("handle_operation_write retry: %d failed, ret: %d, ignore it\n", i, ret);
         return 0;
     }
 
@@ -811,12 +833,12 @@ static int mac_probe(struct i2c_client *client, const struct i2c_device_id *id)
     return 0;
 }
 
-static int mac_remove(struct i2c_client *client)
+static void mac_remove(struct i2c_client *client)
 {
     struct mac_data *data = i2c_get_clientdata(client);
 
     hwmon_device_unregister(data->hwmon_dev);
-    return 0;
+    return;
 }
 
 static const struct i2c_device_id mac_id_table[] = {

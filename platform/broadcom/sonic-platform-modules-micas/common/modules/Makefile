@@ -10,10 +10,10 @@ export module_out_put_dir
 KERNEL_MODULES_SRC = $(PWD)/linux-5.10
 
 PLAT_SYSFS_DIR = $(PWD)/plat_sysfs
-INTEL_SPI = $(PWD)/intel_spi
 PHY = $(PWD)/phy
 PINCTRL = $(PWD)/pinctrl
 SDHCI = $(PWD)/sdhci
+RTL_DRIVER_PATH = r8168
 
 export PLAT_SYSFS_DIR
 
@@ -29,7 +29,7 @@ obj-m += wb_i2c_dev.o
 obj-m += wb_platform_i2c_dev.o
 obj-m += wb_io_dev.o
 obj-m += wb_eeprom_93xx46.o
-obj-m += wb_spi_93xx46.o
+#obj-m += wb_spi_93xx46.o
 obj-m += wb_gpio_d1500.o
 obj-m += wb_gpio_device.o
 obj-m += wb_i2c_ocores.o
@@ -39,21 +39,22 @@ obj-m += wb_wdt.o
 obj-m += wb_optoe.o
 obj-m += wb_spi_gpio.o
 obj-m += wb_spi_gpio_device.o
-obj-m += wb_spi_nor_device.o
+#obj-m += wb_spi_nor_device.o
 obj-m += wb_xdpe132g5c.o
 obj-m += wb_uio_irq.o
 obj-m += hw_test.o
+obj-y += r8168/
 
 all :
 	$(MAKE) -C $(KERNEL_MODULES_SRC)
 	$(MAKE) -C $(PLAT_SYSFS_DIR)
-	$(MAKE) -C $(INTEL_SPI)
 	$(MAKE) -C $(PHY)
 	$(MAKE) -C $(PINCTRL)
 	$(MAKE) -C $(SDHCI)
 	$(MAKE) -C $(KERNEL_SRC)/build M=$(PWD) modules
 	@if [ ! -d $(module_out_put_dir) ]; then mkdir -p $(module_out_put_dir) ;fi
 	cp -p  $(PWD)/*.ko $(module_out_put_dir)
+	cp -p  $(PWD)/$(RTL_DRIVER_PATH)/*.ko $(module_out_put_dir)
 
 clean :
 	rm  -rf $(module_out_put_dir)

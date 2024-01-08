@@ -521,7 +521,7 @@ void wb_pmbus_clear_faults(struct i2c_client *client);
 bool wb_pmbus_check_byte_register(struct i2c_client *client, int page, int reg);
 bool wb_pmbus_check_word_register(struct i2c_client *client, int page, int reg);
 int wb_pmbus_do_probe(struct i2c_client *client, struct pmbus_driver_info *info);
-int wb_pmbus_do_remove(struct i2c_client *client);
+void wb_pmbus_do_remove(struct i2c_client *client);
 const struct pmbus_driver_info *wb_pmbus_get_driver_info(struct i2c_client
                               *client);
 int wb_pmbus_get_fan_rate_device(struct i2c_client *client, int page, int id,

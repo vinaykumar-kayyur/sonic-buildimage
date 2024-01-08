@@ -28,6 +28,7 @@
 #include <linux/gpio.h>
 #include <linux/fs.h>
 #include <linux/uaccess.h>
+#include <linux/uio.h>
 
 #include "wb_i2c_mux_pca9641.h"
 
@@ -227,6 +228,12 @@ static int pca9641_reset_file_read(const char *path, uint32_t pos, uint8_t *val,
     struct file *filp;
     loff_t tmp_pos;
 
+    struct kvec iov = {
+        .iov_base = val,
+        .iov_len = min_t(size_t, size, MAX_RW_COUNT),
+    };
+    struct iov_iter iter;
+
     filp = filp_open(path, O_RDONLY, 0);
     if (IS_ERR(filp)) {
         PCA_DEBUG_ERR("read open failed errno = %ld\r\n", -PTR_ERR(filp));
@@ -235,9 +242,10 @@ static int pca9641_reset_file_read(const char *path, uint32_t pos, uint8_t *val,
     }
 
     tmp_pos = (loff_t)pos;
-    ret = kernel_read(filp, val, size, &tmp_pos);
+    iov_iter_kvec(&iter, ITER_DEST, &iov, 1, iov.iov_len);
+    ret = vfs_iter_read(filp, &iter, &tmp_pos, 0);
     if (ret < 0) {
-        PCA_DEBUG_ERR("kernel_read failed, path=%s, addr=0x%x, size=%ld, ret=%d\r\n", path, pos, size, ret);
+        PCA_DEBUG_ERR("vfs_iter_read failed, path=%s, addr=0x%x, size=%ld, ret=%d\r\n", path, pos, size, ret);
         goto exit;
     }
 
@@ -255,10 +263,15 @@ exit:
 
 static int pca9641_reset_file_write(const char *path, uint32_t pos, uint8_t *val, size_t size)
 {
-
     int ret;
     struct file *filp;
     loff_t tmp_pos;
+
+    struct kvec iov = {
+        .iov_base = val,
+        .iov_len = min_t(size_t, size, MAX_RW_COUNT),
+    };
+    struct iov_iter iter;
 
     filp = filp_open(path, O_RDWR, 777);
     if (IS_ERR(filp)) {
@@ -268,9 +281,10 @@ static int pca9641_reset_file_write(const char *path, uint32_t pos, uint8_t *val
     }
 
     tmp_pos = (loff_t)pos;
-    ret = kernel_write(filp, val, size, &tmp_pos);
+    iov_iter_kvec(&iter, ITER_SOURCE, &iov, 1, iov.iov_len);
+    ret = vfs_iter_write(filp, &iter, &tmp_pos, 0);
     if (ret < 0) {
-        PCA_DEBUG_ERR("kernel_write failed, path=%s, addr=0x%x, size=%ld, ret=%d\r\n", path, pos, size, ret);
+        PCA_DEBUG_ERR("vfs_iter_write failed, path=%s, addr=0x%x, size=%ld, ret=%d\r\n", path, pos, size, ret);
         goto exit;
     }
 
@@ -1372,12 +1386,12 @@ static int pca9541_probe(struct i2c_client *client, const struct i2c_device_id *
     return 0;
 }
 
-static int pca9541_remove(struct i2c_client *client)
+static void pca9541_remove(struct i2c_client *client)
 {
 	struct i2c_mux_core *muxc = i2c_get_clientdata(client);
 
 	i2c_mux_del_adapters(muxc);
-	return 0;
+	return;
 }
 
 static struct i2c_driver pca9641_driver = {

@@ -27,6 +27,9 @@
 #define IO_INDIRECT_OP_WRITE               (0x2)
 #define IO_INDIRECT_OP_READ                (0X3)
 
+#define KERNEL_SPASE         (0)
+#define USER_SPASE           (1)
+
 static int g_io_dev_debug = 0;
 static int g_io_dev_error = 0;
 
@@ -138,7 +141,7 @@ static int io_dev_read_tmp(wb_io_dev_t *wb_io_dev, uint32_t offset, uint8_t *buf
     return count;
 }
 
-static ssize_t io_dev_read(struct file *file, char __user *buf, size_t count, loff_t *offset)
+static ssize_t io_dev_read(struct file *file, char __user *buf, size_t count, loff_t *offset, int flag)
 {
     wb_io_dev_t *wb_io_dev;
     int ret, read_len;
@@ -167,7 +170,8 @@ static ssize_t io_dev_read(struct file *file, char __user *buf, size_t count, lo
         return read_len;
     }
 
-    if (access_ok(buf, read_len)) {
+    /* check flag is user spase or kernel spase */
+    if (flag == USER_SPASE) {
         IO_DEV_DEBUG_VERBOSE("user space read, buf: %p, offset: %lld, read count %lu.\n",
             buf, *offset, count);
         if (copy_to_user(buf, buf_tmp, read_len)) {
@@ -184,13 +188,23 @@ static ssize_t io_dev_read(struct file *file, char __user *buf, size_t count, lo
     return ret;
 }
 
+static ssize_t io_dev_read_user(struct file *file, char __user *buf, size_t count, loff_t *offset)
+{
+    int ret;
+
+    IO_DEV_DEBUG_VERBOSE("io_dev_read_user, file: %p, count: %lu, offset: %lld\n",
+        file, count, *offset);
+    ret = io_dev_read(file, buf, count, offset, USER_SPASE);
+    return ret;
+}
+
 static ssize_t io_dev_read_iter(struct kiocb *iocb, struct iov_iter *to)
 {
     int ret;
 
     IO_DEV_DEBUG_VERBOSE("io_dev_read_iter, file: %p, count: %lu, offset: %lld\n",
         iocb->ki_filp, to->count, iocb->ki_pos);
-    ret = io_dev_read(iocb->ki_filp, to->kvec->iov_base, to->count, &iocb->ki_pos);
+    ret = io_dev_read(iocb->ki_filp, to->kvec->iov_base, to->count, &iocb->ki_pos, KERNEL_SPASE);
     return ret;
 }
 
@@ -245,7 +259,7 @@ static int io_dev_write_tmp(wb_io_dev_t *wb_io_dev, uint32_t offset, uint8_t *bu
     return count;
 }
 
-static ssize_t io_dev_write(struct file *file, const char __user *buf, size_t count, loff_t *offset)
+static ssize_t io_dev_write(struct file *file, const char __user *buf, size_t count, loff_t *offset, int flag)
 {
     wb_io_dev_t *wb_io_dev;
     int write_len;
@@ -268,7 +282,8 @@ static ssize_t io_dev_write(struct file *file, const char __user *buf, size_t co
     }
 
     mem_clear(buf_tmp, sizeof(buf_tmp));
-    if (access_ok(buf, count)) {
+    /* check flag is user spase or kernel spase */
+    if (flag == USER_SPASE) {
         IO_DEV_DEBUG_VERBOSE("user space write, buf: %p, offset: %lld, write count %lu.\n",
             buf, *offset, count);
         if (copy_from_user(buf_tmp, buf, count)) {
@@ -291,13 +306,23 @@ static ssize_t io_dev_write(struct file *file, const char __user *buf, size_t co
     return write_len;
 }
 
+static ssize_t io_dev_write_user(struct file *file, const char __user *buf, size_t count, loff_t *offset)
+{
+    int ret;
+
+    IO_DEV_DEBUG_VERBOSE("io_dev_write_user, file: %p, count: %lu, offset: %lld\n",
+        file, count, *offset);
+    ret = io_dev_write(file, buf, count, offset, USER_SPASE);
+    return ret;
+}
+
 static ssize_t io_dev_write_iter(struct kiocb *iocb, struct iov_iter *from)
 {
     int ret;
 
     IO_DEV_DEBUG_VERBOSE("io_dev_write_iter, file: %p, count: %lu, offset: %lld\n",
         iocb->ki_filp, from->count, iocb->ki_pos);
-    ret = io_dev_write(iocb->ki_filp, from->kvec->iov_base, from->count, &iocb->ki_pos);
+    ret = io_dev_write(iocb->ki_filp, from->kvec->iov_base, from->count, &iocb->ki_pos, KERNEL_SPASE);
     return ret;
 }
 
@@ -354,6 +379,8 @@ static long io_dev_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 static const struct file_operations io_dev_fops = {
     .owner      = THIS_MODULE,
     .llseek     = io_dev_llseek,
+    .read       = io_dev_read_user,
+    .write      = io_dev_write_user,
     .read_iter  = io_dev_read_iter,
     .write_iter = io_dev_write_iter,
     .unlocked_ioctl = io_dev_ioctl,

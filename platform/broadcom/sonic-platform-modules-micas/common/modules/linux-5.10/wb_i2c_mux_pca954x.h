@@ -35,6 +35,7 @@ typedef struct file_attr_s {
     uint32_t mask;
     uint32_t reset_on;
     uint32_t reset_off;
+    uint32_t width;
 } file_attr_t;
 
 typedef struct gpio_attr_s {
