@@ -17,6 +17,7 @@
 #include <linux/of_irq.h>
 #include <linux/slab.h>
 #include <linux/workqueue.h>
+#include <linux/version.h>
 
 #define _memset(s, c, n) memset(s, c, n)
 
@@ -158,12 +159,19 @@ static int smbalert_probe(struct i2c_client *ara,
 }
 
 /* IRQ and memory resources are managed so they are freed automatically */
-static int smbalert_remove(struct i2c_client *ara)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 0, 0)
+static int
+#else
+static void
+#endif
+smbalert_remove(struct i2c_client *ara)
 {
 	struct i2c_smbus_alert *alert = i2c_get_clientdata(ara);
 
 	cancel_work_sync(&alert->alert);
-	return 0;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 0, 0)
+    return 0;
+#endif
 }
 
 static const struct i2c_device_id smbalert_ids[] = {
