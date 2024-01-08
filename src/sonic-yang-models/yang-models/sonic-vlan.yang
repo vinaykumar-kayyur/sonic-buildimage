@@ -249,7 +249,7 @@ module sonic-vlan {
 							path "/lag:sonic-portchannel/lag:PORTCHANNEL/lag:PORTCHANNEL_LIST/lag:name";
 						}
 					}
-                }
+				}
 
 				leaf tagging_mode {
 					mandatory true;
