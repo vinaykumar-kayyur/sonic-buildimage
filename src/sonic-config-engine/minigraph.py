@@ -1459,23 +1459,27 @@ def select_mmu_profiles(profile, platform, hwsku):
                 exec_cmd(["sudo", "cp", file_in_dir, base_file])
 
 def is_ipv4(address):
-    # address maybe is bytes type, so encode and decode to unicode
+    # encode and decode to unicode, because when address is bytes type, ip_network will throw AddressValueError
     # set strict to False because address may set host bit, for example 192.168.0.1/24
-    return type(ipaddress.ip_network(address.encode().decode(), False)) is ipaddress.IPv4Network
+    return isinstance(ipaddress.ip_network(address.encode().decode(), False), ipaddress.IPv4Network)
 
 def update_forced_mgmt_route(mgmt_intf, mgmt_routes):
     for mgmt_intf_key in mgmt_intf.keys():
         forced_mgmt_routes = []
 
-        # get mgmt interface type
-        mgmt_intf_addr = mgmt_intf_key[1]
-        mgmt_is_ipv4 = is_ipv4(mgmt_intf_addr)
+        try:
+            # get mgmt interface type
+            mgmt_intf_addr = mgmt_intf_key[1]
+            mgmt_is_ipv4 = is_ipv4(mgmt_intf_addr)
 
-        # add mgmt route to different mgmt interface by address type
-        for mgmt_route in mgmt_routes:
-            route_is_ipv4 = is_ipv4(mgmt_route)
-            if mgmt_is_ipv4 == route_is_ipv4:
-                forced_mgmt_routes.append(mgmt_route)
+            # add mgmt route to different mgmt interface by address type
+            for mgmt_route in mgmt_routes:
+                route_is_ipv4 = is_ipv4(mgmt_route)
+                if mgmt_is_ipv4 == route_is_ipv4:
+                    forced_mgmt_routes.append(mgmt_route)
+        except Exception as e:
+            print("Warning: invalid management routes in minigraph, exception: {}".format(e), file=sys.stderr)
+            continue
 
         # forced_mgmt_routes yang model not support empty list
         if len(forced_mgmt_routes) > 0:
