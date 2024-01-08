@@ -339,7 +339,9 @@
                     "L4_SRC_PORT",
                     "INNER_DST_IP",
                     "INNER_SRC_IP"
-                ]
+                ],
+                "ecmp_hash_algorithm": "CRC",
+                "lag_hash_algorithm": "XOR"
             }
         },
         "DEVICE_METADATA": {
@@ -475,14 +477,36 @@
         },
         "NTP": {
             "global": {
+                "authentication": "disabled",
+                "dhcp": "enabled",
+                "server_role": "disabled",
+                "admin_state": "enabled",
                 "vrf": "mgmt",
                 "src_intf": "eth0;Loopback0"
             }
         },
         "NTP_SERVER": {
-            "0.debian.pool.ntp.org": {},
-            "23.92.29.245": {},
-            "2001:aa:aa::aa": {}
+            "0.debian.pool.ntp.org": {
+                "association_type": "pool",
+                "resolve_as": "0.debian.pool.ntp.org"
+            },
+            "time.google.com": {
+                "association_type": "server",
+                "resolve_as": "216.239.35.4"
+            },
+            "23.92.29.245": {
+                "admin_state": "enabled",
+                "association_type": "server",
+                "resolve_as": "23.92.29.245",
+                "iburst": "off",
+                "trusted": "yes"
+            },
+            "2001:aa:aa::aa": {
+                "admin_state": "disabled",
+                "iburst": "on",
+                "association_type": "server",
+                "resolve_as": "2001:aa:aa::aa"
+            }
         },
         "SYSLOG_SERVER" : {
             "10.13.14.17": {
@@ -869,7 +893,7 @@
                 "alias": "Eth31/1",
                 "lanes": "121,122",
                 "description": "",
-                "fec": "fc",
+                "fec": "auto",
                 "speed": "11100",
                 "tpid": "0x8100",
                 "admin_status": "up"
@@ -1211,10 +1235,10 @@
                 "src_ip": "30.57.185.38",
                 "unidirectional": "true"
             },
-            "DestinationGroup_HS": {
+            "DestinationGroup|HS": {
                 "dst_addr": "30.57.186.214:8081,30.57.185.39:8081"
             },
-            "Subscription_HS_RDMA": {
+            "Subscription|HS_RDMA": {
                 "dst_group": "HS",
                 "path_target": "COUNTERS_DB",
                 "paths": "COUNTERS/Ethernet*,COUNTERS_PORT_NAME_MAP",
@@ -1573,6 +1597,11 @@
                 "local_ip": "12.12.0.2"
             }
         },
+        "BGP_BBR": {
+            "all": {
+                "status": "enabled"
+            }
+        },
         "BGP_GLOBALS": {
             "default": {
                 "router_id": "5.5.5.5",
@@ -1801,6 +1830,7 @@
                 "auto_restart": "always_enabled",
                 "has_global_scope": "true",
                 "has_per_asic_scope": "true",
+                "has_per_dpu_scope": "true",
                 "delayed": "false",
                 "high_mem_alert": "disabled",
                 "state": "always_enabled",
@@ -2322,9 +2352,9 @@
             "test": {
                 "priority": "64",
                 "cipher_suite": "GCM-AES-128",
-                "primary_cak": "0123456789ABCDEF0123456789ABCDEF",
+                "primary_cak": "1159485744465e5a537272050a1011073557475152020c0e040c57223a357d7d71",
                 "primary_ckn": "6162636465666768696A6B6C6D6E6F70",
-                "fallback_cak": "00000000000000000000000000000000",
+                "fallback_cak": "000000000000000000000000000000000000000000000000000000000000000000",
                 "fallback_ckn": "11111111111111111111111111111111",
                 "policy": "security",
                 "enable_replay_protect": "true",
@@ -2379,7 +2409,7 @@
                  ],
                  "BIND_POINTS": [
                      "PORT",
-                     "LAG"
+                     "PORTCHANNEL"
                  ]
              }
         },
@@ -2533,6 +2563,20 @@
                 "FG_NHG": "nhg2",
                 "bank": "1",
                 "link": "PortChannel2"
+            }
+        },
+        "MID_PLANE_BRIDGE": {
+            "GLOBAL" : {
+                "bridge": "bridge_midplane",
+                "ip_prefix": "169.254.200.254/24"
+            }
+        },
+        "DPUS": {
+            "dpu0": {
+                "midplane_interface": "dpu0"
+            },
+            "dpu1": {
+                "midplane_interface": "dpu1"
             }
         }
     },
