@@ -159,7 +159,7 @@ static int smbalert_probe(struct i2c_client *ara,
 }
 
 /* IRQ and memory resources are managed so they are freed automatically */
-#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 0, 0)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 1, 0)
 static int
 #else
 static void
@@ -169,7 +169,7 @@ smbalert_remove(struct i2c_client *ara)
 	struct i2c_smbus_alert *alert = i2c_get_clientdata(ara);
 
 	cancel_work_sync(&alert->alert);
-#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 0, 0)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 1, 0)
     return 0;
 #endif
 }

@@ -243,7 +243,7 @@ exit:
     return err;
 }
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 0, 0)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 1, 0)
 static int
 #else
 static void
@@ -253,7 +253,7 @@ sys_eeprom_remove(struct i2c_client *client)
     sysfs_remove_bin_file(&client->dev.kobj, &sys_eeprom_attr);
     kfree(i2c_get_clientdata(client));
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 0, 0)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 1, 0)
     return 0;
 #endif
 }
