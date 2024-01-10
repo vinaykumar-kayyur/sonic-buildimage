@@ -43,7 +43,7 @@ def lease(db, dhcp_interface):
         if not port:
             port = "<Unknown>"
         table.append([interface + "|" + port, mac, entry["ip"], ts_to_str(entry["lease_start"]), ts_to_str(entry["lease_end"])])
-    click.echo(tabulate(table, headers=headers))
+    click.echo(tabulate(table, headers=headers, tablefmt="grid"))
 
 
 def count_ipv4(start, end):
@@ -74,7 +74,7 @@ def range(db, range_name):
         if count < 1:
             count = "range value is illegal"
         table.append([name, start, end, count])
-    click.echo(tabulate(table, headers=headers))
+    click.echo(tabulate(table, headers=headers, tablefmt="grid"))
 
 
 def dhcp_interface_is_match(input_, key):
@@ -104,7 +104,7 @@ def info(db, dhcp_interface, with_customized_options):
         table.append([interface, entry["mode"], entry["gateway"], entry["netmask"], entry["lease_time"], entry["state"]])
         if with_customized_options:
             table[-1].append(entry["customized_options"])
-    click.echo(tabulate(table, headers=headers))
+    click.echo(tabulate(table, headers=headers, tablefmt="grid"))
 
 
 @ipv4.command()
@@ -118,7 +118,7 @@ def option(db, option_name):
         entry = dbconn.get_all("CONFIG_DB", key)
         name = key.split("|")[1]
         table.append([name, entry["id"], entry["value"], entry["type"]])
-    click.echo(tabulate(table, headers=headers))
+    click.echo(tabulate(table, headers=headers, tablefmt="grid"))
 
 
 @ipv4.command()
@@ -136,7 +136,7 @@ def port(db, interface):
                 table.append([intf, entry["ranges"].replace(",", "\n")])
             if "ips" in entry:
                 table.append([intf, entry["ips"].replace(",", "\n")])
-    click.echo(tabulate(table, headers=headers))
+    click.echo(tabulate(table, headers=headers, tablefmt="grid"))
 
 
 def register(cli):
