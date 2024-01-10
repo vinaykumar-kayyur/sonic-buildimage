@@ -76,6 +76,9 @@ class pid(object):
         pwm_max = pid_para["pwm_max"]
         flag = pid_para["flag"]
 
+        pid_debug("%s pid para: flag: %s, speed_type: %s, Kp: %s, Ki: %s, Kd: %s, target: %s, pwm_min: 0x%x, pwm_max: 0x%x"
+            % (name, flag, speed_type, Kp, Ki, Kd, target, pwm_min, pwm_max))
+
         if flag != 1:
             pid_debug("%s pid flag == 0" % name)
             return None

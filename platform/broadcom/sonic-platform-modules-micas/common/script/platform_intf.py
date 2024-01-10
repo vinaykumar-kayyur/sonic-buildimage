@@ -76,14 +76,31 @@ class IntfPlatform:
 
     def get_port_path(self, port):
         port_num = self.__port_optoe_dict.get("port_num", 0)
-        optoe_start_bus = self.__port_optoe_dict.get("optoe_start_bus", 0)
-        if port_num <= 0 or optoe_start_bus <= 0:
-            msg = "PLATFORM_INTF_OPTOE config error!"
+        if port_num <= 0:
+            msg = "PLATFORM_INTF_OPTOE port_num config error, port_num: %d!" % port_num
             return False, msg
+
         if port <= 0 or port > port_num:
             msg = "port out of range !"
             return False, msg
-        path = OPTOE_PATH % (port + optoe_start_bus - 1)
+
+        port_bus_map = self.__port_optoe_dict.get("port_bus_map")
+        optoe_start_bus = self.__port_optoe_dict.get("optoe_start_bus", 0)
+        if port_bus_map is None: # get port bus by optoe_start_bus
+            if optoe_start_bus <= 0:
+                msg = "PLATFORM_INTF_OPTOE optoe_start_bus config error, optoe_start_bus: %d" % optoe_start_bus
+                return False, msg
+            port_bus = port + optoe_start_bus - 1
+        else: # get port bus by port_bus_map
+            port_bus = port_bus_map.get(port)
+            if port_bus is None:
+                msg = "port %d don't has i2c bus" % port
+                return False, msg
+            if not isinstance(port_bus, int) or port_bus < 0:
+                msg = "port %d i2c bus config error, port_bus: %s " % port_bus
+                return False, msg
+
+        path = OPTOE_PATH % (port_bus)
         platform_intf_debug("path:%s" % path)
         return True, path
 

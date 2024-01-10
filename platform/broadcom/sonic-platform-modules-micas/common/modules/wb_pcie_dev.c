@@ -25,6 +25,9 @@
 #define PCIE_BUS_WIDTH_2         (2)
 #define PCIE_BUS_WIDTH_4         (4)
 
+#define KERNEL_SPASE         (0)
+#define USER_SPASE           (1)
+
 static int g_pcie_dev_debug = 0;
 static int g_pcie_dev_error = 0;
 
@@ -60,6 +63,8 @@ typedef struct wb_pci_dev_s {
     uint32_t bar_len;
     uint32_t bar_flag;
     uint32_t bus_width;
+    uint32_t check_pci_id;
+    uint32_t pci_id;
     struct miscdevice misc;
     void (*setreg)(struct wb_pci_dev_s *wb_pci_dev, int reg, u32 value);
     u32 (*getreg)(struct wb_pci_dev_s *wb_pci_dev, int reg);
@@ -216,7 +221,7 @@ static int pci_dev_read_tmp(wb_pci_dev_t *wb_pci_dev, uint32_t offset, uint8_t *
     return count;
 }
 
-static ssize_t pci_dev_read(struct file *file, char __user *buf, size_t count, loff_t *offset)
+static ssize_t pci_dev_read(struct file *file, char __user *buf, size_t count, loff_t *offset, int flag)
 {
     wb_pci_dev_t *wb_pci_dev;
     int ret, read_len;
@@ -244,7 +249,8 @@ static ssize_t pci_dev_read(struct file *file, char __user *buf, size_t count, l
         PCIE_DEV_DEBUG_ERROR("pci_dev_read_tmp failed, ret:%d.\n", read_len);
         return read_len;
     }
-    if (access_ok(buf, read_len)) {
+    /* check flag is user spase or kernel spase */
+    if (flag == USER_SPASE) {
         PCIE_DEV_DEBUG_VERBOSE("user space read, buf: %p, offset: %lld, read count %lu.\n",
             buf, *offset, count);
         if (copy_to_user(buf, buf_tmp, read_len)) {
@@ -261,13 +267,23 @@ static ssize_t pci_dev_read(struct file *file, char __user *buf, size_t count, l
     return ret;
 }
 
+static ssize_t pci_dev_read_user(struct file *file, char __user *buf, size_t count, loff_t *offset)
+{
+    int ret;
+
+    PCIE_DEV_DEBUG_VERBOSE("pci_dev_read_user, file: %p, count: %lu, offset: %lld\n",
+        file, count, *offset);
+    ret = pci_dev_read(file, buf, count, offset, USER_SPASE);
+    return ret;
+}
+
 static ssize_t pci_dev_read_iter(struct kiocb *iocb, struct iov_iter *to)
 {
     int ret;
 
     PCIE_DEV_DEBUG_VERBOSE("pci_dev_read_iter, file: %p, count: %lu, offset: %lld\n",
         iocb->ki_filp, to->count, iocb->ki_pos);
-    ret = pci_dev_read(iocb->ki_filp, to->kvec->iov_base, to->count, &iocb->ki_pos);
+    ret = pci_dev_read(iocb->ki_filp, to->kvec->iov_base, to->count, &iocb->ki_pos, KERNEL_SPASE);
     return ret;
 }
 
@@ -307,7 +323,7 @@ static int pci_dev_write_tmp(wb_pci_dev_t *wb_pci_dev, uint32_t offset, uint8_t 
 }
 
 static ssize_t pci_dev_write(struct file *file, const char __user *buf, size_t count,
-                   loff_t *offset)
+                   loff_t *offset, int flag)
 {
     wb_pci_dev_t *wb_pci_dev;
     u8 buf_tmp[PCI_RDWR_MAX_LEN];
@@ -330,7 +346,8 @@ static ssize_t pci_dev_write(struct file *file, const char __user *buf, size_t c
     }
 
     mem_clear(buf_tmp, sizeof(buf_tmp));
-    if (access_ok(buf, count)) {
+    /* check flag is user spase or kernel spase */
+    if (flag == USER_SPASE) {
         PCIE_DEV_DEBUG_VERBOSE("user space write, buf: %p, offset: %lld, write count %lu.\n",
             buf, *offset, count);
         if (copy_from_user(buf_tmp, buf, count)) {
@@ -353,13 +370,23 @@ static ssize_t pci_dev_write(struct file *file, const char __user *buf, size_t c
     return write_len;
 }
 
+static ssize_t pci_dev_write_user(struct file *file, const char __user *buf, size_t count, loff_t *offset)
+{
+    int ret;
+
+    PCIE_DEV_DEBUG_VERBOSE("pci_dev_write_user, file: %p, count: %lu, offset: %lld\n",
+        file, count, *offset);
+    ret = pci_dev_write(file, buf, count, offset, USER_SPASE);
+    return ret;
+}
+
 static ssize_t pci_dev_write_iter(struct kiocb *iocb, struct iov_iter *from)
 {
     int ret;
 
     PCIE_DEV_DEBUG_VERBOSE("pci_dev_write_iter, file: %p, count: %lu, offset: %lld\n",
         iocb->ki_filp, from->count, iocb->ki_pos);
-    ret = pci_dev_write(iocb->ki_filp, from->kvec->iov_base, from->count, &iocb->ki_pos);
+    ret = pci_dev_write(iocb->ki_filp, from->kvec->iov_base, from->count, &iocb->ki_pos, KERNEL_SPASE);
     return ret;
 }
 
@@ -464,6 +491,8 @@ static long pci_dev_ioctl(struct file *file, unsigned int cmd, unsigned long arg
 static const struct file_operations pcie_dev_fops = {
     .owner      = THIS_MODULE,
     .llseek     = pci_dev_llseek,
+    .read       = pci_dev_read_user,
+    .write      = pci_dev_write_user,
     .read_iter  = pci_dev_read_iter,
     .write_iter = pci_dev_write_iter,
     .unlocked_ioctl = pci_dev_ioctl,
@@ -587,6 +616,7 @@ static int pci_setup_bars(wb_pci_dev_t *wb_pci_dev, struct pci_dev *dev)
 static int pci_dev_probe(struct platform_device *pdev)
 {
     int ret, devfn;
+    uint32_t pci_id;
     wb_pci_dev_t *wb_pci_dev;
     struct pci_dev *pci_dev;
     struct miscdevice *misc;
@@ -622,11 +652,19 @@ static int pci_dev_probe(struct platform_device *pdev)
         ret += of_property_read_u32(pdev->dev.of_node, "upg_flash_base", &firmware_upg->upg_flash_base);
         if (ret != 0) {
             PCIE_DEV_DEBUG_VERBOSE("dts don't adaptive fpga upg related, ret:%d.\n", ret);
-            firmware_upg->upg_ctrl_base  = -1;
+            firmware_upg->upg_ctrl_base = -1;
             firmware_upg->upg_flash_base = -1;
         } else {
             PCIE_DEV_DEBUG_VERBOSE("upg_ctrl_base:0x%04x, upg_flash_base:0x%02x.\n",
                 firmware_upg->upg_ctrl_base, firmware_upg->upg_flash_base);
+        }
+        ret = of_property_read_u32(pdev->dev.of_node, "check_pci_id", &wb_pci_dev->check_pci_id);
+        if (ret == 0) {
+            ret = of_property_read_u32(pdev->dev.of_node, "pci_id", &wb_pci_dev->pci_id);
+            if (ret != 0) {
+                dev_err(&pdev->dev, "Failed to get pci_id, ret:%d.\n", ret);
+                return -ENXIO;
+            }
         }
     } else {
         if (pdev->dev.platform_data == NULL) {
@@ -641,6 +679,8 @@ static int pci_dev_probe(struct platform_device *pdev)
         wb_pci_dev->fn = pci_dev_device->pci_fn;
         wb_pci_dev->bar = pci_dev_device->pci_bar;
         wb_pci_dev->bus_width = pci_dev_device->bus_width;
+        wb_pci_dev->check_pci_id = pci_dev_device->check_pci_id;
+        wb_pci_dev->pci_id = pci_dev_device->pci_id;
         firmware_upg->upg_ctrl_base = pci_dev_device->upg_ctrl_base;
         firmware_upg->upg_flash_base = pci_dev_device->upg_flash_base;
         PCIE_DEV_DEBUG_VERBOSE("upg_ctrl_base:0x%04x, upg_flash_base:0x%02x.\n",
@@ -657,6 +697,15 @@ static int pci_dev_probe(struct platform_device *pdev)
         dev_err(&pdev->dev, "Failed to find pci_dev, domain:0x%04x, bus:0x%02x, devfn:0x%x\n",
             wb_pci_dev->domain, wb_pci_dev->bus, devfn);
         return -ENXIO;
+    }
+    if (wb_pci_dev->check_pci_id == 1) {
+        pci_id = (pci_dev->vendor << 16) | pci_dev->device;
+        if (wb_pci_dev->pci_id != pci_id) {
+            dev_err(&pdev->dev, "Failed to check pci id, except: 0x%x, really: 0x%x\n",
+                wb_pci_dev->pci_id, pci_id);
+            return -ENXIO;
+        }
+        PCIE_DEV_DEBUG_VERBOSE("pci id check ok, pci_id: 0x%x", pci_id);
     }
     ret = pci_setup_bars(wb_pci_dev, pci_dev);
     if (ret != 0) {

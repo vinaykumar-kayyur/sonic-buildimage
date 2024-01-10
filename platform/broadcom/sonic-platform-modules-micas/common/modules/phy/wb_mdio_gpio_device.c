@@ -22,7 +22,6 @@ static char *gpio_chip_name = NULL;
 module_param(gpio_chip_name, charp, 0644);
 MODULE_PARM_DESC(str_var, "A string variable for GPIO controller");
 
-
 static int g_wb_mdio_gpio_device_debug = 0;
 static int g_wb_mdio_gpio_device_error = 0;
 

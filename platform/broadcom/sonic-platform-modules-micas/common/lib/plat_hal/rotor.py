@@ -32,7 +32,7 @@ class rotor(devicebase):
 
     def getRunning(self):
         ret, val = self.get_value(self.rotor_run_conf)
-        if ret is False or val is None:
+        if ret is False or val is None or val == "no_support":
             return False
         if isinstance(val, str):
             value = int(val, 16)

@@ -72,6 +72,7 @@ typedef struct info_ctrl_s {
     char str_cons[INFO_STR_CONS_MAX_LEN];
     int32_t int_extra1;
     int32_t int_extra2;
+    int32_t int_extra3;      /* cpld voltage mode */
 } info_ctrl_t;
 
 typedef enum info_ctrl_mem_s {
@@ -87,6 +88,7 @@ typedef enum info_ctrl_mem_s {
     INFO_CTRL_MEM_STR_CONS,
     INFO_CTRL_MEM_INT_EXTRA1,
     INFO_CTRL_MEM_INT_EXTRA2,
+    INFO_CTRL_MEM_INT_EXTRA3,
     INFO_CTRL_MEM_END
 } info_ctrl_mem_t;
 

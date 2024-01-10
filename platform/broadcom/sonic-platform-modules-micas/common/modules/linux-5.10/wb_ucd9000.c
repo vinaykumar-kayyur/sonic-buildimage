@@ -19,6 +19,8 @@
 #include <linux/delay.h>
 #include "wb_pmbus.h"
 
+#define mem_clear(data, size) memset((data), 0, (size))
+
 enum chips { ucd9000, ucd90120, ucd90124, ucd90160, ucd90320, ucd9090,
          ucd90910 };
 
@@ -96,18 +98,61 @@ struct ucd9000_debugfs_entry {
     u8 index;
 };
 
+static int wb_i2c_smbus_read_block_data_tmp(const struct i2c_client *client, u8 command, u8 *values)
+{
+
+    struct i2c_msg msg[2];
+    int status;
+    u8 read_buf[I2C_SMBUS_BLOCK_MAX + 1];
+    int read_len, val_len;
+
+    val_len = i2c_smbus_read_byte_data(client, command);
+    if (val_len < 0) {
+        WB_UDC9000_ERROR("read byte failed. nr:%d, addr:0x%x, reg:0x%x, ret:%d.\n",
+            client->adapter->nr, client->addr, command, val_len);
+        return -ENXIO;
+    }
+    read_len = val_len + 1;
+    if (read_len > sizeof(read_buf)) {
+        WB_UDC9000_ERROR("Out of memory, val_len: %d, read length: %d, read buf len: %lu.\n",
+            val_len, read_len, sizeof(read_buf));
+        return -ENOMEM;
+    }
+
+    mem_clear(msg, sizeof(msg));
+    msg[0].addr = client->addr;
+    msg[0].buf = &command;
+    msg[0].len = 1;
+
+    msg[1].addr = client->addr;
+    msg[1].flags = I2C_M_RD;
+    msg[1].buf = read_buf;
+    msg[1].len = read_len;
+
+    status = i2c_transfer(client->adapter, msg, 2);
+    if (status != 2) {
+        WB_UDC9000_ERROR("i2c_transfer failed. nr:%d, addr:0x%x, reg:0x%x, read len:%d, status:%d.\n",
+            client->adapter->nr, client->addr, command, read_len, status);
+        return -EIO;
+    }
+    WB_UDC9000_VERBOSE("read_block_data success. nr:%d, addr:0x%x, reg:0x%x, read len:%d",
+        client->adapter->nr, client->addr, command, read_len);
+    memcpy(values, &read_buf[1], val_len);
+    return val_len;
+}
+
 static int wb_i2c_smbus_read_block_data(const struct i2c_client *client, u8 command, u8 *values)
 {
     int rv, i;
 
     for(i = 0; i < UCD9000_RETRY_TIME; i++) {
-        rv = i2c_smbus_read_block_data(client, command, values);
+        rv = wb_i2c_smbus_read_block_data_tmp(client, command, values);
         if(rv >= 0){
             return rv;
         }
         usleep_range(UCD9000_RETRY_SLEEP_TIME, UCD9000_RETRY_SLEEP_TIME + 1);
     }
-    WB_UDC9000_ERROR("read_block_data failed. nr:%d, addr:0x%x, reg:0x%x, rv:%d.",
+    WB_UDC9000_ERROR("read_block_data failed. nr:  %d, addr: 0x%x, reg: 0x%x, rv: %d\n",
         client->adapter->nr, client->addr, command, rv);
     return rv;
 }
@@ -537,8 +582,7 @@ static int ucd9000_probe(struct i2c_client *client)
     int i, ret;
 
     if (!i2c_check_functionality(client->adapter,
-                     I2C_FUNC_SMBUS_BYTE_DATA |
-                     I2C_FUNC_SMBUS_BLOCK_DATA))
+                     I2C_FUNC_SMBUS_BYTE_DATA))
         return -ENODEV;
 
     ret = wb_i2c_smbus_read_block_data(client, UCD9000_DEVICE_ID,
@@ -591,7 +635,8 @@ static int ucd9000_probe(struct i2c_client *client)
     }
 
     /* The internal temperature sensor is always active */
-    info->func[0] = PMBUS_HAVE_TEMP;
+    /* ucd90160 have no temperature */
+    /* info->func[0] = PMBUS_HAVE_TEMP; */
 
     /* Everything else is configurable */
     ret = wb_i2c_smbus_read_block_data(client, UCD9000_MONITOR_CONFIG,
