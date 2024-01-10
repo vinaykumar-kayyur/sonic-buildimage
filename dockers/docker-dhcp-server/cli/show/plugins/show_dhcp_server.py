@@ -30,11 +30,9 @@ def ipv4():
 
 
 @ipv4.command()
-@click.argument('dhcp_interface', required=False)
+@click.argument('dhcp_interface', required=False, default="*")
 @clicommon.pass_db
 def lease(db, dhcp_interface):
-    if not dhcp_interface:
-        dhcp_interface = "*"
     headers = ["Interface", "MAC Address", "IP", "Lease Start", "Lease End"]
     table = []
     dbconn = db.db
@@ -55,11 +53,9 @@ def count_ipv4(start, end):
 
 
 @ipv4.command()
-@click.argument('range_name', required=False)
+@click.argument('range_name', required=False, default="*")
 @clicommon.pass_db
 def range(db, range_name):
-    if not range_name:
-        range_name = "*"
     headers = ["Range", "IP Start", "IP End", "IP Count"]
     table = []
     dbconn = db.db
@@ -93,12 +89,10 @@ def dhcp_interface_is_match(input_, key):
 
 
 @ipv4.command()
-@click.argument('dhcp_interface', required=False)
+@click.argument('dhcp_interface', required=False, default="*")
 @click.option('--with_customized_options', default=False, is_flag=True)
 @clicommon.pass_db
 def info(db, dhcp_interface, with_customized_options):
-    if not dhcp_interface:
-        dhcp_interface = "*"
     headers = ["Interface", "Mode", "Gateway", "Netmask", "Lease Time(s)", "State"]
     if with_customized_options:
         headers.append("Customized Options")
@@ -114,11 +108,9 @@ def info(db, dhcp_interface, with_customized_options):
 
 
 @ipv4.command()
-@click.argument("option_name", required=False)
+@click.argument("option_name", required=False, default="*")
 @clicommon.pass_db
 def option(db, option_name):
-    if not option_name:
-        option_name = "*"
     headers = ["Option Name", "Option ID", "Value", "Type"]
     table = []
     dbconn = db.db
@@ -130,11 +122,9 @@ def option(db, option_name):
 
 
 @ipv4.command()
-@click.argument('interface', required=False)
+@click.argument('interface', required=False, default="*")
 @clicommon.pass_db
 def port(db, interface):
-    if not interface:
-        interface = "*"
     headers = ["Interface", "Bind"]
     table = []
     dbconn = db.db
