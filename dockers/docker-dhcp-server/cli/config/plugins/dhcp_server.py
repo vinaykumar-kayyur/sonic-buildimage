@@ -242,7 +242,7 @@ def dhcp_server_ipv4_range_update(db, range_name, ip_start, ip_end):
 @dhcp_server_ipv4_range.command(name="del")
 @click.argument("range_name", required=True)
 @clicommon.pass_db
-def dhcp_sever_ipv4_range_del(db, range_name)
+def dhcp_sever_ipv4_range_del(db, range_name):
     ctx = click.get_current_context()
     dbconn = db.db
     key = "DHCP_SERVER_IPV4_RANGE|" + range_name
