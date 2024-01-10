@@ -1461,7 +1461,7 @@ def select_mmu_profiles(profile, platform, hwsku):
 def is_ipv4(address):
     # encode and decode to unicode, because when address is bytes type, ip_network will throw AddressValueError
     # set strict to False because address may set host bit, for example 192.168.0.1/24
-    return isinstance(ipaddress.ip_network(address.encode().decode(), False), ipaddress.IPv4Network)
+    return isinstance(ipaddress.ip_network(UNICODE_TYPE(address), False), ipaddress.IPv4Network)
 
 def update_forced_mgmt_route(mgmt_intf, mgmt_routes):
     for mgmt_intf_key in mgmt_intf.keys():
@@ -1477,7 +1477,7 @@ def update_forced_mgmt_route(mgmt_intf, mgmt_routes):
                 route_is_ipv4 = is_ipv4(mgmt_route)
                 if mgmt_is_ipv4 == route_is_ipv4:
                     forced_mgmt_routes.append(mgmt_route)
-        except Exception as e:
+        except ValueError as e:
             print("Warning: invalid management routes in minigraph, exception: {}".format(e), file=sys.stderr)
             continue
 
