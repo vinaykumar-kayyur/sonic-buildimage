@@ -215,7 +215,7 @@ def dhcp_server_ipv4_range_add(db, range_name, ip_start, ip_end):
     if dbconn.exists("CONFIG_DB", key):
         ctx.fail("Range {} already exist".format(range_name))
     else:
-        db.hmset("CONFIG_DB", key, {"range": ip_start + "," + ip_end})
+        dbconn.hmset("CONFIG_DB", key, {"range": ip_start + "," + ip_end})
 
 
 @dhcp_server_ipv4_range.command(name="update")
@@ -234,7 +234,7 @@ def dhcp_server_ipv4_range_update(db, range_name, ip_start, ip_end):
     dbconn = db.db
     key = "DHCP_SERVER_IPV4_RANGE|" + range_name
     if dbconn.exists("CONFIG_DB", key):
-        db.set("CONFIG_DB", key, "range", ip_start + "," + ip_end)
+        dbconn.set("CONFIG_DB", key, "range", ip_start + "," + ip_end)
     else:
         ctx.fail("Range {} does not exist, cannot update".format(range_name))
 
