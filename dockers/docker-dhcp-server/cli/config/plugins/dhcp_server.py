@@ -249,7 +249,7 @@ def dhcp_sever_ipv4_range_del(db, range_name, force):
     key = "DHCP_SERVER_IPV4_RANGE|" + range_name
     if dbconn.exists("CONFIG_DB", key):
         if not force:
-            for port in dhconn.keys("CONFIG_DB", "DHCP_SERVER_IPV4_PORT*"):
+            for port in dbconn.keys("CONFIG_DB", "DHCP_SERVER_IPV4_PORT*"):
                 ranges = dbconn.get("CONFIG_DB", port, "ranges")
                 if ranges and range_name in ranges.split(","):
                     ctx.fail("Range {} is referenced in {}, cannot delete, add --force to bypass".format(range_name, port))
