@@ -340,7 +340,7 @@ class TestConfigDHCPServer(object):
         runner = CliRunner()
         db = clicommon.Db()
         db.db = mock_db
-        result = runner.invoke(dhcp_server.dhcp_server.commands["ipv4"].commands["range"].commands["delete"], \
+        result = runner.invoke(dhcp_server.dhcp_server.commands["ipv4"].commands["range"].commands["del"], \
                 ["range2"], obj=db)
         assert result.exit_code == 0, "exit code: {}, Exception: {}, Traceback: {}".format(result.exit_code, result.exception, result.exc_info)
         assert mock_db.exists("CONFIG_DB", "DHCP_SERVER_IPV4_RANGE|range2") == False
@@ -349,7 +349,7 @@ class TestConfigDHCPServer(object):
         runner = CliRunner()
         db = clicommon.Db()
         db.db = mock_db
-        result = runner.invoke(dhcp_server.dhcp_server.commands["ipv4"].commands["range"].commands["delete"], \
+        result = runner.invoke(dhcp_server.dhcp_server.commands["ipv4"].commands["range"].commands["del"], \
                 ["range4"], obj=db)
         assert result.exit_code == 2, "exit code: {}, Exception: {}, Traceback: {}".format(result.exit_code, result.exception, result.exc_info)
 
@@ -357,7 +357,7 @@ class TestConfigDHCPServer(object):
         runner = CliRunner()
         db = clicommon.Db()
         db.db = mock_db
-        result = runner.invoke(dhcp_server.dhcp_server.commands["ipv4"].commands["range"].commands["delete"], \
+        result = runner.invoke(dhcp_server.dhcp_server.commands["ipv4"].commands["range"].commands["del"], \
                 ["range1"], obj=db)
         assert result.exit_code == 2, "exit code: {}, Exception: {}, Traceback: {}".format(result.exit_code, result.exception, result.exc_info)
 
@@ -365,8 +365,8 @@ class TestConfigDHCPServer(object):
         runner = CliRunner()
         db = clicommon.Db()
         db.db = mock_db
-        result = runner.invoke(dhcp_server.dhcp_server.commands["ipv4"].commands["range"].commands["delete"], \
-                ["range1"], obj=db)
+        result = runner.invoke(dhcp_server.dhcp_server.commands["ipv4"].commands["range"].commands["del"], \
+                ["range1", "--force"], obj=db)
         assert result.exit_code == 0, "exit code: {}, Exception: {}, Traceback: {}".format(result.exit_code, result.exception, result.exc_info)
         assert mock_db.exists("CONFIG_DB", "DHCP_SERVER_IPV4_RANGE|range1") == False
 
