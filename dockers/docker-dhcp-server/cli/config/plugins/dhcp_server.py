@@ -241,12 +241,18 @@ def dhcp_server_ipv4_range_update(db, range_name, ip_start, ip_end):
 
 @dhcp_server_ipv4_range.command(name="del")
 @click.argument("range_name", required=True)
+@click.option("--force", required=False, default=False, is_flag=True)
 @clicommon.pass_db
-def dhcp_sever_ipv4_range_del(db, range_name):
+def dhcp_sever_ipv4_range_del(db, range_name, force):
     ctx = click.get_current_context()
     dbconn = db.db
     key = "DHCP_SERVER_IPV4_RANGE|" + range_name
     if dbconn.exists("CONFIG_DB", key):
+        if not force:
+            for port in dhconn.keys("CONFIG_DB", "DHCP_SERVER_IPV4_PORT*"):
+                ranges = dbconn.get("CONFIG_DB", port, "ranges")
+                if ranges and range_name in ranges.split(","):
+                    ctx.fail("Range {} is referenced in {}, cannot delete, add --force to bypass".format(range_name, port))
         dbconn.delete("CONFIG_DB", key)
     else:
         ctx.fail("Range {} does not exist, cannot delete".format(range_name))

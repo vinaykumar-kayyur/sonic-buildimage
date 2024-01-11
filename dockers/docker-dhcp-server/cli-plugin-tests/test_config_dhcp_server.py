@@ -341,9 +341,9 @@ class TestConfigDHCPServer(object):
         db = clicommon.Db()
         db.db = mock_db
         result = runner.invoke(dhcp_server.dhcp_server.commands["ipv4"].commands["range"].commands["delete"], \
-                ["range1"], obj=db)
+                ["range2"], obj=db)
         assert result.exit_code == 0, "exit code: {}, Exception: {}, Traceback: {}".format(result.exit_code, result.exception, result.exc_info)
-        assert mock_db.exists("CONFIG_DB", "DHCP_SERVER_IPV4_RANGE|range1") == False
+        assert mock_db.exists("CONFIG_DB", "DHCP_SERVER_IPV4_RANGE|range2") == False
 
     def test_config_dhcp_server_ipv4_range_delete_nonexisting(self, mock_db):
         runner = CliRunner()
@@ -352,3 +352,21 @@ class TestConfigDHCPServer(object):
         result = runner.invoke(dhcp_server.dhcp_server.commands["ipv4"].commands["range"].commands["delete"], \
                 ["range4"], obj=db)
         assert result.exit_code == 2, "exit code: {}, Exception: {}, Traceback: {}".format(result.exit_code, result.exception, result.exc_info)
+
+    def test_config_dhcp_server_ipv4_range_delete_referenced(self, mock_db):
+        runner = CliRunner()
+        db = clicommon.Db()
+        db.db = mock_db
+        result = runner.invoke(dhcp_server.dhcp_server.commands["ipv4"].commands["range"].commands["delete"], \
+                ["range1"], obj=db)
+        assert result.exit_code == 2, "exit code: {}, Exception: {}, Traceback: {}".format(result.exit_code, result.exception, result.exc_info)
+
+    def test_config_dhcp_server_ipv4_range_delete_referenced_force(self, mock_db):
+        runner = CliRunner()
+        db = clicommon.Db()
+        db.db = mock_db
+        result = runner.invoke(dhcp_server.dhcp_server.commands["ipv4"].commands["range"].commands["delete"], \
+                ["range1"], obj=db)
+        assert result.exit_code == 0, "exit code: {}, Exception: {}, Traceback: {}".format(result.exit_code, result.exception, result.exc_info)
+        assert mock_db.exists("CONFIG_DB", "DHCP_SERVER_IPV4_RANGE|range1") == False
+
