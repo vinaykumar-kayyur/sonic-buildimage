@@ -468,11 +468,11 @@ int on_shell_execve (char *user, int shell_level, char *cmd, char **argv)
             break;
             case -2:
                 // -2 means no servers, so not authorized
-                fprintf(stdout, "%s not authorized by TACACS+ with given arguments\n", cmd);
+                fprintf(stdout, "%s not authorized by TACACS+ with given arguments, not executing\n", cmd);
             break;
             default:
                 // when command reject by server, authorization will failed immediately
-                fprintf(stdout, "%s authorize failed by TACACS+ with given arguments\n", cmd);
+                fprintf(stdout, "%s authorize failed by TACACS+ with given arguments, not executing\n", cmd);
                 return ret;
         }
 
