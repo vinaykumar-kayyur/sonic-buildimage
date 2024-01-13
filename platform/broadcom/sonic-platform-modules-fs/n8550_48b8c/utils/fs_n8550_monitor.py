@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 #
-# Copyright (C) 2017 Accton Technology Corporation
-#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
@@ -13,14 +11,7 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-# ------------------------------------------------------------------
-# HISTORY:
-#    mm/dd/yyyy (A.D.)
-#    3/23/2018: Roy Lee modify for as7326_56x
-#    6/26/2018: Jostar implement by new thermal policy from HW RD
-# ------------------------------------------------------------------
+# along with this program. 
 
 try:
     import getopt

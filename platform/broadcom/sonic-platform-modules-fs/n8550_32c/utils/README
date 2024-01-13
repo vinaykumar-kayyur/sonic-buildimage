@@ -19,12 +19,12 @@ Contents of this package:
                     for kernel configuration.
             driver-i2c-muxes-pca954x-always-deselect.patch 
                     for i2c_mux deselects after transaction.
-            driver-patches-for-accton-as5712-fan-psu-cpld.patch
-                    for as5712's fan/psu/cpld/led/sfp drivers.
+            driver-patches-for-fs-n8550-fan-psu-cpld.patch
+                    for n8550's fan/psu/cpld/led/sfp drivers.
         for ONIE:
             onie_installer-fs-N8550-32C.patch 
                     for console port setting and copy util script o rootfs.
-  module - Contains source code of as5712 kernel driver modules.
+  module - Contains source code of n8550 kernel driver modules.
 
 The late Sonic building scripts, pushed @Dec 5 2016, will automatically 
 create a docker container and run building process under it.
@@ -43,7 +43,7 @@ User is not necessary to handle docker environment creation.
 3. Build installer 
   - Change directory back to sonic-buildimage/.
   - Get onie_installer-fs-N8550-32C.patch" from patch/installer.
-  - Change setting for AS5712-54X by patching build_image.sh.
+  - Change setting for N8550-32C by patching build_image.sh.
     "patch -p1 < onie_installer-fs-N8550-32C.patch"
     !!NOTICE, patching onie_installer-fs-N8550-32C.patch comments out the
     "git status" checking at build_image.sh.
@@ -60,11 +60,11 @@ All Linux kernel code is licensed under the GPLv1. All other code is
 licensed under the GPLv3. Please see the LICENSE file for copies of
 both licenses.
 
-The code for integacting with Accton AS5712-54X has 2 parts, 
+The code for integacting with FS N8550-32C has 2 parts, 
 kernel drivers and operational script. 
 The kernel drivers of peripherals are under module/ directory.
 1.  These drivers are patched into kernel by 
-    driver-patches-for-accton-as5712-fan-psu-cpld.patch
+    driver-patches-for-fs-n8550-fan-psu-cpld.patch
     Or you can build the driver under module/ by setting environment variable, 
     KERNEL_SRC, to proper linux built directory and run make. 
     It may be sonic-linux-kernel/linux-3.*/debian/build/build_amd64_none_amd64/.
