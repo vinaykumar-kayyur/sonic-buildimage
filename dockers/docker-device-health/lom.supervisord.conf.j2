@@ -52,7 +52,7 @@ dependent_startup_wait_for=start:exited
 
 {% for proc in procs %}
 [program:LoMPluginMgr-{{ proc }}]
-command=/usr/bin/LoMPluginMgr -proc_id={{ proc }}
+command=/usr/bin/LoMPluginMgr -proc_id={{ proc }} -syslog_level 4
 priority=3
 autostart=false
 autorestart=false
