@@ -177,25 +177,6 @@ class Chassis(PddfChassis):
                              index, len(self._sfp_list)))
         return sfp
 
-    def set_system_led(self, led_device_name, color):
-        """
-        Sets the color of an System LED device
-        Args:
-           led_device_name: a pre-defined LED device name list used in pddf-device.json.
-           color: A string representing the color with which to set a LED
-        Returns:
-           bool: True if the LED state is set successfully, False if not
-        """
-
-        if led_device_name in self.plugin_data['LED']['capability']['rw']:
-            result, msg  = self.pddf_obj.set_system_led_color(led_device_name, color)
-            if not result and msg:
-                print(msg)
-            return (result)
-        else:
-            print("Not Support")
-            return False            
-
     def get_reboot_cause(self):
         """
         Retrieves the cause of the previous reboot
