@@ -258,6 +258,108 @@ def dhcp_sever_ipv4_range_del(db, range_name, force):
         ctx.fail("Range {} does not exist, cannot delete".format(range_name))
 
 
+@dhcp_server_ipv4.command(name="bind")
+@click.argument("vlan_interface", required=True)
+@click.argument("interface", required=True)
+@click.option("--range", "range_", required=False)
+@click.argument("ip_list", required=False)
+@clicommon.pass_db
+def dhcp_server_ipv4_ip_bind(db, vlan_interface, interface, range_, ip_list):
+    ctx = click.get_current_context()
+    dbconn = db.db
+    vlan_prefix = "VLAN_INTERFACE|" + vlan_interface + "|"
+    subnets = [ipaddress.ip_network(key[len(vlan_prefix):]) for key in dbconn.keys("CONFIG_DB", vlan_prefix + "*")]
+    if range_:
+        range_ = set(range_.split(","))
+        for r in range_:
+            if not dbconn.exists("CONFIG_DB", "DHCP_SERVER_IPV4_RANGE|" + r):
+                ctx.fail("Cannot bind nonexistent range {} to interface".format(r))
+            ip_range = dbconn.get("CONFIG_DB", "DHCP_SERVER_IPV4_RANGE|" + r, "range").split(",")
+            if len(ip_range) == 1:
+                ip_start = ip_range[0]
+                ip_end = ip_range[0]
+            if len(ip_range) == 2:
+                ip_start = ip_range[0]
+                ip_end = ip_range[1]
+            if not any([ipaddress.ip_address(ip_start) in subnet and ipaddress.ip_address(ip_end) in subnet for subnet in subnets]):
+                ctx.fail("Range {} is not in any subnet of vlan {}".format(r, vlan_interface))
+    if ip_list:
+        ip_list = set(ip_list.split(","))
+        for ip in ip_list:
+            if not validate_str_type("ipv4-address", ip):
+                ctx.fail("Illegal IP address {}".format(ip))
+            if not any([ipaddress.ip_address(ip) in subnet for subnet in subnets]):
+                ctx.fail("IP {} is not in any subnet of vlan {}".format(ip, vlan_interface))
+    if range_ and ip_list or not range_ and not ip_list:
+        ctx.fail("Only one of range and ip list need to be provided")
+    key = "DHCP_SERVER_IPV4_PORT|" + vlan_interface + "|" + interface
+    if dbconn.exists("CONFIG_DB", key):
+        ips = dbconn.get("CONFIG_DB", key, "ips")
+        ranges = dbconn.get("CONFIG_DB", key, "ranges")
+        if ips and range_ or ranges and ip_list:
+            ctx.fail("IP bind cannot have ip range and ip list configured at the same time")
+        if range_:
+            range_set= set(ranges.split(",")) if ranges else set()
+            range_set = range_set.union(range_)
+            dbconn.set("CONFIG_DB", key, "ranges", ",".join(range_set))
+        if ip_list:
+            ip_set= set(ips.split(",")) if ips else set()
+            ip_set = ip_set.union(ip_list)
+            dbconn.set("CONFIG_DB", key, "ips", ",".join(ip_set))
+    elif range_:
+        dbconn.hmset("CONFIG_DB", key, {"ranges": ",".join(range_)})
+    elif ip_list:
+        dbconn.hmset("CONFIG_DB", key, {"ips": ",".join(ip_list)})
+
+
+@dhcp_server_ipv4.command(name="unbind")
+@click.argument("vlan_interface", required=True)
+@click.argument("interface", required=True)
+@click.option("--range", "range_", required=False)
+@click.argument("ip_list", required=False)
+@clicommon.pass_db
+def dhcp_server_ipv4_ip_unbind(db, vlan_interface, interface, range_, ip_list):
+    ctx = click.get_current_context()
+    dbconn = db.db
+    key = "DHCP_SERVER_IPV4_PORT|" + vlan_interface + "|" + interface
+    if ip_list == "all":
+        dbconn.delete("CONFIG_DB", key)
+        return
+    if range_:
+        range_ = set(range_.split(","))
+    if ip_list:
+        ip_list = set(ip_list.split(","))
+    if range_ and ip_list or not range_ and not ip_list:
+        ctx.fail("Only one of range and ip list need to be provided")
+    if dbconn.exists("CONFIG_DB", key):
+        ips = dbconn.get("CONFIG_DB", key, "ips")
+        ranges = dbconn.get("CONFIG_DB", key, "ranges")
+        if range_:
+            range_set= set(ranges.split(",")) if ranges else set()
+            if range_set.issuperset(range_):
+                range_set = range_set.difference(range_)
+                if range_set:
+                    dbconn.set("CONFIG_DB", key, "ranges", ",".join(range_set))
+                else:
+                    dbconn.delete("CONFIG_DB", key)
+            else:
+                ctx.fail("Attempting to unbind range that is not binded")
+        if ip_list:
+            ip_set= set(ips.split(",")) if ips else set()
+            if ip_set.issuperset(ip_list):
+                ip_set = ip_set.difference(ip_list)
+                if ip_set:
+                    dbconn.set("CONFIG_DB", key, "ips", ",".join(ip_set))
+                else:
+                    dbconn.delete("CONFIG_DB", key)
+            else:
+                ctx.fail("Attempting to unbind ip that is not binded")
+    elif range_:
+        ctx.fail("The specified vlan and interface are not bind to ip range")
+    elif ip_list:
+        ctx.fail("The specified vlan and interface are not bind to ip list")
+
+
 def register(cli):
     # cli.add_command(dhcp_server)
     pass
