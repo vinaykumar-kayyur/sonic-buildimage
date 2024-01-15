@@ -5,6 +5,7 @@
 #include <linux/ctype.h>
 #include <linux/slab.h>
 #include <linux/uaccess.h>
+#include <linux/uio.h>
 #include <firmware_sysfs.h>
 #include <firmware_sysfs_upgrade.h>
 #include <firmware_upgrade.h>
@@ -14,6 +15,11 @@ static int firmware_file_read(const char *path, uint32_t addr, uint8_t *val, siz
     int ret;
     struct file *filp;
     loff_t pos;
+    struct kvec iov = {
+        .iov_base = val,
+        .iov_len = min_t(size_t, size, MAX_RW_COUNT),
+    };
+    struct iov_iter iter;
 
     filp = filp_open(path, O_RDONLY, 0);
     if (IS_ERR(filp)) {
@@ -23,9 +29,10 @@ static int firmware_file_read(const char *path, uint32_t addr, uint8_t *val, siz
     }
 
     pos = (loff_t)addr;
-    ret = kernel_read(filp, val, size, &pos);
+    iov_iter_kvec(&iter, ITER_DEST, &iov, 1, iov.iov_len);
+    ret = vfs_iter_read(filp, &iter, &pos, 0);
     if (ret != size) {
-        FIRMWARE_DRIVER_DEBUG_ERROR("read kernel_read failed, path=%s, addr=%d, size=%ld, ret=%d\r\n", path, addr, size, ret);
+        FIRMWARE_DRIVER_DEBUG_ERROR("vfs_iter_read failed, path=%s, addr=%d, size=%ld, ret=%d\r\n", path, addr, size, ret);
         goto exit;
     }
     filp_close(filp, NULL);
@@ -45,6 +52,11 @@ static int firmware_file_write(const char *path, uint32_t addr, uint8_t *val, si
     int ret;
     struct file *filp;
     loff_t pos;
+    struct kvec iov = {
+        .iov_base = val,
+        .iov_len = min_t(size_t, size, MAX_RW_COUNT),
+    };
+    struct iov_iter iter;
 
     filp = filp_open(path, O_RDWR, 777);
     if (IS_ERR(filp)) {
@@ -54,9 +66,10 @@ static int firmware_file_write(const char *path, uint32_t addr, uint8_t *val, si
     }
 
     pos = (loff_t)addr;
-    ret = kernel_write(filp, (void*)val, size, &pos);
+    iov_iter_kvec(&iter, ITER_SOURCE, &iov, 1, iov.iov_len);
+    ret = vfs_iter_write(filp, &iter, &pos, 0);
     if (ret < 0) {
-        FIRMWARE_DRIVER_DEBUG_ERROR("write kernel_write failed, path=%s, addr=%d, size=%ld, ret=%d\r\n", path, addr, size, ret);
+        FIRMWARE_DRIVER_DEBUG_ERROR("vfs_iter_write failed, path=%s, addr=%d, size=%ld, ret=%d\r\n", path, addr, size, ret);
         goto exit;
     }
     vfs_fsync(filp, 1);

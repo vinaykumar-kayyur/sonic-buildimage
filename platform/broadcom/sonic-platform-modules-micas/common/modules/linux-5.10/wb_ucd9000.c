@@ -19,6 +19,8 @@
 #include <linux/delay.h>
 #include "wb_pmbus.h"
 
+#define mem_clear(data, size) memset((data), 0, (size))
+
 enum chips { ucd9000, ucd90120, ucd90124, ucd90160, ucd90320, ucd9090,
          ucd90910 };
 
@@ -117,7 +119,7 @@ static int wb_i2c_smbus_read_block_data_tmp(const struct i2c_client *client, u8 
         return -ENOMEM;
     }
 
-    memset(msg, 0, sizeof(msg));
+    mem_clear(msg, sizeof(msg));
     msg[0].addr = client->addr;
     msg[0].buf = &command;
     msg[0].len = 1;

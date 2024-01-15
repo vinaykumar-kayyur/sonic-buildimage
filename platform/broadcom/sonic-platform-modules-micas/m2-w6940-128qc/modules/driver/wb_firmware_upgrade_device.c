@@ -10,7 +10,7 @@
 #include <linux/platform_device.h>
 #include <firmware_upgrade.h>
 
-#define GPIO_D1700_OFFSET  (275)
+#define GPIO_D1700_OFFSET  (10003)
 
 static int g_wb_firmware_upgrade_debug = 0;
 static int g_wb_firmware_upgrade_error = 0;
