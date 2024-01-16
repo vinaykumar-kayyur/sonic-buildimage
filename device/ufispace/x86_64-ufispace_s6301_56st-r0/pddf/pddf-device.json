@@ -1147,6 +1147,24 @@
                     "attr_len": "2"
                 },
                 {
+                    "attr_name": "psu_v_out_min",
+                    "attr_devaddr": "0x59",
+                    "attr_devtype": "pmbus",
+                    "attr_offset": "0xa4",
+                    "attr_mask": "0x0",
+                    "attr_cmpval": "0xff",
+                    "attr_len": "2"
+                },
+                {
+                    "attr_name": "psu_v_out_max",
+                    "attr_devaddr": "0x59",
+                    "attr_devtype": "pmbus",
+                    "attr_offset": "0xa5",
+                    "attr_mask": "0x0",
+                    "attr_cmpval": "0xff",
+                    "attr_len": "2"
+                },
+                {
                     "attr_name": "psu_i_out",
                     "attr_devaddr": "0x59",
                     "attr_devtype": "pmbus",
@@ -1160,6 +1178,15 @@
                     "attr_devaddr": "0x59",
                     "attr_devtype": "pmbus",
                     "attr_offset": "0x96",
+                    "attr_mask": "0x0",
+                    "attr_cmpval": "0xff",
+                    "attr_len": "2"
+                },
+                {
+                    "attr_name": "psu_p_out_max",
+                    "attr_devaddr": "0x59",
+                    "attr_devtype": "pmbus",
+                    "attr_offset": "0xa7",
                     "attr_mask": "0x0",
                     "attr_cmpval": "0xff",
                     "attr_len": "2"
