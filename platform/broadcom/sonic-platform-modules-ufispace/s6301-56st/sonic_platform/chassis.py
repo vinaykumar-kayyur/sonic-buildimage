@@ -39,7 +39,7 @@ class Chassis(PddfChassis):
         Returns:
             string: The name of the chassis
         """
-        return device_info.get_platform()
+        return self._eeprom.platform_name_str()
 
     def initizalize_system_led(self):
         return True
