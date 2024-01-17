@@ -10,7 +10,7 @@ except ImportError as e:
 class Psu(PddfPsu):
     """PDDF Platform-Specific PSU class"""
     
-    PLATFORM_PSU_CAPACITY = 2000
+    PLATFORM_PSU_CAPACITY = 1300
 
     def __init__(self, index, pddf_data=None, pddf_plugin_data=None):
         PddfPsu.__init__(self, index, pddf_data, pddf_plugin_data)
