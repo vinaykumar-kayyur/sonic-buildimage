@@ -271,6 +271,8 @@ sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install docker-ce=${DOCKER_VERSIO
 
 install_kubernetes () {
     local ver="$1"
+    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get update
+    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install gnupg
     sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT curl -fsSL \
         https://packages.cloud.google.com/apt/doc/apt-key.gpg | \
         sudo LANG=C chroot $FILESYSTEM_ROOT apt-key add -
@@ -299,8 +301,7 @@ then
     install_kubernetes ${MASTER_KUBERNETES_VERSION}
 
     sudo LANG=C chroot $FILESYSTEM_ROOT apt-get update
-    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install hyperv-daemons gnupg xmlstarlet parted netcat
-    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y remove gnupg
+    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install hyperv-daemons xmlstarlet parted netcat
     sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT curl -o /tmp/cri-dockerd.deb -fsSL \
         https://github.com/Mirantis/cri-dockerd/releases/download/v${MASTER_CRI_DOCKERD}/cri-dockerd_${MASTER_CRI_DOCKERD}.3-0.debian-${IMAGE_DISTRO}_amd64.deb
     sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install -f /tmp/cri-dockerd.deb
