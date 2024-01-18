@@ -267,6 +267,8 @@ def dhcp_sever_ipv4_range_del(db, range_name, force):
 def dhcp_server_ipv4_ip_bind(db, dhcp_interface, member_interface, range_, ip_list):
     ctx = click.get_current_context()
     dbconn = db.db
+    if not dbconn.exists("CONFIG_DB", "VLAN_MEMBER|" + dhcp_interface + "|" + member_interface):
+        ctx.fail("Cannot confirm member interface {} is really in dhcp interface {}".format(member_interface, dhcp_interface))
     vlan_prefix = "VLAN_INTERFACE|" + dhcp_interface + "|"
     subnets = [ipaddress.ip_network(key[len(vlan_prefix):], strict=False) for key in dbconn.keys("CONFIG_DB", vlan_prefix + "*")]
     if range_:

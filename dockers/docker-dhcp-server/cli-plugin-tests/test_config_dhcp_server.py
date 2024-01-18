@@ -460,6 +460,14 @@ class TestConfigDHCPServer(object):
                 ["Vlan100", "Ethernet4", "100.1.2.10"], obj=db)
         assert result.exit_code == 2, "exit code: {}, Exception: {}, Traceback: {}".format(result.exit_code, result.exception, result.exc_info)
 
+    def test_config_dhcp_server_ipv4_bind_interface_not_in_vlan(self, mock_db):
+        runner = CliRunner()
+        db = clicommon.Db()
+        db.db = mock_db
+        result = runner.invoke(dhcp_server.dhcp_server.commands["ipv4"].commands["bind"], \
+                ["Vlan100", "Ethernet5", "100.1.1.10"], obj=db)
+        assert result.exit_code == 2, "exit code: {}, Exception: {}, Traceback: {}".format(result.exit_code, result.exception, result.exc_info)
+
     def test_config_dhcp_server_ipv4_bind_range_and_ip(self, mock_db):
         runner = CliRunner()
         db = clicommon.Db()
