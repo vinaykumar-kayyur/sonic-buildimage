@@ -297,7 +297,7 @@ def dhcp_server_ipv4_ip_bind(db, dhcp_interface, member_interface, range_, ip_li
     key = "DHCP_SERVER_IPV4_PORT|" + dhcp_interface + "|" + member_interface
     key_exist = dbconn.exists("CONFIG_DB", key)
     for bind_value_name, bind_value in [["ips", ip_list], ["ranges", range_]]:
-        if key_exits:
+        if key_exist:
             existing_value = dbconn.get("CONFIG_DB", key, bind_value_name)
             if (not not existing_value) == (not bind_value):
                 ctx.fail("IP bind cannot have ip range and ip list configured at the same time")
