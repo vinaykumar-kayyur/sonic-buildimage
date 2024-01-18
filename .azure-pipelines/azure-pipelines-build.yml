@@ -124,6 +124,8 @@ jobs:
       - template: .azure-pipelines/template-daemon.yml@buildimage
       - bash: |
           set -ex
+          echo "$BUILD_OPTIONS"
+          echo "$(K8S_OPTIONS)"
           if [ $(GROUP_NAME) == pensando ]; then
             make $BUILD_OPTIONS target/sonic-pensando.tar
           elif [ $(GROUP_NAME) == vs ]; then
@@ -136,7 +138,7 @@ jobs:
               mv target/docker-sonic-vs.gz target/docker-sonic-vs-asan.gz
             fi
             if [ "$(K8S_OPTIONS)" == 'INCLUDE_KUBERNETES_MASTER=y' ]; then
-              make $BUILD_OPTIONS $(K8S_OPTIONS) target/sonic-vs.img.gz
+              make $BUILD_OPTIONS INCLUDE_KUBERNETES_MASTER=y target/sonic-vs.img.gz
               mv target/sonic-vs.img.gz target/sonic-vs-k8s.img.gz
             fi
             make $BUILD_OPTIONS target/docker-sonic-vs.gz target/sonic-vs.img.gz target/docker-ptf.gz
