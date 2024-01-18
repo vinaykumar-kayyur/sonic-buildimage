@@ -12,6 +12,8 @@
     },
     "VLAN_INTERFACE|Vlan300": {
     },
+    "VLAN_MEMBER|Vlan100|Ethernet2": {
+    },
     "VLAN_MEMBER|Vlan100|Ethernet4": {
     },
     "VLAN_MEMBER|Vlan100|Ethernet7": {
