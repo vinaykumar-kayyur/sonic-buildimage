@@ -86,6 +86,9 @@ class BgpStateGet:
                 if rc:
                     syslog.syslog(syslog.LOG_ERR, "*ERROR* Failed with rc:{} when execute: {}".format(rc, cmd))
                     return
+                if len(output) == 0:
+                    syslog.syslog(syslog.LOG_WARNING, "*WARNING* output none when execute: {}".format(cmd))
+                    return
 
                 peer_info = json.loads(output)
                 # cmd ran successfully, safe to Clean the "new" set/dict for new snapshot
