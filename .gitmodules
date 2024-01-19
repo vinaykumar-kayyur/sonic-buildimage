@@ -112,3 +112,6 @@
 [submodule "src/dhcprelay"]
 	path = src/dhcprelay
 	url = https://github.com/sonic-net/sonic-dhcp-relay.git
+[submodule "src/dhcpmon"]
+	path = src/dhcpmon
+	url = https://github.com/sonic-net/sonic-dhcpmon.git
