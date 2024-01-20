@@ -1,0 +1,16 @@
+#!/bin/bash
+REBOOT_CAUSE_FILE="/host/reboot-cause/reboot-cause.txt"
+REBOOT_TIME=$(date)
+REBOOT_USER=$(logname)
+
+# Update the reboot cause file to reflect that user issued 'hardware-reset' command
+# Upon next boot, the contents of this file will be used to determine the
+# cause of the previous reboot
+function UpdateHwResetCause() {
+    echo "User issued 'hardware-reset' command [User: ${REBOOT_USER}, Time: ${REBOOT_TIME}]" > ${REBOOT_CAUSE_FILE}
+    sync
+    /sbin/fstrim -av
+    sleep 3
+}
+
+UpdateHwResetCause

@@ -1,0 +1,17 @@
+[Unit]
+Description=FS N8550_48B8C Platform Monitoring service
+Before=pmon.service
+After=as7326-platform-handle_mac.service
+DefaultDependencies=no
+
+[Service]
+ExecStartPre=/usr/local/bin/fs_n8550_util.py install
+ExecStart=/usr/local/bin/fs_n8550_monitor.py
+KillSignal=SIGKILL
+SuccessExitStatus=SIGKILL
+
+# Resource Limitations
+LimitCORE=infinity
+
+[Install]
+WantedBy=multi-user.target
