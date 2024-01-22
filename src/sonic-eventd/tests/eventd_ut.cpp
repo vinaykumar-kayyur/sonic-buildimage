@@ -601,7 +601,7 @@ TEST(eventd, service)
     }
 
     thread thread_service(&run_eventd_service);
-    this_thread::sleep_for(chrono::milliseconds(1000));
+    this_thread::sleep_for(chrono::milliseconds(CAPTURE_SERVICE_POLLING_DURATION * CAPTURE_SERVICE_POLLING_RETRIES));
 
     /* Need client side service to interact with server side */
     EXPECT_EQ(0, service.init_client(zctx));
@@ -617,7 +617,7 @@ TEST(eventd, service)
         string wr_source("hello");
 
         /* Test service startup caching */
-        event_serialized_lst_t evts_start, evts_read;
+        event_serialized_lst_t evts_start, evts_read, polled_events;
 
         for(int i=0; i<wr_sz; ++i) {
             string evt_str;
@@ -631,15 +631,32 @@ TEST(eventd, service)
         /* Publish events. */
         run_pub(mock_pub, wr_source, wr_evts);
 
-        /* Published events must have been captured. Give a pause, to ensure sent. */
-        this_thread::sleep_for(chrono::milliseconds(1000));
+        int max_polling_duration = 2000;
+        int polling_interval = 100;
+        auto poll_start_ts = chrono::steady_clock::now();
+
+        while(true) {
+            auto current_ts = chrono::steady_clock::now();
+	    if(chrono::duration_cast<chrono::milliseconds>(current_ts - poll_start_ts).count() >= max_polling_duration) {
+                break;
+            }
+            event_serialized_lst_t read_events;
+            service.cache_read(read_events);
+            polled_events.insert(polled_events.end(), read_events.begin(), read_events.end());
+            if (!read_events.empty()) {
+                break;
+            }
+            this_thread::sleep_for(chrono::milliseconds(polling_interval));	    
+        }
 
         EXPECT_EQ(0, service.cache_stop());
 
-        /* Read the cache; expect wr_sz events */
+        /* Read remaining events in cache, if any */
         EXPECT_EQ(0, service.cache_read(evts_read));
 
-        EXPECT_EQ(evts_read, evts_start);
+	polled_events.insert(polled_events.end(), evts_read.begin(), evts_read.end());
+
+        EXPECT_EQ(polled_events, evts_start);
 
         zmq_close(mock_pub);
     }
