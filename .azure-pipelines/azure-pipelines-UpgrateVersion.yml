@@ -40,6 +40,7 @@ parameters:
   - marvell-armhf
   - marvell-arm64
   - mellanox
+  - pensando
 
 stages:
 - stage: Prepare
