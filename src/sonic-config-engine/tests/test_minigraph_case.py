@@ -139,7 +139,10 @@ class TestCfgGenCaseInsensitive(TestCase):
     def test_minigraph_vlan_interfaces_keys(self):
         argument = ['-m', self.sample_graph, '-p', self.port_config, '-v', "VLAN_INTERFACE.keys()|list"]
         output = self.run_script(argument)
-        self.assertEqual(output.strip(), "[('Vlan1000', '192.168.0.1/27'), 'Vlan1000']")
+        expected_list_dict = {
+            'list': ['Vlan1000', 'Vlan1000|192.168.0.1/27', 'Vlan1000|192.168.1.1/27']
+        }
+        self.assertEqual(utils.liststr_to_dict(output.strip()), expected_list_dict)
 
     def test_minigraph_vlan_interfaces(self):
         argument = ['-m', self.sample_graph, '-p', self.port_config, '-v', "VLAN_INTERFACE"]
@@ -149,6 +152,9 @@ class TestCfgGenCaseInsensitive(TestCase):
             'Vlan1000': {
                 'proxy_arp': 'enabled',
                 'grat_arp': 'enabled'
+            },
+            'Vlan1000|192.168.1.1/27': {
+                'secondary': 'true'
             }
         }
         self.assertEqual(utils.to_dict(output.strip()), expected_table)
@@ -208,6 +214,7 @@ class TestCfgGenCaseInsensitive(TestCase):
 
         expected_table = {
             'switch2-t0': {
+                'cluster': 'DB5PrdApp11',
                 'lo_addr': '25.1.1.10/32',
                 'mgmt_addr': '10.7.0.196/26',
                 'hwsku': 'Force10-S6000',
@@ -228,6 +235,7 @@ class TestCfgGenCaseInsensitive(TestCase):
                 'type': 'Server'
             },
             'switch-01t1': {
+                'cluster': 'DB5PrdApp11',
                 'lo_addr': '10.1.0.186/32',
                 'deployment_id': '2',
                 'hwsku': 'Force10-S6000',
