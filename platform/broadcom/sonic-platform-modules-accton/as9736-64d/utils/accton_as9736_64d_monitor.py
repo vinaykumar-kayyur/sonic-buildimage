@@ -535,7 +535,6 @@ class device_monitor(object):
                     send_mac_shutdown_warning =1
                     stop_syncd_service()
                     logging.critical("MAC sensor for temperature high is detected, shutdown MAC chip.")
-                    sync_log_buffer_to_disk()
                     shutdown_mac()  # No return, keep monitoring.
 
             else:
