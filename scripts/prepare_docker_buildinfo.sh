@@ -7,6 +7,11 @@ grep "^# SKIP_HOOK" $2 && exit 0
 BUILDINFO_BASE=/usr/local/share/buildinfo
 
 SCRIPT_SRC_PATH=src/sonic-build-hooks
+if [ -e ${SCRIPT_SRC_PATH} ]; then
+       . ${SCRIPT_SRC_PATH}/scripts/utils.sh
+else
+       . ${BUILDINFO_BASE}/scripts/utils.sh
+fi
 
 IMAGENAME=$1
 DOCKERFILE=$2
