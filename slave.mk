@@ -33,16 +33,6 @@ FILES_PATH = $(TARGET_PATH)/files/$(BLDENV)
 PYTHON_DEBS_PATH = $(TARGET_PATH)/python-debs/$(BLDENV)
 PYTHON_WHEELS_PATH = $(TARGET_PATH)/python-wheels/$(BLDENV)
 PROJECT_ROOT := $(shell pwd)
-JESSIE_DEBS_PATH = $(TARGET_PATH)/debs/jessie
-JESSIE_FILES_PATH = $(TARGET_PATH)/files/jessie
-STRETCH_DEBS_PATH = $(TARGET_PATH)/debs/stretch
-STRETCH_FILES_PATH = $(TARGET_PATH)/files/stretch
-BUSTER_DEBS_PATH = $(TARGET_PATH)/debs/buster
-BUSTER_FILES_PATH = $(TARGET_PATH)/files/buster
-BULLSEYE_DEBS_PATH = $(TARGET_PATH)/debs/bullseye
-BULLSEYE_FILES_PATH = $(TARGET_PATH)/files/bullseye
-BOOKWORM_DEBS_PATH = $(TARGET_PATH)/debs/bookworm
-BOOKWORM_FILES_PATH = $(TARGET_PATH)/files/bookworm
 DBG_IMAGE_MARK = dbg
 DBG_SRC_ARCHIVE_FILE = $(TARGET_PATH)/sonic_src.tar.gz
 BUILD_WORKDIR = /sonic
@@ -107,25 +97,6 @@ ifneq ($(CONFIGURED_PLATFORM),generic)
 	$(Q)echo Build system is not configured, please run make configure
 	$(Q)exit 1
 endif
-
-configure :
-	$(Q)mkdir -p $(JESSIE_DEBS_PATH)
-	$(Q)mkdir -p $(STRETCH_DEBS_PATH)
-	$(Q)mkdir -p $(BUSTER_DEBS_PATH)
-	$(Q)mkdir -p $(BULLSEYE_DEBS_PATH)
-	$(Q)mkdir -p $(BOOKWORM_DEBS_PATH)
-	$(Q)mkdir -p $(FILES_PATH)
-	$(Q)mkdir -p $(JESSIE_FILES_PATH)
-	$(Q)mkdir -p $(STRETCH_FILES_PATH)
-	$(Q)mkdir -p $(BUSTER_FILES_PATH)
-	$(Q)mkdir -p $(BULLSEYE_FILES_PATH)
-	$(Q)mkdir -p $(BOOKWORM_FILES_PATH)
-	$(Q)mkdir -p $(PYTHON_DEBS_PATH)
-	$(Q)mkdir -p $(PYTHON_WHEELS_PATH)
-	$(Q)mkdir -p $(DPKG_ADMINDIR_PATH)
-	$(Q)mkdir -p $(TARGET_PATH)/vcache
-	$(Q)echo $(PLATFORM) > .platform
-	$(Q)echo $(PLATFORM_ARCH) > .arch
 
 distclean : .platform clean
 	$(Q)rm -f .platform
@@ -731,6 +702,9 @@ $(addprefix $(DEBS_PATH)/, $(SONIC_MAKE_DEBS)) : $(DEBS_PATH)/% : .platform $$(a
 	# Skip building the target if it is already loaded from cache
 	if [ -z '$($*_CACHE_LOADED)' ] ; then
 
+		exec 200<$($*_SRC_PATH)/Makefile
+		flock -x -w 3600 200
+
 		# Remove target to force rebuild
 		rm -f $(addprefix $(DEBS_PATH)/, $* $($*_DERIVED_DEBS) $($*_EXTRA_DEBS))
 		# Apply series of patches if exist
@@ -741,6 +715,7 @@ $(addprefix $(DEBS_PATH)/, $(SONIC_MAKE_DEBS)) : $(DEBS_PATH)/% : .platform $$(a
 		# Clean up
 		if [ -f $($*_SRC_PATH).patch/series ]; then pushd $($*_SRC_PATH) && quilt pop -a -f; [ -d .pc ] && rm -rf .pc; popd; fi $(LOG)
 
+		exec 200<&-
 		# Save the target deb into DPKG cache
 		$(call SAVE_CACHE,$*,$@)
 
@@ -771,6 +746,9 @@ $(addprefix $(DEBS_PATH)/, $(SONIC_DPKG_DEBS)) : $(DEBS_PATH)/% : .platform $$(a
 	# Skip building the target if it is already loaded from cache
 	if [ -z '$($*_CACHE_LOADED)' ] ; then
 
+		exec 200<$($*_SRC_PATH)/debian/rules
+		flock -x -w 3600 200
+
 		# Remove old build logs if they exist
 		rm -f $($*_SRC_PATH)/debian/*.debhelper.log
 		# Apply series of patches if exist
@@ -789,6 +767,7 @@ $(addprefix $(DEBS_PATH)/, $(SONIC_DPKG_DEBS)) : $(DEBS_PATH)/% : .platform $$(a
 		# Take built package(s)
 		mv -f $(addprefix $($*_SRC_PATH)/../, $* $($*_DERIVED_DEBS) $($*_EXTRA_DEBS)) $(DEBS_PATH) $(LOG)
 
+		exec 200<&-
 		# Save the target deb into DPKG cache
 		$(call SAVE_CACHE,$*,$@)
 	fi
@@ -926,6 +905,9 @@ $(addprefix $(PYTHON_WHEELS_PATH)/, $(SONIC_PYTHON_WHEELS)) : $(PYTHON_WHEELS_PA
 	# Skip building the target if it is already loaded from cache
 	if [ -z '$($*_CACHE_LOADED)' ] ; then
 
+		exec 200<$($*_SRC_PATH)/setup.py
+		flock -x -w 3600 200
+
 		pushd $($*_SRC_PATH) $(LOG_SIMPLE)
 		# apply series of patches if exist
 		if [ -f ../$(notdir $($*_SRC_PATH)).patch/series ]; then ( quilt pop -a -f 1>/dev/null 2>&1 || true ) && QUILT_PATCHES=../$(notdir $($*_SRC_PATH)).patch quilt push -a; fi $(LOG)
@@ -952,6 +934,7 @@ endif
 		popd $(LOG_SIMPLE)
 		mv -f $($*_SRC_PATH)/dist/$* $(PYTHON_WHEELS_PATH) $(LOG)
 
+		exec 200<&-
 		# Save the target deb into DPKG cache
 		$(call SAVE_CACHE,$*,$@)
 	fi
@@ -1681,6 +1664,8 @@ clean :: .platform clean-logs clean-versions $$(SONIC_CLEAN_DEBS) $$(SONIC_CLEAN
 ###############################################################################
 
 all : .platform $$(addprefix $(TARGET_PATH)/,$$(SONIC_ALL))
+
+bookworm : $(addprefix $(DEBS_PATH)/, $(SONIC_MAKE_DEBS))
 
 bullseye : $$(addprefix $(TARGET_PATH)/,$$(BULLSEYE_DOCKER_IMAGES)) \
           $$(addprefix $(TARGET_PATH)/,$$(BULLSEYE_DBG_DOCKER_IMAGES))

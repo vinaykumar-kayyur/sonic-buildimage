@@ -74,8 +74,10 @@ if [ ! -f $DOCKERFILE_TARGET ] || ! grep -q "Auto-Generated for buildinfo" $DOCK
 fi
 
 # Copy the build info config
-mkdir -p ${BUILDINFO_PATH}
-cp -rf src/sonic-build-hooks/buildinfo/* $BUILDINFO_PATH
+if ls /usr/local/share/buildinfo &>/dev/null ;then
+    mkdir -p ${BUILDINFO_PATH}
+    cp -f /usr/local/share/buildinfo/*.deb $BUILDINFO_PATH
+fi
 
 # Generate the version lock files
 scripts/versions_manager.py generate -t "$BUILDINFO_VERSION_PATH" -n "$IMAGENAME" -d "$DISTRO" -a "$ARCH"
