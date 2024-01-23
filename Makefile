@@ -42,32 +42,32 @@ endif
 jessie:
 ifeq ($(NOJESSIE), 0)
 	@echo "+++ Making $@ +++"
-	$(MAKE_WITH_RETRY) BLDENV=$@ -f Makefile.work $@ > target/$@.log
+	$(MAKE_WITH_RETRY) BLDENV=$@ -f Makefile.work $@ 2>&1 | tee target/$@.log
 endif
 
 stretch:
 ifeq ($(NOSTRETCH), 0)
 	@echo "+++ Making $@ +++"
-	$(MAKE_WITH_RETRY) BLDENV=$@ -f Makefile.work $@ > target/$@.log
+	$(MAKE_WITH_RETRY) BLDENV=$@ -f Makefile.work $@ 2>&1 | tee target/$@.log
 endif
 
 buster:
 ifeq ($(NOBUSTER), 0)
 	@echo "+++ Making $@ +++"
-	$(MAKE_WITH_RETRY) BLDENV=$@ -f Makefile.work DISTS=y $@ 2>&1 | tee target/$@.log
+	$(MAKE_WITH_RETRY) BLDENV=$@ -f Makefile.work $@ 2>&1 | tee target/$@.log
 endif
 
 
 bullseye:
 ifeq ($(NOBULLSEYE), 0)
 	@echo "+++ Making $@ +++"
-	$(MAKE_WITH_RETRY) BLDENV=$@ -f Makefile.work DISTS=y $@ 2>&1 | tee target/$@.log
+	$(MAKE_WITH_RETRY) BLDENV=$@ -f Makefile.work $@ 2>&1 | tee target/$@.log
 endif
 
 bookworm:
 ifeq ($(NOBOOKWORM), 0)
 	@echo "+++ Making $@ +++"
-	$(MAKE_WITH_RETRY) BLDENV=$@ -f Makefile.work DISTS=y $@ 2>&1 | tee target/$@.log
+	$(MAKE_WITH_RETRY) BLDENV=$@ -f Makefile.work $@ 2>&1 | tee target/$@.log
 endif
 
 init:
