@@ -34,6 +34,7 @@ while getopts ":a:d:e:" opt; do
             echo "[ FAIL LOG START ] [ ${OPTARG} ]"
             cat ${OPTARG}.log
             echo "[  FAIL LOG END  ] [ ${OPTARG} ]"
+            ;;
         \?)
             echo "Invalid option: -$OPTARG" >&2
             rm -f .screen
