@@ -617,21 +617,16 @@ export MIRROR_SNAPSHOT
 export SONIC_VERSION_CONTROL_COMPONENTS
 export PIP_HTTP_TIMEOUT
 
-%:
-ifneq ($(filter y, $(MULTIARCH_QEMU_ENVIRON) $(CROSS_BUILD_ENVIRON)),)
-	$(Q)$(DOCKER_MULTIARCH_CHECK)
-ifneq ($(BLDENV), )
-	$(Q)$(DOCKER_SERVICE_MULTIARCH_CHECK)
-	$(Q)$(DOCKER_SERVICE_DOCKERFS_CHECK)
-endif
-endif
-	$(Q)$(OVERLAY_MODULE_CHECK)
-	$(Q)$(SONIC_SLAVE_BASE_BUILD)
-	$(Q)$(SONIC_SLAVE_USER_BUILD)
-
+target/%: sonic-slave-build
 	$(Q)$(DOCKER_RUN) \
 		$(SLAVE_IMAGE):$(SLAVE_TAG) \
 		bash -c "$(SONIC_BUILD_INSTRUCTION) $@; $(COLLECT_BUILD_VERSION); $(SLAVE_SHELL)" 
+	$(Q)$(docker-image-cleanup)
+
+jessie stretch buster bullseye bookworm: sonic-slave-build
+	$(Q)$(DOCKER_RUN) \
+		$(SLAVE_IMAGE):$(SLAVE_TAG) \
+		bash -c "$(SONIC_BUILD_INSTRUCTION) $@; $(COLLECT_BUILD_VERSION); $(SLAVE_SHELL)"
 	$(Q)$(docker-image-cleanup)
 
 docker-cleanup:
@@ -641,9 +636,9 @@ docker-cleanup:
 sonic-build-hooks:
 	$(Q)cp -r src/sonic-build-hooks $(SLAVE_DIR); pushd $(SLAVE_DIR)/sonic-build-hooks; TRUSTED_GPG_URLS=$(TRUSTED_GPG_URLS) $(MAKE) all; popd; mkdir -p $(SLAVE_DIR)/buildinfo
 	$(Q)cp -r $(SLAVE_DIR)/sonic-build-hooks/buildinfo/*.deb $(SLAVE_DIR)/buildinfo
-#	$(Q)rm -rf $(SLAVE_DIR)/sonic-build-hooks
+	$(Q)rm -rf $(SLAVE_DIR)/sonic-build-hooks
 
-sonic-slave-base-build : | sonic-build-hooks
+sonic-slave-base-build : sonic-build-hooks
 ifeq ($(MULTIARCH_QEMU_ENVIRON), y)
 	$(Q)$(DOCKER_MULTIARCH_CHECK)
 endif
