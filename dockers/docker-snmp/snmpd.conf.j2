@@ -13,11 +13,20 @@
 #  AGENT BEHAVIOUR
 #
 
-#  Listen for connections on all ip addresses, including eth0, ipv4 lo
+# Listen for connections on all ip addresses, including eth0, ipv4 lo for multi-asic platform
+# Listen on managment and loopback0 ips for single asic platform
 #
+{% macro protocol(ip_addr) %}
+{%- if ip_addr|ipv6 -%}
+{{ 'udp6' }}
+{%- else -%}
+{{ 'udp' }}
+{%- endif -%}
+{% endmacro %}
+
 {% if SNMP_AGENT_ADDRESS_CONFIG %}
 {% for (agentip, port, vrf) in SNMP_AGENT_ADDRESS_CONFIG %}
-agentAddress {{ agentip }}{% if port %}:{{ port }}{% endif %}{% if vrf %}%{{ vrf }}{% endif %}{{ "" }}
+agentAddress {{ protocol(agentip) }}:[{{ agentip }}]{% if port %}:{{ port }}{% endif %}{% if vrf %}%{{ vrf }}{% endif %}{{ "" }}
 {% endfor %}
 {% else %}
 agentAddress udp:161

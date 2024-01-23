@@ -8,11 +8,7 @@ RUN [ -f /etc/rsyslog.conf ] && sed -ri "s/%syslogtag%/$docker_container_name#%s
 ## Make apt-get non-interactive
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get install -y gnupg
-COPY ["sonic-dev.gpg.key", "/etc/apt/"]
-RUN apt-key add /etc/apt/sonic-dev.gpg.key
-RUN echo "deb http://packages.microsoft.com/repos/sonic-dev/ jessie main" >> /etc/apt/sources.list
-RUN apt-get update
+RUN apt-get update && apt-get install -y gnupg
 
 RUN apt-get install -y net-tools \
                        arping \
@@ -147,6 +143,7 @@ COPY ["zero_profiles.json", "/etc/sonic"]
 COPY ["buffermgrd.sh", "/usr/bin/"]
 
 COPY ["platform.json", "/usr/share/sonic/device/x86_64-kvm_x86_64-r0/"]
+COPY ["platform-dpu-2p.json", "/usr/share/sonic/device/x86_64-kvm_x86_64-r0/"]
 COPY ["hwsku.json", "/usr/share/sonic/device/x86_64-kvm_x86_64-r0/Force10-S6000/"]
 COPY ["hwsku.json", "/usr/share/sonic/device/x86_64-kvm_x86_64-r0/brcm_gearbox_vs/"]
 COPY ["hwsku.json", "/usr/share/sonic/device/x86_64-kvm_x86_64-r0/Mellanox-SN2700/"]
