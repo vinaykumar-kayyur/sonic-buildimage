@@ -703,7 +703,7 @@ $(addprefix $(DEBS_PATH)/, $(SONIC_MAKE_DEBS)) : $(DEBS_PATH)/% : .platform $$(a
 	if [ -z '$($*_CACHE_LOADED)' ] ; then
 
 		exec 200<$($*_SRC_PATH)/Makefile
-		flock -x -w 3600 200
+		flock -x -w 3600 200 && echo "$$(date --iso-8601=seconds) flock success: $($*_SRC_PATH)/Makefile" $(LOG)
 
 		# Remove target to force rebuild
 		rm -f $(addprefix $(DEBS_PATH)/, $* $($*_DERIVED_DEBS) $($*_EXTRA_DEBS))
@@ -747,7 +747,7 @@ $(addprefix $(DEBS_PATH)/, $(SONIC_DPKG_DEBS)) : $(DEBS_PATH)/% : .platform $$(a
 	if [ -z '$($*_CACHE_LOADED)' ] ; then
 
 		exec 200<$($*_SRC_PATH)/debian/rules
-		flock -x -w 3600 200
+		flock -x -w 3600 200 && echo "$$(date --iso-8601=seconds) flock success: $($*_SRC_PATH)/debian/rules" $(LOG)
 
 		# Remove old build logs if they exist
 		rm -f $($*_SRC_PATH)/debian/*.debhelper.log
@@ -867,6 +867,10 @@ $(addprefix $(PYTHON_DEBS_PATH)/, $(SONIC_PYTHON_STDEB_DEBS)) : $(PYTHON_DEBS_PA
 	if [ -z '$($*_CACHE_LOADED)' ] ; then
 
 		# Apply series of patches if exist
+		exec 200<$($*_SRC_PATH)/setup.py
+		flock -x -w 3600 200 && echo "$$(date --iso-8601=seconds) flock success: $($*_SRC_PATH)/setup.py" $(LOG)
+
+		# Apply series of patches if exist
 		if [ -f $($*_SRC_PATH).patch/series ]; then pushd $($*_SRC_PATH) && ( quilt pop -a -f 1>/dev/null 2>&1 || true ) && QUILT_PATCHES=../$(notdir $($*_SRC_PATH)).patch quilt push -a; popd; fi $(LOG)
 		# Build project
 		pushd $($*_SRC_PATH) $(LOG_SIMPLE)
@@ -878,6 +882,7 @@ $(addprefix $(PYTHON_DEBS_PATH)/, $(SONIC_PYTHON_STDEB_DEBS)) : $(PYTHON_DEBS_PA
 		# Take built package(s)
 		mv -f $(addprefix $($*_SRC_PATH)/deb_dist/, $* $($*_DERIVED_DEBS)) $(PYTHON_DEBS_PATH) $(LOG)
 
+		exec 200<&-
 		# Save the target deb into DPKG cache
 		$(call SAVE_CACHE,$*,$@)
 	fi
@@ -906,16 +911,16 @@ $(addprefix $(PYTHON_WHEELS_PATH)/, $(SONIC_PYTHON_WHEELS)) : $(PYTHON_WHEELS_PA
 	if [ -z '$($*_CACHE_LOADED)' ] ; then
 
 		exec 200<$($*_SRC_PATH)/setup.py
-		flock -x -w 3600 200
+		flock -x -w 3600 200 && echo "$$(date --iso-8601=seconds) flock success: $($*_SRC_PATH)/setup.py" $(LOG)
 
 		pushd $($*_SRC_PATH) $(LOG_SIMPLE)
 		# apply series of patches if exist
 		if [ -f ../$(notdir $($*_SRC_PATH)).patch/series ]; then ( quilt pop -a -f 1>/dev/null 2>&1 || true ) && QUILT_PATCHES=../$(notdir $($*_SRC_PATH)).patch quilt push -a; fi $(LOG)
 ifneq ($(CROSS_BUILD_ENVIRON),y)
 		# Use pip instead of later setup.py to install dependencies into user home, but uninstall self
-		pip$($*_PYTHON_VERSION) install . && pip$($*_PYTHON_VERSION) uninstall --yes `python$($*_PYTHON_VERSION) setup.py --name`
+		pip$($*_PYTHON_VERSION) install . $(LOG) && pip$($*_PYTHON_VERSION) uninstall --yes `python$($*_PYTHON_VERSION) setup.py --name` $(LOG)
 ifeq ($(BLDENV),bookworm)
-		if [ ! "$($*_TEST)" = "n" ]; then pip$($*_PYTHON_VERSION) install ".[testing]" && pip$($*_PYTHON_VERSION) uninstall --yes `python$($*_PYTHON_VERSION) setup.py --name` && python$($*_PYTHON_VERSION) -m pytest $(LOG); fi
+		if [ ! "$($*_TEST)" = "n" ]; then pip$($*_PYTHON_VERSION) install ".[testing]" $(LOG) && pip$($*_PYTHON_VERSION) uninstall --yes `python$($*_PYTHON_VERSION) setup.py --name` $(LOG) && python$($*_PYTHON_VERSION) -m pytest $(LOG); fi
 		python$($*_PYTHON_VERSION) -m build -n $(LOG)
 else
 		if [ ! "$($*_TEST)" = "n" ]; then python$($*_PYTHON_VERSION) setup.py test $(LOG); fi
@@ -930,8 +935,8 @@ else
 		}
 endif
 		# clean up
-		if [ -f ../$(notdir $($*_SRC_PATH)).patch/series ]; then quilt pop -a -f; [ -d .pc ] && rm -rf .pc; fi
-		popd $(LOG_SIMPLE)
+		if [ -f ../$(notdir $($*_SRC_PATH)).patch/series ]; then quilt pop -a -f $(LOG); [ -d .pc ] && rm -rf .pc; fi
+		popd $(LOG)
 		mv -f $($*_SRC_PATH)/dist/$* $(PYTHON_WHEELS_PATH) $(LOG)
 
 		exec 200<&-
