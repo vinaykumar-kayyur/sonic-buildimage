@@ -65,9 +65,10 @@ if [ ! -f $DOCKERFILE_TARGET ] || ! grep -q "Auto-Generated for buildinfo" $DOCK
 fi
 
 # Copy the build info config
+sleep 3600
 if ls /usr/local/share/buildinfo &>/dev/null ;then
     mkdir -p ${BUILDINFO_PATH}
-    cp -rf /usr/local/share/buildinfo/*.deb /usr/local/share/buildinfo/config $BUILDINFO_PATH
+    cp -rf /usr/local/share/buildinfo/* $BUILDINFO_PATH
 fi
 
 # Generate the version lock files

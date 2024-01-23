@@ -256,8 +256,6 @@ PREPARE_DOCKER=BUILD_SLAVE=y \
 		"" \
 		$(BLDENV)
 
-$(shell $(PREPARE_DOCKER) )
-
 # Add the versions in the tag, if the version change, need to rebuild the slave
 SLAVE_BASE_TAG = $(shell \
 	cat $(SLAVE_DIR)/Dockerfile \
