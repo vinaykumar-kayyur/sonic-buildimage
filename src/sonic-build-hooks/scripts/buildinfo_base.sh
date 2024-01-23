@@ -343,23 +343,28 @@ run_pip_command()
         parameters+=("-c")
         parameters+=("${tmp_version_file}")
     fi
-
-    if [ ! -z "$(get_version_cache_option)" ]; then
-        FLOCK ${PIP_CACHE_PATH}
-        $REAL_COMMAND ${PKG_CACHE_OPTION} "${parameters[@]}"
-        local result=$?
-        chmod -f -R 777 ${PIP_CACHE_PATH}
-        touch ${PIP_CACHE_PATH}
-        FUNLOCK ${PIP_CACHE_PATH}
-    else
-        $REAL_COMMAND "${parameters[@]}"
-		local result=$?
-		if [ "$result" != 0 ]; then
-			echo "Failed to run the command with constraint, try to install with the original command" 1>&2
-			$REAL_COMMAND "$@"
-			result=$?
-		fi
+    local result=1
+    for i in {1..10};do
+        if [ ! -z "$(get_version_cache_option)" ]; then
+            FLOCK ${PIP_CACHE_PATH}
+            $REAL_COMMAND ${PKG_CACHE_OPTION} "${parameters[@]}"
+            result=$?
+            chmod -f -R 777 ${PIP_CACHE_PATH}
+            touch ${PIP_CACHE_PATH}
+            FUNLOCK ${PIP_CACHE_PATH}
+        else
+            $REAL_COMMAND "${parameters[@]}"
+            result=$?
+            if [ "$result" != 0 ]; then
+                echo "Failed to run the command with constraint, try to install with the original command" 1>&2
+                $REAL_COMMAND "$@"
+                result=$?
+            fi
 	fi
+        [[ "$result" == 0 ]] && break
+        [[ "$install" != "y" ]] && break
+        sleep 60
+    done
     rm $tmp_version_file
     return $result
 }

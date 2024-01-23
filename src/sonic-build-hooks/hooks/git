@@ -46,14 +46,15 @@ get_clone_path(){
 main(){
     parse_config "$@"
 
-    # execute git.
-    $REAL_COMMAND "$@"
-    result=$?
-
-    # if sub command is not "clone", exit
-    if [[ $MODE_CLONE != 1 ]];then
-        exit $result
-    fi
+    for i in {1..10};do
+        # execute git.
+        $REAL_COMMAND "$@"
+        result=$?
+        [[ "$result" == "0" ]] && break
+        # if sub command is not "clone", exit
+        [[ $MODE_CLONE != 1 ]] && exit $result
+        sleep 60
+    done
 
     get_clone_path "$@"
     pushd $clone_PATH &> /dev/null
