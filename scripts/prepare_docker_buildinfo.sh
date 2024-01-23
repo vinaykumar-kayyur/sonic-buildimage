@@ -7,11 +7,6 @@ grep "^# SKIP_HOOK" $2 && exit 0
 BUILDINFO_BASE=/usr/local/share/buildinfo
 
 SCRIPT_SRC_PATH=src/sonic-build-hooks
-if [ -e ${SCRIPT_SRC_PATH} ]; then
-	. ${SCRIPT_SRC_PATH}/scripts/utils.sh
-else
-	. ${BUILDINFO_BASE}/scripts/utils.sh
-fi
 
 IMAGENAME=$1
 DOCKERFILE=$2
@@ -19,16 +14,12 @@ ARCH=$3
 DOCKERFILE_TARGET=$4
 DISTRO=$5
 
-
 [ -z "$BUILD_SLAVE" ] && BUILD_SLAVE=n
 [ -z "$DOCKERFILE_TARGET" ] && DOCKERFILE_TARGET=$DOCKERFILE
 DOCKERFILE_PATH=$(dirname "$DOCKERFILE_TARGET")
 BUILDINFO_PATH="${DOCKERFILE_PATH}/buildinfo"
 BUILDINFO_VERSION_PATH="${BUILDINFO_PATH}/versions"
 DOCKER_PATH=$(dirname $DOCKERFILE)
-
-[ -d $BUILDINFO_PATH ] && rm -rf $BUILDINFO_PATH
-mkdir -p $BUILDINFO_VERSION_PATH
 
 # Get the debian distribution from the docker base image
 if [ -z "$DISTRO" ]; then
@@ -76,7 +67,7 @@ fi
 # Copy the build info config
 if ls /usr/local/share/buildinfo &>/dev/null ;then
     mkdir -p ${BUILDINFO_PATH}
-    cp -f /usr/local/share/buildinfo/*.deb $BUILDINFO_PATH
+    cp -rf /usr/local/share/buildinfo/*.deb /usr/local/share/buildinfo/config $BUILDINFO_PATH
 fi
 
 # Generate the version lock files
