@@ -153,8 +153,7 @@ ssize_t pddf_get_custom_psu_model_name(struct device *dev, struct device_attribu
     int i, status;
     
     for (i = 0; i < ARRAY_SIZE(models); i++) {
-        memset(data.model_name, 0, sizeof(data.model_name));
-
+        memset_s(data.model_name, sizeof(data.model_name), 0, sizeof(data.model_name));
         status = pddf_psu_read_block(client, models[i].offset,
                                            data.model_name, models[i].length);
         if (status < 0) {
