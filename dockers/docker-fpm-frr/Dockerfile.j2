@@ -61,8 +61,12 @@ RUN chmod a+x /usr/bin/TSA && \
     chmod a+x /usr/bin/TSC && \
     chmod a+x /usr/bin/zsocket.sh
 
+{% if include_system_eventd == "y" %}
+{% if build_reduce_image_size != "y" or sonic_asic_platform != "broadcom" %}
 RUN j2 -f json /etc/rsyslog.d/rsyslog_plugin.conf.j2 /etc/rsyslog.d/events_info.json  > /etc/rsyslog.d/bgp_events.conf
 RUN rm -f /etc/rsyslog.d/rsyslog_plugin.conf.j2
 RUN rm -f /etc/rsyslog.d/events_info.json
+{% endif %}
+{% endif %}
 
 ENTRYPOINT ["/usr/bin/docker_init.sh"]
