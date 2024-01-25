@@ -359,9 +359,7 @@ sudo chmod 755 $FILESYSTEM_ROOT/usr/bin/restart_service
 
 # Installed smartmontools version should match installed smartmontools in docker-platform-monitor Dockerfile
 # TODO: are mismatching versions fine for bookworm?
-echo "deb http://deb.debian.org/debian bookworm-backports main" | sudo tee -a $FILESYSTEM_ROOT/etc/apt/sources.list > /dev/null
-sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get update
-sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -t bookworm-backports smartmontools=7.4-2~bpo12+1
+sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -t bookworm-backports smartmontools
 sudo cp $IMAGE_CONFIGS/smartmontools/smartmontools $FILESYSTEM_ROOT/etc/default/smartmontools
 
 # Install custom-built openssh sshd
