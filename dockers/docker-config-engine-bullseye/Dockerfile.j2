@@ -50,13 +50,8 @@ RUN pip3 install redis==4.5.4
 COPY ["files/swss_vars.j2", "/usr/share/sonic/templates/"]
 COPY ["files/readiness_probe.sh", "/usr/bin/"]
 COPY ["files/container_startup.py", "/usr/share/sonic/scripts/"]
-
-# Copy omprog conf for rsyslog plugin
-{% if include_system_eventd == "y" %}
-{% if build_reduce_image_size != "y" or sonic_asic_platform != "broadcom" %}
 COPY ["00-load-omprog.conf", "/etc/rsyslog.d/"]
-{% endif %}
-{% endif %}
+
 
 ## Clean up
 RUN apt-get purge -y               \
