@@ -1953,7 +1953,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
                 for pc_mbr_del_key in pc_mbr_del_keys:
                     del pc_members[pc_mbr_del_key]
 
-    # set default port channel MTU as 9100 and admin status up and default TPID 0x8100 
+    # set default port channel MTU as 9100 and admin status up and default TPID 0x8100
     for pc in pcs.values():
         pc['mtu'] = '9100'
         pc['tpid'] = '0x8100'

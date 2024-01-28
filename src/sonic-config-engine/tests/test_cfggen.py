@@ -553,7 +553,7 @@ class TestCfgGen(TestCase):
     def test_minigraph_neighbor_interfaces(self):
         argument = ['-m', self.sample_graph_simple_case, '-p', self.port_config, '-v', "PORT"]
         output = self.run_script(argument)
-        self.maxDiff = None
+        
         self.assertEqual(
             utils.to_dict(output.strip()),
             utils.to_dict( 
@@ -596,7 +596,7 @@ class TestCfgGen(TestCase):
         # test to check if PORT table is retrieved from config_db
         argument = ['-m', self.sample_graph_simple_case, '-p', self.port_config, '-v', "PORT"]
         output = self.run_script(argument)
-        self.maxDiff = None
+
         self.assertEqual(
             utils.to_dict(output.strip()),
             utils.to_dict(
@@ -639,7 +639,6 @@ class TestCfgGen(TestCase):
         graph_file = kwargs.get('graph_file', self.sample_graph_simple)
         argument = ['-m', graph_file, '-p', self.port_config, '-v', "PORT"]
         output = self.run_script(argument)
-        self.maxDiff = None
 
         self.assertEqual(
             utils.to_dict(output.strip()),
@@ -969,7 +968,6 @@ class TestCfgGen(TestCase):
         argument = ["-j", self.macsec_profile, "-m", self.sample_graph_voq, "-p", self.voq_port_config, "--var-json", "PORT"]
         output = self.run_script(argument)
         output_dict = utils.to_dict(output.strip())
-        self.maxDiff = None
         self.assertDictEqual(
             output_dict['Ethernet-IB0'], {
                 "lanes": "222",
@@ -1085,7 +1083,6 @@ class TestCfgGen(TestCase):
     def test_minigraph_400g_to_100G_speed(self):
         argument = ["-j", self.macsec_profile, "-m", self.voq_sample_masic_graph, "-p", self.voq_port_config_400g, "-n",  "asic0", "-v", "PORT"]
         output = self.run_script(argument)
-        self.maxDiff = None
         self.assertEqual(
             utils.to_dict(output.strip()),
             utils.to_dict(
@@ -1115,7 +1112,6 @@ class TestCfgGen(TestCase):
         argument = ["-m", self.sample_cisco_100_graph, "-p", self.sample_cisco_port_config_400g, "-v", "PORT"]
         self.assertTrue(self.yang.validate(argument))
         output = self.run_script(argument)
-        self.maxDiff = None
         self.assertEqual(
             utils.to_dict(output.strip()),
             utils.to_dict(
@@ -1125,7 +1121,6 @@ class TestCfgGen(TestCase):
     def test_minigraph_cisco_400G_to_400G_speed(self):
         argument = ["-m", self.sample_cisco_400_graph, "-p", self.sample_cisco_port_config_400g, "-v", "PORT"]
         output = self.run_script(argument)
-        self.maxDiff = None
         self.assertEqual(
             utils.to_dict(output.strip()),
             utils.to_dict(
@@ -1138,7 +1133,6 @@ class TestCfgGen(TestCase):
         argument = ["-m", self.sample_cisco_8111_graph, "-p", self.sample_cisco_8111_port_config, "-v", "PORT"]
         self.assertTrue(self.yang.validate(argument))
         output = self.run_script(argument)
-        self.maxDiff = None
         self.assertEqual(
             utils.to_dict(output.strip()),
             utils.to_dict(
