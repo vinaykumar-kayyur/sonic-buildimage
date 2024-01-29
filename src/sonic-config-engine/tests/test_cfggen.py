@@ -553,11 +553,10 @@ class TestCfgGen(TestCase):
     def test_minigraph_neighbor_interfaces(self):
         argument = ['-m', self.sample_graph_simple_case, '-p', self.port_config, '-v', "PORT"]
         output = self.run_script(argument)
-        
         self.assertEqual(
             utils.to_dict(output.strip()),
-            utils.to_dict( 
-                "{'Ethernet0': {'lanes': '29,30,31,32', 'description': 'switch-01t1:port1', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100','mode': 'trunk' ,'alias': 'fortyGigE0/0', 'admin_status': 'up', 'speed': '10000', 'autoneg': 'on'}, "
+            utils.to_dict(
+                "{'Ethernet0': {'lanes': '29,30,31,32', 'description': 'switch-01t1:port1', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100','mode': 'trunk' ,'alias': 'fortyGigE0/0', 'admin_status': 'up', 'speed': '10000', 'autoneg': 'on'},"
                 "'Ethernet4': {'lanes': '25,26,27,28', 'description': 'server1:port1', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'trunk' ,'alias': 'fortyGigE0/4', 'admin_status': 'up', 'speed': '25000', 'autoneg': 'on', 'mux_cable': 'true'}, "
                 "'Ethernet8': {'lanes': '37,38,39,40', 'description': 'Interface description', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100','mode': 'trunk' , 'alias': 'fortyGigE0/8', 'admin_status': 'up', 'speed': '40000', 'autoneg': 'on', 'mux_cable': 'true'}, "
                 "'Ethernet12': {'lanes': '33,34,35,36', 'description': 'Interface description', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100','mode': 'trunk' , 'alias': 'fortyGigE0/12', 'admin_status': 'up', 'speed': '10000', 'autoneg': 'on'}, "
