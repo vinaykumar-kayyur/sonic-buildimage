@@ -7,12 +7,9 @@ Table of Contents
    * [Introduction](#introduction)
    * [Configuration](#configuration)
    * [<strong>Config Load and Save</strong>](#config-load-and-save)
-
          * [Incremental Configuration](#incremental-configuration)
    * [<strong>Redis and Json Schema</strong>](#redis-and-json-schema)
-
          * [ACL and Mirroring](#acl-and-mirroring)
-         * [BGP BBR](#bgp-bbr)
          * [BGP Device Global](#bgp-device-global)
          * [BGP Sessions](#bgp-sessions)
          * [BUFFER_PG](#buffer_pg)
@@ -72,7 +69,6 @@ Table of Contents
          * [TC to Priority group map](#tc-to-priority-group-map)
          * [TC to Queue map](#tc-to-queue-map)
          * [Telemetry](#telemetry)
-         * [Telemetry client](#telemetry-client)
          * [Tunnel](#tunnel)
          * [Versions](#versions)
          * [VLAN](#vlan)
@@ -366,18 +362,6 @@ and migration plan
             "SRC_IP": "1.1.1.1/32",
         }
     }
-}
-```
-### BGP BBR
-
-The **BGP_BBR** table contains device-level BBR state.
-```
-{
-        "BGP_BBR": {
-            "all": {
-                "status": "enabled"/"disabled"
-            }
-        }
 }
 ```
 ### BGP Device Global
@@ -2059,31 +2043,6 @@ and is listed in this table.
             "client_auth": "true",
             "log_level": "2",
             "port": "50051"
-        }
-    }
-}
-```
-
-### Telemetry client
-
-```
-{
-    "TELEMETRY_CLIENT": {
-        "Global": {
-            "encoding": "JSON_IETF",
-            "retry_interval": "30",
-            "src_ip": "30.57.185.38",
-            "unidirectional": "true"
-        },
-        "DestinationGroup|HS": {
-            "dst_addr": "30.57.186.214:8081,30.57.185.39:8081"
-        },
-        "Subscription|HS_RDMA": {
-            "dst_group": "HS",
-            "path_target": "COUNTERS_DB",
-            "paths": "COUNTERS/Ethernet*,COUNTERS_PORT_NAME_MAP",
-            "report_interval": "5000",
-            "report_type": "periodic"
         }
     }
 }

@@ -13,8 +13,7 @@ TEMPLATE_PATH = os.path.abspath('../../dockers/docker-fpm-frr/frr')
 BASE_PATH = os.path.abspath('../sonic-bgpcfgd/tests/data/general/peer-group.conf/')
 global_constants = {
     "bgp":  {
-        "traffic_shift_community" :"12345:12345",
-        "internal_community_match_tag" : "1001"
+        "traffic_shift_community" :"12345:12345"
     }
 }
 

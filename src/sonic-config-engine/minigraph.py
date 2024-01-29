@@ -607,7 +607,7 @@ def parse_dpg(dpg, hname):
                         else:
                             prefix = prefix + "/32"
                     static_routes[prefix] = {'nexthop': ",".join(nexthop), 'ifname': ",".join(ifname), 'advertise': advertise}
-
+                    
             if port_nhipv4_map and port_nhipv6_map:
                 subnet_check_ip = list(port_nhipv4_map.values())[0]
                 for subnet_range in ip_intfs_map:
@@ -1986,10 +1986,6 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
             port['mux_cable'] = "true"
 
     if static_routes:
-        # Enable static Route BFD by default for static route in chassis-packet
-        if switch_type == "chassis-packet":
-            for pfx, data in static_routes.items():
-                data.update({"bfd":"true"})
         results['STATIC_ROUTE'] = static_routes
 
     for nghbr in list(neighbors.keys()):
@@ -2080,6 +2076,10 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     # Disable unsupported counters on management devices
     if current_device and current_device['type'] in mgmt_device_types:
         results["FLEX_COUNTER_TABLE"] = {counter: {"FLEX_COUNTER_STATUS": "disable"} for counter in mgmt_disabled_counters}
+
+    # Enable bgp-suppress-fib by default for leafrouter
+    if current_device and current_device['type'] in leafrouter_device_types:
+        results['DEVICE_METADATA']['localhost']['suppress-fib-pending'] = 'enabled'
 
     return results
 

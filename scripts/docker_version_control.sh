@@ -1,8 +1,7 @@
-#!/bin/bash
-
 # This script is for reproducible build.
 # Reproducible build for docker enabled: Before build docker image, this script will change image:tag to image:sha256 in DOCKERFILE.
 # And record image sha256 to a target file.
+#!/bin/bash
 
 IMAGENAME=$1
 DOCKERFILE=$2

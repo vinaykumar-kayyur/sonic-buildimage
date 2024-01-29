@@ -16,9 +16,7 @@ function check_not_installed()
     is_internal_route_map $route_map_name && continue
     echo "$config" | egrep -q "^route-map $route_map_name permit 20$"
     c=$((c+$?))
-    echo "$config" | egrep -q "^route-map $route_map_name permit 30$"
-    c=$((c+$?))
-    echo "$config" | egrep -q "^route-map $route_map_name deny 40$"
+    echo "$config" | egrep -q "^route-map $route_map_name deny 30$"
     c=$((c+$?))
   done
   return $c
@@ -35,10 +33,7 @@ function check_installed()
     echo "$config" | egrep -q "^route-map $route_map_name permit 20$"
     c=$((c+$?))
     e=$((e+1))
-    echo "$config" | egrep -q "^route-map $route_map_name permit 30$"
-    c=$((c+$?))
-    e=$((e+1))
-    echo "$config" | egrep -q "^route-map $route_map_name deny 40$"
+    echo "$config" | egrep -q "^route-map $route_map_name deny 30$"
     c=$((c+$?))
     e=$((e+1))
   done
