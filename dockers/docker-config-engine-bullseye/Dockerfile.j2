@@ -52,7 +52,6 @@ COPY ["files/readiness_probe.sh", "/usr/bin/"]
 COPY ["files/container_startup.py", "/usr/share/sonic/scripts/"]
 COPY ["00-load-omprog.conf", "/etc/rsyslog.d/"]
 
-
 ## Clean up
 RUN apt-get purge -y               \
         python3-dev                \
