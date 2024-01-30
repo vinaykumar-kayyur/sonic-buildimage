@@ -6,7 +6,7 @@ template(name="prog_msg" type="list") {
 }
 
 {% if include_system_eventd == "y" %}
-{% if build_reduce_image_size == "y" %}
+{% if build_reduce_image_size != "y" or sonic_asic_platform != "broadcom" %}
 
 $ModLoad omprog
 
