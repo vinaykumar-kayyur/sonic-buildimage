@@ -244,7 +244,7 @@ TEST(eventd, proxy)
 
     /* Starting proxy */
     EXPECT_EQ(0, pxy->init());
- 
+
     /* capture in a thread */
     thread thrc(&run_cap, zctx, ref(term_cap), ref(rd_csource), ref(rd_cevts_sz), ref(should_read_control));
 
@@ -286,7 +286,7 @@ TEST(eventd, proxy)
     /* Do control test */
 
     should_read_control = true;
-    
+
     /* capture in a thread */
     thread thrcc(&run_cap, zctx, ref(term_cap), ref(rd_csource), ref(rd_cevts_sz), ref(should_read_control));
 
@@ -334,7 +334,7 @@ TEST(eventd, capture)
 
     /* Starting proxy */
     EXPECT_EQ(0, pxy->init());
- 
+
     /* Create capture service */
     capture_service *pcap = new capture_service(zctx, cache_max, &stats_instance);
 
@@ -637,7 +637,7 @@ TEST(eventd, service)
 
         while(true) {
             auto current_ts = chrono::steady_clock::now();
-	    if(chrono::duration_cast<chrono::milliseconds>(current_ts - poll_start_ts).count() >= max_polling_duration) {
+            if(chrono::duration_cast<chrono::milliseconds>(current_ts - poll_start_ts).count() >= max_polling_duration) {
                 break;
             }
             event_serialized_lst_t read_events;
@@ -654,7 +654,7 @@ TEST(eventd, service)
         /* Read remaining events in cache, if any */
         EXPECT_EQ(0, service.cache_read(evts_read));
 
-	polled_events.insert(polled_events.end(), evts_read.begin(), evts_read.end());
+        polled_events.insert(polled_events.end(), evts_read.begin(), evts_read.end());
 
         EXPECT_EQ(polled_events, evts_start);
 
