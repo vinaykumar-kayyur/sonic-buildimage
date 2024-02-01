@@ -8,16 +8,22 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <linux/limits.h>
+#include <json-c/json.h>
 
 #define MAX_NUM_TARGETS 48
 #define MAX_NUM_INSTALL_LINES 48
 #define MAX_NUM_UNITS 128
 #define MAX_BUF_SIZE 512
+#define MAX_PLATFORM_NAME_LEN 64
+
+
 
 const char* UNIT_FILE_PREFIX = "/usr/lib/systemd/system/";
 const char* CONFIG_FILE = "/etc/sonic/generated_services.conf";
 const char* MACHINE_CONF_FILE = "/host/machine.conf";
 const char* ASIC_CONF_FORMAT = "/usr/share/sonic/device/%s/asic.conf";
+const char* PLATFORM_FILE_FORMAT = "/usr/share/sonic/device/%s/platform.json";
+const char* DPU_PREFIX = "dpu";
 
 const char* g_unit_file_prefix = NULL;
 const char* get_unit_file_prefix() {
@@ -39,9 +45,64 @@ const char* get_asic_conf_format() {
     return (g_asic_conf_format) ? g_asic_conf_format : ASIC_CONF_FORMAT;
 }
 
+const char* g_platform_file_format = NULL;
+const char* get_platform_file_format() {
+    return (g_platform_file_format) ? g_platform_file_format : PLATFORM_FILE_FORMAT;
+}
+
 static int num_asics;
 static char** multi_instance_services;
 static int num_multi_inst;
+static bool smart_switch_npu;
+static bool smart_switch_dpu;
+static bool smart_switch;
+static size_t num_dpus;
+static char* platform = NULL;
+static struct json_object *platform_info = NULL;
+
+
+#ifdef _SSG_UNITTEST
+/**
+ * @brief Cleans up the cache by resetting cache pointers.
+ */
+void clean_up_cache() {
+    platform = NULL;
+    platform_info = NULL;
+}
+#endif
+
+/**
+ * Sets the value of a pointer to an invalid memory address.
+ *
+ * @param pointer A pointer to a pointer variable.
+ */
+void set_invalid_pointer(void **pointer) {
+    *pointer = (void *)-1;
+}
+
+
+/**
+ * @brief Checks if a pointer is valid.
+ *
+ * This function checks if a pointer is valid by verifying that it is not NULL and not equal to (void *)-1.
+ *
+ * @param pointer The pointer to be checked.
+ * @return true if the pointer is valid, false otherwise.
+ */
+bool is_valid_pointer(void *pointer) {
+    return pointer != NULL && pointer != (void *)-1;
+}
+
+
+/**
+ * Checks if a pointer is initialized.
+ *
+ * @param pointer The pointer to check.
+ * @return true if the pointer is not NULL, false otherwise.
+ */
+bool is_initialized_pointer(void *pointer) {
+    return pointer != NULL;
+}
 
 void strip_trailing_newline(char* str) {
     /***
@@ -127,6 +188,45 @@ static bool is_multi_instance_service(char *service_name){
     return false;
 
 }
+
+
+/**
+ * Checks if a service is a multi-instance service for DPU.
+ *
+ * @param service_name The name of the service to check.
+ * @return true if the service is a multi-instance service for DPU, false otherwise.
+ */
+static bool is_multi_instance_service_for_dpu(const char *service_name) {
+    if (!smart_switch_npu) {
+        return false;
+    }
+
+    const static char* multi_instance_services_for_dpu[] = {"database"};
+    char *saveptr;
+    char *tmp_service_name = strdup(service_name);
+
+    for (size_t i = 0; i < sizeof(multi_instance_services_for_dpu) /
+                               sizeof(multi_instance_services_for_dpu[0]);
+         i++) {
+        char* saveptr;
+        char* token = strtok_r(tmp_service_name, "@", &saveptr);
+        if (token) {
+            if (strstr(token, ".service") != NULL) {
+                /* If we are here, service_name did not have '@' delimiter but
+                 * contains '.service' */
+                token = strtok_r(tmp_service_name, ".", &saveptr);
+            }
+        }
+        if (strcmp(tmp_service_name, multi_instance_services_for_dpu[i]) == 0) {
+            free(tmp_service_name);
+            return true;
+        }
+    }
+
+    free(tmp_service_name);
+    return false;
+}
+
 
 static int get_install_targets_from_line(char* target_string, char* install_type, char* targets[], int existing_targets) {
     /***
@@ -228,10 +328,16 @@ static void replace_multi_inst_dep(char *src) {
                     service_name = strdup(word);
                     service_name = strtok_r(service_name, ".", &save_ptr2);
                     type = strtok_r(NULL, "\n", &save_ptr2);
-                    if (is_multi_instance_service(word)) {
+                    if (num_asics > 1 &&  is_multi_instance_service(word)) {
                         for(i = 0; i < num_asics; i++) {
                             snprintf(buf, MAX_BUF_SIZE, "%s=%s@%d.%s\n",
                                     token, service_name, i, type);
+                            fputs(buf,fp_tmp);
+                        }
+                    } else if (smart_switch_npu && is_multi_instance_service_for_dpu(word)) {
+                        for(i = 0; i < num_dpus; i++) {
+                            snprintf(buf, MAX_BUF_SIZE, "%s=%s@%s%d.%s\n",
+                                    token, service_name, DPU_PREFIX, i, type);
                             fputs(buf,fp_tmp);
                         }
                     } else {
@@ -280,7 +386,8 @@ int get_install_targets(char* unit_file, char* targets[]) {
     dot_ptr = strchr(instance_name, '.');
     *dot_ptr = '\0';
 
-    if((num_asics > 1) && (!is_multi_instance_service(instance_name))) {
+    if(((num_asics > 1) && (!is_multi_instance_service(instance_name)))
+        || ((num_dpus > 0) && (!is_multi_instance_service_for_dpu(instance_name)))) {
         replace_multi_inst_dep(file_path);
     }
     free(instance_name);
@@ -362,6 +469,13 @@ int get_unit_files(char* unit_files[]) {
                         (num_asics == 1)) {
             continue;
         }
+
+        /* midplane-network service to be started only for smart switch platform */
+        if ((strcmp(line, "midplane-network.service") == 0) &&
+                        !smart_switch) {
+            continue;
+        }
+
         unit_files[num_unit_files] = strdup(line);
         num_unit_files++;
     }
@@ -374,7 +488,7 @@ int get_unit_files(char* unit_files[]) {
 }
 
 
-char* insert_instance_number(char* unit_file, int instance) {
+char* insert_instance_number(char* unit_file, int instance, const char *instance_prefix) {
     /***
     Adds an instance number to a systemd template name
 
@@ -390,12 +504,16 @@ char* insert_instance_number(char* unit_file, int instance) {
         return NULL;
     }
 
+    if (instance_prefix == NULL) {
+        instance_prefix = "";
+    }
+
     /***
     suffix is "@.service", set suffix=".service"
     prefix_len is length of "example@"
     ***/
     prefix_len = ++suffix - unit_file;
-    ret = asprintf(&instance_name, "%.*s%d%s", prefix_len, unit_file, instance, suffix);
+    ret = asprintf(&instance_name, "%.*s%s%d%s", prefix_len, unit_file, instance_prefix, instance, suffix);
     if (ret == -1) {
         fprintf(stderr, "Error creating instance %d of %s\n", instance, unit_file);
         return NULL;
@@ -405,7 +523,7 @@ char* insert_instance_number(char* unit_file, int instance) {
 }
 
 
-static int create_symlink(char* unit, char* target, char* install_dir, int instance) {
+static int create_symlink(char* unit, char* target, char* install_dir, int instance, const char *instance_prefix) {
     struct stat st;
     char src_path[PATH_MAX];
     char dest_path[PATH_MAX];
@@ -420,7 +538,7 @@ static int create_symlink(char* unit, char* target, char* install_dir, int insta
         unit_instance = strdup(unit);
     }
     else {
-        unit_instance = insert_instance_number(unit, instance);
+        unit_instance = insert_instance_number(unit, instance, instance_prefix);
     }
 
     strcpy(final_install_dir, install_dir);
@@ -501,27 +619,89 @@ static int install_unit_file(char* unit_file, char* target, char* install_dir) {
         for (int i = 0; i < num_asics; i++) {
 
             if (strstr(target, "@") != NULL) {
-                target_instance = insert_instance_number(target, i);
+                target_instance = insert_instance_number(target, i, "");
             }
             else {
                 target_instance = strdup(target);
             }
 
-            r = create_symlink(unit_file, target_instance, install_dir, i);
+            r = create_symlink(unit_file, target_instance, install_dir, i, "");
             if (r < 0)
                 fprintf(stderr, "Error installing %s for target %s\n", unit_file, target_instance);
 
             free(target_instance);
 
         }
-    }
-    else {
-        r = create_symlink(unit_file, target, install_dir, -1);
+    } else if (num_dpus > 0 && strstr(unit_file, "@") != NULL) {
+        // If multi-instance service for DPU
+        // Install each DPU units to the host main instance only,
+        // E.g. install database@dpu0.service, database@dpu1.service to multi-user.target.wants
+        // We don't have case like to install xxx@dpu0.service to swss@dpu0.service.wants
+        for (int i = 0; i < num_dpus; i++) {
+            r = create_symlink(unit_file, target, install_dir, i, DPU_PREFIX);
+            if (r < 0)
+                fprintf(stderr, "Error installing %s for target %s\n", unit_file, target);
+        }
+    } else {
+        r = create_symlink(unit_file, target, install_dir, -1, "");
         if (r < 0)
             fprintf(stderr, "Error installing %s for target %s\n", unit_file, target);
     }
 
     return 0;
+}
+
+
+/**
+ * Retrieves the platform name from the machine configuration file.
+ * If the platform name is already cached, it returns the cached value.
+ * If the platform name is not found in the configuration file, it sets the platform pointer to NULL.
+ * 
+ * @return The platform name if found, otherwise NULL.
+ */
+const char* get_platform() {
+    if (is_initialized_pointer(platform)) {
+        if (is_valid_pointer(platform)) {
+            return platform;
+        } else {
+            return NULL;
+        }
+    }
+
+    FILE* fp;
+    char* line = NULL;
+    char* token;
+    char* saveptr;
+    char *tmp_platform = NULL;
+    static char platform_buffer[MAX_PLATFORM_NAME_LEN + 1];
+    size_t len = 0;
+    ssize_t nread;
+    const char* machine_config_file = get_machine_config_file();
+    fp = fopen(machine_config_file, "r");
+    if (fp == NULL) {
+        fprintf(stderr, "Failed to open %s\n", machine_config_file);
+        exit(EXIT_FAILURE);
+    }
+
+    while ((nread = getline(&line, &len, fp)) != -1) {
+        if ((strstr(line, "onie_platform") != NULL) ||
+            (strstr(line, "aboot_platform") != NULL)) {
+            token = strtok_r(line, "=", &saveptr);
+            tmp_platform = strtok_r(NULL, "=", &saveptr);
+            strip_trailing_newline(tmp_platform);
+            break;
+        }
+    }
+    if (tmp_platform == NULL) {
+        set_invalid_pointer((void **)&platform);
+        return NULL;
+    }
+    strncpy(platform_buffer, tmp_platform, sizeof(platform_buffer) - 1);
+    fclose(fp);
+    free(line);
+
+    platform = platform_buffer;
+    return platform;
 }
 
 
@@ -532,33 +712,16 @@ int get_num_of_asic() {
     FILE *fp;
     char *line = NULL;
     char* token;
-    char* platform = NULL;
+    const char* platform = NULL;
     char* saveptr;
     size_t len = 0;
     ssize_t nread;
-    bool ans;
     char asic_file[512];
     char* str_num_asic;
     int num_asic = 1;
-    const char* machine_config_file = get_machine_config_file();
 
-    fp = fopen(machine_config_file, "r");
+    platform = get_platform();
 
-    if (fp == NULL) {
-        fprintf(stderr, "Failed to open %s\n", machine_config_file);
-        exit(EXIT_FAILURE);
-    }
-
-    while ((nread = getline(&line, &len, fp)) != -1) {
-        if ((strstr(line, "onie_platform") != NULL) ||
-            (strstr(line, "aboot_platform") != NULL)) {
-            token = strtok_r(line, "=", &saveptr);
-            platform = strtok_r(NULL, "=", &saveptr);
-            strip_trailing_newline(platform);
-            break;
-        }
-    }
-    fclose(fp);
     if(platform != NULL) {
         snprintf(asic_file, 512, get_asic_conf_format(), platform);
         fp = fopen(asic_file, "r");
@@ -582,6 +745,236 @@ int get_num_of_asic() {
 
 }
 
+
+/**
+ * Retrieves the platform information.
+ * 
+ * This function reads the platform information from a JSON file and returns it as a JSON object.
+ * If the platform information has already been retrieved, it returns the cached value.
+ * 
+ * @return The platform information as a JSON object, or NULL if it fails to retrieve or parse the information.
+ */
+const struct json_object* get_platform_info() {
+    if (is_initialized_pointer(platform_info)) {
+        if (is_valid_pointer(platform_info)) {
+            return platform_info;
+        } else {
+            return NULL;
+        }
+    }
+
+    char platform_file_path[PATH_MAX];
+    const char* platform = get_platform();
+    if (platform == NULL) {
+        set_invalid_pointer((void **)&platform_info);
+        return NULL;
+    }
+    snprintf(platform_file_path, sizeof(platform_file_path), get_platform_file_format(), platform);
+
+    FILE *fp = fopen(platform_file_path, "r");
+    if (fp == NULL) {
+        fprintf(stdout, "Failed to open %s\n", platform_file_path);
+        set_invalid_pointer((void **)&platform_info);
+        return NULL;
+    }
+    if (fseek(fp, 0, SEEK_END) != 0) {
+        fprintf(stdout, "Failed to seek to end of %s\n", platform_file_path);
+        fclose(fp);
+        exit(EXIT_FAILURE);
+    }
+    size_t fsize = ftell(fp);
+    if (fseek(fp, 0, SEEK_SET) != 0) {
+        fprintf(stdout, "Failed to seek to beginning of %s\n", platform_file_path);
+        fclose(fp);
+        exit(EXIT_FAILURE);
+    }
+    char *platform_json = malloc(fsize + 1);
+    if (platform_json == NULL) {
+        fprintf(stdout, "Failed to allocate memory for %s\n", platform_file_path);
+        fclose(fp);
+        exit(EXIT_FAILURE);
+    }
+    if (fread(platform_json, fsize, 1, fp) != 1) {
+        fprintf(stdout, "Failed to read %s\n", platform_file_path);
+        fclose(fp);
+        exit(EXIT_FAILURE);
+    }
+    fclose(fp);
+    platform_json[fsize] = '\0';
+
+    platform_info = json_tokener_parse(platform_json);
+    if (platform_info == NULL) {
+        fprintf(stderr, "Failed to parse %s\n", platform_file_path);
+        free(platform_json);
+        return NULL;
+    }
+    free(platform_json);
+    return platform_info;
+}
+
+
+/**
+ * Checks if the platform is a smart switch with an NPU (Network Processing Unit).
+ * 
+ * @return true if the platform is a smart switch with an NPU, false otherwise.
+ */
+static bool is_smart_switch_npu() {
+    struct json_object *dpus;
+    const struct json_object *platform_info = get_platform_info();
+    if (platform_info == NULL) {
+        return false;
+    }
+    if (!json_object_object_get_ex(platform_info, "DPUS", &dpus)) {
+        return false;
+    }
+    return true;
+}
+
+
+/**
+ * Checks if the current platform is a smart switch with a DPU (Data Processing Unit).
+ * 
+ * @return true if the platform is a smart switch with a DPU, false otherwise.
+ */
+static bool is_smart_switch_dpu() {
+    struct json_object *dpu;
+    const struct json_object *platform_info = get_platform_info();
+    if (platform_info == NULL) {
+        return false;
+    }
+    if (!json_object_object_get_ex(platform_info, "DPU", &dpu)) {
+        return false;
+    }
+    
+    return true;
+}
+
+
+/**
+ * @brief Retrieves the number of DPUs (Data Processing Units).
+ *
+ * This function retrieves the number of DPUs by accessing the platform information
+ * and extracting the "DPUS" array from it. If the platform information is not available
+ * or the "DPUS" array does not exist, the function returns 0.
+ *
+ * @return The number of DPUs.
+ */
+static int get_num_of_dpu() {
+    struct json_object *dpus;
+    const struct json_object *platform_info = get_platform_info();
+    if (platform_info == NULL) {
+        return 0;
+    }
+    if (!json_object_object_get_ex(platform_info, "DPUS", &dpus)) {
+        return 0;
+    }
+    size_t num_dpu = json_object_array_length(dpus);
+    return num_dpu;
+}
+
+
+static int revise_smart_switch_dependency_chain(int num_unit_files,const char* unit_files[MAX_NUM_UNITS]) {
+    assert(num_unit_files < MAX_NUM_UNITS);
+
+    if (!smart_switch || num_unit_files <= 0) {
+        return 0;
+    }
+
+    // Check the midplane-network.service is in the target list
+    bool found_midplane_network_service = false;
+    for (int i = 0; i < num_unit_files; i++) {
+        if (strcmp(unit_files[i], "midplane-network.service") == 0) {
+            found_midplane_network_service = true;
+            break;
+        }
+    }
+    if (!found_midplane_network_service) {
+        fprintf(stderr, "midplane-network.service is required in the target list\n");
+        return -1;
+    }
+
+    // Set the midplane-network.service as before and required
+    const char* after_units[MAX_NUM_UNITS] = {NULL};
+    assert(MAX_NUM_UNITS > 3);
+    after_units[0] = "database.service";
+    if (smart_switch_npu) {
+        after_units[1] = "database@.service";
+    }
+
+    const char** unit = after_units;
+    static const char required_after_statements[] = "\nRequires=midplane-network.service\nAfter=midplane-network.service\n";
+    static const size_t required_after_statements_len = sizeof(required_after_statements) - 1;
+    static const char unit_tag[] = "[Unit]";
+    static const size_t unit_tag_len = sizeof(unit_tag) - 1;
+    while(*unit != NULL) {
+        char unit_path[PATH_MAX] = {0};
+        FILE *fp;
+        strcpy(unit_path, get_unit_file_prefix());
+        strcat(unit_path, *unit);
+        // Read all data from file
+        fp = fopen(unit_path, "r");
+        if (fp == NULL) {
+            fprintf(stderr, "Failed to open %s\n", unit_path);
+            return -1;
+        }
+        fseek(fp, 0, SEEK_END);
+        long fsize = ftell(fp);
+        fseek(fp, 0, SEEK_SET);
+        size_t len = fsize + required_after_statements_len + 1;
+        char *data = malloc(len);
+        if (data == NULL) {
+            fprintf(stderr, "Failed to allocate memory for %s\n", unit_path);
+            fclose(fp);
+            return -1;
+        }
+        if (fread(data, fsize, 1, fp) != 1) {
+            fprintf(stderr, "Failed to read %s\n", unit_path);
+            fclose(fp);
+            free(data);
+            return -1;
+        }
+        fclose(fp);
+        data[fsize] = '\0';
+        // Check if the unit file already has the required statements
+        if (strstr(data, required_after_statements) != NULL) {
+            free(data);
+            unit++;
+            continue;
+        }
+        // Append the required statements to the Unit section of the unit file
+        char *unit_section = strstr(data, unit_tag);
+        if (unit_section == NULL) {
+            fprintf(stderr, "Failed to find %s section in %s\n", unit_tag, unit_path);
+            free(data);
+            return -1;
+        }
+        unit_section += unit_tag_len;
+        memmove(unit_section + required_after_statements_len, unit_section, strlen(unit_section) + 1);
+        memcpy(unit_section, required_after_statements, required_after_statements_len);
+        // Write the data back to the unit file
+        fp = fopen(unit_path, "w");
+        if (fp == NULL) {
+            fprintf(stderr, "Failed to open %s\n", unit_path);
+            free(data);
+            return -1;
+        }
+        // Don't write the trailing '\0'
+        assert(len > 1);
+        if (fwrite(data, len - 1, 1, fp) != 1) {
+            fprintf(stderr, "Failed to write %s\n", unit_path);
+            fclose(fp);
+            free(data);
+            return -1;
+        }
+        fclose(fp);
+        free(data);
+        unit++;
+    }
+
+    return 0;
+}
+
+
 int ssg_main(int argc, char **argv) {
     char* unit_files[MAX_NUM_UNITS];
     char install_dir[PATH_MAX];
@@ -594,20 +987,38 @@ int ssg_main(int argc, char **argv) {
     int num_targets;
     int r;
 
+#ifdef _SSG_UNITTEST
+    clean_up_cache();
+#endif
+
     if (argc <= 1) {
         fputs("Installation directory required as argument\n", stderr);
         return 1;
     }
 
     num_asics = get_num_of_asic();
+    smart_switch_npu = is_smart_switch_npu();
+    smart_switch_dpu = is_smart_switch_dpu();
+    smart_switch = smart_switch_npu || smart_switch_dpu;
+    num_dpus = get_num_of_dpu();
+
     strcpy(install_dir, argv[1]);
     strcat(install_dir, "/");
     num_unit_files = get_unit_files(unit_files);
 
+    // Revise dependency chain for smart switch
+    if (smart_switch) {
+        if (revise_smart_switch_dependency_chain(num_unit_files, (const char **)unit_files) != 0) {
+            return 1;
+        }
+    }
+
     // For each unit file, get the installation targets and install the unit
     for (int i = 0; i < num_unit_files; i++) {
         unit_instance = strdup(unit_files[i]);
-        if ((num_asics == 1) && strstr(unit_instance, "@") != NULL) {
+        if ((num_asics == 1 &&
+             !is_multi_instance_service_for_dpu(unit_instance)) &&
+            strstr(unit_instance, "@") != NULL) {
             prefix = strdup(strtok_r(unit_instance, "@", &saveptr));
             suffix = strdup(strtok_r(NULL, "@", &saveptr));
 
@@ -641,6 +1052,10 @@ int ssg_main(int argc, char **argv) {
         free(multi_instance_services[i]);
     }
     free(multi_instance_services);
+
+    if (is_valid_pointer(platform_info)) {
+        json_object_put(platform_info);
+    }
 
     return 0;
 }
