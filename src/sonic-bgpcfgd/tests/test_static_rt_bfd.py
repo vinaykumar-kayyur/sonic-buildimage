@@ -129,9 +129,9 @@ def test_set_del_ipv6():
             "nexthop": "2603:10E2:400:1::2,2603:10E2:400:2::2,2603:10e2:400:3::2"
         }),
         {
-            "set_default:default:2603:10e2:400:1::2" : {'multihop': 'true', 'rx_interval': '50', 'tx_interval': '50', 'multiplier': '3', 'local_addr': '2603:10E2:400:1::1'},
-            "set_default:default:2603:10e2:400:2::2" : {'multihop': 'true', 'rx_interval': '50', 'tx_interval': '50', 'multiplier': '3', 'local_addr': '2603:10E2:400:2::1'},
-            "set_default:default:2603:10e2:400:3::2" : {'multihop': 'true', 'rx_interval': '50', 'tx_interval': '50', 'multiplier': '3', 'local_addr': '2603:10E2:400:3::1'}
+            "set_default:default:2603:10e2:400:1::2" : {'multihop': 'false', 'rx_interval': '50', 'tx_interval': '50', 'multiplier': '3', 'local_addr': '2603:10E2:400:1::1'},
+            "set_default:default:2603:10e2:400:2::2" : {'multihop': 'false', 'rx_interval': '50', 'tx_interval': '50', 'multiplier': '3', 'local_addr': '2603:10E2:400:2::1'},
+            "set_default:default:2603:10e2:400:3::2" : {'multihop': 'false', 'rx_interval': '50', 'tx_interval': '50', 'multiplier': '3', 'local_addr': '2603:10E2:400:3::1'}
         },
         {}
     )
