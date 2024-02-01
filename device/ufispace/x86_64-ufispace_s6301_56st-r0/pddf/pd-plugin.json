@@ -23,6 +23,10 @@
             "i2c":
             {
                 "valmap": { "1":true, "0":false }
+            },
+            "bmc":
+            {
+                "valmap": { "1":true, "0":false }
             }
         },
 
@@ -33,6 +37,7 @@
                 "valmap": { "1": true, "0":false }
             }
         },
+        
         "psu_support_list":
         [
             {"Manufacturer": "ASPOWER","Name": "U1A-K10150-DRB-13", "MaxSpd": "PSU_AC_FAN_MAX_SPEED", "Dir": "EXHAUST", "Type": "AC" },

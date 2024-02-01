@@ -864,7 +864,19 @@
                 { "itf":"pmbus", "dev":"PSU1-PMBUS" },
                 { "itf":"eeprom", "dev":"PSU1-EEPROM" }
             ]
-        }
+        },
+        "bmc": {
+            "ipmitool": {
+                "attr_list": [
+                    {
+                        "attr_name": "psu_present",
+                        "bmc_cmd": "i2cget -y -f 2 0x58 0x0 > /dev/null 2>&1; [ $? -ne 0 ] && echo '0' || echo '1'",
+                        "raw": "1",
+                        "type": "raw"
+                    }
+                ]
+            }
+        }        
     },
     "PSU1-PMBUS": {
         "dev_info": {
@@ -880,16 +892,6 @@
                 "dev_type": "psu_pmbus"
             },
             "attr_list": [
-                {
-                    "attr_name": "psu_present",
-                    "attr_devaddr":"0x33",
-                    "attr_devtype": "cpld",
-                    "attr_devname":"CPLD1",
-                    "attr_offset": "0x59",
-                    "attr_mask": "0x1",
-                    "attr_cmpval": "0x0",
-                    "attr_len": "1"
-                },
                 {
                     "attr_name": "psu_power_good",
                     "attr_devaddr": "0x33",
@@ -1056,7 +1058,19 @@
                 { "itf":"pmbus", "dev":"PSU2-PMBUS" },
                 { "itf":"eeprom", "dev":"PSU2-EEPROM" }
             ]
-        }
+        },
+        "bmc": {
+            "ipmitool": {
+                "attr_list": [
+                    {
+                        "attr_name": "psu_present",
+                        "bmc_cmd": "i2cget -y -f 2 0x59 0x0 > /dev/null 2>&1; [ $? -ne 0 ] && echo '0' || echo '1'",
+                        "raw": "1",
+                        "type": "raw"
+                    }
+                ]
+            }
+        }        
     },
     "PSU2-PMBUS": {
         "dev_info": {
@@ -1072,16 +1086,6 @@
                 "dev_type": "psu_pmbus"
             },
             "attr_list": [
-                {
-                    "attr_name": "psu_present",
-                    "attr_devaddr":"0x33",
-                    "attr_devtype": "cpld",
-                    "attr_devname":"CPLD1",
-                    "attr_offset": "0x59",
-                    "attr_mask": "0x2",
-                    "attr_cmpval": "0x0",
-                    "attr_len": "1"
-                },
                 {
                     "attr_name": "psu_power_good",
                     "attr_devaddr": "0x33",
