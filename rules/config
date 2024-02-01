@@ -127,6 +127,9 @@ DEFAULT_VS_PREPARE_MEM = yes
 # INCLUDE_SYSTEM_GNMI - build docker-sonic-gnmi for system gnmi support
 INCLUDE_SYSTEM_GNMI = y
 
+# INCLUDE_SYSTEM_EVENTD - build docker-eventd for system eventd support
+INCLUDE_SYSTEM_EVENTD = y
+
 # INCLUDE_SYSTEM_TELEMETRY - build docker-sonic-telemetry for system telemetry support
 INCLUDE_SYSTEM_TELEMETRY = n
 
@@ -144,7 +147,7 @@ INCLUDE_MGMT_FRAMEWORK = y
 ENABLE_HOST_SERVICE_ON_START = y
 
 # INCLUDE_RESTAPI - build docker-sonic-restapi for configuring the switch using REST APIs
-INCLUDE_RESTAPI = n
+INCLUDE_RESTAPI ?= n
 
 # INCLUDE_NAT - build docker-nat for nat support
 INCLUDE_NAT = y

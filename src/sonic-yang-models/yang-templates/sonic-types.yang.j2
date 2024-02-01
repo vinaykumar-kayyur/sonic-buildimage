@@ -209,6 +209,14 @@ module sonic-types {
         }
     }
 
+    typedef switchport_mode {
+        type string {
+            pattern "routed|access|trunk";
+        }
+        description
+            "SwitchPort Modes for Port & PortChannel";
+    }
+
     typedef meter_type {
         type enumeration {
             enum packets;
@@ -358,6 +366,22 @@ module sonic-types {
             for a particular server is out of scope.";
         reference
             "BCP 175: Procedures for Maintaining the Time Zone Database";
+    }
+
+    typedef yes-no {
+        description "Yes/No configuration";
+        type enumeration {
+            enum yes;
+            enum no;
+        }
+    }
+
+    typedef on-off {
+        description "On/Off configuration";
+        type enumeration {
+            enum on;
+            enum off;
+        }
     }
 
     {% if yang_model_type == "cvl" %}
