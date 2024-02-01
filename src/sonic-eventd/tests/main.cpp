@@ -69,7 +69,7 @@ public:
         }
         catch (exception &e)
         {
-            printf("Received error in getDbId call, e=(%s)\n", e.what());
+            EXPECT_STREQ(e.what(), "Key :invalid is not a valid key name in config file");
         }
 
         // Get this info handy
