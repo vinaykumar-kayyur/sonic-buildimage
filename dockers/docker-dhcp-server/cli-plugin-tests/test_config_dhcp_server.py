@@ -620,3 +620,19 @@ class TestConfigDHCPServer(object):
         assert result.exit_code == 0, "exit code: {}, Exception: {}, Traceback: {}".format(result.exit_code, result.exception, result.exc_info)
         assert mock_db.get_all("CONFIG_DB", "DHCP_SERVER_IPV4_CUSTOMIZED_OPTIONS|Option61") == expected_value
 
+    def test_config_dhcp_server_ipv4_option_add_existing(self, mock_db):
+        runner = CliRunner()
+        db = clicommon.Db()
+        db.db = mock_db
+        result = runner.invoke(dhcp_server.dhcp_server.commands["ipv4"].commands["option"].commands["add"], \
+                ["Option60", "60", "string", "dummy_value"], obj=db)
+        assert result.exit_code == 2, "exit code: {}, Exception: {}, Traceback: {}".format(result.exit_code, result.exception, result.exc_info)
+
+    def test_config_dhcp_server_ipv4_option_add_illegal_argument(self, mock_db):
+        runner = CliRunner()
+        db = clicommon.Db()
+        db.db = mock_db
+        result = runner.invoke(dhcp_server.dhcp_server.commands["ipv4"].commands["option"].commands["add"], \
+                ["Option61", "-5", "string", "dummy_value"], obj=db)
+        assert result.exit_code == 2, "exit code: {}, Exception: {}, Traceback: {}".format(result.exit_code, result.exception, result.exc_info)
+
