@@ -608,7 +608,7 @@ class TestConfigDHCPServer(object):
 
     def test_config_dhcp_server_ipv4_option_add(self, mock_db):
         expected_value = {
-            "option_id": "61",
+            "option_id": "62",
             "type": "string",
             "value": "dummy_value"
         }
@@ -616,9 +616,9 @@ class TestConfigDHCPServer(object):
         db = clicommon.Db()
         db.db = mock_db
         result = runner.invoke(dhcp_server.dhcp_server.commands["ipv4"].commands["option"].commands["add"], \
-                ["option61", "61", "string", "dummy_value"], obj=db)
+                ["option62", "62", "string", "dummy_value"], obj=db)
         assert result.exit_code == 0, "exit code: {}, Exception: {}, Traceback: {}".format(result.exit_code, result.exception, result.exc_info)
-        assert mock_db.get_all("CONFIG_DB", "DHCP_SERVER_IPV4_CUSTOMIZED_OPTIONS|option61") == expected_value
+        assert mock_db.get_all("CONFIG_DB", "DHCP_SERVER_IPV4_CUSTOMIZED_OPTIONS|option62") == expected_value
 
     def test_config_dhcp_server_ipv4_option_add_existing(self, mock_db):
         runner = CliRunner()
@@ -633,6 +633,31 @@ class TestConfigDHCPServer(object):
         db = clicommon.Db()
         db.db = mock_db
         result = runner.invoke(dhcp_server.dhcp_server.commands["ipv4"].commands["option"].commands["add"], \
-                ["option61", "-5", "string", "dummy_value"], obj=db)
+                ["option62", "-5", "string", "dummy_value"], obj=db)
+        assert result.exit_code == 2, "exit code: {}, Exception: {}, Traceback: {}".format(result.exit_code, result.exception, result.exc_info)
+
+    def test_config_dhcp_server_ipv4_option_del(self, mock_db):
+        runner = CliRunner()
+        db = clicommon.Db()
+        db.db = mock_db
+        result = runner.invoke(dhcp_server.dhcp_server.commands["ipv4"].commands["option"].commands["del"], \
+                ["option61"], obj=db)
+        assert result.exit_code == 0, "exit code: {}, Exception: {}, Traceback: {}".format(result.exit_code, result.exception, result.exc_info)
+        assert mock_db.exists("CONFIG_DB", "DHCP_SERVER_IPV4_CUSTOMIZED_OPTIONS|option61") == False
+
+    def test_config_dhcp_server_ipv4_option_del_nonexisting(self, mock_db):
+        runner = CliRunner()
+        db = clicommon.Db()
+        db.db = mock_db
+        result = runner.invoke(dhcp_server.dhcp_server.commands["ipv4"].commands["option"].commands["del"], \
+                ["option62"], obj=db)
+        assert result.exit_code == 2, "exit code: {}, Exception: {}, Traceback: {}".format(result.exit_code, result.exception, result.exc_info)
+
+    def test_config_dhcp_server_ipv4_option_del_referenced(self, mock_db):
+        runner = CliRunner()
+        db = clicommon.Db()
+        db.db = mock_db
+        result = runner.invoke(dhcp_server.dhcp_server.commands["ipv4"].commands["option"].commands["del"], \
+                ["option60"], obj=db)
         assert result.exit_code == 2, "exit code: {}, Exception: {}, Traceback: {}".format(result.exit_code, result.exception, result.exc_info)
 
