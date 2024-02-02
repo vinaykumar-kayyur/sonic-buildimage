@@ -187,6 +187,8 @@ class TestShowDHCPServer(object):
 +===============+=============+=============+========+
 | option60      |          60 | dummy_value | string |
 +---------------+-------------+-------------+--------+
+| option61      |          61 | dummy_value | string |
++---------------+-------------+-------------+--------+
 """
         runner = CliRunner()
         db = clicommon.Db()
