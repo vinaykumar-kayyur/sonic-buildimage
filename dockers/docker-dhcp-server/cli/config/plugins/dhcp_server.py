@@ -382,7 +382,7 @@ def dhcp_server_ipv4_option_del(db, option_name):
     for key in dbconn.keys("CONFIG_DB", "DHCP_SERVER_IPV4|*"):
         existing_options = dbconn.get("CONFIG_DB", key, "customized_options")
         if existing_options and option_name in existing_options.split(","):
-            ctx.fail("Option {} is referenced in {}, cannot delete".format(option_name, key[len("DHCP_SERVER_IPV4|":)]))
+            ctx.fail("Option {} is referenced in {}, cannot delete".format(option_name, key[len("DHCP_SERVER_IPV4|"):]))
     dbconn.delete("CONFIG_DB", key)
 
 
