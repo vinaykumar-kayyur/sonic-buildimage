@@ -46,6 +46,7 @@ def validate_str_type(type_, value):
 
 
 @click.group(cls=clicommon.AbbreviationGroup, name="dhcp_server")
+@clicommon.pass_db
 def dhcp_server():
     """config DHCP Server information"""
     ctx = click.get_current_context()
@@ -341,9 +342,93 @@ def dhcp_server_ipv4_ip_unbind(db, dhcp_interface, member_interface, range_, ip_
                 ctx.fail("Attempting to unbind range or ip that is not binded")
 
 
-def register(cli):
-    # cli.add_command(dhcp_server)
+@dhcp_server_ipv4.group(cls=clicommon.AliasedGroup, name="option")
+def dhcp_server_ipv4_option():
     pass
+
+
+@dhcp_server_ipv4_option.command(name="add")
+@click.argument("option_name", required=True)
+@click.argument("option_id", required=True)
+@click.argument("type", "type_", required=True)
+@click.argument("value", required=True)
+@clicommon.pass_db
+def dhcp_server_ipv4_option_add(db, option_name, option_id, type_, value):
+    ctx = click.get_current_context()
+    if not validate_str_type("uint32", option_id):
+        ctx.fail("option_id must be uint32")
+    if type_ != "string"
+        ctx.fail("Currently only string type is supproted")
+    dbconn = db.db
+    key = "DHCP_SERVER_IPV4_CUSTOMIZED_OPTIONS|" + option_name
+    if dbconn.exists("CONFIG_DB", key):
+        ctx.fail("Option {} already exist".format(option_name))
+    dbconn.hmset("CONFIG_DB", key, {
+        "option_id": option_id,
+        "type": type_,
+        "value": value,
+        })
+
+
+@dhcp_server_ipv4_option.command(name="del")
+@click.argument("option_name", required=True)
+@clicommon.pass_db
+def dhcp_server_ipv4_option_del(db, option_name):
+    ctx = click.get_current_context()
+    dbconn = db.db
+    key = "DHCP_SERVER_IPV4_CUSTOMIZED_OPTIONS|" + option_name
+    if not dbconn.exists("CONFIG_DB", key):
+        ctx.fail("Option {} does not exist, cannot delete".format(option_name))
+    dbconn.delete("CONFIG_DB", key)
+
+
+@dhcp_server_ipv4_option.command(name="bind")
+@click.argument("dhcp_interface", required=True)
+@click.argument("option_list", required=True)
+@clicommon.pass_db
+def dhcp_server_ipv4_option_bind(db, dhcp_interface, option_list):
+    ctx = click.get_current_context()
+    dbconn = db.db
+    key = "DHCP_SERVER_IPV4|" + dhcp_interface
+    if not dbconn.exists("CONFIG_DB", key):
+        ctx.fail("Interface {} is not valid dhcp interface".format(dhcp_interface))
+    option_list = option_list.split(",")
+    for option_name in option_list:
+        option_key = "DHCP_SERVER_IPV4_CUSTOMIZED_OPTIONS|" + option_name
+        if not dbconn.exists("CONFIG_DB", option_key):
+            ctx.fail("Option {} does not exist, cannot bind".format(option_name))
+    existing_value = dbconn.get("CONFIG_DB", key, "customized_options")
+    value_set = set(existing_value.split(",")) if existing_value else set()
+    new_value_set = value_set.union(option_list)
+    dbconn.set("CONFIG_DB", key, "customized_options", ",".join(new_value_set))
+
+
+@dhcp_server_ipv4_option.command(name="unbind")
+@click.argument("dhcp_interface", required=True)
+@click.argument("option_list", required=False)
+@click.option("--all", "all_", required=False, default=False, is_flag=True)
+@clicommon.pass_db
+def dhcp_server_ipv4_option_unbind(db, dhcp_interface, option_list, all_):
+    ctx = click.get_current_context()
+    dbconn = db.db
+    key = "DHCP_SERVER_IPV4|" + dhcp_interface
+    if not dbconn.exists("CONFIG_DB", key):
+        ctx.fail("Interface {} is not valid dhcp interface".format(dhcp_interface))
+    if all_:
+        dbconn.set("CONFIG_DB", key, "customized_options", "")
+    else:
+        unbind_value = set(option_list.split(","))
+        existing_value = dbconn.get("CONFIG_DB", key, "customized_options")
+        value_set = set(existing_value.split(",")) if existing_value else set()
+        if value_set.issuperset(unbind_value):
+            new_value_set = value_set.difference(unbind_value)
+            dbconn.set("CONFIG_DB", key, "customized_options", ",".join(new_value_set))
+        else:
+            ctx.fail("Attempting to unbind option that is not binded")
+
+
+def register(cli):
+    cli.add_command(dhcp_server)
 
 
 if __name__ == '__main__':
