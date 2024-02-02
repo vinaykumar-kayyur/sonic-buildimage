@@ -357,7 +357,7 @@ def dhcp_server_ipv4_option_add(db, option_name, option_id, type_, value):
     ctx = click.get_current_context()
     if not validate_str_type("uint32", option_id):
         ctx.fail("option_id must be uint32")
-    if type_ != "string"
+    if type_ != "string":
         ctx.fail("Currently only string type is supproted")
     dbconn = db.db
     key = "DHCP_SERVER_IPV4_CUSTOMIZED_OPTIONS|" + option_name
