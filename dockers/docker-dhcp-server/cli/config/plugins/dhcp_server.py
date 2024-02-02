@@ -350,7 +350,7 @@ def dhcp_server_ipv4_option():
 @dhcp_server_ipv4_option.command(name="add")
 @click.argument("option_name", required=True)
 @click.argument("option_id", required=True)
-@click.argument("type", "type_", required=True)
+@click.argument("type_", required=True)
 @click.argument("value", required=True)
 @clicommon.pass_db
 def dhcp_server_ipv4_option_add(db, option_name, option_id, type_, value):
@@ -358,7 +358,7 @@ def dhcp_server_ipv4_option_add(db, option_name, option_id, type_, value):
     if not validate_str_type("uint32", option_id):
         ctx.fail("option_id must be uint32")
     if type_ != "string":
-        ctx.fail("Currently only string type is supproted")
+        ctx.fail("Currently only string type is supported")
     dbconn = db.db
     key = "DHCP_SERVER_IPV4_CUSTOMIZED_OPTIONS|" + option_name
     if dbconn.exists("CONFIG_DB", key):
