@@ -606,3 +606,17 @@ class TestConfigDHCPServer(object):
                 ["Vlan100", "Ethernet4", "100.1.1.13,100.1.1.14"], obj=db)
         assert result.exit_code == 2, "exit code: {}, Exception: {}, Traceback: {}".format(result.exit_code, result.exception, result.exc_info)
 
+    def test_config_dhcp_server_ipv4_option_add(self, mock_db):
+        expected_value = {
+            "option_id": "61",
+            "type": "string",
+            "value": "dummy_value"
+        }
+        runner = CliRunner()
+        db = clicommon.Db()
+        db.db = mock_db
+        result = runner.invoke(dhcp_server.dhcp_server.commands["ipv4"].commands["option"].commands["add"], \
+                ["Option61", "61", "string", "dummy_value"], obj=db)
+        assert result.exit_code == 0, "exit code: {}, Exception: {}, Traceback: {}".format(result.exit_code, result.exception, result.exc_info)
+        assert mock_db.get_all("CONFIG_DB", "DHCP_SERVER_IPV4_CUSTOMIZED_OPTIONS|Option61") == expected_value
+
