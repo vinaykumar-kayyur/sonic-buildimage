@@ -608,7 +608,7 @@ class TestConfigDHCPServer(object):
 
     def test_config_dhcp_server_ipv4_option_add(self, mock_db):
         expected_value = {
-            "option_id": "62",
+            "option_id": "165",
             "type": "string",
             "value": "dummy_value"
         }
@@ -616,7 +616,7 @@ class TestConfigDHCPServer(object):
         db = clicommon.Db()
         db.db = mock_db
         result = runner.invoke(dhcp_server.dhcp_server.commands["ipv4"].commands["option"].commands["add"], \
-                ["option62", "62", "string", "dummy_value"], obj=db)
+                ["option62", "165", "string", "dummy_value"], obj=db)
         assert result.exit_code == 0, "exit code: {}, Exception: {}, Traceback: {}".format(result.exit_code, result.exception, result.exc_info)
         assert mock_db.get_all("CONFIG_DB", "DHCP_SERVER_IPV4_CUSTOMIZED_OPTIONS|option62") == expected_value
 
@@ -625,15 +625,31 @@ class TestConfigDHCPServer(object):
         db = clicommon.Db()
         db.db = mock_db
         result = runner.invoke(dhcp_server.dhcp_server.commands["ipv4"].commands["option"].commands["add"], \
-                ["option60", "60", "string", "dummy_value"], obj=db)
+                ["option60", "163", "string", "dummy_value"], obj=db)
         assert result.exit_code == 2, "exit code: {}, Exception: {}, Traceback: {}".format(result.exit_code, result.exception, result.exc_info)
 
-    def test_config_dhcp_server_ipv4_option_add_illegal_argument(self, mock_db):
+    def test_config_dhcp_server_ipv4_option_add_illegal_option_id(self, mock_db):
         runner = CliRunner()
         db = clicommon.Db()
         db.db = mock_db
         result = runner.invoke(dhcp_server.dhcp_server.commands["ipv4"].commands["option"].commands["add"], \
-                ["option62", "-5", "string", "dummy_value"], obj=db)
+                ["option62", "10", "string", "dummy_value"], obj=db)
+        assert result.exit_code == 2, "exit code: {}, Exception: {}, Traceback: {}".format(result.exit_code, result.exception, result.exc_info)
+
+    def test_config_dhcp_server_ipv4_option_add_illegal_type(self, mock_db):
+        runner = CliRunner()
+        db = clicommon.Db()
+        db.db = mock_db
+        result = runner.invoke(dhcp_server.dhcp_server.commands["ipv4"].commands["option"].commands["add"], \
+                ["option62", "165", "xx", "xx"], obj=db)
+        assert result.exit_code == 2, "exit code: {}, Exception: {}, Traceback: {}".format(result.exit_code, result.exception, result.exc_info)
+
+    def test_config_dhcp_server_ipv4_option_add_illegal_value(self, mock_db):
+        runner = CliRunner()
+        db = clicommon.Db()
+        db.db = mock_db
+        result = runner.invoke(dhcp_server.dhcp_server.commands["ipv4"].commands["option"].commands["add"], \
+                ["option62", "165", "uint8", "1000000"], obj=db)
         assert result.exit_code == 2, "exit code: {}, Exception: {}, Traceback: {}".format(result.exit_code, result.exception, result.exc_info)
 
     def test_config_dhcp_server_ipv4_option_del(self, mock_db):
