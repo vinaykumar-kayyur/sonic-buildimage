@@ -20,7 +20,7 @@ def validate_str_type(type_, value):
     """
     if not isinstance(value, str):
         return False
-    if type_ not in SUPPORT_TYPE:
+    if type_ not in SUPPORTED_TYPE:
         return False
     if type_ == "string":
         return True
