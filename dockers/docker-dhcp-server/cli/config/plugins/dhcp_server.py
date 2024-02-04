@@ -362,7 +362,7 @@ def dhcp_server_ipv4_option_add(db, option_name, option_id, type_, value):
         ctx.fail("Option id {} is not supported".format(option_id))
     if type_ not in SUPPORTED_TYPE:
         ctx.fail("Input type is not supported")
-    if not valudate_str_type(type_, value):
+    if not validate_str_type(type_, value):
         ctx.fail("Value {} is not of type {}".format(value, type_))
     dbconn = db.db
     key = "DHCP_SERVER_IPV4_CUSTOMIZED_OPTIONS|" + option_name
