@@ -36,12 +36,12 @@
         "state": "disabled"
     },
     "DHCP_SERVER_IPV4_CUSTOMIZED_OPTIONS|option60": {
-        "id": "60",
+        "id": "163",
         "type": "string",
         "value": "dummy_value"
     },
     "DHCP_SERVER_IPV4_CUSTOMIZED_OPTIONS|option61": {
-        "id": "61",
+        "id": "164",
         "type": "string",
         "value": "dummy_value"
     },

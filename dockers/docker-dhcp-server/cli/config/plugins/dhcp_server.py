@@ -347,6 +347,9 @@ def dhcp_server_ipv4_option():
     pass
 
 
+SUPPORTED_OPTION_ID = ["147", "148", "149", "163", "164", "165", "166", "167", "168", "169", "170", "171", "172", "173", "174", "178", "179", "180", "181", "182", "183", "184", "185", "186", "187", "188", "189", "190", "191", "192", "193", "194", "195", "196", "197", "198", "199", "200", "201", "202", "203", "204", "205", "206", "207", "214", "215", "216", "217", "218", "219", "222", "223"]
+
+
 @dhcp_server_ipv4_option.command(name="add")
 @click.argument("option_name", required=True)
 @click.argument("option_id", required=True)
@@ -355,10 +358,12 @@ def dhcp_server_ipv4_option():
 @clicommon.pass_db
 def dhcp_server_ipv4_option_add(db, option_name, option_id, type_, value):
     ctx = click.get_current_context()
-    if not validate_str_type("uint32", option_id):
-        ctx.fail("option_id must be uint32")
-    if type_ != "string":
-        ctx.fail("Currently only string type is supported")
+    if option_id not in SUPPORTED_OPTION_ID:
+        ctx.fail("Option id {} is not supported".format(option_id))
+    if type_ not in SUPPORTED_TYPE:
+        ctx.fail("Input type is not supported")
+    if not valudate_str_type(type_, value):
+        ctx.fail("Value {} is not of type {}".format(value, type_))
     dbconn = db.db
     key = "DHCP_SERVER_IPV4_CUSTOMIZED_OPTIONS|" + option_name
     if dbconn.exists("CONFIG_DB", key):
