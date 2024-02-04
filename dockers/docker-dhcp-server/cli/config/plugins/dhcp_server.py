@@ -5,7 +5,7 @@ import ipaddress
 import string
 
 
-SUPPORT_TYPE = ["binary", "boolean", "ipv4-address", "string", "uint8", "uint16", "uint32"]
+SUPPORTED_TYPE = ["binary", "boolean", "ipv4-address", "string", "uint8", "uint16", "uint32"]
 
 
 def validate_str_type(type_, value):
