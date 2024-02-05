@@ -9,8 +9,6 @@
 #### MODULES ####
 #################
 
-$ModLoad imuxsock # provides support for local system logging
-
 #
 # Set a rate limit on messages from the container
 #
@@ -37,16 +35,17 @@ $SystemLogRateLimitBurst {{ rate_limit_burst }}
 $SystemLogRateLimitBurst 20000
 {% endif %}
 
-#$ModLoad imklog  # provides kernel logging support
-#$ModLoad immark  # provides --MARK-- message capability
+module(load="imuxsock") # provides support for local system logging
+#module(load="imklog")   # provides kernel logging support
+#module(load="immark")  # provides --MARK-- message capability
 
 # provides UDP syslog reception
-#$ModLoad imudp
-#$UDPServerRun 514
+#module(load="imudp")
+#input(type="imudp" port="514")
 
 # provides TCP syslog reception
-#$ModLoad imtcp
-#$InputTCPServerRun 514
+#module(load="imtcp")
+#input(type="imtcp" port="514")
 
 
 ###########################
@@ -71,7 +70,8 @@ if ($.PLATFORM == "x86_64-mlnx_msn2700-r0" or $.PLATFORM == "x86_64-mlnx_msn2700
 
 # Set remote syslog server
 template (name="ForwardFormatInContainer" type="string" string="<%PRI%>%TIMESTAMP:::date-rfc3339% %HOSTNAME% %$.CONTAINER_NAME%#%syslogtag%%msg:::sp-if-no-1st-sp%%msg%")
-*.* action(type="omfwd" target=`echo $SYSLOG_TARGET_IP` port="514" protocol="udp" Template="ForwardFormatInContainer")
+module(load="omrelp")
+*.* action(type="omrelp" target=`echo $SYSLOG_TARGET_IP` port="2514" Template="ForwardFormatInContainer")
 
 #
 # Use traditional timestamp format.

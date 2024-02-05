@@ -13,8 +13,6 @@
 #### MODULES ####
 #################
 
-$ModLoad imuxsock # provides support for local system logging
-
 {% set gconf = (SYSLOG_CONFIG | d({})).get('GLOBAL', {}) -%}
 {% set rate_limit_interval = gconf.get('rate_limit_interval') %}
 {% set rate_limit_burst = gconf.get('rate_limit_burst') %}
@@ -26,17 +24,21 @@ $SystemLogRateLimitInterval {{ rate_limit_interval }}
 $SystemLogRateLimitBurst {{ rate_limit_burst }}
 {% endif %}
 
-$ModLoad imklog   # provides kernel logging support
-#$ModLoad immark  # provides --MARK-- message capability
+module(load="imuxsock") # provides support for local system logging
+module(load="imklog")   # provides kernel logging support
+#module(load="immark")  # provides --MARK-- message capability
 
 # provides UDP syslog reception
-$ModLoad imudp
-$UDPServerAddress {{udp_server_ip}}  #bind to localhost before udp server run
-$UDPServerRun 514
+#module(load="imudp")
+#input(type="imudp" port="514")
 
 # provides TCP syslog reception
-#$ModLoad imtcp
-#$InputTCPServerRun 514
+#module(load="imtcp")
+#input(type="imtcp" port="514")
+
+# provides RELP syslog reception
+module(load="imrelp")
+input(type="imrelp" port="2514")
 
 
 ###########################
