@@ -34,6 +34,7 @@ class psu(devicebase):
     __Temperature = None
     __FanSpeedMin = None
     __FanSpeedMax = None
+    __PsuFanNumber = None
     __FanSpeedTolerance = None
     __InputsVoltage_config = None
     __InputsCurrent_config = None
@@ -71,6 +72,7 @@ class psu(devicebase):
         self.Temperature_config = conf.get("Temperature", None)
         self.Temperature = sensor(self.Temperature_config, self.get_psu_model)
 
+        self.PsuFanNumber = conf.get('psu_fan_number', 1)
         self.FanSpeedTolerance = conf.get('psu_fan_tolerance', 30)
         self.FanSpeed_config = conf.get("FanSpeed", None)
         self.FanSpeed = sensor(self.FanSpeed_config, self.get_psu_model)
@@ -308,6 +310,14 @@ class psu(devicebase):
     @FanSpeedMax.setter
     def FanSpeedMax(self, val):
         self.__FanSpeedMax = val
+
+    @property
+    def PsuFanNumber(self):
+        return self.__PsuFanNumber
+
+    @PsuFanNumber.setter
+    def PsuFanNumber(self, val):
+        self.__PsuFanNumber = val
 
     @property
     def FanSpeedTolerance(self):
