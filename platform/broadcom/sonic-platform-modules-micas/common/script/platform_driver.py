@@ -3,7 +3,7 @@ import os
 import subprocess
 import time
 import click
-from platform_config import GLOBALCONFIG, WARM_UPGRADE_STARTED_FLAG, WARM_UPG_FLAG
+from platform_config import GLOBALCONFIG, WARM_UPGRADE_STARTED_FLAG, WARM_UPG_FLAG, FW_UPGRADE_STARTED_FLAG
 
 
 CONTEXT_SETTINGS = {"help_option_names": ['-h', '--help']}
@@ -39,6 +39,10 @@ def platform_process_file_check():
     # WARM_UPG_FLAG is used as port related service judgment flag
     if os.path.exists(WARM_UPG_FLAG):
         os.remove(WARM_UPG_FLAG)
+
+    # FW_UPGRADE_STARTED_FLAG is used as upgrade.py process start flag
+    if os.path.exists(FW_UPGRADE_STARTED_FLAG):
+        os.remove(FW_UPGRADE_STARTED_FLAG)
 
 
 def startCommon_operation():

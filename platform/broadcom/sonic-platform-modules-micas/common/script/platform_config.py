@@ -20,6 +20,7 @@ __all__ = [
     "PMON_SYSLOG_STATUS",
     "REBOOT_CAUSE_PARA",
     "UPGRADE_SUMMARY",
+    "FW_UPGRADE_STARTED_FLAG",
     "WARM_UPGRADE_PARAM",
     "WARM_UPG_FLAG",
     "WARM_UPGRADE_STARTED_FLAG",
@@ -43,7 +44,8 @@ __all__ = [
     "MONITOR_DEV_STATUS",
     "MONITOR_DEV_STATUS_DECODE",
     "DEV_LEDS",
-    "fanloc"
+    "fanloc",
+    "PLATFORM_POWER_CONF"
 ]
 
 
@@ -115,6 +117,7 @@ REBOOT_CAUSE_PARA = module_product.REBOOT_CAUSE_PARA
 
 # upgrade parameter
 UPGRADE_SUMMARY = module_product.UPGRADE_SUMMARY
+FW_UPGRADE_STARTED_FLAG = module_product.FW_UPGRADE_STARTED_FLAG
 
 # warm_uprade parameter
 WARM_UPGRADE_PARAM = module_product.WARM_UPGRADE_PARAM
@@ -139,6 +142,10 @@ SET_MAC_CONF = module_product.SET_MAC_CONF
 
 # driver update config
 DRVIER_UPDATE_CONF = module_product.DRVIER_UPDATE_CONF
+
+#platform power config
+PLATFORM_POWER_CONF = module_product.PLATFORM_POWER_CONF
+
 
 ################################ fancontrol parameter###################################
 

@@ -914,6 +914,8 @@ class interface(object):
             dic["High"] = self.error_ret
             dic["Value"] = self.error_ret
             dic["Unit"] = self.error_ret
+            dic["Invalid"] = self.error_ret
+            dic["Error"] = self.error_ret
         else:
             dic["Name"] = temptmp.name
             dic["Api_name"] = temptmp.api_name
@@ -924,6 +926,8 @@ class interface(object):
             temp_value = temptmp.Value
             dic["Value"] = temp_value if (temp_value is not None) else self.error_ret
             dic["Unit"] = temptmp.Unit
+            dic["Invalid"] = temptmp.temp_invalid
+            dic["Error"] = temptmp.temp_error
         return dic
 
     def get_temp_info(self):

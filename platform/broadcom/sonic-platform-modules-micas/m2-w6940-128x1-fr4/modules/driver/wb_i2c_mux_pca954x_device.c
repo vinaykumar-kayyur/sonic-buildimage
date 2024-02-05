@@ -99,9 +99,10 @@ static i2c_mux_pca954x_device_t i2c_mux_pca954x_device_data3 = {
     .attr = {
         .file_attr.dev_name         = "/dev/fpga0",
         .file_attr.offset           = 0x80,
-        .file_attr.mask             = 0x04,
+        .file_attr.mask             = 0x00000004,
         .file_attr.reset_on         = 0x00,
-        .file_attr.reset_off        = 0x04,
+        .file_attr.reset_off        = 0x00000004,
+        .file_attr.width            = 4,
     },
 };
 
@@ -119,9 +120,10 @@ static i2c_mux_pca954x_device_t i2c_mux_pca954x_device_data4 = {
     .attr = {
         .file_attr.dev_name         = "/dev/fpga0",
         .file_attr.offset           = 0x80,
-        .file_attr.mask             = 0x08,
+        .file_attr.mask             = 0x00000008,
         .file_attr.reset_on         = 0x00,
-        .file_attr.reset_off        = 0x08,
+        .file_attr.reset_off        = 0x00000008,
+        .file_attr.width            = 4,
     },
 };
 
@@ -139,9 +141,10 @@ static i2c_mux_pca954x_device_t i2c_mux_pca954x_device_data5 = {
     .attr = {
         .file_attr.dev_name         = "/dev/fpga0",
         .file_attr.offset           = 0x80,
-        .file_attr.mask             = 0x10,
+        .file_attr.mask             = 0x00000010,
         .file_attr.reset_on         = 0x00,
-        .file_attr.reset_off        = 0x10,
+        .file_attr.reset_off        = 0x00000010,
+        .file_attr.width            = 4,
     },
 };
 
@@ -159,9 +162,31 @@ static i2c_mux_pca954x_device_t i2c_mux_pca954x_device_data6 = {
     .attr = {
         .file_attr.dev_name         = "/dev/fpga0",
         .file_attr.offset           = 0x80,
-        .file_attr.mask             = 0x40,
+        .file_attr.mask             = 0x00000040,
         .file_attr.reset_on         = 0x00,
-        .file_attr.reset_off        = 0x40,
+        .file_attr.reset_off        = 0x00000040,
+        .file_attr.width            = 4,
+    },
+};
+
+static i2c_mux_pca954x_device_t i2c_mux_pca954x_device_data7 = {
+    .i2c_bus                        = 12,
+    .i2c_addr                       = 0x70,
+    .probe_disable                  = 1,
+    .select_chan_check              = 0,
+    .close_chan_force_reset         = 0,
+    .pca9548_base_nr                = 88,
+    .pca9548_reset_type             = PCA9548_RESET_FILE,
+    .rst_delay_b                    = 0,
+    .rst_delay                      = 1000,
+    .rst_delay_a                    = 1000,
+    .attr = {
+        .file_attr.dev_name         = "/dev/fpga0",
+        .file_attr.offset           = 0x80,
+        .file_attr.mask             = 0x00000400,
+        .file_attr.reset_on         = 0x00,
+        .file_attr.reset_off        = 0x00000400,
+        .file_attr.width            = 4,
     },
 };
 
@@ -193,6 +218,10 @@ struct i2c_board_info i2c_mux_pca954x_device_info[] = {
     {
         .type = "wb_pca9548",
         .platform_data = &i2c_mux_pca954x_device_data6,
+    },
+    {
+        .type = "wb_pca9548",
+        .platform_data = &i2c_mux_pca954x_device_data7,
     },
 };
 

@@ -121,7 +121,7 @@ monitor = {
         "check_crit_sleep_time": 20,
 
         "deal_all_fan_error_method_flag": 1,
-        "all_fan_error_switch_temp_critical_temp": 80,
+        "all_fan_error_switch_temp_critical_temp": 95,
         "all_fan_error_recover_log": "Power off base and mac board.",
         "all_fan_error_recover_cmd": "dfd_debug io_wr 0x947 0xfa",
         "all_fan_error_check_crit_reboot_num": 3,

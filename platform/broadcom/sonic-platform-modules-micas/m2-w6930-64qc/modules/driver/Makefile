@@ -8,7 +8,8 @@ EXTRA_CFLAGS+= -I$(FIRMWARE_UPGRADE_PATH)
 
 obj-m += wb_pcie_dev_device.o
 obj-m += wb_spi_ocores_device.o
-#obj-m += wb_spi_dev_device.o
+obj-m += wb_spi_dev_device.o
+obj-m += wb_spi_dev_platform_device.o
 obj-m += wb_lpc_drv_device.o
 obj-m += wb_io_dev_device.o
 obj-m += wb_fpga_i2c_bus_device.o

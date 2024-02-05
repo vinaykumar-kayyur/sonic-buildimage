@@ -31,9 +31,13 @@
 #               "presence_path": "/xx/wb_plat/xx[port_id]/present"
 #               "eeprom_path": "/sys/bus/i2c/devices/i2c-[bus]/[bus]-0050/eeprom"
 #               "reset_path": "/xx/wb_plat/xx[port_id]/reset"
+#      ver 3.0
+#               For TH5 CPO only, need to switch page/bank manually
+#               instead of using OPTOE
 #############################################################################
 import sys
 import time
+import fcntl
 import syslog
 import traceback
 from abc import abstractmethod
@@ -75,6 +79,8 @@ class Sfp(SfpOptoeBase):
             self._sfp_api = SfpV1(index)
         elif vers == 2:
             self._sfp_api = SfpV2(index)
+        elif vers == 3:
+            self._sfp_api = SfpV3CPO(index)
         else:
             self._sfplog(LOG_ERROR_LEVEL, "Get SfpVer Error!")
 
@@ -84,23 +90,35 @@ class Sfp(SfpOptoeBase):
     def read_eeprom(self, offset, num_bytes):
         return self._sfp_api.read_eeprom(offset, num_bytes)
 
+    def write_eeprom(self, offset, num_bytes, write_buffer):
+        return self._sfp_api.write_eeprom(offset, num_bytes, write_buffer)
+
     def get_presence(self):
         return self._sfp_api.get_presence()
 
     def get_transceiver_info(self):
-        # temporary solution for a sonic202111 bug
-        transceiver_info = super().get_transceiver_info()
-        try:
-            if transceiver_info == None:
-                return None
-            if transceiver_info['cable_type'] == None:
-                transceiver_info['cable_type'] = 'N/A'
-            if transceiver_info["vendor_rev"] is not None:
-                transceiver_info["hardware_rev"] = transceiver_info["vendor_rev"]
-        except BaseException:
-            print(traceback.format_exc())
-            return None
-        return transceiver_info
+        api_get = self._sfp_api.get_transceiver_info(SfpOptoeBase, self)
+        return api_get if api_get is not None else super().get_transceiver_info()
+
+    def get_transceiver_bulk_status(self):
+        api_get = self._sfp_api.get_transceiver_bulk_status(SfpOptoeBase, self)
+        return api_get if api_get is not None else super().get_transceiver_bulk_status()
+
+    def get_transceiver_threshold_info(self):
+        api_get = self._sfp_api.get_transceiver_threshold_info(SfpOptoeBase, self)
+        return api_get if api_get is not None else super().get_transceiver_threshold_info()
+    
+    def get_transceiver_status(self):
+        api_get = self._sfp_api.get_transceiver_status(SfpOptoeBase, self)
+        return api_get if api_get is not None else super().get_transceiver_status()
+    
+    def get_transceiver_loopback(self):
+        api_get = self._sfp_api.get_transceiver_loopback(SfpOptoeBase, self)
+        return api_get if api_get is not None else super().get_transceiver_loopback()
+    
+    def get_transceiver_pm(self):
+        api_get = self._sfp_api.get_transceiver_pm(SfpOptoeBase, self)
+        return api_get if api_get is not None else super().get_transceiver_pm()
 
     def get_reset_status(self):
         if self.get_presence() is False:
@@ -270,7 +288,41 @@ class SfpCust():
         return self.eeprom_path or None
 
     @abstractmethod
+    def _pre_get_transceiver_info(self):
+        pass
+
+    @abstractmethod
     def get_presence(self):
+        pass
+
+    def get_transceiver_info(self, class_optoeBase, class_sfp):
+        # temporary solution for a sonic202111 bug
+        transceiver_info = class_optoeBase.get_transceiver_info(class_sfp)
+        try:
+            if transceiver_info == None:
+                return None
+            if transceiver_info['cable_type'] == None:
+                transceiver_info['cable_type'] = 'N/A'
+            if transceiver_info["vendor_rev"] is not None:
+                transceiver_info["hardware_rev"] = transceiver_info["vendor_rev"]
+        except BaseException:
+            print(traceback.format_exc())
+            return None
+        return transceiver_info
+
+    def get_transceiver_bulk_status(self, class_optoeBase, class_sfp):
+        pass
+
+    def get_transceiver_threshold_info(self, class_optoeBase, class_sfp):
+        pass
+
+    def get_transceiver_status(self, class_optoeBase, class_sfp):
+        pass
+
+    def get_transceiver_loopback(self, class_optoeBase, class_sfp):
+        pass
+
+    def get_transceiver_pm(self, class_optoeBase, class_sfp):
         pass
 
     def read_eeprom(self, offset, num_bytes):
@@ -292,18 +344,16 @@ class SfpCust():
         return None
 
     def write_eeprom(self, offset, num_bytes, write_buffer):
-        try:
-            for i in range(self.eeprom_retry_times):
-                ret = SfpOptoeBase.write_eeprom(self, offset, num_bytes, write_buffer)
-                if ret is False:
-                    time.sleep(self.eeprom_retry_break_sec)
-                    continue
-                break
-
-            return ret
-        except BaseException:
-            self._sfplog(LOG_ERROR_LEVEL, traceback.format_exc())
-            return False
+        for i in range(self.eeprom_retry_times):
+            try:
+                with open(self._get_eeprom_path(), mode='r+b', buffering=0) as f:
+                    f.seek(offset)
+                    f.write(write_buffer[0:num_bytes])
+                return True
+            except (OSError, IOError):
+                time.sleep(self.eeprom_retry_break_sec)
+                pass
+        return False
 
     @abstractmethod
     def set_optoe_type(self, optoe_type):
@@ -632,3 +682,197 @@ class SfpV2(SfpCust):
             self._sfplog(LOG_ERROR_LEVEL, traceback.format_exc())
             return False
         return True
+
+class SfpV3CPO(SfpCust):
+    def _init_config(self, index):
+        super()._init_config(index)
+        sfp_config = baseutil.get_config().get("sfps", None)
+
+        eeprom_path_config = sfp_config.get("eeprom_path", None)
+        eeprom_path_key = sfp_config.get("eeprom_path_key")[self._port_id - 1]
+        self.eeprom_path = None if eeprom_path_config is None else eeprom_path_config % (
+            eeprom_path_key, eeprom_path_key)
+        self._sfplog(LOG_DEBUG_LEVEL, "Done init eeprom path: %s" % self.eeprom_path)
+
+    # CPO always present
+    def get_presence(self):
+        return True
+
+    def read_eeprom(self, offset, num_bytes):
+        # temp solution for CPO byte0 bug, remove me when it fixed
+        if offset == 0:
+            if self._file_rw_lock() is False:
+                return None
+            self._switch_page(0)
+            result = self._read_eeprom(offset, num_bytes)
+            self._file_rw_unlock()
+            return result
+
+        if offset < 128:    # page 0L
+            return self._read_eeprom(offset, num_bytes)
+
+        if self._file_rw_lock() is False:
+            return None
+
+        # for other page, need to convert flat_mem offset to single page offset
+        result = self._convert_to_single_page_offset_read(offset, num_bytes)
+        self._file_rw_unlock()
+        return result
+
+    def write_eeprom(self, offset, num_bytes, write_buffer):
+        # temp solution for CPO byte0 bug, remove me when it fixed
+        if offset == 0:
+            if self._file_rw_lock() is False:
+                return None
+            self._switch_page(0)
+            result = self._write_eeprom(offset, num_bytes, write_buffer)
+            self._file_rw_unlock()
+            return result
+
+        if offset < 128:    # page 0L
+            return self._write_eeprom(offset, num_bytes, write_buffer)
+
+        if self._file_rw_lock() is False:
+            return None
+
+        # for other page, need to convert flat_mem offset to single page offset
+        result = self._convert_to_single_page_offset_write(offset, num_bytes, write_buffer)
+        self._file_rw_unlock()
+        return result
+
+    def set_optoe_type(self, optoe_type):
+        ret, info = platform_get_optoe_type(self._port_id)
+        if ret is True and info != optoe_type:
+            try:
+                ret, _ = platform_set_optoe_type(self._port_id, optoe_type)
+            except Exception as err:
+                self._sfplog(LOG_ERROR_LEVEL, "Set optoe err %s" % err)
+
+    def _read_eeprom(self, offset, num_bytes):    
+        try:
+            for i in range(self.eeprom_retry_times):
+                with open(self._get_eeprom_path(), mode='rb', buffering=0) as f:
+                    f.seek(offset)
+                    result = f.read(num_bytes)
+                    # temporary solution for a sonic202111 bug
+                    if len(result) < num_bytes:
+                        result = result[::-1].zfill(num_bytes)[::-1]
+                    if result is not None:
+                        return bytearray(result)
+                    time.sleep(self.eeprom_retry_break_sec)
+                    continue
+
+        except BaseException:
+            self._sfplog(LOG_ERROR_LEVEL, traceback.format_exc())
+        return None
+
+    def _write_eeprom(self, offset, num_bytes, write_buffer):
+        for i in range(self.eeprom_retry_times):
+            try:
+                with open(self._get_eeprom_path(), mode='r+b', buffering=0) as f:
+                    f.seek(offset)
+                    f.write(write_buffer[0:num_bytes])
+                return True
+            except BaseException:
+                print(traceback.format_exc())
+                time.sleep(self.eeprom_retry_break_sec)
+                pass
+        return False
+
+    def _switch_page(self, page):
+        page_offset = 127 #0x7f
+        num_bytes = 1
+        cur_page = self._read_eeprom(page_offset, num_bytes)[0]
+        if cur_page is None:
+            self._sfplog(LOG_ERROR_LEVEL, "CPO read PAGE ERROR!")
+            return False
+
+        if cur_page == page:
+            return True
+
+        return self._write_eeprom(page_offset, num_bytes, bytearray([page]))
+
+    def _switch_bank(self, bank):
+        bank_offset = 126 #0x7e
+        num_bytes = 1
+        cur_bank = self._read_eeprom(bank_offset, num_bytes)[0]
+        if cur_bank is None:
+            self._sfplog(LOG_ERROR_LEVEL, "CPO read BANK ERROR!")
+            return False
+    
+        if cur_bank == bank:
+            return True
+
+        return self._write_eeprom(bank_offset, num_bytes, bytearray([bank]))
+
+    def _convert_to_single_page_offset_read(self, offset, num_bytes):
+        page_list = [0, 1, 2, 16, 17, 19, 20, 159]  # page 0 1 2 10h 11h 13h 14h 9Fh
+        for p in page_list:
+            if (256 + (p - 1) * 128) <= offset < (256 + 128 * p):
+                self._switch_page(p)
+                single_page_offset = offset - 128 * p
+
+                if p in [16, 17, 19, 20]:   # need to switch Bank
+                    port_id_abs = (self._port_id - 1) % 16
+                    bank_id = port_id_abs // 2
+                    self._switch_bank(bank_id)
+
+                return self._read_eeprom(single_page_offset, num_bytes)
+
+        self._sfplog(LOG_WARNING_LEVEL, "cannot find page! offset: %d num_bytes: %d" % (offset, num_bytes))
+        return None
+
+    def _convert_to_single_page_offset_write(self, offset, num_bytes, write_buffer):
+        page_list = [0, 1, 2, 16, 17, 19, 20, 159]  # page 0 1 2 10h 11h 13h 14h 9Fh
+        for p in page_list:
+            if (256 + (p - 1) * 128) <= offset < (256 + 128 * p):
+                self._switch_page(p)
+                single_page_offset = offset - 128 * p
+
+                if p in [16, 17, 19, 20]:   # need to switch Bank
+                    port_id_abs = (self._port_id - 1) % 16
+                    bank_id = port_id_abs // 2
+                    self._switch_bank(bank_id)
+
+                return self._write_eeprom(single_page_offset, num_bytes, write_buffer)
+
+        self._sfplog(LOG_WARNING_LEVEL, "cannot find page! offset: %d num_bytes: %d" % (offset, num_bytes))
+        return None
+
+    pidfile = None
+
+    def _file_rw_lock(self):
+        global pidfile
+        pidfile = open(self._get_eeprom_path(), "r")
+        file_lock_flag = False
+        # Retry 100 times to lock file
+        for i in range(0, 100):
+            try:
+                fcntl.flock(pidfile, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                file_lock_flag = True
+                self._sfplog(LOG_DEBUG_LEVEL, "file lock success")
+                return True
+            except Exception:
+                time.sleep(0.001)
+                continue
+
+        if file_lock_flag == False:
+            if pidfile is not None:
+                pidfile.close()
+                pidfile = None
+            return False
+
+    def _file_rw_unlock(self):
+        try:
+            global pidfile
+            if pidfile is not None:
+                fcntl.flock(pidfile, fcntl.LOCK_UN)
+                pidfile.close()
+                pidfile = None
+                self._sfplog(LOG_DEBUG_LEVEL, "file unlock success")
+            else:
+                self._sfplog(LOG_DEBUG_LEVEL, "pidfile is invalid, do nothing")
+            return True
+        except Exception as e:
+            self._sfplog(LOG_ERROR_LEVEL, "file unlock err, msg:%s" % (str(e)))
+            return False

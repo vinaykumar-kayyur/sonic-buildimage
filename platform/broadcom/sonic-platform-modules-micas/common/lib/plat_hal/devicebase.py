@@ -30,6 +30,8 @@ class CodeVisitor(ast.NodeVisitor):
             value = node.n
         elif isinstance(node, ast.Str):      # node is Str Constant
             value = node.s
+        elif isinstance(node, ast.List):     # node is List Constant
+            value = [element.value for element in node.elts]
         else:
             raise NotImplementedError("Unsupport operand type: %s" % type(node))
         return value
@@ -78,7 +80,7 @@ class CodeVisitor(ast.NodeVisitor):
         int support one or two parameters, eg: int(xxx) or int(xxx, 16)
         xxx can be ast.Call/ast.Constant(ast.Num/ast.Str)/ast.BinOp
         '''
-        calc_tuple = ("float", "int", "str")
+        calc_tuple = ("float", "int", "str", "max", "min")
 
         if node.func.id not in calc_tuple:
             raise NotImplementedError("Unsupport function call type: %s" % node.func.id)
@@ -86,7 +88,10 @@ class CodeVisitor(ast.NodeVisitor):
         args_val_list = []
         for item in node.args:
             ret = self.get_op_value(item)
-            args_val_list.append(ret)
+            if isinstance(ret, list):
+                args_val_list.extend(ret)
+            else:
+                args_val_list.append(ret)
 
         if node.func.id == "str":
             if len(args_val_list) != 1:
@@ -99,6 +104,16 @@ class CodeVisitor(ast.NodeVisitor):
             if len(args_val_list) != 1:
                 raise TypeError("float() takes 1 positional argument but %s were given" % len(args_val_list))
             value = float(args_val_list[0])
+            self.value = value
+            return value
+
+        if node.func.id == "max":
+            value = max(args_val_list)
+            self.value = value
+            return value
+
+        if node.func.id == "min":
+            value = min(args_val_list)
             self.value = value
             return value
         # int

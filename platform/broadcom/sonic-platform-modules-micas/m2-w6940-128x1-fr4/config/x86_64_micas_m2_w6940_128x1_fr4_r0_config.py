@@ -10,7 +10,7 @@ STARTMODULE = {
     "tty_console": 0,
     "reboot_cause": 0,
     "pmon_syslog": 1,
-    "sff_temp_polling": 0,
+    "sff_temp_polling": 1,
     "generate_airflow": 0,
 }
 
@@ -22,7 +22,7 @@ DEV_MONITOR_PARAM = {
             "present": {"gettype": "i2c", "bus": 13, "loc": 0x1d, "offset": 0x42, "presentbit": 0, "okval": 0},
             "device": [
                 {"id": "psu2pmbus", "name": "wb_fsp1200", "bus": 10, "loc": 0x58, "attr": "hwmon"},
-                {"id": "psu2frue2", "name": "wb_24c64", "bus": 10, "loc": 0x50, "attr": "eeprom"},
+                {"id": "psu2frue2", "name": "wb_24c02", "bus": 10, "loc": 0x50, "attr": "eeprom"},
             ],
         },
         {
@@ -30,7 +30,7 @@ DEV_MONITOR_PARAM = {
             "present": {"gettype": "i2c", "bus": 13, "loc": 0x1d, "offset": 0x42, "presentbit": 1, "okval": 0},
             "device": [
                 {"id": "psu1pmbus", "name": "wb_fsp1200", "bus": 11, "loc": 0x58, "attr": "hwmon"},
-                {"id": "psu1frue2", "name": "wb_24c64", "bus": 11, "loc": 0x50, "attr": "eeprom"},
+                {"id": "psu1frue2", "name": "wb_24c02", "bus": 11, "loc": 0x50, "attr": "eeprom"},
             ],
         },
     ],
@@ -320,7 +320,7 @@ MANUINFO_CONF = {
     "cpld5_model": {
         "key": "Device Model",
         "parent": "cpld5",
-        "config": "LCMXO2-1200HC-4TG144C",
+        "config": "LCMXO3LF-2100C-5BG256C",
         "arrt_index": 1,
     },
     "cpld5_vender": {
@@ -356,7 +356,7 @@ MANUINFO_CONF = {
     "cpld6_model": {
         "key": "Device Model",
         "parent": "cpld6",
-        "config": "LCMXO2-1200HC-4TG144C",
+        "config": "LCMXO3LF-2100C-5BG256C",
         "arrt_index": 1,
     },
     "cpld6_vender": {
@@ -873,9 +873,9 @@ DEVICE = [
     {"name": "wb_24c64", "bus": 50, "loc": 0x50},
     {"name": "wb_24c64", "bus": 51, "loc": 0x50},
     # psu
-    {"name": "wb_24c64", "bus": 10, "loc": 0x50},
+    {"name": "wb_24c02", "bus": 10, "loc": 0x50},
     {"name": "wb_fsp1200", "bus": 10, "loc": 0x58},
-    {"name": "wb_24c64", "bus": 11, "loc": 0x50},
+    {"name": "wb_24c02", "bus": 11, "loc": 0x50},
     {"name": "wb_fsp1200", "bus": 11, "loc": 0x58},
     # MCB
     {"name": "wb_ina3221", "bus": 12, "loc": 0x40},
@@ -900,14 +900,49 @@ DEVICE = [
     {"name": "wb_xdpe132g5c_pmbus", "bus": 69, "loc": 0x40},
     {"name": "wb_xdpe12284", "bus": 70, "loc": 0x68},
     {"name": "wb_xdpe12284", "bus": 71, "loc": 0x68},
+    # fan DCDC
+    {"name": "wb_ina3221", "bus": 88, "loc": 0x42},
+    {"name": "wb_ina3221", "bus": 89, "loc": 0x42},
+    {"name": "wb_ina3221", "bus": 90, "loc": 0x42},
 ]
 
 OPTOE = [
+    {"name": "wb_24c02", "startbus": 24, "endbus": 31},
 ]
 
 REBOOT_CTRL_PARAM = {}
 
 INIT_PARAM_PRE = [
+    # set ina3221 shunt_resistor
+    # SCM_VDD12.0_C
+    {"loc": "33-0041/hwmon/hwmon*/shunt1_resistor", "value": "1000"},
+    # SCM_OCM_V12.0_C
+    {"loc": "33-0041/hwmon/hwmon*/shunt3_resistor", "value": "1000"},
+    # MAC_PLL1_VDD0.9_C
+    {"loc": "56-0040/hwmon/hwmon*/shunt1_resistor", "value": "2000"},
+    # MAC_PLL0_VDD0.9_C
+    {"loc": "56-0040/hwmon/hwmon*/shunt2_resistor", "value": "2000"},
+    # MAC_PLL2_VDD0.9_C
+    {"loc": "58-0040/hwmon/hwmon*/shunt1_resistor", "value": "2000"},
+    # MAC_PLL3_VDD0.9_C
+    {"loc": "58-0040/hwmon/hwmon*/shunt3_resistor", "value": "2000"},
+    # FAN1_VDD12_C
+    {"loc": "88-0042/hwmon/hwmon*/shunt1_resistor", "value": "1000"},
+    # FAN2_VDD12_C
+    {"loc": "88-0042/hwmon/hwmon*/shunt2_resistor", "value": "1000"},
+    # FAN3_VDD12_C
+    {"loc": "88-0042/hwmon/hwmon*/shunt3_resistor", "value": "1000"},
+    # FAN4_VDD12_C
+    {"loc": "89-0042/hwmon/hwmon*/shunt1_resistor", "value": "1000"},
+    # FAN5_VDD12_C
+    {"loc": "89-0042/hwmon/hwmon*/shunt2_resistor", "value": "1000"},
+    # FAN6_VDD12_C
+    {"loc": "89-0042/hwmon/hwmon*/shunt3_resistor", "value": "1000"},
+    # FAN7_VDD12_C
+    {"loc": "90-0042/hwmon/hwmon*/shunt1_resistor", "value": "1000"},
+    # FAN8_VDD12_C
+    {"loc": "90-0042/hwmon/hwmon*/shunt2_resistor", "value": "1000"},
+    # set avs threshold
     # MAC_CORE_V
     {"loc": "64-0040/hwmon/hwmon*/avs0_vout_min", "value": "630000"},
     {"loc": "64-0040/hwmon/hwmon*/avs0_vout_max", "value": "858000"},
@@ -966,10 +1001,7 @@ INIT_PARAM_PRE = [
 
 INIT_PARAM = []
 
-INIT_COMMAND_PRE = [
-    # set SMB LED
-    "dfd_debug io_wr 0x953 0x02",
-]
+INIT_COMMAND_PRE = []
 
 INIT_COMMAND = []
 
@@ -982,56 +1014,66 @@ UPGRADE_SUMMARY = {
             "chain1":{
                 "name":"IOB_FPGA",
                 "is_support_warm_upg":0,
+                "init_cmd": [
+                    # firmware upgrade set sysled blue/amber alternate flashing
+                    {"gettype": "devfile", "path": "/dev/cpld1", "offset": 0x50, "value": [0x01]}
+                ]
             },
             "chain2":{
                 "name":"DOM_FPGA",
                 "is_support_warm_upg":0,
+                "init_cmd": [
+                    # firmware upgrade set sysled blue/amber alternate flashing
+                    {"gettype": "devfile", "path": "/dev/cpld1", "offset": 0x50, "value": [0x01]}
+                ]
             },
             "chain3":{
                 "name":"SCM_CPLD",
                 "is_support_warm_upg":0,
+                "init_cmd": [
+                    # firmware upgrade set sysled blue/amber alternate flashing
+                    {"gettype": "devfile", "path": "/dev/cpld1", "offset": 0x50, "value": [0x01]}
+                ]
             },
             "chain4":{
                 "name":"MCB_CPLD",
                 "is_support_warm_upg":0,
+                "init_cmd": [
+                    # firmware upgrade set sysled blue/amber alternate flashing
+                    {"gettype": "devfile", "path": "/dev/cpld1", "offset": 0x50, "value": [0x01]}
+                ]
             },
             "chain5":{
                 "name":"SMB_CPLD",
                 "is_support_warm_upg":0,
+                "init_cmd": [
+                    # firmware upgrade set sysled blue/amber alternate flashing
+                    {"gettype": "devfile", "path": "/dev/cpld1", "offset": 0x50, "value": [0x01]}
+                ]
             },
             "chain6":{
                 "name":"FCB_B_CPLD",
                 "is_support_warm_upg":0,
+                "init_cmd": [
+                    # firmware upgrade set sysled blue/amber alternate flashing
+                    {"gettype": "devfile", "path": "/dev/cpld1", "offset": 0x50, "value": [0x01]}
+                ]
             },
             "chain7":{
                 "name":"FCB_T_CPLD",
                 "is_support_warm_upg":0,
+                "init_cmd": [
+                    # firmware upgrade set sysled blue/amber alternate flashing
+                    {"gettype": "devfile", "path": "/dev/cpld1", "offset": 0x50, "value": [0x01]}
+                ]
             },
             "chain8":{
                 "name":"MAC_PCIe",
                 "is_support_warm_upg":0,
-            },
-
-
-            "chain12":{
-                "name":"SCM_CPLD SHAOPIAN",
-                "is_support_warm_upg":0,
-            },
-            "chain13":{
-                "name":"MCB_CPLD SHAOPIAN",
-                "is_support_warm_upg":0,
-            },
-            "chain14":{
-                "name":"SMB_CPLD SHAOPIAN",
-                "is_support_warm_upg":0,
-            },
-            "chain15":{
-                "name":"FCB_B_CPLD SHAOPIAN",
-                "is_support_warm_upg":0,
-            },
-            "chain16":{
-                "name":"FCB_T_CPLD SHAOPIAN",
-                "is_support_warm_upg":0,
+                "init_cmd": [
+                    # firmware upgrade set sysled blue/amber alternate flashing
+                    {"gettype": "devfile", "path": "/dev/cpld1", "offset": 0x50, "value": [0x01]}
+                ]
             },
         },
 
@@ -1041,6 +1083,8 @@ UPGRADE_SUMMARY = {
                 "is_support_warm_upg": 0,
                 "filesizecheck": 20480,  # bios check file size, Unit: K
                 "init_cmd": [
+                    # firmware upgrade set sysled blue/amber alternate flashing
+                    {"gettype": "devfile", "path": "/dev/cpld1", "offset": 0x50, "value": [0x01]},
                     {"cmd": "modprobe mtd", "gettype": "cmd"},
                     {"cmd": "modprobe spi_nor", "gettype": "cmd"},
                     {"cmd": "modprobe ofpart", "gettype": "cmd"},
@@ -1075,7 +1119,10 @@ UPGRADE_SUMMARY = {
 
     "BMC": {
         "name": "BMC",
-        "init_cmd": [],
+        "init_cmd": [
+            # firmware upgrade set sysled blue/amber alternate flashing
+            {"gettype": "devfile", "path": "/dev/cpld1", "offset": 0x50, "value": [0x01]}
+        ],
         "finish_cmd": [],
     },
 }
@@ -1099,3 +1146,620 @@ PLATFORM_E2_CONF = {
         {"name": "syseeprom", "e2_type": "onie_tlv", "e2_path": "/sys/bus/i2c/devices/1-0056/eeprom"},
     ],
 }
+
+PLATFORM_POWER_CONF = [
+    {
+        "name": "Input power total",
+        "unit": "W",
+        "children": [
+            {
+                "name": "PSU1 input",
+                "pre_check": {
+                    "loc": "/sys/wb_plat/psu/psu1/present",
+                    "gettype": "sysfs", "mask": 0x01, "okval": 1,
+                    "not_ok_msg": "ABSENT"
+                },
+                "val_conf": [
+                    {
+                       "gettype": "sysfs",
+                       "loc": "/sys/bus/i2c/devices/11-0058/hwmon/hwmon*/power1_input",
+                       "int_decode": 10,
+                    }
+                ],
+                "unit": "W",
+                "format": "float(float(%s)/1000000)"
+            },
+            {
+                "name": "PSU2 input",
+                "pre_check": {
+                    "loc": "/sys/wb_plat/psu/psu2/present",
+                    "gettype": "sysfs", "mask": 0x01, "okval": 1,
+                    "not_ok_msg": "ABSENT"
+                },
+                "val_conf": [
+                    {
+                       "gettype": "sysfs",
+                       "loc": "/sys/bus/i2c/devices/10-0058/hwmon/hwmon*/power1_input",
+                       "int_decode": 10,
+                    }
+                ],
+                "unit": "W",
+                "format": "float(float(%s)/1000000)"
+            },
+        ]
+    },
+    {
+        "name": "Output power total",
+        "unit": "W",
+        "children": [
+            {
+                "name": "PSU1 output",
+                "pre_check": {
+                    "loc": "/sys/wb_plat/psu/psu1/present",
+                    "gettype": "sysfs", "mask": 0x01, "okval": 1,
+                    "not_ok_msg": "ABSENT"
+                },
+                "val_conf": [
+                    {
+                       "gettype": "sysfs",
+                       "loc": "/sys/bus/i2c/devices/11-0058/hwmon/hwmon*/power2_input",
+                       "int_decode": 10,
+                    }
+                ],
+                "unit": "W",
+                "format": "float(float(%s)/1000000)"
+            },
+            {
+                "name": "PSU2 output",
+                "pre_check": {
+                    "loc": "/sys/wb_plat/psu/psu2/present",
+                    "gettype": "sysfs", "mask": 0x01, "okval": 1,
+                    "not_ok_msg": "ABSENT"
+                },
+                "val_conf": [
+                    {
+                       "gettype": "sysfs",
+                       "loc": "/sys/bus/i2c/devices/10-0058/hwmon/hwmon*/power2_input",
+                       "int_decode": 10,
+                    }
+                ],
+                "unit": "W",
+                "format": "float(float(%s)/1000000)"
+            },
+        ]
+    },
+    {
+        "name": "MAC power consumption",
+        "unit": "W",
+        "children": [
+            {
+                "name": "MAC_CORE",
+                "val_conf": [
+                    {
+                       "gettype": "sysfs",
+                       "loc": "/sys/bus/i2c/devices/64-0040/hwmon/hwmon*/power3_input",
+                       "int_decode": 10,
+                    }
+                ],
+                "unit": "W",
+                "format": "float(float(%s)*2/1000000)"
+            },
+            {
+                "name": "MAC_ANALOG0 V0.9",
+                "val_conf": [
+                    {
+                       "gettype": "sysfs",
+                       "loc": "/sys/bus/i2c/devices/65-0040/hwmon/hwmon*/power3_input",
+                       "int_decode": 10,
+                    }
+                ],
+                "unit": "W",
+                "format": "float(float(%s)/1000000)"
+            },
+            {
+                "name": "MAC_ANALOG0 V0.75",
+                "val_conf": [
+                    {
+                       "gettype": "sysfs",
+                       "loc": "/sys/bus/i2c/devices/65-0040/hwmon/hwmon*/power4_input",
+                       "int_decode": 10,
+                    }
+                ],
+                "unit": "W",
+                "format": "float(float(%s)/1000000)"
+            },
+            {
+                "name": "MAC_ANALOG1 V0.9",
+                "val_conf": [
+                    {
+                       "gettype": "sysfs",
+                       "loc": "/sys/bus/i2c/devices/66-0040/hwmon/hwmon*/power3_input",
+                       "int_decode": 10,
+                    }
+                ],
+                "unit": "W",
+                "format": "float(float(%s)/1000000)"
+            },
+            {
+                "name": "MAC_ANALOG1 V0.75",
+                "val_conf": [
+                    {
+                       "gettype": "sysfs",
+                       "loc": "/sys/bus/i2c/devices/66-0040/hwmon/hwmon*/power4_input",
+                       "int_decode": 10,
+                    }
+                ],
+                "unit": "W",
+                "format": "float(float(%s)/1000000)"
+            },
+            {
+                "name": "MAC_PLL0_VDD0.9",
+                "val_conf": [
+                    {
+                       "gettype": "sysfs",
+                       "loc": "/sys/bus/i2c/devices/56-0040/hwmon/hwmon*/in2_input",
+                       "int_decode": 10,
+                    },
+                    {
+                       "gettype": "sysfs",
+                       "loc": "/sys/bus/i2c/devices/56-0040/hwmon/hwmon*/curr2_input",
+                       "int_decode": 10,
+                    }
+                ],
+                "unit": "W",
+                "format": "float(float(%s)*float(%s)/1000000)"
+            },
+            {
+                "name": "MAC_PLL1_VDD0.9",
+                "val_conf": [
+                    {
+                       "gettype": "sysfs",
+                       "loc": "/sys/bus/i2c/devices/56-0040/hwmon/hwmon*/in1_input",
+                       "int_decode": 10,
+                    },
+                    {
+                       "gettype": "sysfs",
+                       "loc": "/sys/bus/i2c/devices/56-0040/hwmon/hwmon*/curr1_input",
+                       "int_decode": 10,
+                    }
+                ],
+                "unit": "W",
+                "format": "float(float(%s)*float(%s)/1000000)"
+            },
+            {
+                "name": "MAC_PLL2_VDD0.9",
+                "val_conf": [
+                    {
+                       "gettype": "sysfs",
+                       "loc": "/sys/bus/i2c/devices/58-0040/hwmon/hwmon*/in1_input",
+                       "int_decode": 10,
+                    },
+                    {
+                       "gettype": "sysfs",
+                       "loc": "/sys/bus/i2c/devices/58-0040/hwmon/hwmon*/curr1_input",
+                       "int_decode": 10,
+                    }
+                ],
+                "unit": "W",
+                "format": "float(float(%s)*float(%s)/1000000)"
+            },
+            {
+                "name": "MAC_PLL3_VDD0.9",
+                "val_conf": [
+                    {
+                       "gettype": "sysfs",
+                       "loc": "/sys/bus/i2c/devices/58-0040/hwmon/hwmon*/in3_input",
+                       "int_decode": 10,
+                    },
+                    {
+                       "gettype": "sysfs",
+                       "loc": "/sys/bus/i2c/devices/58-0040/hwmon/hwmon*/curr3_input",
+                       "int_decode": 10,
+                    }
+                ],
+                "unit": "W",
+                "format": "float(float(%s)*float(%s)/1000000)"
+            },
+            {
+                "name": "MAC_VDD_0.8",
+                "val_conf": [
+                    {
+                       "gettype": "sysfs",
+                       "loc": "/sys/bus/i2c/devices/58-0040/hwmon/hwmon*/in2_input",
+                       "int_decode": 10,
+                    },
+                    {
+                       "gettype": "sysfs",
+                       "loc": "/sys/bus/i2c/devices/58-0040/hwmon/hwmon*/curr2_input",
+                       "int_decode": 10,
+                    }
+                ],
+                "unit": "W",
+                "format": "float(float(%s)*float(%s)/1000000)"
+            },
+            {
+                "name": "MAC_VDD_1.8",
+                "val_conf": [
+                    {
+                       "gettype": "sysfs",
+                       "loc": "/sys/bus/i2c/devices/60-0040/hwmon/hwmon*/in1_input",
+                       "int_decode": 10,
+                    },
+                    {
+                       "gettype": "sysfs",
+                       "loc": "/sys/bus/i2c/devices/60-0040/hwmon/hwmon*/curr1_input",
+                       "int_decode": 10,
+                    }
+                ],
+                "unit": "W",
+                "format": "float(float(%s)*float(%s)/1000000)"
+            },
+            {
+                "name": "MAC_VDD_1.5",
+                "val_conf": [
+                    {
+                       "gettype": "sysfs",
+                       "loc": "/sys/bus/i2c/devices/60-0040/hwmon/hwmon*/in2_input",
+                       "int_decode": 10,
+                    },
+                    {
+                       "gettype": "sysfs",
+                       "loc": "/sys/bus/i2c/devices/60-0040/hwmon/hwmon*/curr2_input",
+                       "int_decode": 10,
+                    }
+                ],
+                "unit": "W",
+                "format": "float(float(%s)*float(%s)/1000000)"
+            },
+            {
+                "name": "MAC_VDD_1.2",
+                "val_conf": [
+                    {
+                       "gettype": "sysfs",
+                       "loc": "/sys/bus/i2c/devices/61-0040/hwmon/hwmon*/in1_input",
+                       "int_decode": 10,
+                    },
+                    {
+                       "gettype": "sysfs",
+                       "loc": "/sys/bus/i2c/devices/61-0040/hwmon/hwmon*/curr1_input",
+                       "int_decode": 10,
+                    }
+                ],
+                "unit": "W",
+                "format": "float(float(%s)*float(%s)/1000000)"
+            }
+        ]
+    },
+    
+    
+    {
+        "name": "CPO OE power consumption",
+        "unit": "W",
+        "children": [
+            {
+                "name": "OE_AVDD_0.75",
+                "val_conf": [
+                    {
+                       "gettype": "sysfs",
+                       "loc": "/sys/bus/i2c/devices/69-0040/hwmon/hwmon*/power3_input",
+                       "int_decode": 10,
+                    }
+                ],
+                "unit": "W",
+                "format": "float(float(%s)/1000000)"
+            },
+            {
+                "name": "OE_AVDD_1.2",
+                "val_conf": [
+                    {
+                       "gettype": "sysfs",
+                       "loc": "/sys/bus/i2c/devices/69-0040/hwmon/hwmon*/power4_input",
+                       "int_decode": 10,
+                    }
+                ],
+                "unit": "W",
+                "format": "float(float(%s)/1000000)"
+            },
+            {
+                "name": "OE_AVDD_TX_1.8",
+                "val_conf": [
+                    {
+                       "gettype": "sysfs",
+                       "loc": "/sys/bus/i2c/devices/70-0068/hwmon/hwmon*/power3_input",
+                       "int_decode": 10,
+                    }
+                ],
+                "unit": "W",
+                "format": "float(float(%s)/1000000)"
+            },
+            {
+                "name": "OE_AVDD_RX_1.8",
+                "val_conf": [
+                    {
+                       "gettype": "sysfs",
+                       "loc": "/sys/bus/i2c/devices/70-0068/hwmon/hwmon*/power4_input",
+                       "int_decode": 10,
+                    }
+                ],
+                "unit": "W",
+                "format": "float(float(%s)/1000000)"
+            },
+            {
+                "name": "OE_HCSL_PLL_VDD0_0.75",
+                "val_conf": [
+                    {
+                       "gettype": "sysfs",
+                       "loc": "/sys/bus/i2c/devices/56-0040/hwmon/hwmon*/in3_input",
+                       "int_decode": 10,
+                    },
+                    {
+                       "gettype": "sysfs",
+                       "loc": "/sys/bus/i2c/devices/56-0040/hwmon/hwmon*/curr3_input",
+                       "int_decode": 10,
+                    }
+                ],
+                "unit": "W",
+                "format": "float(float(%s)*float(%s)/1000000)"
+            },
+            {
+                "name": "OE_HCSL_PLL_VDD1_0.75",
+                "val_conf": [
+                    {
+                       "gettype": "sysfs",
+                       "loc": "/sys/bus/i2c/devices/57-0040/hwmon/hwmon*/in2_input",
+                       "int_decode": 10,
+                    },
+                    {
+                       "gettype": "sysfs",
+                       "loc": "/sys/bus/i2c/devices/57-0040/hwmon/hwmon*/curr2_input",
+                       "int_decode": 10,
+                    }
+                ],
+                "unit": "W",
+                "format": "float(float(%s)*float(%s)/1000000)"
+            },
+            {
+                "name": "OE_AVDD_3.3",
+                "val_conf": [
+                    {
+                       "gettype": "sysfs",
+                       "loc": "/sys/bus/i2c/devices/59-0040/hwmon/hwmon*/in1_input",
+                       "int_decode": 10,
+                    },
+                    {
+                       "gettype": "sysfs",
+                       "loc": "/sys/bus/i2c/devices/59-0040/hwmon/hwmon*/curr1_input",
+                       "int_decode": 10,
+                    }
+                ],
+                "unit": "W",
+                "format": "float(float(%s)*float(%s)/1000000)"
+            },
+            {
+                "name": "OE_VDD_HCSL_PLL_1.8",
+                "val_conf": [
+                    {
+                       "gettype": "sysfs",
+                       "loc": "/sys/bus/i2c/devices/59-0040/hwmon/hwmon*/in2_input",
+                       "int_decode": 10,
+                    },
+                    {
+                       "gettype": "sysfs",
+                       "loc": "/sys/bus/i2c/devices/59-0040/hwmon/hwmon*/curr2_input",
+                       "int_decode": 10,
+                    }
+                ],
+                "unit": "W",
+                "format": "float(float(%s)*float(%s)/1000000)"
+            },
+            {
+                "name": "OE_VDD_1.8",
+                "val_conf": [
+                    {
+                       "gettype": "sysfs",
+                       "loc": "/sys/bus/i2c/devices/60-0040/hwmon/hwmon*/in3_input",
+                       "int_decode": 10,
+                    },
+                    {
+                       "gettype": "sysfs",
+                       "loc": "/sys/bus/i2c/devices/60-0040/hwmon/hwmon*/curr3_input",
+                       "int_decode": 10,
+                    }
+                ],
+                "unit": "W",
+                "format": "float(float(%s)*float(%s)/1000000)"
+            },
+        ]
+    },
+    
+    {
+        "name": "RLM power consumption",
+        "unit": "W",
+        "children": [
+            {
+                "name": "RLML_VDD V3.3",
+                "val_conf": [
+                    {
+                       "gettype": "sysfs",
+                       "loc": "/sys/bus/i2c/devices/71-0068/hwmon/hwmon*/power3_input",
+                       "int_decode": 10,
+                    }
+                ],
+                "unit": "W",
+                "format": "float(float(%s)*1.5/1000000)"
+            },
+            {
+                "name": "RLMH_VDD V3.3",
+                "val_conf": [
+                    {
+                       "gettype": "sysfs",
+                       "loc": "/sys/bus/i2c/devices/71-0068/hwmon/hwmon*/power4_input",
+                       "int_decode": 10,
+                    }
+                ],
+                "unit": "W",
+                "format": "float(float(%s)*1.5/1000000)"
+            },
+        ]
+    },
+    {
+        "name": "CPU sub-module power consumption",
+        "unit": "W",
+        "val_conf": [
+            {
+               "gettype": "sysfs",
+               "loc": "/sys/bus/i2c/devices/33-0041/hwmon/hwmon*/in3_input",
+               "int_decode": 10,
+            },
+            {
+               "gettype": "sysfs",
+               "loc": "/sys/bus/i2c/devices/33-0041/hwmon/hwmon*/curr3_input",
+               "int_decode": 10,
+            }
+        ],
+        "format": "float(float(%s)*float(%s)/1000000)"
+    },
+    {
+        "name": "FAN power consumption total",
+        "unit": "W",
+        "children": [
+            {
+                "name": "FAN1 power consumption",
+                "val_conf": [
+                    {
+                       "gettype": "sysfs",
+                       "loc": "/sys/bus/i2c/devices/88-0042/hwmon/hwmon*/in1_input",
+                       "int_decode": 10,
+                    },
+                    {
+                       "gettype": "sysfs",
+                       "loc": "/sys/bus/i2c/devices/88-0042/hwmon/hwmon*/curr1_input",
+                       "int_decode": 10,
+                    }
+                ],
+                "unit": "W",
+                "format": "float(float(%s)*float(%s)/1000000)"
+            },
+            {
+                "name": "FAN2 power consumption",
+                "val_conf": [
+                    {
+                       "gettype": "sysfs",
+                       "loc": "/sys/bus/i2c/devices/89-0042/hwmon/hwmon*/in2_input",
+                       "int_decode": 10,
+                    },
+                    {
+                       "gettype": "sysfs",
+                       "loc": "/sys/bus/i2c/devices/89-0042/hwmon/hwmon*/curr2_input",
+                       "int_decode": 10,
+                    }
+                ],
+                "unit": "W",
+                "format": "float(float(%s)*float(%s)/1000000)"
+            },
+            {
+                "name": "FAN3 power consumption",
+                "val_conf": [
+                    {
+                       "gettype": "sysfs",
+                       "loc": "/sys/bus/i2c/devices/88-0042/hwmon/hwmon*/in2_input",
+                       "int_decode": 10,
+                    },
+                    {
+                       "gettype": "sysfs",
+                       "loc": "/sys/bus/i2c/devices/88-0042/hwmon/hwmon*/curr2_input",
+                       "int_decode": 10,
+                    }
+                ],
+                "unit": "W",
+                "format": "float(float(%s)*float(%s)/1000000)"
+            },
+            {
+                "name": "FAN4 power consumption",
+                "val_conf": [
+                    {
+                       "gettype": "sysfs",
+                       "loc": "/sys/bus/i2c/devices/89-0042/hwmon/hwmon*/in3_input",
+                       "int_decode": 10,
+                    },
+                    {
+                       "gettype": "sysfs",
+                       "loc": "/sys/bus/i2c/devices/89-0042/hwmon/hwmon*/curr3_input",
+                       "int_decode": 10,
+                    }
+                ],
+                "unit": "W",
+                "format": "float(float(%s)*float(%s)/1000000)"
+            },
+            {
+                "name": "FAN5 power consumption",
+                "val_conf": [
+                    {
+                       "gettype": "sysfs",
+                       "loc": "/sys/bus/i2c/devices/88-0042/hwmon/hwmon*/in3_input",
+                       "int_decode": 10,
+                    },
+                    {
+                       "gettype": "sysfs",
+                       "loc": "/sys/bus/i2c/devices/88-0042/hwmon/hwmon*/curr3_input",
+                       "int_decode": 10,
+                    }
+                ],
+                "unit": "W",
+                "format": "float(float(%s)*float(%s)/1000000)"
+            },
+            {
+                "name": "FAN6 power consumption",
+                "val_conf": [
+                    {
+                       "gettype": "sysfs",
+                       "loc": "/sys/bus/i2c/devices/90-0042/hwmon/hwmon*/in1_input",
+                       "int_decode": 10,
+                    },
+                    {
+                       "gettype": "sysfs",
+                       "loc": "/sys/bus/i2c/devices/90-0042/hwmon/hwmon*/curr1_input",
+                       "int_decode": 10,
+                    }
+                ],
+                "unit": "W",
+                "format": "float(float(%s)*float(%s)/1000000)"
+            },
+            {
+                "name": "FAN7 power consumption",
+                "val_conf": [
+                    {
+                       "gettype": "sysfs",
+                       "loc": "/sys/bus/i2c/devices/89-0042/hwmon/hwmon*/in1_input",
+                       "int_decode": 10,
+                    },
+                    {
+                       "gettype": "sysfs",
+                       "loc": "/sys/bus/i2c/devices/89-0042/hwmon/hwmon*/curr1_input",
+                       "int_decode": 10,
+                    }
+                ],
+                "unit": "W",
+                "format": "float(float(%s)*float(%s)/1000000)"
+            },
+            {
+                "name": "FAN8 power consumption",
+                "val_conf": [
+                    {
+                       "gettype": "sysfs",
+                       "loc": "/sys/bus/i2c/devices/90-0042/hwmon/hwmon*/in2_input",
+                       "int_decode": 10,
+                    },
+                    {
+                       "gettype": "sysfs",
+                       "loc": "/sys/bus/i2c/devices/90-0042/hwmon/hwmon*/curr2_input",
+                       "int_decode": 10,
+                    }
+                ],
+                "unit": "W",
+                "format": "float(float(%s)*float(%s)/1000000)"
+            },
+
+        ]
+    },
+]

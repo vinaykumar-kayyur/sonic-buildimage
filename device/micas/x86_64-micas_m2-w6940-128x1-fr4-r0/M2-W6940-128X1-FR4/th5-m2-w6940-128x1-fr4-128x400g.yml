@@ -1341,7 +1341,7 @@ device:
                   [341, 344]]
       :
         ENABLE: 0
-        SPEED: 400000
+        SPEED: 200000
         NUM_LANES: 4
         FEC_MODE: PC_FEC_RS544_2XN
         MAX_FRAME_SIZE: 9416
@@ -1389,24 +1389,24 @@ device:
         TX_SIG_MODE_AUTO: 0
         TXFIR_TAP_MODE: PC_TXFIR_PAM4_TAPS_6
         TXFIR_TAP_MODE_AUTO: 0
-        TX_PRE3: 0
         TX_PRE3_AUTO: 0
-        TX_PRE2_SIGN: 0
-        TX_PRE2: 2
         TX_PRE2_AUTO: 0
-        TX_PRE_SIGN: 1
-        TX_PRE: -14
         TX_PRE_AUTO: 0
-        TX_MAIN: 88
         TX_MAIN_AUTO: 0
-        TX_POST_SIGN: 1
-        TX_POST: -6
         TX_POST_AUTO: 0
-        TX_POST2_SIGN: 0
-        TX_POST2: -1
         TX_POST2_AUTO: 0
-        TX_POST3: 0
         TX_POST3_AUTO: 0
+        TX_PRE2_SIGN: 0
+        TX_PRE_SIGN: 1
+        TX_POST_SIGN: 1
+        TX_POST2_SIGN: 1
+        TX_PRE3: 0
+        TX_PRE2: 1
+        TX_PRE: 3
+        TX_MAIN: 71
+        TX_POST: 4
+        TX_POST2: 1
+        TX_POST3: 0
 ...
 ---
 device:
@@ -1446,6 +1446,6 @@ device:
                   [330, 333],
                   [341, 344]]
       :
-        MTU: 9416
+        MTU: 9100
         MTU_CHECK: 1
 ...

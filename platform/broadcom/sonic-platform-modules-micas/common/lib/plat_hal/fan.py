@@ -50,6 +50,7 @@ class fan(devicebase):
             self.EnableWatchdogConf = conf.get('EnableWatchdogConf', None)
             self.led_attrs_config = conf.get('led_attrs', None)
             self.led_config = conf.get('led', None)
+            self.led_map = conf.get('led_map', None)
             self.Rotor_config = conf.get('Rotor', None)
             self.fan_display_name_conifg = conf.get("fan_display_name", None)
             rotor_tmp = []
@@ -228,6 +229,12 @@ class fan(devicebase):
         if ret is False or value is None:
             return False, 'N/A'
         ledval = int(value) & mask
+        if self.led_map is not None:
+            led_color = self.led_map.get(ledval, None)
+            if led_color is None:
+                return False, 'N/A'
+            return True, led_color
+
         for key, val in self.led_attrs_config.items():
             if (ledval == val) and (key != "mask"):
                 return True, key
@@ -256,7 +263,7 @@ class fan(devicebase):
 
     def get_presence(self):
         ret, val = self.get_value(self.present)
-        if ret is False or val is None or val == "no_support":
+        if ret is False or val is None or val == "no_support" or val == "NA":
             return False
         if isinstance(val, str):
             value = int(val, 16)

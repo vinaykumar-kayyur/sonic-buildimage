@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 psu_fan_airflow = {
-    "intake": ['DLK3000AN12C31', 'CRPS3000CL'],
+    "intake": ['DLK3000AN12C31', 'CRPS3000CL', 'ECDL3000123'],
     "exhaust": []
 }
 
@@ -11,7 +11,7 @@ fanairflow = {
 }
 
 psu_display_name = {
-    "PA3000I-F": ['DLK3000AN12C31', 'CRPS3000CL'],
+    "PA3000I-F": ['DLK3000AN12C31', 'CRPS3000CL', 'ECDL3000123'],
 }
 
 psutypedecode = {
@@ -251,10 +251,10 @@ devices = {
             "api_name": "CPU",
             "Temperature": {
                 "value": {"loc": "/sys/bus/platform/devices/coretemp.0/hwmon/hwmon*/temp1_input", "way": "sysfs"},
-                "Min": 2000,
-                "Low": 10000,
-                "High": 99000,
-                "Max": 104000,
+                "Min": -30000,
+                "Low": -10000,
+                "High": 100000,
+                "Max": 102000,
                 "Unit": Unit.Temperature,
                 "format": "float(float(%s)/1000)"
             }
@@ -265,12 +265,12 @@ devices = {
             "api_name": "Inlet",
             "Temperature": {
                 "value": {"loc": "/sys/bus/i2c/devices/35-004d/hwmon/hwmon*/temp1_input", "way": "sysfs"},
-                "Min": -10000,
-                "Low": 0,
-                "High": 38000,
-                "Max": 45000,
+                "Min": -37000,
+                "Low": -27000,
+                "High": 53000,
+                "Max": 58000,
                 "Unit": Unit.Temperature,
-                "format": "float(float(%s)/1000)"
+                "format": "float(float(%s)/1000)-3"
             }
         },
         {
@@ -282,70 +282,128 @@ devices = {
                     {"loc": "/sys/bus/i2c/devices/8-0048/hwmon/hwmon*/temp1_input", "way": "sysfs"},
                     {"loc": "/sys/bus/i2c/devices/8-0049/hwmon/hwmon*/temp1_input", "way": "sysfs"},
                     {"loc": "/sys/bus/i2c/devices/9-0048/hwmon/hwmon*/temp1_input", "way": "sysfs"},
-                    {"loc": "/sys/bus/i2c/devices/9-004d/hwmon/hwmon*/temp1_input", "way": "sysfs"},
+                    {"loc": "/sys/bus/i2c/devices/9-0049/hwmon/hwmon*/temp1_input", "way": "sysfs"},
                 ],
-                "Min": -10000,
-                "Low": 0,
+                "Min": -30000,
+                "Low": -20000,
                 "High": 70000,
-                "Max": 80000,
+                "Max": 75000,
+                "Unit": Unit.Temperature,
+                "format": "float(float(%s)/1000)"
+            }
+        },
+        {
+            "name": "BOARD_TEMP",
+            "temp_id": "TEMP4",
+            "api_name": "Board",
+            "Temperature": {
+                "value": {"loc": "/sys/bus/i2c/devices/14-0048/hwmon/*/temp1_input", "way": "sysfs"},
+                "Min": -30000,
+                "Low": -10000,
+                "High": 70000,
+                "Max": 75000,
                 "Unit": Unit.Temperature,
                 "format": "float(float(%s)/1000)"
             }
         },
         {
             "name": "SWITCH_TEMP",
-            "temp_id": "TEMP4",
+            "temp_id": "TEMP5",
             "api_name": "ASIC_TEMP",
             "Temperature": {
                 "value": {"loc": "/sys/wb_plat/sensor/temp2/temp_input", "way": "sysfs"},
-                "Min": 2000,
-                "Low": 10000,
+                "Min": -30000,
+                "Low": -20000,
                 "High": 100000,
                 "Max": 105000,
                 "Unit": Unit.Temperature,
                 "format": "float(float(%s)/1000)"
-            }
+            },
+            "invalid": -100000,
+            "error": -99999,
         },
         {
             "name": "PSU1_TEMP",
-            "temp_id": "TEMP5",
+            "temp_id": "TEMP6",
             "Temperature": {
                 "value": {"loc": "/sys/bus/i2c/devices/i2c-11/11-0058/hwmon/hwmon*/temp1_input", "way": "sysfs"},
                 "Min": -10000,
-                "Low": 0,
-                "High": 55000,
-                "Max": 60000,
+                "Low": -5000,
+                "High": 50000,
+                "Max": 55000,
                 "Unit": Unit.Temperature,
                 "format": "float(float(%s)/1000)"
             }
         },
         {
             "name": "PSU2_TEMP",
-            "temp_id": "TEMP6",
+            "temp_id": "TEMP7",
             "Temperature": {
                 "value": {"loc": "/sys/bus/i2c/devices/i2c-10/10-0058/hwmon/hwmon*/temp1_input", "way": "sysfs"},
                 "Min": -10000,
-                "Low": 0,
-                "High": 55000,
-                "Max": 60000,
+                "Low": -5000,
+                "High": 50000,
+                "Max": 55000,
                 "Unit": Unit.Temperature,
                 "format": "float(float(%s)/1000)"
             }
         },
         {
-            "name": "SFF_TEMP",
+            "name": "OE_TEMP",
+            "temp_id": "TEMP8",
+            "api_name": "Toe_eic",
             "Temperature": {
-                "value": {"loc": "/tmp/highest_sff_temp", "way": "sysfs", "flock_path": "/tmp/highest_sff_temp"},
-                "Min": -15000,
-                "Low": 0,
+                "value": {"loc": "/etc/sonic/highest_oe_temp", "way": "sysfs", "flock_path": "/etc/sonic/highest_oe_temp"},
+                "Min": -30000,
+                "Low": -20000,
                 "High": 80000,
-                "Max": 100000,
+                "Max": 85000,
                 "Unit": Unit.Temperature,
                 "format": "float(float(%s)/1000)"
             },
-            "invalid": -10000,
-            "error": -9999,
-        }
+            "invalid": -100000,
+            "error": -99999,
+        },
+        {
+            "name": "RLM_TEMP",
+            "temp_id": "TEMP9",
+            "api_name": "TRLM",
+            "Temperature": {
+                "value": {"loc": "/etc/sonic/highest_rlm_temp", "way": "sysfs", "flock_path": "/etc/sonic/highest_rlm_temp"},
+                "Min": -40000,
+                "Low": -30000,
+                "High": 40000,
+                "Max": 45000,
+                "Unit": Unit.Temperature,
+                "format": "float(float(%s)/1000)"
+            },
+            "invalid": -100000,
+            "error": -99999,
+        },
+        {
+            "name": "Tout-Tin",
+            "Temperature": {
+                "value": {
+                    "val_conf_list": [
+                        {"loc": "/sys/bus/i2c/devices/8-0048/hwmon/hwmon*/temp1_input", "way": "sysfs", "fail_val":-99999000},
+                        {"loc": "/sys/bus/i2c/devices/8-0049/hwmon/hwmon*/temp1_input", "way": "sysfs", "fail_val":-99999000},
+                        {"loc": "/sys/bus/i2c/devices/9-0048/hwmon/hwmon*/temp1_input", "way": "sysfs", "fail_val":-99999000},
+                        {"loc": "/sys/bus/i2c/devices/9-0049/hwmon/hwmon*/temp1_input", "way": "sysfs", "fail_val":-99999000},
+                        {"loc": "/sys/bus/i2c/devices/35-004d/hwmon/hwmon*/temp1_input", "way": "sysfs"},
+                    ],
+                    "fail_conf_set_list": [
+                        {0,1,2,3},
+                    ],
+                    "format": "float(float(max(%s,%s,%s,%s)-float(%s))/1000)+3"
+                },
+                #"Min": -10000,
+                #"Low": 0,
+                "High": 15000,
+                "Max": 20000,
+                "Unit": Unit.Temperature,
+                "format": "float(float(%s)/1000)"
+            }
+        },
     ],
     "leds": [
         {
@@ -353,8 +411,13 @@ devices = {
             "led_type": "SYS_LED",
             "led": {"loc": "/dev/cpld1", "offset": 0x50, "len": 1, "way": "devfile"},
             "led_attrs": {
-                "off": 0x00, "green": 0x02, "amber": 0x06, "red": 0x06, "mask": 0x07
+                "off": 0x00, "green": 0x02, "amber": 0x06, "red": 0x06, "mask": 0x07,
+                "flash": 0x01, "amber_flash": 0x05,
             },
+            "led_map": {
+                0x00: "off", 0x02: "blue", 0x06: "amber", 0x01: "blue/amber alternate flashing",
+                0x05: "amber flashing"
+            }
         },
         {
             "name": "FRONT_PSU_LED",
@@ -363,22 +426,32 @@ devices = {
             "led_attrs": {
                 "off": 0x00, "green": 0x02, "amber": 0x06, "red": 0x06, "mask": 0x07
             },
-        },
-        {
-            "name": "FRONT_FAN_LED",
-            "led_type": "FAN_LED",
-            "led": {"loc": "/dev/cpld1", "offset": 0x52, "len": 1, "way": "devfile"},
-            "led_attrs": {
-                "off": 0x00, "green": 0x02, "amber": 0x06, "red": 0x06, "mask": 0x07
-            },
+            "led_map": {
+                0x00: "off", 0x02: "blue", 0x06: "amber"
+            }
         },
         {
             "name": "FRONT_SMB_LED",
             "led_type": "SMB_LED",
+            
+            "led": {"loc": "/dev/cpld1", "offset": 0x52, "len": 1, "way": "devfile"},
+            "led_attrs": {
+                "off": 0x00, "green": 0x02, "amber": 0x06, "red": 0x06, "mask": 0x07
+            },
+            "led_map": {
+                0x00: "off", 0x02: "blue", 0x06: "amber"
+            }
+        },
+        {
+            "name": "FRONT_FAN_LED",
+            "led_type": "FAN_LED",
             "led": {"loc": "/dev/cpld1", "offset": 0x53, "len": 1, "way": "devfile"},
             "led_attrs": {
                 "off": 0x00, "green": 0x02, "amber": 0x06, "red": 0x06, "mask": 0x07
             },
+            "led_map": {
+                0x00: "off", 0x02: "blue", 0x06: "amber"
+            }
         },
     ],
     "fans": [
@@ -392,6 +465,9 @@ devices = {
             "led": {"bus": 44, "addr": 0x0d, "offset": 0x60, "way": "i2c"},
             "led_attrs": {
                 "off": 0x00, "green": 0x06, "amber": 0x01, "red": 0x01, "mask": 0x07
+            },
+            "led_map": {
+                0x00: "off", 0x06: "blue", 0x01: "amber"
             },
             "PowerMax": 80.64,
             "Rotor": {
@@ -436,6 +512,9 @@ devices = {
             "led_attrs": {
                 "off": 0x00, "green": 0x06, "amber": 0x01, "red": 0x01, "mask": 0x07
             },
+            "led_map": {
+                0x00: "off", 0x06: "blue", 0x01: "amber"
+            },
             "PowerMax": 80.64,
             "Rotor": {
                 "Rotor1_config": {
@@ -478,6 +557,9 @@ devices = {
             "led": {"bus": 44, "addr": 0x0d, "offset": 0x62, "way": "i2c"},
             "led_attrs": {
                 "off": 0x00, "green": 0x06, "amber": 0x01, "red": 0x01, "mask": 0x07
+            },
+            "led_map": {
+                0x00: "off", 0x06: "blue", 0x01: "amber"
             },
             "PowerMax": 80.64,
             "Rotor": {
@@ -522,6 +604,9 @@ devices = {
             "led_attrs": {
                 "off": 0x00, "green": 0x06, "amber": 0x01, "red": 0x01, "mask": 0x07
             },
+            "led_map": {
+                0x00: "off", 0x06: "blue", 0x01: "amber"
+            },
             "PowerMax": 80.64,
             "Rotor": {
                 "Rotor1_config": {
@@ -564,6 +649,9 @@ devices = {
             "led": {"bus": 52, "addr": 0x0d, "offset": 0x60, "way": "i2c"},
             "led_attrs": {
                 "off": 0x00, "green": 0x06, "amber": 0x01, "red": 0x01, "mask": 0x07
+            },
+            "led_map": {
+                0x00: "off", 0x06: "blue", 0x01: "amber"
             },
             "PowerMax": 80.64,
             "Rotor": {
@@ -608,6 +696,9 @@ devices = {
             "led_attrs": {
                 "off": 0x00, "green": 0x06, "amber": 0x01, "red": 0x01, "mask": 0x07
             },
+            "led_map": {
+                0x00: "off", 0x06: "blue", 0x01: "amber"
+            },
             "PowerMax": 80.64,
             "Rotor": {
                 "Rotor1_config": {
@@ -651,6 +742,9 @@ devices = {
             "led_attrs": {
                 "off": 0x00, "green": 0x06, "amber": 0x01, "red": 0x01, "mask": 0x07
             },
+            "led_map": {
+                0x00: "off", 0x06: "blue", 0x01: "amber"
+            },
             "PowerMax": 80.64,
             "Rotor": {
                 "Rotor1_config": {
@@ -693,6 +787,9 @@ devices = {
             "led": {"bus": 52, "addr": 0x0d, "offset": 0x63, "way": "i2c"},
             "led_attrs": {
                 "off": 0x00, "green": 0x06, "amber": 0x01, "red": 0x01, "mask": 0x07
+            },
+            "led_map": {
+                0x00: "off", 0x06: "blue", 0x01: "amber"
             },
             "PowerMax": 80.64,
             "Rotor": {
@@ -820,22 +917,8 @@ devices = {
         },
 
         {
-            "name": "SCM_53134O_V1.0_C",
-            "dcdc_id": "DCDC2",
-            "Min": -1000,
-            "value": {
-                "loc": "/sys/bus/i2c/devices/33-0040/hwmon/hwmon*/curr1_input",
-                "way": "sysfs",
-            },
-            "read_times": 3,
-            "Unit": "A",
-            "Max": 550,
-            "format": "float(float(%s)/1000)",
-        },
-
-        {
             "name": "SCM_I210_V3.3_V",
-            "dcdc_id": "DCDC3",
+            "dcdc_id": "DCDC2",
             "Min": 2970,
             "value": {
                 "loc": "/sys/bus/i2c/devices/33-0040/hwmon/hwmon*/in2_input",
@@ -848,22 +931,8 @@ devices = {
         },
 
         {
-            "name": "SCM_I210_V3.3_C",
-            "dcdc_id": "DCDC4",
-            "Min": -1000,
-            "value": {
-                "loc": "/sys/bus/i2c/devices/33-0040/hwmon/hwmon*/curr2_input",
-                "way": "sysfs",
-            },
-            "read_times": 3,
-            "Unit": "A",
-            "Max": 550,
-            "format": "float(float(%s)/1000)",
-        },
-
-        {
             "name": "SCM_VDD3.3_V",
-            "dcdc_id": "DCDC5",
+            "dcdc_id": "DCDC3",
             "Min": 2970,
             "value": {
                 "loc": "/sys/bus/i2c/devices/33-0040/hwmon/hwmon*/in3_input",
@@ -876,22 +945,8 @@ devices = {
         },
 
         {
-            "name": "SCM_VDD3.3_C",
-            "dcdc_id": "DCDC6",
-            "Min": -1000,
-            "value": {
-                "loc": "/sys/bus/i2c/devices/33-0040/hwmon/hwmon*/curr3_input",
-                "way": "sysfs",
-            },
-            "read_times": 3,
-            "Unit": "A",
-            "Max": 2200,
-            "format": "float(float(%s)/1000)",
-        },
-
-        {
             "name": "SCM_VDD12.0_V",
-            "dcdc_id": "DCDC7",
+            "dcdc_id": "DCDC4",
             "Min": 10800,
             "value": {
                 "loc": "/sys/bus/i2c/devices/33-0041/hwmon/hwmon*/in1_input",
@@ -904,22 +959,8 @@ devices = {
         },
 
         {
-            "name": "SCM_VDD12.0_C",
-            "dcdc_id": "DCDC8",
-            "Min": -1000,
-            "value": {
-                "loc": "/sys/bus/i2c/devices/33-0041/hwmon/hwmon*/curr1_input",
-                "way": "sysfs",
-            },
-            "read_times": 3,
-            "Unit": "A",
-            "Max": 8800,
-            "format": "float(float(%s)/1000)",
-        },
-
-        {
             "name": "SCM_OCM_V12.0_V",
-            "dcdc_id": "DCDC9",
+            "dcdc_id": "DCDC5",
             "Min": 10800,
             "value": {
                 "loc": "/sys/bus/i2c/devices/33-0041/hwmon/hwmon*/in3_input",
@@ -932,22 +973,8 @@ devices = {
         },
 
         {
-            "name": "SCM_OCM_V12.0_C",
-            "dcdc_id": "DCDC10",
-            "Min": -1000,
-            "value": {
-                "loc": "/sys/bus/i2c/devices/33-0041/hwmon/hwmon*/curr3_input",
-                "way": "sysfs",
-            },
-            "read_times": 3,
-            "Unit": "A",
-            "Max": 7700,
-            "format": "float(float(%s)/1000)",
-        },
-
-        {
             "name": "SCM_SSD_V3.3_V",
-            "dcdc_id": "DCDC11",
+            "dcdc_id": "DCDC6",
             "Min": 2970,
             "value": {
                 "loc": "/sys/bus/i2c/devices/33-0042/hwmon/hwmon*/in1_input",
@@ -960,22 +987,8 @@ devices = {
         },
 
         {
-            "name": "SCM_SSD_V3.3_C",
-            "dcdc_id": "DCDC12",
-            "Min": -1000,
-            "value": {
-                "loc": "/sys/bus/i2c/devices/33-0042/hwmon/hwmon*/curr1_input",
-                "way": "sysfs",
-            },
-            "read_times": 3,
-            "Unit": "A",
-            "Max": 1650,
-            "format": "float(float(%s)/1000)",
-        },
-
-        {
             "name": "SCM_BMC_V3.3_V",
-            "dcdc_id": "DCDC13",
+            "dcdc_id": "DCDC7",
             "Min": -1000,
             "value": {
                 "loc": "/sys/bus/i2c/devices/33-0042/hwmon/hwmon*/in2_input",
@@ -988,22 +1001,8 @@ devices = {
         },
 
         {
-            "name": "SCM_BMC_V3.3_C",
-            "dcdc_id": "DCDC14",
-            "Min": -1000,
-            "value": {
-                "loc": "/sys/bus/i2c/devices/33-0042/hwmon/hwmon*/curr2_input",
-                "way": "sysfs",
-            },
-            "read_times": 3,
-            "Unit": "A",
-            "Max": 2750,
-            "format": "float(float(%s)/1000)",
-        },
-
-        {
             "name": "SCM_VDD5.0_V",
-            "dcdc_id": "DCDC15",
+            "dcdc_id": "DCDC8",
             "Min": 4500,
             "value": {
                 "loc": "/sys/bus/i2c/devices/33-0042/hwmon/hwmon*/in3_input",
@@ -1016,22 +1015,8 @@ devices = {
         },
 
         {
-            "name": "SCM_VDD5.0_C",
-            "dcdc_id": "DCDC16",
-            "Min": -1000,
-            "value": {
-                "loc": "/sys/bus/i2c/devices/33-0042/hwmon/hwmon*/curr3_input",
-                "way": "sysfs",
-            },
-            "read_times": 3,
-            "Unit": "A",
-            "Max": 550,
-            "format": "float(float(%s)/1000)",
-        },
-
-        {
             "name": "MAC_CORE_V",
-            "dcdc_id": "DCDC17",
+            "dcdc_id": "DCDC9",
             "Min": 630,
             "value": {
                 "loc": "/sys/bus/i2c/devices/64-0040/hwmon/hwmon*/in3_input",
@@ -1044,22 +1029,8 @@ devices = {
         },
 
         {
-            "name": "MAC_CORE_C",
-            "dcdc_id": "DCDC18",
-            "Min": -500,
-            "value": {
-                "loc": "/sys/bus/i2c/devices/64-0040/hwmon/hwmon*/curr3_input",
-                "way": "sysfs",
-            },
-            "read_times": 3,
-            "Unit": "A",
-            "Max": 454850,
-            "format": "float(float(%s)*2/1000)",
-        },
-
-        {
             "name": "MAC_ANALOG0 V0.9_V",
-            "dcdc_id": "DCDC19",
+            "dcdc_id": "DCDC10",
             "Min": 810,
             "value": {
                 "loc": "/sys/bus/i2c/devices/65-0040/hwmon/hwmon*/in3_input",
@@ -1072,22 +1043,8 @@ devices = {
         },
 
         {
-            "name": "MAC_ANALOG0 V0.9_C",
-            "dcdc_id": "DCDC20",
-            "Min": -1000,
-            "value": {
-                "loc": "/sys/bus/i2c/devices/65-0040/hwmon/hwmon*/curr3_input",
-                "way": "sysfs",
-            },
-            "read_times": 3,
-            "Unit": "A",
-            "Max": 77737,
-            "format": "float(float(%s)/1000)",
-        },
-
-        {
             "name": "MAC_ANALOG0 V0.75_V",
-            "dcdc_id": "DCDC21",
+            "dcdc_id": "DCDC11",
             "Min": 675,
             "value": {
                 "loc": "/sys/bus/i2c/devices/65-0040/hwmon/hwmon*/in4_input",
@@ -1100,22 +1057,8 @@ devices = {
         },
 
         {
-            "name": "MAC_ANALOG0 V0.75_C",
-            "dcdc_id": "DCDC22",
-            "Min": -1000,
-            "value": {
-                "loc": "/sys/bus/i2c/devices/65-0040/hwmon/hwmon*/curr4_input",
-                "way": "sysfs",
-            },
-            "read_times": 3,
-            "Unit": "A",
-            "Max": 38826,
-            "format": "float(float(%s)/1000)",
-        },
-
-        {
             "name": "MAC_ANALOG1 V0.9_V",
-            "dcdc_id": "DCDC23",
+            "dcdc_id": "DCDC12",
             "Min": 810,
             "value": {
                 "loc": "/sys/bus/i2c/devices/66-0040/hwmon/hwmon*/in3_input",
@@ -1128,22 +1071,8 @@ devices = {
         },
 
         {
-            "name": "MAC_ANALOG1 V0.9_C",
-            "dcdc_id": "DCDC24",
-            "Min": -1000,
-            "value": {
-                "loc": "/sys/bus/i2c/devices/66-0040/hwmon/hwmon*/curr3_input",
-                "way": "sysfs",
-            },
-            "read_times": 3,
-            "Unit": "A",
-            "Max": 77737,
-            "format": "float(float(%s)/1000)",
-        },
-
-        {
             "name": "MAC_ANALOG1 V0.75_V",
-            "dcdc_id": "DCDC25",
+            "dcdc_id": "DCDC13",
             "Min": 675,
             "value": {
                 "loc": "/sys/bus/i2c/devices/66-0040/hwmon/hwmon*/in4_input",
@@ -1156,22 +1085,8 @@ devices = {
         },
 
         {
-            "name": "MAC_ANALOG1 V0.75_C",
-            "dcdc_id": "DCDC26",
-            "Min": -1000,
-            "value": {
-                "loc": "/sys/bus/i2c/devices/66-0040/hwmon/hwmon*/curr4_input",
-                "way": "sysfs",
-            },
-            "read_times": 3,
-            "Unit": "A",
-            "Max": 38826,
-            "format": "float(float(%s)/1000)",
-        },
-
-        {
             "name": "MAC_PLL0_VDD0.9_V",
-            "dcdc_id": "DCDC27",
+            "dcdc_id": "DCDC14",
             "Min": 810,
             "value": {
                 "loc": "/sys/bus/i2c/devices/56-0040/hwmon/hwmon*/in2_input",
@@ -1184,22 +1099,8 @@ devices = {
         },
 
         {
-            "name": "MAC_PLL0_VDD0.9_C",
-            "dcdc_id": "DCDC28",
-            "Min": -1000,
-            "value": {
-                "loc": "/sys/bus/i2c/devices/56-0040/hwmon/hwmon*/curr2_input",
-                "way": "sysfs",
-            },
-            "read_times": 3,
-            "Unit": "A",
-            "Max": 2570,
-            "format": "float(float(%s)/1000)",
-        },
-
-        {
             "name": "MAC_PLL1_VDD0.9_V",
-            "dcdc_id": "DCDC29",
+            "dcdc_id": "DCDC15",
             "Min": 810,
             "value": {
                 "loc": "/sys/bus/i2c/devices/56-0040/hwmon/hwmon*/in1_input",
@@ -1212,22 +1113,8 @@ devices = {
         },
 
         {
-            "name": "MAC_PLL1_VDD0.9_C",
-            "dcdc_id": "DCDC30",
-            "Min": -1000,
-            "value": {
-                "loc": "/sys/bus/i2c/devices/56-0040/hwmon/hwmon*/curr1_input",
-                "way": "sysfs",
-            },
-            "read_times": 3,
-            "Unit": "A",
-            "Max": 2570,
-            "format": "float(float(%s)/1000)",
-        },
-
-        {
             "name": "MAC_PLL2_VDD0.9_V",
-            "dcdc_id": "DCDC31",
+            "dcdc_id": "DCDC16",
             "Min": 810,
             "value": {
                 "loc": "/sys/bus/i2c/devices/58-0040/hwmon/hwmon*/in1_input",
@@ -1240,22 +1127,8 @@ devices = {
         },
 
         {
-            "name": "MAC_PLL2_VDD0.9_C",
-            "dcdc_id": "DCDC32",
-            "Min": -1000,
-            "value": {
-                "loc": "/sys/bus/i2c/devices/58-0040/hwmon/hwmon*/curr1_input",
-                "way": "sysfs",
-            },
-            "read_times": 3,
-            "Unit": "A",
-            "Max": 550,
-            "format": "float(float(%s)/1000)",
-        },
-
-        {
             "name": "MAC_PLL3_VDD0.9_V",
-            "dcdc_id": "DCDC33",
+            "dcdc_id": "DCDC17",
             "Min": 810,
             "value": {
                 "loc": "/sys/bus/i2c/devices/58-0040/hwmon/hwmon*/in3_input",
@@ -1268,22 +1141,8 @@ devices = {
         },
 
         {
-            "name": "MAC_PLL3_VDD0.9_C",
-            "dcdc_id": "DCDC34",
-            "Min": -1000,
-            "value": {
-                "loc": "/sys/bus/i2c/devices/58-0040/hwmon/hwmon*/curr3_input",
-                "way": "sysfs",
-            },
-            "read_times": 3,
-            "Unit": "A",
-            "Max": 550,
-            "format": "float(float(%s)/1000)",
-        },
-
-        {
             "name": "MAC_VDD_0.8_V",
-            "dcdc_id": "DCDC35",
+            "dcdc_id": "DCDC18",
             "Min": 720,
             "value": {
                 "loc": "/sys/bus/i2c/devices/58-0040/hwmon/hwmon*/in2_input",
@@ -1296,22 +1155,8 @@ devices = {
         },
 
         {
-            "name": "MAC_VDD_0.8_C",
-            "dcdc_id": "DCDC36",
-            "Min": -1000,
-            "value": {
-                "loc": "/sys/bus/i2c/devices/58-0040/hwmon/hwmon*/curr2_input",
-                "way": "sysfs",
-            },
-            "read_times": 3,
-            "Unit": "A",
-            "Max": 1500,
-            "format": "float(float(%s)/1000)",
-        },
-
-        {
             "name": "MAC_VDD_1.8_V",
-            "dcdc_id": "DCDC37",
+            "dcdc_id": "DCDC19",
             "Min": 1620,
             "value": {
                 "loc": "/sys/bus/i2c/devices/60-0040/hwmon/hwmon*/in1_input",
@@ -1324,22 +1169,8 @@ devices = {
         },
 
         {
-            "name": "MAC_VDD_1.8_C",
-            "dcdc_id": "DCDC38",
-            "Min": -1000,
-            "value": {
-                "loc": "/sys/bus/i2c/devices/60-0040/hwmon/hwmon*/curr1_input",
-                "way": "sysfs",
-            },
-            "read_times": 3,
-            "Unit": "A",
-            "Max": 2570,
-            "format": "float(float(%s)/1000)",
-        },
-
-        {
             "name": "MAC_VDD_1.5_V",
-            "dcdc_id": "DCDC39",
+            "dcdc_id": "DCDC20",
             "Min": 1350,
             "value": {
                 "loc": "/sys/bus/i2c/devices/60-0040/hwmon/hwmon*/in2_input",
@@ -1352,22 +1183,8 @@ devices = {
         },
 
         {
-            "name": "MAC_VDD_1.5_C",
-            "dcdc_id": "DCDC40",
-            "Min": -1000,
-            "value": {
-                "loc": "/sys/bus/i2c/devices/60-0040/hwmon/hwmon*/curr2_input",
-                "way": "sysfs",
-            },
-            "read_times": 3,
-            "Unit": "A",
-            "Max": 1485,
-            "format": "float(float(%s)/1000)",
-        },
-
-        {
             "name": "MAC_VDD_1.2_V",
-            "dcdc_id": "DCDC41",
+            "dcdc_id": "DCDC21",
             "Min": 1080,
             "value": {
                 "loc": "/sys/bus/i2c/devices/61-0040/hwmon/hwmon*/in1_input",
@@ -1380,22 +1197,8 @@ devices = {
         },
 
         {
-            "name": "MAC_VDD_1.2_C",
-            "dcdc_id": "DCDC42",
-            "Min": -1000,
-            "value": {
-                "loc": "/sys/bus/i2c/devices/61-0040/hwmon/hwmon*/curr1_input",
-                "way": "sysfs",
-            },
-            "read_times": 3,
-            "Unit": "A",
-            "Max": 1600,
-            "format": "float(float(%s)/1000)",
-        },
-
-        {
             "name": "OE_AVDD_0.75_V",
-            "dcdc_id": "DCDC43",
+            "dcdc_id": "DCDC22",
             "Min": 675,
             "value": {
                 "loc": "/sys/bus/i2c/devices/69-0040/hwmon/hwmon*/in3_input",
@@ -1408,22 +1211,8 @@ devices = {
         },
 
         {
-            "name": "OE_AVDD_0.75_C",
-            "dcdc_id": "DCDC44",
-            "Min": -1000,
-            "value": {
-                "loc": "/sys/bus/i2c/devices/69-0040/hwmon/hwmon*/curr3_input",
-                "way": "sysfs",
-            },
-            "read_times": 3,
-            "Unit": "A",
-            "Max": 88000,
-            "format": "float(float(%s)/1000)",
-        },
-
-        {
             "name": "OE_AVDD_1.2_V",
-            "dcdc_id": "DCDC45",
+            "dcdc_id": "DCDC23",
             "Min": 1080,
             "value": {
                 "loc": "/sys/bus/i2c/devices/69-0040/hwmon/hwmon*/in4_input",
@@ -1436,22 +1225,8 @@ devices = {
         },
 
         {
-            "name": "OE_AVDD_1.2_C",
-            "dcdc_id": "DCDC46",
-            "Min": -1000,
-            "value": {
-                "loc": "/sys/bus/i2c/devices/69-0040/hwmon/hwmon*/curr4_input",
-                "way": "sysfs",
-            },
-            "read_times": 3,
-            "Unit": "A",
-            "Max": 72000,
-            "format": "float(float(%s)/1000)",
-        },
-
-        {
             "name": "OE_AVDD_TX_1.8_V",
-            "dcdc_id": "DCDC47",
+            "dcdc_id": "DCDC24",
             "Min": 1620,
             "value": {
                 "loc": "/sys/bus/i2c/devices/70-0068/hwmon/hwmon*/in3_input",
@@ -1464,22 +1239,8 @@ devices = {
         },
 
         {
-            "name": "OE_AVDD_TX_1.8_C",
-            "dcdc_id": "DCDC48",
-            "Min": -1000,
-            "value": {
-                "loc": "/sys/bus/i2c/devices/70-0068/hwmon/hwmon*/curr3_input",
-                "way": "sysfs",
-            },
-            "read_times": 3,
-            "Unit": "A",
-            "Max": 42000,
-            "format": "float(float(%s)/1000)",
-        },
-
-        {
             "name": "OE_AVDD_RX_1.8_V",
-            "dcdc_id": "DCDC49",
+            "dcdc_id": "DCDC25",
             "Min": 1620,
             "value": {
                 "loc": "/sys/bus/i2c/devices/70-0068/hwmon/hwmon*/in4_input",
@@ -1492,22 +1253,8 @@ devices = {
         },
 
         {
-            "name": "OE_AVDD_RX_1.8_C",
-            "dcdc_id": "DCDC50",
-            "Min": -1000,
-            "value": {
-                "loc": "/sys/bus/i2c/devices/70-0068/hwmon/hwmon*/curr4_input",
-                "way": "sysfs",
-            },
-            "read_times": 3,
-            "Unit": "A",
-            "Max": 4000,
-            "format": "float(float(%s)/1000)",
-        },
-
-        {
             "name": "OE_HCSL_PLL_VDD0_0.75_V",
-            "dcdc_id": "DCDC51",
+            "dcdc_id": "DCDC26",
             "Min": 675,
             "value": {
                 "loc": "/sys/bus/i2c/devices/56-0040/hwmon/hwmon*/in3_input",
@@ -1520,22 +1267,8 @@ devices = {
         },
 
         {
-            "name": "OE_HCSL_PLL_VDD0_0.75_C",
-            "dcdc_id": "DCDC52",
-            "Min": -1000,
-            "value": {
-                "loc": "/sys/bus/i2c/devices/56-0040/hwmon/hwmon*/curr3_input",
-                "way": "sysfs",
-            },
-            "read_times": 3,
-            "Unit": "A",
-            "Max": 550,
-            "format": "float(float(%s)/1000)",
-        },
-
-        {
             "name": "OE_HCSL_PLL_VDD1_0.75_V",
-            "dcdc_id": "DCDC53",
+            "dcdc_id": "DCDC27",
             "Min": 675,
             "value": {
                 "loc": "/sys/bus/i2c/devices/57-0040/hwmon/hwmon*/in2_input",
@@ -1548,22 +1281,8 @@ devices = {
         },
 
         {
-            "name": "OE_HCSL_PLL_VDD1_0.75_C",
-            "dcdc_id": "DCDC54",
-            "Min": -1000,
-            "value": {
-                "loc": "/sys/bus/i2c/devices/57-0040/hwmon/hwmon*/curr2_input",
-                "way": "sysfs",
-            },
-            "read_times": 3,
-            "Unit": "A",
-            "Max": 550,
-            "format": "float(float(%s)/1000)",
-        },
-
-        {
             "name": "OE_AVDD_3.3_V",
-            "dcdc_id": "DCDC55",
+            "dcdc_id": "DCDC28",
             "Min": 2970,
             "value": {
                 "loc": "/sys/bus/i2c/devices/59-0040/hwmon/hwmon*/in1_input",
@@ -1576,22 +1295,8 @@ devices = {
         },
 
         {
-            "name": "OE_AVDD_3.3_C",
-            "dcdc_id": "DCDC56",
-            "Min": -1000,
-            "value": {
-                "loc": "/sys/bus/i2c/devices/59-0040/hwmon/hwmon*/curr1_input",
-                "way": "sysfs",
-            },
-            "read_times": 3,
-            "Unit": "A",
-            "Max": 1100,
-            "format": "float(float(%s)/1000)",
-        },
-
-        {
             "name": "OE_VDD_HCSL_PLL_1.8_V",
-            "dcdc_id": "DCDC57",
+            "dcdc_id": "DCDC29",
             "Min": 1620,
             "value": {
                 "loc": "/sys/bus/i2c/devices/59-0040/hwmon/hwmon*/in2_input",
@@ -1604,22 +1309,8 @@ devices = {
         },
 
         {
-            "name": "OE_VDD_HCSL_PLL_1.8_C",
-            "dcdc_id": "DCDC58",
-            "Min": -1000,
-            "value": {
-                "loc": "/sys/bus/i2c/devices/59-0040/hwmon/hwmon*/curr2_input",
-                "way": "sysfs",
-            },
-            "read_times": 3,
-            "Unit": "A",
-            "Max": 550,
-            "format": "float(float(%s)/1000)",
-        },
-
-        {
             "name": "OE_VDD_1.8_V",
-            "dcdc_id": "DCDC59",
+            "dcdc_id": "DCDC30",
             "Min": 1620,
             "value": {
                 "loc": "/sys/bus/i2c/devices/60-0040/hwmon/hwmon*/in3_input",
@@ -1632,22 +1323,8 @@ devices = {
         },
 
         {
-            "name": "OE_VDD_1.8_C",
-            "dcdc_id": "DCDC60",
-            "Min": -1000,
-            "value": {
-                "loc": "/sys/bus/i2c/devices/60-0040/hwmon/hwmon*/curr3_input",
-                "way": "sysfs",
-            },
-            "read_times": 3,
-            "Unit": "A",
-            "Max": 550,
-            "format": "float(float(%s)/1000)",
-        },
-
-        {
             "name": "RLML_VDD V3.3_V",
-            "dcdc_id": "DCDC61",
+            "dcdc_id": "DCDC31",
             "Min": 1980,
             "value": {
                 "loc": "/sys/bus/i2c/devices/71-0068/hwmon/hwmon*/in3_input",
@@ -1660,22 +1337,8 @@ devices = {
         },
 
         {
-            "name": "RLML_VDD V3.3_C",
-            "dcdc_id": "DCDC62",
-            "Min": -1000,
-            "value": {
-                "loc": "/sys/bus/i2c/devices/71-0068/hwmon/hwmon*/curr3_input",
-                "way": "sysfs",
-            },
-            "read_times": 3,
-            "Unit": "A",
-            "Max": 1320,
-            "format": "float(float(%s)/1000)",
-        },
-
-        {
             "name": "RLMH_VDD V3.3_V",
-            "dcdc_id": "DCDC63",
+            "dcdc_id": "DCDC32",
             "Min": 1980,
             "value": {
                 "loc": "/sys/bus/i2c/devices/71-0068/hwmon/hwmon*/in4_input",
@@ -1688,22 +1351,8 @@ devices = {
         },
 
         {
-            "name": "RLMH_VDD V3.3_C",
-            "dcdc_id": "DCDC64",
-            "Min": -1000,
-            "value": {
-                "loc": "/sys/bus/i2c/devices/71-0068/hwmon/hwmon*/curr4_input",
-                "way": "sysfs",
-            },
-            "read_times": 3,
-            "Unit": "A",
-            "Max": 1320,
-            "format": "float(float(%s)/1000)",
-        },
-
-        {
             "name": "SMB_CLK_VDD3.3_V",
-            "dcdc_id": "DCDC65",
+            "dcdc_id": "DCDC33",
             "Min": 2970,
             "value": {
                 "loc": "/sys/bus/i2c/devices/56-0041/hwmon/hwmon*/in1_input",
@@ -1716,22 +1365,8 @@ devices = {
         },
 
         {
-            "name": "SMB_CLK_VDD3.3_C",
-            "dcdc_id": "DCDC66",
-            "Min": -1000,
-            "value": {
-                "loc": "/sys/bus/i2c/devices/56-0041/hwmon/hwmon*/curr1_input",
-                "way": "sysfs",
-            },
-            "read_times": 3,
-            "Unit": "A",
-            "Max": 1100,
-            "format": "float(float(%s)/1000)",
-        },
-
-        {
             "name": "SMB_CLK2_VDD1.8_V",
-            "dcdc_id": "DCDC67",
+            "dcdc_id": "DCDC34",
             "Min": 1620,
             "value": {
                 "loc": "/sys/bus/i2c/devices/56-0041/hwmon/hwmon*/in2_input",
@@ -1744,22 +1379,8 @@ devices = {
         },
 
         {
-            "name": "SMB_CLK2_VDD1.8_C",
-            "dcdc_id": "DCDC68",
-            "Min": -1000,
-            "value": {
-                "loc": "/sys/bus/i2c/devices/56-0041/hwmon/hwmon*/curr2_input",
-                "way": "sysfs",
-            },
-            "read_times": 3,
-            "Unit": "A",
-            "Max": 1100,
-            "format": "float(float(%s)/1000)",
-        },
-
-        {
             "name": "SMB_CLK_VDD1.8_V",
-            "dcdc_id": "DCDC69",
+            "dcdc_id": "DCDC35",
             "Min": 1620,
             "value": {
                 "loc": "/sys/bus/i2c/devices/56-0041/hwmon/hwmon*/in3_input",
@@ -1772,22 +1393,8 @@ devices = {
         },
 
         {
-            "name": "SMB_CLK_VDD1.8_C",
-            "dcdc_id": "DCDC70",
-            "Min": -1000,
-            "value": {
-                "loc": "/sys/bus/i2c/devices/56-0041/hwmon/hwmon*/curr3_input",
-                "way": "sysfs",
-            },
-            "read_times": 3,
-            "Unit": "A",
-            "Max": 1100,
-            "format": "float(float(%s)/1000)",
-        },
-
-        {
             "name": "SMB_FPGA_VDD1.8_V",
-            "dcdc_id": "DCDC71",
+            "dcdc_id": "DCDC36",
             "Min": 1620,
             "value": {
                 "loc": "/sys/bus/i2c/devices/57-0040/hwmon/hwmon*/in1_input",
@@ -1800,22 +1407,8 @@ devices = {
         },
 
         {
-            "name": "SMB_FPGA_VDD1.8_C",
-            "dcdc_id": "DCDC72",
-            "Min": -1000,
-            "value": {
-                "loc": "/sys/bus/i2c/devices/57-0040/hwmon/hwmon*/curr1_input",
-                "way": "sysfs",
-            },
-            "read_times": 3,
-            "Unit": "A",
-            "Max": 550,
-            "format": "float(float(%s)/1000)",
-        },
-
-        {
             "name": "SMB_VDD_5.0_V",
-            "dcdc_id": "DCDC73",
+            "dcdc_id": "DCDC37",
             "Min": 4500,
             "value": {
                 "loc": "/sys/bus/i2c/devices/61-0040/hwmon/hwmon*/in2_input",
@@ -1828,22 +1421,8 @@ devices = {
         },
 
         {
-            "name": "SMB_VDD_5.0_C",
-            "dcdc_id": "DCDC74",
-            "Min": -1000,
-            "value": {
-                "loc": "/sys/bus/i2c/devices/61-0040/hwmon/hwmon*/curr2_input",
-                "way": "sysfs",
-            },
-            "read_times": 3,
-            "Unit": "A",
-            "Max": 3300,
-            "format": "float(float(%s)/1000)",
-        },
-
-        {
             "name": "SMB_FPGA_V3.3_V",
-            "dcdc_id": "DCDC75",
+            "dcdc_id": "DCDC38",
             "Min": 2970,
             "value": {
                 "loc": "/sys/bus/i2c/devices/62-0040/hwmon/hwmon*/in1_input",
@@ -1856,22 +1435,8 @@ devices = {
         },
 
         {
-            "name": "SMB_FPGA_V3.3_C",
-            "dcdc_id": "DCDC76",
-            "Min": -1000,
-            "value": {
-                "loc": "/sys/bus/i2c/devices/62-0040/hwmon/hwmon*/curr1_input",
-                "way": "sysfs",
-            },
-            "read_times": 3,
-            "Unit": "A",
-            "Max": 550,
-            "format": "float(float(%s)/1000)",
-        },
-
-        {
             "name": "SMB_FPGA_V1.0_V",
-            "dcdc_id": "DCDC77",
+            "dcdc_id": "DCDC39",
             "Min": 900,
             "value": {
                 "loc": "/sys/bus/i2c/devices/62-0040/hwmon/hwmon*/in2_input",
@@ -1884,22 +1449,8 @@ devices = {
         },
 
         {
-            "name": "SMB_FPGA_V1.0_C",
-            "dcdc_id": "DCDC78",
-            "Min": -1000,
-            "value": {
-                "loc": "/sys/bus/i2c/devices/62-0040/hwmon/hwmon*/curr2_input",
-                "way": "sysfs",
-            },
-            "read_times": 3,
-            "Unit": "A",
-            "Max": 1188,
-            "format": "float(float(%s)/1000)",
-        },
-
-        {
             "name": "SMB_FPGA_V1.2_V",
-            "dcdc_id": "DCDC79",
+            "dcdc_id": "DCDC40",
             "Min": 1080,
             "value": {
                 "loc": "/sys/bus/i2c/devices/62-0040/hwmon/hwmon*/in3_input",
@@ -1912,22 +1463,8 @@ devices = {
         },
 
         {
-            "name": "SMB_FPGA_V1.2_C",
-            "dcdc_id": "DCDC80",
-            "Min": -1000,
-            "value": {
-                "loc": "/sys/bus/i2c/devices/62-0040/hwmon/hwmon*/curr3_input",
-                "way": "sysfs",
-            },
-            "read_times": 3,
-            "Unit": "A",
-            "Max": 550,
-            "format": "float(float(%s)/1000)",
-        },
-
-        {
             "name": "SMB_VDD_3.3_V",
-            "dcdc_id": "DCDC81",
+            "dcdc_id": "DCDC41",
             "Min": 2970,
             "value": {
                 "loc": "/sys/bus/i2c/devices/63-0040/hwmon/hwmon*/in1_input",
@@ -1940,22 +1477,8 @@ devices = {
         },
 
         {
-            "name": "SMB_VDD_3.3_C",
-            "dcdc_id": "DCDC82",
-            "Min": -1000,
-            "value": {
-                "loc": "/sys/bus/i2c/devices/63-0040/hwmon/hwmon*/curr1_input",
-                "way": "sysfs",
-            },
-            "read_times": 3,
-            "Unit": "A",
-            "Max": 550,
-            "format": "float(float(%s)/1000)",
-        },
-
-        {
             "name": "SMB_CPLD_VDD_1.8_V",
-            "dcdc_id": "DCDC83",
+            "dcdc_id": "DCDC42",
             "Min": 1620,
             "value": {
                 "loc": "/sys/bus/i2c/devices/63-0040/hwmon/hwmon*/in2_input",
@@ -1968,22 +1491,8 @@ devices = {
         },
 
         {
-            "name": "SMB_CPLD_VDD_1.8_C",
-            "dcdc_id": "DCDC84",
-            "Min": -1000,
-            "value": {
-                "loc": "/sys/bus/i2c/devices/63-0040/hwmon/hwmon*/curr2_input",
-                "way": "sysfs",
-            },
-            "read_times": 3,
-            "Unit": "A",
-            "Max": 330,
-            "format": "float(float(%s)/1000)",
-        },
-
-        {
             "name": "SMB_CPLD_VDD_3.3_V",
-            "dcdc_id": "DCDC85",
+            "dcdc_id": "DCDC43",
             "Min": 2970,
             "value": {
                 "loc": "/sys/bus/i2c/devices/63-0040/hwmon/hwmon*/in3_input",
@@ -1996,22 +1505,8 @@ devices = {
         },
 
         {
-            "name": "SMB_CPLD_VDD_3.3_C",
-            "dcdc_id": "DCDC86",
-            "Min": -1000,
-            "value": {
-                "loc": "/sys/bus/i2c/devices/63-0040/hwmon/hwmon*/curr3_input",
-                "way": "sysfs",
-            },
-            "read_times": 3,
-            "Unit": "A",
-            "Max": 550,
-            "format": "float(float(%s)/1000)",
-        },
-
-        {
             "name": "MCB_FPGA_VDD1.0_V",
-            "dcdc_id": "DCDC87",
+            "dcdc_id": "DCDC44",
             "Min": 900,
             "value": {
                 "loc": "/sys/bus/i2c/devices/12-0040/hwmon/hwmon*/in1_input",
@@ -2024,22 +1519,8 @@ devices = {
         },
 
         {
-            "name": "MCB_FPGA_VDD1.0_C",
-            "dcdc_id": "DCDC88",
-            "Min": -1000,
-            "value": {
-                "loc": "/sys/bus/i2c/devices/12-0040/hwmon/hwmon*/curr1_input",
-                "way": "sysfs",
-            },
-            "read_times": 3,
-            "Unit": "A",
-            "Max": 1188,
-            "format": "float(float(%s)/1000)",
-        },
-
-        {
             "name": "MCB_FPGA_VDD1.8_V",
-            "dcdc_id": "DCDC89",
+            "dcdc_id": "DCDC45",
             "Min": 1620,
             "value": {
                 "loc": "/sys/bus/i2c/devices/12-0040/hwmon/hwmon*/in2_input",
@@ -2052,22 +1533,8 @@ devices = {
         },
 
         {
-            "name": "MCB_FPGA_VDD1.8_C",
-            "dcdc_id": "DCDC90",
-            "Min": -1000,
-            "value": {
-                "loc": "/sys/bus/i2c/devices/12-0040/hwmon/hwmon*/curr2_input",
-                "way": "sysfs",
-            },
-            "read_times": 3,
-            "Unit": "A",
-            "Max": 550,
-            "format": "float(float(%s)/1000)",
-        },
-
-        {
             "name": "MCB_FPGA_VDD1.2_V",
-            "dcdc_id": "DCDC91",
+            "dcdc_id": "DCDC46",
             "Min": 1080,
             "value": {
                 "loc": "/sys/bus/i2c/devices/12-0040/hwmon/hwmon*/in3_input",
@@ -2080,22 +1547,8 @@ devices = {
         },
 
         {
-            "name": "MCB_FPGA_VDD1.2_C",
-            "dcdc_id": "DCDC92",
-            "Min": -1000,
-            "value": {
-                "loc": "/sys/bus/i2c/devices/12-0040/hwmon/hwmon*/curr3_input",
-                "way": "sysfs",
-            },
-            "read_times": 3,
-            "Unit": "A",
-            "Max": 550,
-            "format": "float(float(%s)/1000)",
-        },
-
-        {
             "name": "MCB_CPLD_VDD3.3_V",
-            "dcdc_id": "DCDC93",
+            "dcdc_id": "DCDC47",
             "Min": 2970,
             "value": {
                 "loc": "/sys/bus/i2c/devices/12-0041/hwmon/hwmon*/in1_input",
@@ -2108,22 +1561,8 @@ devices = {
         },
 
         {
-            "name": "MCB_CPLD_VDD3.3_C",
-            "dcdc_id": "DCDC94",
-            "Min": -1000,
-            "value": {
-                "loc": "/sys/bus/i2c/devices/12-0041/hwmon/hwmon*/curr1_input",
-                "way": "sysfs",
-            },
-            "read_times": 3,
-            "Unit": "A",
-            "Max": 550,
-            "format": "float(float(%s)/1000)",
-        },
-
-        {
             "name": "MCB_VDD3.3_V",
-            "dcdc_id": "DCDC95",
+            "dcdc_id": "DCDC48",
             "Min": 2970,
             "value": {
                 "loc": "/sys/bus/i2c/devices/12-0041/hwmon/hwmon*/in2_input",
@@ -2136,22 +1575,8 @@ devices = {
         },
 
         {
-            "name": "MCB_VDD3.3_C",
-            "dcdc_id": "DCDC96",
-            "Min": -1000,
-            "value": {
-                "loc": "/sys/bus/i2c/devices/12-0041/hwmon/hwmon*/curr2_input",
-                "way": "sysfs",
-            },
-            "read_times": 3,
-            "Unit": "A",
-            "Max": 550,
-            "format": "float(float(%s)/1000)",
-        },
-
-        {
             "name": "MCB_FPGA_VDD3.3_V",
-            "dcdc_id": "DCDC97",
+            "dcdc_id": "DCDC49",
             "Min": 2970,
             "value": {
                 "loc": "/sys/bus/i2c/devices/12-0041/hwmon/hwmon*/in3_input",
@@ -2164,22 +1589,8 @@ devices = {
         },
 
         {
-            "name": "MCB_FPGA_VDD3.3_C",
-            "dcdc_id": "DCDC98",
-            "Min": -1000,
-            "value": {
-                "loc": "/sys/bus/i2c/devices/12-0041/hwmon/hwmon*/curr3_input",
-                "way": "sysfs",
-            },
-            "read_times": 3,
-            "Unit": "A",
-            "Max": 550,
-            "format": "float(float(%s)/1000)",
-        },
-
-        {
             "name": "OCM_P1V05_V",
-            "dcdc_id": "DCDC99",
+            "dcdc_id": "DCDC50",
             "Min": 954,
             "value": {
                 "loc": "/sys/bus/i2c/devices/5-005f/hwmon/hwmon*/in1_input",
@@ -2193,7 +1604,7 @@ devices = {
 
         {
             "name": "OCM_VCCIN_V",
-            "dcdc_id": "DCDC100",
+            "dcdc_id": "DCDC51",
             "Min": 1350,
             "value": {
                 "loc": "/sys/bus/i2c/devices/5-005f/hwmon/hwmon*/in2_input",
@@ -2207,7 +1618,7 @@ devices = {
 
         {
             "name": "OCM_P1V2_VDDQ_V",
-            "dcdc_id": "DCDC101",
+            "dcdc_id": "DCDC52",
             "Min": 1120,
             "value": {
                 "loc": "/sys/bus/i2c/devices/5-005f/hwmon/hwmon*/in3_input",
@@ -2221,7 +1632,7 @@ devices = {
 
         {
             "name": "OCM_P1V8_V",
-            "dcdc_id": "DCDC102",
+            "dcdc_id": "DCDC53",
             "Min": 1690,
             "value": {
                 "loc": "/sys/bus/i2c/devices/5-005f/hwmon/hwmon*/in4_input",
@@ -2235,7 +1646,7 @@ devices = {
 
         {
             "name": "OCM_P0V6_VTT_V",
-            "dcdc_id": "DCDC103",
+            "dcdc_id": "DCDC54",
             "Min": 558,
             "value": {
                 "loc": "/sys/bus/i2c/devices/5-005f/hwmon/hwmon*/in5_input",
@@ -2249,7 +1660,7 @@ devices = {
 
         {
             "name": "OCM_VNN_PCH_V",
-            "dcdc_id": "DCDC104",
+            "dcdc_id": "DCDC55",
             "Min": 540,
             "value": {
                 "loc": "/sys/bus/i2c/devices/5-005f/hwmon/hwmon*/in6_input",
@@ -2263,7 +1674,7 @@ devices = {
 
         {
             "name": "OCM_VNN_NAC_V",
-            "dcdc_id": "DCDC105",
+            "dcdc_id": "DCDC56",
             "Min": 540,
             "value": {
                 "loc": "/sys/bus/i2c/devices/5-005f/hwmon/hwmon*/in7_input",
@@ -2277,7 +1688,7 @@ devices = {
 
         {
             "name": "OCM_P2V5_VPP_V",
-            "dcdc_id": "DCDC106",
+            "dcdc_id": "DCDC57",
             "Min": 2250,
             "value": {
                 "loc": "/sys/bus/i2c/devices/5-005f/hwmon/hwmon*/in8_input",
@@ -2291,7 +1702,7 @@ devices = {
 
         {
             "name": "OCM_VCC_ANA_V",
-            "dcdc_id": "DCDC107",
+            "dcdc_id": "DCDC58",
             "Min": 900,
             "value": {
                 "loc": "/sys/bus/i2c/devices/5-005f/hwmon/hwmon*/in9_input",
@@ -2305,7 +1716,7 @@ devices = {
 
         {
             "name": "OCM_P3V3_STBY_V",
-            "dcdc_id": "DCDC108",
+            "dcdc_id": "DCDC59",
             "Min": 2970,
             "value": {
                 "loc": "/sys/bus/i2c/devices/5-005f/hwmon/hwmon*/in10_input",
@@ -2319,7 +1730,7 @@ devices = {
 
         {
             "name": "OCM_P5V_AUX_V",
-            "dcdc_id": "DCDC109",
+            "dcdc_id": "DCDC60",
             "Min": 4000,
             "value": {
                 "loc": "/sys/bus/i2c/devices/5-005f/hwmon/hwmon*/in11_input",
@@ -2333,7 +1744,7 @@ devices = {
 
         {
             "name": "OCM_P1V8_AUX_V",
-            "dcdc_id": "DCDC110",
+            "dcdc_id": "DCDC61",
             "Min": 1690,
             "value": {
                 "loc": "/sys/bus/i2c/devices/5-005f/hwmon/hwmon*/in12_input",
@@ -2347,7 +1758,7 @@ devices = {
 
         {
             "name": "OCM_P3V3_AUX_V",
-            "dcdc_id": "DCDC111",
+            "dcdc_id": "DCDC62",
             "Min": 2970,
             "value": {
                 "loc": "/sys/bus/i2c/devices/5-005f/hwmon/hwmon*/in13_input",
@@ -2361,7 +1772,7 @@ devices = {
 
         {
             "name": "OCM_V1P80_EMMC_V",
-            "dcdc_id": "DCDC112",
+            "dcdc_id": "DCDC63",
             "Min": 1690,
             "value": {
                 "loc": "/sys/bus/i2c/devices/5-005f/hwmon/hwmon*/in14_input",
@@ -2375,7 +1786,7 @@ devices = {
 
         {
             "name": "OCM_V3P3_EMMC_V",
-            "dcdc_id": "DCDC113",
+            "dcdc_id": "DCDC64",
             "Min": 3100,
             "value": {
                 "loc": "/sys/bus/i2c/devices/5-005f/hwmon/hwmon*/in15_input",
@@ -2389,7 +1800,7 @@ devices = {
 
         {
             "name": "OCM_XDPE_VCCIN_V",
-            "dcdc_id": "DCDC114",
+            "dcdc_id": "DCDC65",
             "Min": 1350,
             "value": {
                 "loc": "/sys/bus/i2c/devices/5-0070/hwmon/hwmon*/in3_input",
@@ -2402,22 +1813,8 @@ devices = {
         },
 
         {
-            "name": "OCM_XDPE_VCCIN_C",
-            "dcdc_id": "DCDC115",
-            "Min": -3100,
-            "value": {
-                "loc": "/sys/bus/i2c/devices/5-0070/hwmon/hwmon*/curr3_input",
-                "way": "sysfs",
-            },
-            "read_times": 3,
-            "Unit": "A",
-            "Max": 147000,
-            "format": "float(float(%s)/1000)",
-        },
-
-        {
             "name": "OCM_XDPE_P1V8_V",
-            "dcdc_id": "DCDC116",
+            "dcdc_id": "DCDC66",
             "Min": 1690,
             "value": {
                 "loc": "/sys/bus/i2c/devices/5-0070/hwmon/hwmon*/in4_input",
@@ -2430,22 +1827,8 @@ devices = {
         },
 
         {
-            "name": "OCM_XDPE_P1V8_C",
-            "dcdc_id": "DCDC117",
-            "Min": -3100,
-            "value": {
-                "loc": "/sys/bus/i2c/devices/5-0070/hwmon/hwmon*/curr4_input",
-                "way": "sysfs",
-            },
-            "read_times": 3,
-            "Unit": "A",
-            "Max": 23000,
-            "format": "float(float(%s)/1000)",
-        },
-
-        {
             "name": "OCM_XDPE_P1V05_V",
-            "dcdc_id": "DCDC118",
+            "dcdc_id": "DCDC67",
             "Min": 954,
             "value": {
                 "loc": "/sys/bus/i2c/devices/5-006e/hwmon/hwmon*/in3_input",
@@ -2458,22 +1841,8 @@ devices = {
         },
 
         {
-            "name": "OCM_XDPE_P1V05_C",
-            "dcdc_id": "DCDC119",
-            "Min": -3100,
-            "value": {
-                "loc": "/sys/bus/i2c/devices/5-006e/hwmon/hwmon*/curr3_input",
-                "way": "sysfs",
-            },
-            "read_times": 3,
-            "Unit": "A",
-            "Max": 14300,
-            "format": "float(float(%s)/1000)",
-        },
-
-        {
             "name": "OCM_XDPE_VNN_PCH_V",
-            "dcdc_id": "DCDC120",
+            "dcdc_id": "DCDC68",
             "Min": 540,
             "value": {
                 "loc": "/sys/bus/i2c/devices/5-006e/hwmon/hwmon*/in4_input",
@@ -2486,22 +1855,8 @@ devices = {
         },
 
         {
-            "name": "OCM_XDPE_VNN_PCH_C",
-            "dcdc_id": "DCDC121",
-            "Min": -3100,
-            "value": {
-                "loc": "/sys/bus/i2c/devices/5-006e/hwmon/hwmon*/curr4_input",
-                "way": "sysfs",
-            },
-            "read_times": 3,
-            "Unit": "A",
-            "Max": 74000,
-            "format": "float(float(%s)/1000)",
-        },
-
-        {
             "name": "OCM_XDPE_VNN_NAC_V",
-            "dcdc_id": "DCDC122",
+            "dcdc_id": "DCDC69",
             "Min": 540,
             "value": {
                 "loc": "/sys/bus/i2c/devices/5-0068/hwmon/hwmon*/in3_input",
@@ -2514,22 +1869,8 @@ devices = {
         },
 
         {
-            "name": "OCM_XDPE_VNN_NAC_C",
-            "dcdc_id": "DCDC123",
-            "Min": -3100,
-            "value": {
-                "loc": "/sys/bus/i2c/devices/5-0068/hwmon/hwmon*/curr3_input",
-                "way": "sysfs",
-            },
-            "read_times": 3,
-            "Unit": "A",
-            "Max": 22000,
-            "format": "float(float(%s)/1000)",
-        },
-
-        {
             "name": "OCM_XDPE_VCC_ANA_V",
-            "dcdc_id": "DCDC124",
+            "dcdc_id": "DCDC70",
             "Min": 900,
             "value": {
                 "loc": "/sys/bus/i2c/devices/5-0068/hwmon/hwmon*/in4_input",
@@ -2537,27 +1878,13 @@ devices = {
             },
             "read_times": 3,
             "Unit": "V",
-            "Max": 11000,
-            "format": "float(float(%s)/1000)",
-        },
-
-        {
-            "name": "OCM_XDPE_VCC_ANA_C",
-            "dcdc_id": "DCDC125",
-            "Min": -3100,
-            "value": {
-                "loc": "/sys/bus/i2c/devices/5-0068/hwmon/hwmon*/curr4_input",
-                "way": "sysfs",
-            },
-            "read_times": 3,
-            "Unit": "A",
-            "Max": 2210,
+            "Max": 1100,
             "format": "float(float(%s)/1000)",
         },
 
         {
             "name": "OCM_XDPE_P1V2_VDDQ_V",
-            "dcdc_id": "DCDC126",
+            "dcdc_id": "DCDC71",
             "Min": 1120,
             "value": {
                 "loc": "/sys/bus/i2c/devices/5-005e/hwmon/hwmon*/in3_input",
@@ -2570,16 +1897,114 @@ devices = {
         },
 
         {
-            "name": "OCM_XDPE_P1V2_VDDQ_C",
-            "dcdc_id": "DCDC127",
-            "Min": -3100,
+            "name": "FAN1_VDD12_V",
+            "dcdc_id": "DCDC72",
+            "Min": 7000,
             "value": {
-                "loc": "/sys/bus/i2c/devices/5-005e/hwmon/hwmon*/curr3_input",
+                "loc": "/sys/bus/i2c/devices/88-0042/hwmon/hwmon*/in1_input",
                 "way": "sysfs",
             },
             "read_times": 3,
-            "Unit": "A",
-            "Max": 19000,
+            "Unit": "V",
+            "Max": 13200,
+            "format": "float(float(%s)/1000)",
+        },
+
+        {
+            "name": "FAN3_VDD12_V",
+            "dcdc_id": "DCDC73",
+            "Min": 7000,
+            "value": {
+                "loc": "/sys/bus/i2c/devices/88-0042/hwmon/hwmon*/in2_input",
+                "way": "sysfs",
+            },
+            "read_times": 3,
+            "Unit": "V",
+            "Max": 13200,
+            "format": "float(float(%s)/1000)",
+        },
+
+        {
+            "name": "FAN5_VDD12_V",
+            "dcdc_id": "DCDC74",
+            "Min": 7000,
+            "value": {
+                "loc": "/sys/bus/i2c/devices/88-0042/hwmon/hwmon*/in3_input",
+                "way": "sysfs",
+            },
+            "read_times": 3,
+            "Unit": "V",
+            "Max": 13200,
+            "format": "float(float(%s)/1000)",
+        },
+
+        {
+            "name": "FAN7_VDD12_V",
+            "dcdc_id": "DCDC75",
+            "Min": 7000,
+            "value": {
+                "loc": "/sys/bus/i2c/devices/89-0042/hwmon/hwmon*/in1_input",
+                "way": "sysfs",
+            },
+            "read_times": 3,
+            "Unit": "V",
+            "Max": 13200,
+            "format": "float(float(%s)/1000)",
+        },
+
+        {
+            "name": "FAN2_VDD12_V",
+            "dcdc_id": "DCDC76",
+            "Min": 7000,
+            "value": {
+                "loc": "/sys/bus/i2c/devices/89-0042/hwmon/hwmon*/in2_input",
+                "way": "sysfs",
+            },
+            "read_times": 3,
+            "Unit": "V",
+            "Max": 13200,
+            "format": "float(float(%s)/1000)",
+        },
+
+        {
+            "name": "FAN4_VDD12_V",
+            "dcdc_id": "DCDC77",
+            "Min": 7000,
+            "value": {
+                "loc": "/sys/bus/i2c/devices/89-0042/hwmon/hwmon*/in3_input",
+                "way": "sysfs",
+            },
+            "read_times": 3,
+            "Unit": "V",
+            "Max": 13200,
+            "format": "float(float(%s)/1000)",
+        },
+
+        {
+            "name": "FAN6_VDD12_V",
+            "dcdc_id": "DCDC78",
+            "Min": 7000,
+            "value": {
+                "loc": "/sys/bus/i2c/devices/90-0042/hwmon/hwmon*/in1_input",
+                "way": "sysfs",
+            },
+            "read_times": 3,
+            "Unit": "V",
+            "Max": 13200,
+            "format": "float(float(%s)/1000)",
+        },
+
+        {
+            "name": "FAN8_VDD12_V",
+            "dcdc_id": "DCDC79",
+            "Min": 7000,
+            "value": {
+                "loc": "/sys/bus/i2c/devices/90-0042/hwmon/hwmon*/in2_input",
+                "way": "sysfs",
+            },
+            "read_times": 3,
+            "Unit": "V",
+            "Max": 13200,
             "format": "float(float(%s)/1000)",
         },
     ],
@@ -2590,5 +2015,14 @@ devices = {
         }
     ],
     "sfps": {
+        "ver": '3.0',
+        "port_index_start": 1,
+        "port_num": 128,
+        "log_level": 2,
+        "eeprom_retry_times": 5,
+        "eeprom_retry_break_sec": 0.2,
+        "presence_val_is_present": 0,
+        "eeprom_path": "/sys/bus/i2c/devices/i2c-%d/%d-0050/eeprom",
+        "eeprom_path_key": [24] * 16 + [25] * 16 + [26] * 16 + [27] * 16 + [28] * 16 + [29] * 16 + [30] * 16 + [31] * 16
     }
 }

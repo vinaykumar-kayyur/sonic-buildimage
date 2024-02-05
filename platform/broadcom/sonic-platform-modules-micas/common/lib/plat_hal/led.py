@@ -15,6 +15,7 @@ class led(devicebase):
             self.led_type = conf.get('led_type', None)
             self.led_attrs_config = conf.get('led_attrs', None)
             self.led_config = conf.get('led', None)
+            self.led_map = conf.get('led_map', None)
 
     def set_color(self, color):
         status = self.led_attrs_config.get(color, None)
@@ -46,6 +47,11 @@ class led(devicebase):
         if ret is False or value is None:
             return False, 'N/A'
         ledval = int(value) & mask
+        if self.led_map is not None:
+            led_color = self.led_map.get(ledval, None)
+            if led_color is None:
+                return False, 'N/A'
+            return True, led_color
         for key, val in self.led_attrs_config.items():
             if (ledval == val) and (key != "mask"):
                 return True, key

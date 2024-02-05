@@ -86,7 +86,10 @@ class Thermal(ThermalBase):
             False if not
         """
         self.temp_dict_update()
-        if (self.temp_dict["Value"] >= self.temp_dict["High"]) or (self.temp_dict["Value"] <= self.temp_dict["Low"]):
+        if self.temp_dict["High"] is not None and self.temp_dict["Value"] > self.temp_dict["High"]:
+            return False
+
+        if self.temp_dict["Low"] is not None and self.temp_dict["Value"] < self.temp_dict["Low"]:
             return False
 
         return True
@@ -120,6 +123,15 @@ class Thermal(ThermalBase):
         value = self.temp_dict["Value"]
         if value is None or value == self.int_case.error_ret:
             return "N/A"
+        # temp value invalid
+        temp_invalid = self.temp_dict.get("Invalid")
+        if temp_invalid is not None and int(value) == int(temp_invalid):
+            return "N/A"
+        # temp value error
+        temp_error = self.temp_dict.get("Error")
+        if temp_error is not None and int(value) == int(temp_error):
+            return "N/A"
+
         if len(self.temperature_list) >= 1000:
             del self.temperature_list[0]
         self.temperature_list.append(float(value))

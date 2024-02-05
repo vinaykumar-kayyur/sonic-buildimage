@@ -7,7 +7,7 @@ import syslog
 import signal
 import click
 from platform_util import get_value, set_value, exec_os_cmd, exec_os_cmd_log
-from platform_config import UPGRADE_SUMMARY, WARM_UPGRADE_STARTED_FLAG
+from platform_config import UPGRADE_SUMMARY, WARM_UPGRADE_STARTED_FLAG, FW_UPGRADE_STARTED_FLAG
 from warm_upgrade import WarmBasePlatform
 
 
@@ -679,7 +679,11 @@ class BasePlatform():
     def do_test_main(self, device, slot):
         print("+================================+")
         print("|Doing upgrade test, please wait.|")
+        exec_os_cmd("touch %s" % FW_UPGRADE_STARTED_FLAG)
+        exec_os_cmd("sync")
         ret, log = self.do_test(device, slot)
+        exec_os_cmd("rm -rf %s" % FW_UPGRADE_STARTED_FLAG)
+        exec_os_cmd("sync")
         if ret == FIRMWARE_SUCCESS:
             print("|         test succeeded!        |")
             print("+================================+")
@@ -694,8 +698,12 @@ class BasePlatform():
 
     def do_bmc_upgrade_main(self, file, chip_select, erase_type):
         bmc_upgrade_config = self.upgrade_param.get("BMC", {})
+        exec_os_cmd("touch %s" % FW_UPGRADE_STARTED_FLAG)
+        exec_os_cmd("sync")
         ret, log = self.upgrading(bmc_upgrade_config, file, self.devtype,
                                   self.subtype, chip_select, BMC_UPGRADE, erase_type)
+        exec_os_cmd("rm -rf %s" % FW_UPGRADE_STARTED_FLAG)
+        exec_os_cmd("sync")
         if ret is True:
             print("===========upgrade succeeded!============")
             sys.exit(0)
@@ -925,7 +933,11 @@ class FwUpg(object):
     def fw_upg(self, path, slot, upg_type):
         print("+================================+")
         print("|  Doing upgrade, please wait... |")
+        exec_os_cmd("touch %s" % FW_UPGRADE_STARTED_FLAG)
+        exec_os_cmd("sync")
         ret, log = self.do_fw_upg(path, slot, upg_type)
+        exec_os_cmd("rm -rf %s" % FW_UPGRADE_STARTED_FLAG)
+        exec_os_cmd("sync")
         if ret == FIRMWARE_SUCCESS:
             print("|       upgrade succeeded!       |")
             print("+================================+")

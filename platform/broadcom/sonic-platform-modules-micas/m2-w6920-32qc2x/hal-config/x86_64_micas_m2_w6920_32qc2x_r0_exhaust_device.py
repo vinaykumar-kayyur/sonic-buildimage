@@ -264,7 +264,7 @@ devices = {
             "Temperature": {
                 "value": [
                     {"loc": "/sys/bus/i2c/devices/57-004f/hwmon/hwmon*/temp1_input", "way": "sysfs"},
-                    {"loc": "/sys/bus/i2c/devices/27-004e/hwmon/hwmon*/temp1_input", "way": "sysfs"}
+                    {"loc": "/sys/bus/i2c/devices/57-004e/hwmon/hwmon*/temp1_input", "way": "sysfs"}
                 ],
                 "Min": -10000,
                 "Low": 0,

@@ -1269,6 +1269,7 @@ DRIVERLISTS = [
     {"name": "wb_spi_ocores_device", "delay": 0},
     {"name": "wb_spi_dev", "delay": 0},
     {"name": "wb_spi_dev_device", "delay": 0},
+    {"name": "wb_spi_dev_platform_device", "delay": 0},
     {"name": "wb_lpc_drv", "delay": 0},
     {"name": "wb_lpc_drv_device", "delay": 0},
     {"name": "wb_io_dev_device", "delay": 0},

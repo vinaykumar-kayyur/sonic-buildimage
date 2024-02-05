@@ -418,7 +418,8 @@ def get_temps_sensor():
     print("=================get_temps_sensor======================")
     temp_list = int_case.get_temps()
     for temp in temp_list:
-        print("id: %s, name: %s, API name: %s, value: %s" % (temp.temp_id, temp.name, temp.api_name, temp.Value))
+        print("id: %s, name: %s, API name: %s, value: %s, Min: %s, Low: %s, High: %s, Max: %s, Invalid: %s, Error: %s" %
+            (temp.temp_id, temp.name, temp.api_name, temp.Value, temp.Min, temp.Low, temp.High, temp.Max, temp.temp_invalid, temp.temp_error))
 
 def get_cpu_reset_num():
     r'''get_cpu_reset_num'''

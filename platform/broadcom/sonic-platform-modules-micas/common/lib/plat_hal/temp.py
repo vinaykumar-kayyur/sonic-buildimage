@@ -120,6 +120,25 @@ class temp(sensor):
                     self.__Value = int(max_val)
                 else:
                     self.__Value = self.get_format_value(self.format % max_val)
+            elif isinstance(self.ValueConfig, dict) and self.ValueConfig.get("val_conf_list") is not None:
+                val_list = []
+                fail_set = set()
+                for index, val_conf_item in enumerate(self.ValueConfig["val_conf_list"]):
+                    val_tmp = self.get_max_value(val_conf_item)
+                    if val_tmp is None:
+                        fail_set.add(index)
+                        fail_val = val_conf_item.get("fail_val")
+                        if fail_val is None:
+                            return None
+                        val_tmp = fail_val
+                    val_list.append(val_tmp)
+                # check fail set
+                fail_conf_set_list = self.ValueConfig.get("fail_conf_set_list",[])
+                for item in fail_conf_set_list:
+                    if item.issubset(fail_set):
+                        return None
+                val_tuple = tuple(val_list)
+                self.__Value = self.get_format_value(self.ValueConfig["format"] % (val_tuple))
             else:
                 ret, val = self.get_value(self.ValueConfig)
                 if ret is False or val is None:
