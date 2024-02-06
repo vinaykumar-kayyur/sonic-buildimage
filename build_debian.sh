@@ -301,8 +301,15 @@ then
     install_kubernetes ${MASTER_KUBERNETES_VERSION}
     
     sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install hyperv-daemons xmlstarlet parted netcat-openbsd
-    sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT curl -o /tmp/cri-dockerd.deb -fsSL \
-        https://github.com/Mirantis/cri-dockerd/releases/download/v${MASTER_CRI_DOCKERD}/cri-dockerd_${MASTER_CRI_DOCKERD}.3-0.debian-bullseye_amd64.deb
+    if [ "$IMAGE_DISTRO" == "bookworm" ]; then
+        # CRI-dockerd is not available for bookworm, use bullseye version for now
+        # TODO: update to bookworm version when available
+        local cri_dockerd_ver="bullseye"
+    else
+        local cri_dockerd_ver="$IMAGE_DISTRO"
+    fi
+    local cri_dockerd_link="https://github.com/Mirantis/cri-dockerd/releases/download/v${MASTER_CRI_DOCKERD}/cri-dockerd_${MASTER_CRI_DOCKERD}.3-0.debian-${cri_dockerd_ver}_amd64.deb"
+    sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT curl -o /tmp/cri-dockerd.deb -fsSL $cri_dockerd_link
     sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install -f /tmp/cri-dockerd.deb
     sudo LANG=C chroot $FILESYSTEM_ROOT rm -f /tmp/cri-dockerd.deb
 else
