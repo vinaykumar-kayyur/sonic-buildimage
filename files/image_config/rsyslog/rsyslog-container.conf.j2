@@ -71,17 +71,7 @@ if ($.PLATFORM == "x86_64-mlnx_msn2700-r0" or $.PLATFORM == "x86_64-mlnx_msn2700
 # Set remote syslog server
 template (name="ForwardFormatInContainer" type="string" string="<%PRI%>%TIMESTAMP:::date-rfc3339% %HOSTNAME% %$.CONTAINER_NAME%#%syslogtag%%msg:::sp-if-no-1st-sp%%msg%")
 module(load="omrelp")
-*.* action(type="omrelp" target=`echo $SYSLOG_TARGET_IP` port="2514" Template="ForwardFormatInContainer")
-
-#
-# Use traditional timestamp format.
-# To enable high precision timestamps, comment out the following line.
-#
-#$ActionFileDefaultTemplate RSYSLOG_TraditionalFileFormat
-
-# Define a custom template
-$template SONiCFileFormat,"%TIMESTAMP%.%timestamp:::date-subseconds% %HOSTNAME% %syslogseverity-text:::uppercase% %$.CONTAINER_NAME%#%syslogtag%%msg:::sp-if-no-1st-sp%%msg:::drop-last-lf%\n"
-$ActionFileDefaultTemplate SONiCFileFormat
+*.* action(type="omrelp" target=`echo $SYSLOG_TARGET_IP` port="2514" Template="ForwardFormatInContainer" RepeatedMsgReduction="on")
 
 #
 # Set the default permissions for all log files.
@@ -101,11 +91,6 @@ $WorkDirectory /var/spool/rsyslog
 # Include all config files in /etc/rsyslog.d/
 #
 $IncludeConfig /etc/rsyslog.d/*.conf
-
-#
-# Suppress duplicate messages and report "message repeated n times"
-#
-$RepeatedMsgReduction on
 
 ###############
 #### RULES ####
