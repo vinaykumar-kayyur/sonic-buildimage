@@ -41,7 +41,11 @@ function startplatform() {
             /usr/bin/flint -d $_MST_DEVICE --clear_semaphore
         fi
 
-        /usr/bin/mlnx-fw-upgrade.sh
+        /usr/bin/mlnx-fw-upgrade.sh -v
+        if [[ "$?" -ne "${EXIT_SUCCESS}" ]]; then
+            debug "Failed to upgrade fw. " "$?" "Restart syncd"
+            exit 1
+        fi
         /etc/init.d/sxdkernel restart
         debug "Firmware update procedure ended"
     fi
@@ -99,17 +103,6 @@ function waitplatform() {
             debug "Starting pmon service..."
             /bin/systemctl start pmon
             debug "Started pmon service"
-        fi
-    fi
-    if [[ x"$BOOT_TYPE" = @(x"fast"|x"warm"|x"fastfast") ]]; then
-        debug "LLDP service is delayed by a timer for better fast/warm boot performance"
-    else
-        lldp_state=$(systemctl is-enabled lldp.timer)
-        if [[ $lldp_state == "enabled" ]]
-        then
-            debug "Starting lldp service..."
-            /bin/systemctl start lldp
-            debug "Started lldp service"
         fi
     fi
 }
