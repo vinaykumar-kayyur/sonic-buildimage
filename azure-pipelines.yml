@@ -42,7 +42,12 @@ variables:
 - name: CACHE_MODE
   value: rcache
 - name: ENABLE_FIPS
-  value: y
+  value: n
+- name: BUILD_BRANCH
+  ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+    value: $(System.PullRequest.TargetBranch)
+  ${{ else }}:
+    value: $(Build.SourceBranchName)
 
 stages:
 - stage: BuildVS
@@ -50,7 +55,7 @@ stages:
   jobs:
   - template: .azure-pipelines/azure-pipelines-build.yml
     parameters:
-      buildOptions: 'USERNAME=admin SONIC_BUILD_JOBS=$(nproc) BUILD_MULTIASIC_KVM=y ${{ variables.VERSION_CONTROL_OPTIONS }}'
+      buildOptions: 'USERNAME=admin SONIC_BUILD_JOBS=$(nproc) BUILD_MULTIASIC_KVM=y INCLUDE_DHCP_SERVER=y ${{ variables.VERSION_CONTROL_OPTIONS }}'
       jobGroups:
       - name: vs
 
@@ -65,6 +70,7 @@ stages:
       - name: broadcom
         variables:
           swi_image: yes
+          INCLUDE_RESTAPI: y
       - name: mellanox
         variables:
           dbg_image: yes
@@ -79,6 +85,7 @@ stages:
         timeoutInMinutes: 1200
         variables:
           PLATFORM_ARCH: armhf
+          INCLUDE_RESTAPI: y
 
 - stage: Test
   dependsOn: BuildVS
@@ -164,7 +171,7 @@ stages:
         TOPOLOGY: t0
         MIN_WORKER: $(T0_INSTANCE_NUM)
         MAX_WORKER: $(T0_INSTANCE_NUM)
-        MGMT_BRANCH: "master"
+        MGMT_BRANCH: $(BUILD_BRANCH)
 
   - job: t0_2vlans_elastictest
     pool: ubuntu-20.04
@@ -178,7 +185,7 @@ stages:
         TEST_SET: t0-2vlans
         MIN_WORKER: $(T0_2VLANS_INSTANCE_NUM)
         MAX_WORKER: $(T0_2VLANS_INSTANCE_NUM)
-        MGMT_BRANCH: "master"
+        MGMT_BRANCH: $(BUILD_BRANCH)
         DEPLOY_MG_EXTRA_PARAMS: "-e vlan_config=two_vlan_a"
 
   - job: t1_lag_elastictest
@@ -192,7 +199,7 @@ stages:
         TOPOLOGY: t1-lag
         MIN_WORKER: $(T1_LAG_INSTANCE_NUM)
         MAX_WORKER: $(T1_LAG_INSTANCE_NUM)
-        MGMT_BRANCH: "master"
+        MGMT_BRANCH: $(BUILD_BRANCH)
 
   - job: multi_asic_elastictest
     displayName: "kvmtest-multi-asic-t1-lag by Elastictest"
@@ -207,7 +214,7 @@ stages:
           MIN_WORKER: $(MULTI_ASIC_INSTANCE_NUM)
           MAX_WORKER: $(MULTI_ASIC_INSTANCE_NUM)
           NUM_ASIC: 4
-          MGMT_BRANCH: "master"
+          MGMT_BRANCH: $(BUILD_BRANCH)
 
   - job: dualtor_elastictest
     pool: ubuntu-20.04
@@ -220,7 +227,7 @@ stages:
           TOPOLOGY: dualtor
           MIN_WORKER: $(T0_DUALTOR_INSTANCE_NUM)
           MAX_WORKER: $(T0_DUALTOR_INSTANCE_NUM)
-          MGMT_BRANCH: "master"
+          MGMT_BRANCH: $(BUILD_BRANCH)
           COMMON_EXTRA_PARAMS: "--disable_loganalyzer "
 
   - job: sonic_t0_elastictest
@@ -235,9 +242,23 @@ stages:
           MIN_WORKER: $(T0_SONIC_INSTANCE_NUM)
           MAX_WORKER: $(T0_SONIC_INSTANCE_NUM)
           TEST_SET: t0-sonic
-          MGMT_BRANCH: "master"
+          MGMT_BRANCH: $(BUILD_BRANCH)
           COMMON_EXTRA_PARAMS: "--neighbor_type=sonic "
           VM_TYPE: vsonic
+
+  - job: dpu_elastictest
+    displayName: "kvmtest-dpu by Elastictest"
+    timeoutInMinutes: 240
+    continueOnError: false
+    pool: ubuntu-20.04
+    steps:
+      - template: .azure-pipelines/run-test-elastictest-template.yml@sonic-mgmt
+        parameters:
+          TOPOLOGY: dpu
+          MIN_WORKER: $(T0_SONIC_INSTANCE_NUM)
+          MAX_WORKER: $(T0_SONIC_INSTANCE_NUM)
+          MGMT_BRANCH: $(BUILD_BRANCH)
+
 
 #  - job: wan_elastictest
 #    displayName: "kvmtest-wan by Elastictest"

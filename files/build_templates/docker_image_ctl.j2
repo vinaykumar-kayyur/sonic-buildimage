@@ -34,31 +34,20 @@ function updateSyslogConf()
     # Also update the container name
     if [[ ($NUM_ASIC -gt 1) ]]; then
         TARGET_IP=$(docker network inspect bridge --format={{ "'{{(index .IPAM.Config 0).Gateway}}'" }})
-    else
-        if [ "$CONTAINER_EXISTS" = "yes" ]; then
-            # database configuration has been synced to /etc/rsyslog.conf
-            # no need generate it to save boot time
-            return
-        fi
-        TARGET_IP="127.0.0.1"
+        CONTAINER_NAME="$DOCKERNAME"
+        TMP_FILE="/tmp/rsyslog.$CONTAINER_NAME.conf"
+        {%- if docker_container_name == "database" %}
+        python -c "import jinja2, os; paths=['/usr/share/sonic/templates']; loader = jinja2.FileSystemLoader(paths); env = jinja2.Environment(loader=loader, trim_blocks=True); template_file='/usr/share/sonic/templates/rsyslog-container.conf.j2'; template = env.get_template(os.path.basename(template_file)); data=template.render({\"target_ip\":\"$TARGET_IP\",\"container_name\":\"$CONTAINER_NAME\"}); print(data)" > $TMP_FILE
+        {%- else %}
+        sonic-cfggen -t /usr/share/sonic/templates/rsyslog-container.conf.j2 -a "{\"target_ip\": \"$TARGET_IP\", \"container_name\": \"$CONTAINER_NAME\" }"  > $TMP_FILE
+        {%- endif %}
+        docker cp $TMP_FILE ${DOCKERNAME}:/etc/rsyslog.conf
+        rm -rf $TMP_FILE
     fi
-    CONTAINER_NAME="$DOCKERNAME"
-    TMP_FILE="/tmp/rsyslog.$CONTAINER_NAME.conf"
-    {%- if docker_container_name == "database" %}
-    python -c "import jinja2, os; paths=['/usr/share/sonic/templates']; loader = jinja2.FileSystemLoader(paths); env = jinja2.Environment(loader=loader, trim_blocks=True); template_file='/usr/share/sonic/templates/rsyslog-container.conf.j2'; template = env.get_template(os.path.basename(template_file)); data=template.render({\"target_ip\":\"$TARGET_IP\",\"container_name\":\"$CONTAINER_NAME\"}); print(data)" > $TMP_FILE
-    {%- else %}
-    sonic-cfggen -d -t /usr/share/sonic/templates/rsyslog-container.conf.j2 -a "{\"target_ip\": \"$TARGET_IP\", \"container_name\": \"$CONTAINER_NAME\" }"  > $TMP_FILE
-    if [ $? -ne 0 ]; then
-      echo "Error: Execute sonic-cfggen -d failed. Execute without '-d'."
-      sonic-cfggen -t /usr/share/sonic/templates/rsyslog-container.conf.j2 -a "{\"target_ip\": \"$TARGET_IP\", \"container_name\": \"$CONTAINER_NAME\" }"  > $TMP_FILE
-    fi
-    {%- endif %}
-    docker cp $TMP_FILE ${DOCKERNAME}:/etc/rsyslog.conf
-    rm -rf $TMP_FILE
 }
 function ebtables_config()
 {
-    if [ "$DEV" ]; then
+    if [[ "$DEV" && $DATABASE_TYPE != "dpudb" ]]; then
         # Install ebtables filter in namespaces on multi-asic.
         ip netns exec $NET_NS ebtables-restore < /etc/ebtables.filter.cfg
     else
@@ -169,7 +158,7 @@ function postStartAction()
 {%- if docker_container_name == "database" %}
     CHASSISDB_CONF="/usr/share/sonic/device/$PLATFORM/chassisdb.conf"
     [ -f $CHASSISDB_CONF ] && source $CHASSISDB_CONF
-    if [ "$DEV" ]; then
+    if [[ "$DEV" && $DATABASE_TYPE != "dpudb" ]]; then
         # Enable the forwarding on eth0 interface in namespace.
         SYSCTL_NET_CONFIG="/etc/sysctl.d/sysctl-net.conf"
         docker exec -i database$DEV sed -i -e "s/^net.ipv4.conf.eth0.forwarding=0/net.ipv4.conf.eth0.forwarding=1/;
@@ -223,7 +212,7 @@ function postStartAction()
     # databases are not availbale until database container is ready.
     # also chassisdb doesn't support warm/fast reboot, its dump.rdb is deleted
     # at service startup time, nothing need to be done here.
-    if [ "$DATABASE_TYPE" != "chassisdb" ]; then
+    if [[ "$DATABASE_TYPE" != "chassisdb" ]]; then
         # Wait until supervisord and redis starts. This change is needed
         # because now database_config.json is jinja2 templated based
         # and by the time file gets generated if we do redis ping
@@ -294,6 +283,12 @@ function postStartAction()
     fi
     chgrp -f redis $REDIS_SOCK && chmod -f 0760 $REDIS_SOCK
 {%- elif docker_container_name == "swss" %}
+    # Wait until swss container state is Running
+    until [[ ($(docker inspect -f {{"'{{.State.Running}}'"}} swss$DEV) == "true") ]]; do
+        sleep 0.1
+    done
+    echo "swss container is up and running"
+
     docker exec swss$DEV rm -f /ready   # remove cruft
     if [[ "$BOOT_TYPE" == "fast" ]] && [[ -d /host/fast-reboot ]]; then
         test -e /host/fast-reboot/fdb.json && docker cp /host/fast-reboot/fdb.json swss$DEV:/
@@ -303,6 +298,9 @@ function postStartAction()
         rm -fr /host/fast-reboot
     fi
     docker exec swss$DEV touch /ready # signal swssconfig.sh to go
+    # Re-confirm that file is indeed created and log an error if not
+    docker exec swss$DEV test -f /ready && echo "File swss:/ready created" || echo "Error: File swss:/ready doesn't exist"
+
 {%- elif docker_container_name == "pmon" %}
 
     DEVPATH="/usr/share/sonic/device"
@@ -326,11 +324,16 @@ start() {
     # Obtain our platform as we will mount directories with these names in each docker
     PLATFORM=${PLATFORM:-`$SONIC_CFGGEN -H -v DEVICE_METADATA.localhost.platform`}
 
-
     # Parse the device specific asic conf file, if it exists
     ASIC_CONF=/usr/share/sonic/device/$PLATFORM/asic.conf
     if [ -f "$ASIC_CONF" ]; then
         source $ASIC_CONF
+    fi
+
+    # Default rsyslog target IP for single ASIC platform
+    SYSLOG_TARGET_IP=127.0.0.1
+    if [[ ($NUM_ASIC -gt 1) ]]; then
+        SYSLOG_TARGET_IP=$(docker network inspect bridge --format={{ "'{{(index .IPAM.Config 0).Gateway}}'" }})
     fi
 
     PLATFORM_ENV_CONF=/usr/share/sonic/device/$PLATFORM/platform_env.conf
@@ -503,7 +506,7 @@ start() {
     fi
     {%- endif %}
 
-    if [ -z "$DEV" ]; then
+    if [[ -z "$DEV" || $DATABASE_TYPE == "dpudb" ]]; then
         NET="host"
 
         # For Multi-ASIC platform we have to mount the redis paths for database instances running in different
@@ -528,6 +531,11 @@ start() {
             DB_OPT=$DB_OPT" --env DATABASE_TYPE=$DATABASE_TYPE"
         else
             DB_OPT=$DB_OPT" -v /var/run/redis$DEV:/var/run/redis:rw "
+            DB_OPT=$DB_OPT" --env DATABASE_TYPE=$DATABASE_TYPE "
+            DB_OPT=$DB_OPT" --env NUM_DPU=$NUM_DPU "
+            if [[ "$DEV" ]]; then
+                DB_OPT=$DB_OPT" -v /var/run/redis$DEV:/var/run/redis$DEV:rw "
+            fi
         fi
         {%- endif %}
     else
@@ -557,6 +565,12 @@ start() {
         fi
     fi
 {%- endif %}
+
+    NAMESPACE_ID="$DEV"
+    if [[ $DATABASE_TYPE == "dpudb" ]]; then
+        NAMESPACE_ID=""
+    fi
+
 {%- if sonic_asic_platform == "mellanox" %}
     # TODO: Mellanox will remove the --tmpfs exception after SDK socket path changed in new SDK version
 {%- endif %}
@@ -630,10 +644,13 @@ start() {
 {%- if mount_default_tmpfs|default("n") == "y" %}
         --tmpfs /var/tmp \
 {%- endif %}
-        --env "NAMESPACE_ID"="$DEV" \
+        --env "NAMESPACE_ID"="$NAMESPACE_ID" \
         --env "NAMESPACE_PREFIX"="$NAMESPACE_PREFIX" \
-        --env "NAMESPACE_COUNT"=$NUM_ASIC \
+        --env "NAMESPACE_COUNT"="$NUM_ASIC" \
+        --env "DEV"="$DEV" \
         --env "CONTAINER_NAME"=$DOCKERNAME \
+        --env "SYSLOG_TARGET_IP"=$SYSLOG_TARGET_IP \
+        --env "PLATFORM"=$PLATFORM \
         --name=$DOCKERNAME \
 {%- if docker_container_name == "gbsyncd" %}
         -v /var/run/docker-syncd$DEV:/var/run/sswsyncd \
@@ -668,7 +685,7 @@ wait() {
 stop() {
     {%- if docker_container_name == "database" %}
     docker stop $DOCKERNAME
-    if [ "$DEV" ]; then
+    if [[ "$DEV" && $DATABASE_TYPE != "dpudb" ]]; then
         ip netns delete "$NET_NS"
     fi
     {%- elif docker_container_name == "teamd" %}
@@ -684,7 +701,7 @@ stop() {
 kill() {
     {%- if docker_container_name == "database" %}
     docker kill $DOCKERNAME
-    if [ "$DEV" ]; then
+    if [[ "$DEV" && $DATABASE_TYPE != "dpudb" ]]; then
         ip netns delete "$NET_NS"
     fi
     {%- else %}
@@ -701,11 +718,16 @@ if [ "$DEV" == "chassisdb" ]; then
       DOCKERNAME=$DOCKERNAME"-chassis"
       unset DEV
 fi
+
+if [[ "$DEV" == *"dpu"* ]]; then
+    DATABASE_TYPE="dpudb"
+fi
+
 {%- endif %}
 NAMESPACE_PREFIX="asic"
 DOCKERNAME=$DOCKERNAME$DEV
 CONTAINER_EXISTS="no"
-if [ "$DEV" ]; then
+if [[ "$DEV" && $DATABASE_TYPE != "dpudb" ]]; then
     NET_NS="$NAMESPACE_PREFIX$DEV" #name of the network namespace
 
     SONIC_CFGGEN="sonic-cfggen -n $NET_NS"
