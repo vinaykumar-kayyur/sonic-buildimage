@@ -1,31 +1,10 @@
-#
-# BCM56880 128x100g port configuration.
-#
-# configuration yaml file
-#   device:
-#       <unit>:
-#           <table>:
-#               ?
-#                   <key_fld_1>: <value>
-#                   <key_fld_2>: <value>
-#                   ...
-#                   <key_fld_n>: <value>
-#               :
-#                   <data_fld_1>: <value>
-#                   <data_fld_2>: <value>
-#                   ...
-#                   <data_fld_n>: <value>
-#
-# $Copyright: (c) 2019 Broadcom.
-# Broadcom Proprietary and Confidential. All rights reserved.$
-#
-
 ---
 bcm_device:
     0:
         global:
             bcm_tunnel_term_compatible_mode: 1
             vlan_flooding_l2mc_num_reserved: 0
+            shared_block_mask_section: uc_bc
             l3_alpm_template: 2
             l3_alpm2_bnk_threshold: 100
             svi_my_station_optimization: 1

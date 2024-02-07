@@ -260,6 +260,14 @@ class fancontrol(object):
         self.__deal_fan_error_conf = self.__fancontrol_para.get("deal_fan_error_conf", {})
         self.__deal_fan_error_default_countdown = self.__deal_fan_error_conf.get("countdown", 0)
 
+        self.__deal_all_fan_error_method_flag = self.__fancontrol_para.get("deal_all_fan_error_method_flag", 0)
+        if self.__deal_all_fan_error_method_flag:
+            self.__all_fan_error_switch_temp_critical_temp = self.__fancontrol_para.get("all_fan_error_switch_temp_critical_temp", 100)
+            self.__all_fan_error_recover_log = self.__fancontrol_para.get("all_fan_error_recover_log", "Reboot the system.")
+            self.__all_fan_error_recover_cmd = self.__fancontrol_para.get("all_fan_error_recover_cmd", "/sbin/reboot")
+            self.__all_fan_error_check_crit_reboot_num = self.__fancontrol_para.get("all_fan_error_check_crit_reboot_num", 3)
+            self.__all_fan_error_check_crit_sleep_time = self.__fancontrol_para.get("all_fan_error_check_crit_sleep_time", 20)
+
         self.__warning_countdown = 0  # temp warning flag for normal fancontrol
         self.__critical_countdown = 0  # temp critical flag for normal fancontrol
         self.__emergency_countdown = 0  # temp emergency flag for normal fancontrol
@@ -574,6 +582,46 @@ class fancontrol(object):
             fancontrol_error("%%policy: checkEmergReboot failed")
             fancontrol_error(str(e))
 
+    def all_fan_error_checkTempRebootCrit(self):
+        try:
+            temp_dict = dict(self.__temps_threshold_config)
+            tmp = temp_dict.get(SWITCH_TEMP)
+            switch_temp_value = tmp['temp']
+            if switch_temp_value >= self.__all_fan_error_switch_temp_critical_temp:
+                fancontrol_debug("all fan error, switch temp[%d] is over critical[%d]."
+                    % (switch_temp_value, self.__all_fan_error_switch_temp_critical_temp))
+                return True
+        except Exception as e:
+            fancontrol_error("%%policy: all_fan_error_checkTempRebootCrit failed")
+            fancontrol_error(str(e))
+        return False
+
+    def all_fan_error_checkCritReboot(self):
+        try:
+            reboot_flag = self.all_fan_error_checkTempRebootCrit()
+            if reboot_flag > 0:
+                self.set_all_fan_speed_pwm(self.__max_pwm)
+                for i in range(self.__all_fan_error_check_crit_reboot_num):
+                    time.sleep(self.__all_fan_error_check_crit_sleep_time)
+                    self.get_monitor_temp()
+                    reboot_flag = self.all_fan_error_checkTempRebootCrit()
+                    if reboot_flag > 0:
+                        fancontrol_emerg("%%FANCONTROL-0-TEMP_EMERG: The temperature of device over reboot critical value lasts for %d seconds." %
+                                         (self.__all_fan_error_check_crit_sleep_time * (i + 1)))
+                        continue
+                    else:
+                        fancontrol_debug("The temperature of device is not over reboot critical value.")
+                        break
+                if reboot_flag > 0:
+                    fancontrol_emerg("%%FANCONTROL-0-TEMP_EMERG: The temperature of device over reboot critical value.")
+                    fancontrol_emerg(self.__all_fan_error_recover_log)
+                    exec_os_cmd("sync")
+                    time.sleep(3)
+                    exec_os_cmd(self.__all_fan_error_recover_cmd)
+        except Exception as e:
+            fancontrol_error("%%policy: all_fan_error_checkCritReboot failed")
+            fancontrol_error(str(e))
+
     def get_fan_total_number(self):
         return self.int_case.get_fan_total_number()
 
@@ -706,6 +754,25 @@ class fancontrol(object):
         pwm_min = self.__min_pwm
         pwm_list.append(pwm_min)
 
+        self.__fan_absent_num = self.checkFanPresence()
+        if self.__fan_absent_num >= self.__fan_absent_fullspeed_num:
+            fan_absent_pwm = self.__max_pwm
+            pwm_list.append(fan_absent_pwm)
+            fancontrol_debug("fan_absent_pwm = 0x%x" % fan_absent_pwm)
+
+        rotor_err_num = self.checkFanRotorStatus()
+        if rotor_err_num >= self.__rotor_error_fullspeed_num:
+            rotor_err_pwm = self.__max_pwm
+            pwm_list.append(rotor_err_pwm)
+            fancontrol_debug("rotor_err_pwm = 0x%x" % rotor_err_pwm)
+
+        if self.__deal_all_fan_error_method_flag:
+            fan_num = self.get_fan_total_number()
+            # all fan absent or fail
+            if (self.__fan_absent_num == fan_num) or (self.__fan_nok_num == fan_num):
+                fancontrol_debug("All fan error or absent.")
+                self.all_fan_error_checkCritReboot()
+
         if self.__check_temp_emergency == 1:
             status = self.checkTempEmergency()
             if status is True:
@@ -750,18 +817,6 @@ class fancontrol(object):
                     pwm_list.append(over_warn_countdown_pwm)
                     fancontrol_debug("TempWarningCountdown: %d, over_warn_countdown_pwm = 0x%x" %
                                      (self.__warning_countdown, over_warn_countdown_pwm))
-
-        self.__fan_absent_num = self.checkFanPresence()
-        if self.__fan_absent_num >= self.__fan_absent_fullspeed_num:
-            fan_absent_pwm = self.__max_pwm
-            pwm_list.append(fan_absent_pwm)
-            fancontrol_debug("fan_absent_pwm = 0x%x" % fan_absent_pwm)
-
-        rotor_err_num = self.checkFanRotorStatus()
-        if rotor_err_num >= self.__rotor_error_fullspeed_num:
-            rotor_err_pwm = self.__max_pwm
-            pwm_list.append(rotor_err_pwm)
-            fancontrol_debug("rotor_err_pwm = 0x%x" % rotor_err_pwm)
 
         psu_absent_num = self.checkPsuPresence()
         if psu_absent_num >= self.__psu_absent_fullspeed_num:

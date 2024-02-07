@@ -181,14 +181,6 @@ MANUINFO_CONF = {
         "separator": "=",
         "arrt_index": 2,
     },
-    "onie_sub_version": {
-        "parent": "onie",
-        "key": "Sub Version",
-        "file": "/host/machine.conf",
-        "pattern": r"^onie_sub_version",
-        "separator": "=",
-        "arrt_index": 3,
-    },
 
     "cpu": {
         "key": "CPU",
@@ -728,7 +720,7 @@ MANUINFO_CONF = {
             "funcname": "get_bcm5387_version",
             "params": {
                 "before": [
-                    {"dealtype": "io_wr", "io_addr": 0x94d, "value": 0xfe},  # enable 5387 
+                    {"dealtype": "io_wr", "io_addr": 0x94d, "value": 0xfe},  # enable 5387
                     {"dealtype": "shell", "cmd": "modprobe wb_spi_gpio"},
                     {"dealtype": "shell", "cmd": "modprobe wb_spi_gpio_device sck=67 miso=32 mosi=65 bus=0"},
                     {"dealtype": "shell", "cmd": "modprobe wb_spi_93xx46 spi_bus_num=0 spi_cs_gpio=6"},
@@ -914,10 +906,6 @@ DRIVERLISTS = [
     {"name": "wb_tps53622", "delay": 0},
     {"name": "wb_ucd9000", "delay": 0},
     {"name": "wb_xdpe132g5c", "delay": 0},
-    {"name": "firmware_driver_cpld", "delay": 0},
-    {"name": "firmware_driver_ispvme", "delay": 0},
-    {"name": "firmware_driver_sysfs", "delay": 0},
-    {"name": "wb_firmware_upgrade_device", "delay": 0},
     {"name": "plat_dfd", "delay": 0},
     {"name": "plat_switch", "delay": 0},
     {"name": "plat_fan", "delay": 0},
@@ -1276,8 +1264,8 @@ REBOOT_CAUSE_PARA = {
             "record": [
                 {"record_type": "file", "mode": "cover", "log": "Watchdog, ",
                     "path": "/etc/sonic/.reboot/.previous-reboot-cause.txt"},
-                {"record_type": "file", "mode": "add", "log": "Watchdog, ", 
-                    "path": "/etc/.reboot/.history-reboot-cause.txt", "file_max_size":1*1024*1024}
+                {"record_type": "file", "mode": "add", "log": "Watchdog, ",
+                    "path": "/etc/sonic/.reboot/.history-reboot-cause.txt", "file_max_size":1*1024*1024}
             ],
             "finish_operation": [
                 {"gettype": "io", "io_addr": 0x987, "value": 0xfc},
@@ -1288,8 +1276,8 @@ REBOOT_CAUSE_PARA = {
             "monitor_point": {"gettype": "io", "io_addr": 0x98a, "okval": 1},
             "record": [
                 {"record_type": "file", "mode": "cover", "log": "BMC reboot, ",
-                    "path": "/var/cache/sonic/previous-reboot-cause.txt"},
-                {"record_type": "file", "mode": "add", "log": "BMC reboot, ", "path": "/host/misc/history-reboot-cause.txt"}
+                    "path": "/etc/sonic/.reboot/.previous-reboot-cause.txt"},
+                {"record_type": "file", "mode": "add", "log": "BMC reboot, ", "path": "/etc/sonic/.reboot/.history-reboot-cause.txt"}
             ],
             "finish_operation": [
                 {"gettype": "io", "io_addr": 0x987, "value": 0xfa},
@@ -1300,8 +1288,8 @@ REBOOT_CAUSE_PARA = {
             "monitor_point": {"gettype": "io", "io_addr": 0x98b, "okval": 1},
             "record": [
                 {"record_type": "file", "mode": "cover", "log": "BMC powerdown, ",
-                    "path": "/var/cache/sonic/previous-reboot-cause.txt"},
-                {"record_type": "file", "mode": "add", "log": "BMC powerdown, ", "path": "/host/misc/history-reboot-cause.txt"}
+                    "path": "/etc/sonic/.reboot/.previous-reboot-cause.txt"},
+                {"record_type": "file", "mode": "add", "log": "BMC powerdown, ", "path": "/etc/sonic/.reboot/.history-reboot-cause.txt"}
             ],
             "finish_operation": [
                 {"gettype": "io", "io_addr": 0x987, "value": 0xf6},
@@ -1386,12 +1374,12 @@ UPGRADE_SUMMARY = {
                     {"cmd": "modprobe mtd", "gettype": "cmd"},
                     {"cmd": "modprobe spi_nor", "gettype": "cmd"},
                     {"cmd": "modprobe ofpart", "gettype": "cmd"},
-                    {"cmd": "modprobe intel_spi writeable=1", "gettype": "cmd"},
-                    {"cmd": "modprobe intel_spi_platform writeable=1", "gettype": "cmd"},
+                    {"cmd": "modprobe spi_intel writeable=1", "gettype": "cmd"},
+                    {"cmd": "modprobe spi_intel_platform", "gettype": "cmd"},
                 ],
                 "finish_cmd": [
-                    {"cmd": "rmmod intel_spi_platform", "gettype": "cmd"},
-                    {"cmd": "rmmod intel_spi", "gettype": "cmd"},
+                    {"cmd": "rmmod spi_intel_platform", "gettype": "cmd"},
+                    {"cmd": "rmmod spi_intel", "gettype": "cmd"},
                     {"cmd": "rmmod ofpart", "gettype": "cmd"},
                     {"cmd": "rmmod spi_nor", "gettype": "cmd"},
                     {"cmd": "rmmod mtd", "gettype": "cmd"},

@@ -1580,7 +1580,7 @@ static const struct pmbus_sensor_attr voltage_attributes[] = {
         .sreg = PMBUS_STATUS_INPUT,
         .gbit = PB_STATUS_VIN_UV,
         .limit = vin_limit_attrs,
-        .nlimit = ARRAY_SIZE(vin_limit_attrs),
+        .nlimit = 0,
     }, {
         .reg = PMBUS_VIRT_READ_VMON,
         .class = PSC_VOLTAGE_IN,
@@ -1589,7 +1589,7 @@ static const struct pmbus_sensor_attr voltage_attributes[] = {
         .sfunc = PMBUS_HAVE_STATUS_VMON,
         .sreg = PMBUS_VIRT_STATUS_VMON,
         .limit = vmon_limit_attrs,
-        .nlimit = ARRAY_SIZE(vmon_limit_attrs),
+        .nlimit = 0,
     }, {
         .reg = PMBUS_READ_VCAP,
         .class = PSC_VOLTAGE_IN,
@@ -1605,7 +1605,7 @@ static const struct pmbus_sensor_attr voltage_attributes[] = {
         .sreg = PMBUS_STATUS_VOUT,
         .gbit = PB_STATUS_VOUT_OV,
         .limit = vout_limit_attrs,
-        .nlimit = ARRAY_SIZE(vout_limit_attrs),
+        .nlimit = 0,
     }
 };
 
@@ -1690,7 +1690,7 @@ static const struct pmbus_sensor_attr current_attributes[] = {
         .sreg = PMBUS_STATUS_INPUT,
         .gbit = PB_STATUS_INPUT,
         .limit = iin_limit_attrs,
-        .nlimit = ARRAY_SIZE(iin_limit_attrs),
+        .nlimit = 0,
     }, {
         .reg = PMBUS_READ_IOUT,
         .class = PSC_CURRENT_OUT,
@@ -1701,7 +1701,7 @@ static const struct pmbus_sensor_attr current_attributes[] = {
         .sreg = PMBUS_STATUS_IOUT,
         .gbit = PB_STATUS_IOUT_OC,
         .limit = iout_limit_attrs,
-        .nlimit = ARRAY_SIZE(iout_limit_attrs),
+        .nlimit = 0,
     }
 };
 
@@ -1781,7 +1781,7 @@ static const struct pmbus_sensor_attr power_attributes[] = {
         .sreg = PMBUS_STATUS_INPUT,
         .gbit = PB_STATUS_INPUT,
         .limit = pin_limit_attrs,
-        .nlimit = ARRAY_SIZE(pin_limit_attrs),
+        .nlimit = 0,
     }, {
         .reg = PMBUS_READ_POUT,
         .class = PSC_POWER,
@@ -1791,7 +1791,7 @@ static const struct pmbus_sensor_attr power_attributes[] = {
         .sfunc = PMBUS_HAVE_STATUS_IOUT,
         .sreg = PMBUS_STATUS_IOUT,
         .limit = pout_limit_attrs,
-        .nlimit = ARRAY_SIZE(pout_limit_attrs),
+        .nlimit = 0,
     }
 };
 
@@ -1920,7 +1920,7 @@ static const struct pmbus_sensor_attr temp_attributes[] = {
         .sreg = PMBUS_STATUS_TEMPERATURE,
         .gbit = PB_STATUS_TEMPERATURE,
         .limit = temp_limit_attrs,
-        .nlimit = ARRAY_SIZE(temp_limit_attrs),
+        .nlimit = 0,
     }, {
         .reg = PMBUS_READ_TEMPERATURE_2,
         .class = PSC_TEMPERATURE,
@@ -1932,7 +1932,7 @@ static const struct pmbus_sensor_attr temp_attributes[] = {
         .sreg = PMBUS_STATUS_TEMPERATURE,
         .gbit = PB_STATUS_TEMPERATURE,
         .limit = temp_limit_attrs2,
-        .nlimit = ARRAY_SIZE(temp_limit_attrs2),
+        .nlimit = 0,
     }, {
         .reg = PMBUS_READ_TEMPERATURE_3,
         .class = PSC_TEMPERATURE,
@@ -1944,7 +1944,7 @@ static const struct pmbus_sensor_attr temp_attributes[] = {
         .sreg = PMBUS_STATUS_TEMPERATURE,
         .gbit = PB_STATUS_TEMPERATURE,
         .limit = temp_limit_attrs3,
-        .nlimit = ARRAY_SIZE(temp_limit_attrs3),
+        .nlimit = 0,
     }
 };
 
@@ -2740,13 +2740,13 @@ int wb_pmbus_do_probe(struct i2c_client *client, struct pmbus_driver_info *info)
 }
 EXPORT_SYMBOL_GPL(wb_pmbus_do_probe);
 
-int wb_pmbus_do_remove(struct i2c_client *client)
+void wb_pmbus_do_remove(struct i2c_client *client)
 {
     struct pmbus_data *data = i2c_get_clientdata(client);
 
     debugfs_remove_recursive(data->debugfs);
 
-    return 0;
+    return;
 }
 EXPORT_SYMBOL_GPL(wb_pmbus_do_remove);
 

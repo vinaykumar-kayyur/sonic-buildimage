@@ -168,13 +168,13 @@ static ssize_t isl68137_avs_vout_show(struct device *dev, struct device_attribut
     struct i2c_client *client = to_i2c_client(dev->parent);
     struct sensor_device_attribute *attr = to_sensor_dev_attr(devattr);
     struct pmbus_data *data = i2c_get_clientdata(client);
-    int ret, vout_cmd, vout;
+    int vout_cmd, vout;
 
     mutex_lock(&data->update_lock);
     vout_cmd = wb_pmbus_read_word_data(client, attr->index, 0xff, PMBUS_VOUT_COMMAND);
     if (vout_cmd < 0) {
         WB_ISL68137_ERROR("%d-%04x: read page%d vout command reg: 0x%x failed, ret: %d\n",
-            client->adapter->nr, client->addr, attr->index, PMBUS_VOUT_COMMAND, ret);
+            client->adapter->nr, client->addr, attr->index, PMBUS_VOUT_COMMAND, vout_cmd);
         mutex_unlock(&data->update_lock);
         return vout_cmd;
     }
@@ -203,6 +203,11 @@ static ssize_t isl68137_avs_vout_store(struct device *dev, struct device_attribu
     ret = kstrtoint(buf, 0, &vout);
     if (ret) {
         WB_ISL68137_ERROR("%d-%04x: invalid value: %s \n", client->adapter->nr, client->addr, buf);
+        return -EINVAL;
+    }
+
+    if (vout <= 0) {
+        WB_ISL68137_ERROR("%d-%04x: invalid value: %d \n", client->adapter->nr, client->addr, vout);
         return -EINVAL;
     }
 

@@ -256,8 +256,8 @@ class fan(devicebase):
 
     def get_presence(self):
         ret, val = self.get_value(self.present)
-        if ret is False or val is None:
-            return -1
+        if ret is False or val is None or val == "no_support" or val == "NA":
+            return False
         if isinstance(val, str):
             value = int(val, 16)
         else:

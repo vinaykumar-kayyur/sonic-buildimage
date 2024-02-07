@@ -8,8 +8,9 @@
 #include <linux/device.h>
 #include <linux/pci.h>
 
-#define FPGA_MSI_IRQ_NUM            (14)
 #define FPGA_MSI_IRQ_BEGIN          (0)
+#define FPGA_MSI_IRQ_MAX            (32)
+#define FPGA_MSI_IRQ_MIN            (16)
 #define XILINX_FPGA_USE_MSI         (0)
 #define XILINX_FPGA_NUSE_MSI        (1)
 
@@ -68,7 +69,7 @@ static int fpga_pcie_probe(struct pci_dev *pdev, const struct pci_device_id *id)
     int err;
     wb_fpga_pcie_t *wb_fpga_pcie;
 
-    FPGA_PCIE_DEV_VERBOSE("Enter vendor 0x%x, subsystem_vendor 0x%x.\n", pdev->vendor, pdev->subsystem_vendor);
+    FPGA_PCIE_DEV_VERBOSE("Enter vendor 0x%x, device 0x%x.\n", pdev->vendor, pdev->device);
 
     wb_fpga_pcie = devm_kzalloc(&pdev->dev, sizeof(wb_fpga_pcie_t), GFP_KERNEL);
     if (!wb_fpga_pcie) {
@@ -96,17 +97,18 @@ static int fpga_pcie_probe(struct pci_dev *pdev, const struct pci_device_id *id)
     if (wb_fpga_pcie->driver_data == XILINX_FPGA_USE_MSI) {
         FPGA_PCIE_DEV_VERBOSE("start pci_enable_msi_range!\n");
 #if LINUX_VERSION_CODE < KERNEL_VERSION(4,19,152)
-        err = pci_enable_msi_range(pdev, FPGA_MSI_IRQ_BEGIN + 1, FPGA_MSI_IRQ_NUM);
+        err = pci_enable_msi_range(pdev, FPGA_MSI_IRQ_BEGIN + 1, FPGA_MSI_IRQ_MAX);
 #else
         err = pci_alloc_irq_vectors_affinity(pdev, FPGA_MSI_IRQ_BEGIN + 1,
-                FPGA_MSI_IRQ_NUM, PCI_IRQ_MSI, NULL);
+                FPGA_MSI_IRQ_MAX, PCI_IRQ_MSI, NULL);
 #endif
-        if (err != FPGA_MSI_IRQ_NUM) {
+        if ((err > FPGA_MSI_IRQ_MAX) || (err < FPGA_MSI_IRQ_MIN)) {
             FPGA_PCIE_DEV_ERROR("pci_enable_msi_block err %d FPGA_MSI_IRQ_NUM %d.\n", err,
-                FPGA_MSI_IRQ_NUM);
+                FPGA_MSI_IRQ_MAX);
             dev_err(&pdev->dev, "Failed to enable pci msi, ret:%d.\n", err);
             return -EINVAL;
         }
+        FPGA_PCIE_DEV_VERBOSE("pci_enable_msi success, ret: %d\n", err);
     }
 
     dev_info(&pdev->dev, "fpga pci device init success.\n");
@@ -132,6 +134,9 @@ static void fpga_pcie_remove(struct pci_dev *pdev)
 static const struct pci_device_id fpga_pci_ids[] = {
         { PCI_DEVICE(0x10ee, 0x7022), .driver_data = XILINX_FPGA_USE_MSI},
         { PCI_DEVICE(0x10ee, 0x7011), .driver_data = XILINX_FPGA_NUSE_MSI},
+        { PCI_DEVICE(0x1ded, 0x7022), .driver_data = XILINX_FPGA_USE_MSI},
+        { PCI_DEVICE(0x1ded, 0x7021), .driver_data = XILINX_FPGA_USE_MSI},
+        { PCI_DEVICE(0x1ded, 0x5220), .driver_data = XILINX_FPGA_USE_MSI},
         {0}
 };
 MODULE_DEVICE_TABLE(pci, fpga_pci_ids);

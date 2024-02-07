@@ -528,7 +528,7 @@ fail:
 	return err;
 }
 
-static int eeprom_93xx46_remove(struct spi_device *spi)
+static void eeprom_93xx46_remove(struct spi_device *spi)
 {
 	struct eeprom_93xx46_dev *edev = spi_get_drvdata(spi);
 
@@ -538,7 +538,7 @@ static int eeprom_93xx46_remove(struct spi_device *spi)
 		device_remove_file(&spi->dev, &dev_attr_erase);
 
 	kfree(edev);
-	return 0;
+	return;
 }
 
 static struct spi_driver wb_eeprom_93xx46_driver = {

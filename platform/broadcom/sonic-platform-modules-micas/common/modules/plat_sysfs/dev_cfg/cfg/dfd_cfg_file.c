@@ -140,24 +140,24 @@ int kfile_read(int32_t addr, char *buf, int buf_size, kfile_ctrl_t *kfile_ctrl)
     return i;
 }
 
-static int kfile_filldir_one(struct dir_context *ctx, const char * name, int len,
+static bool kfile_filldir_one(struct dir_context *ctx, const char * name, int len,
             loff_t pos, u64 ino, unsigned int d_type)
 {
     struct getdents_callback *buf ;
-    int result;
+    bool result;
     buf = container_of(ctx, struct getdents_callback, ctx);
-    result = 0;
+    result = 1;
     if (strncmp(buf->obj_name, name, strlen(buf->obj_name)) == 0) {
         if (buf->dir_len < len) {
             DBG_DEBUG(DBG_ERROR, "match ok. dir name:%s, but buf_len %d small than dir len %d.\n",
                 name, buf->dir_len, len);
             buf->found = 0;
-            return -1;
+            return 0;
         }
         mem_clear(buf->match_name, buf->dir_len);
         memcpy(buf->match_name, name, len);
         buf->found = 1;
-        result = -1;
+        result = 0;
     }
     return result;
 }
