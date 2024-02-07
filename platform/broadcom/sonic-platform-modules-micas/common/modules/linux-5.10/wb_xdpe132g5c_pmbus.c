@@ -1,7 +1,3 @@
-/*
- * Copyright(C) 2020 Ruijie Network. All rights reserved.
- */
-
 #include <linux/err.h>
 #include <linux/i2c.h>
 #include <linux/init.h>
@@ -14,30 +10,22 @@
 #include <linux/mutex.h>
 #include "wb_pmbus.h"
 
-typedef enum {
-    DBG_START,
-    DBG_VERBOSE,
-    DBG_KEY,
-    DBG_WARN,
-    DBG_ERROR,
-    DBG_END,
-} dbg_level_t;
+static int g_wb_xdpe132g5_pmbus_debug = 0;
+static int g_wb_xdpe132g5_pmbus_error = 0;
 
-static int debuglevel = 0;
-module_param(debuglevel, int, S_IRUGO);
+module_param(g_wb_xdpe132g5_pmbus_debug, int, S_IRUGO | S_IWUSR);
+module_param(g_wb_xdpe132g5_pmbus_error, int, S_IRUGO | S_IWUSR);
 
-#define DBG_DEBUG(fmt, arg...)  do { \
-    if ( debuglevel > DBG_START && debuglevel < DBG_ERROR) { \
-          printk(KERN_INFO "[DEBUG]:<%s, %d>:"fmt, __FUNCTION__, __LINE__, ##arg); \
-    } else if ( debuglevel >= DBG_ERROR ) {   \
-        printk(KERN_ERR "[DEBUG]:<%s, %d>:"fmt, __FUNCTION__, __LINE__, ##arg); \
-    } else {    } \
+#define WB_XDPE132G5_PMBUS_DEBUG(fmt, args...) do {                                        \
+    if (g_wb_xdpe132g5_pmbus_debug) { \
+        printk(KERN_INFO "[WB_XDPE132G5_PMBUS][INFO][func:%s line:%d]\n"fmt, __func__, __LINE__, ## args); \
+    } \
 } while (0)
 
-#define DBG_ERROR(fmt, arg...)  do { \
-     if ( debuglevel > DBG_START) {  \
-        printk(KERN_ERR "[ERROR]:<%s, %d>:"fmt, __FUNCTION__, __LINE__, ##arg); \
-       } \
+#define WB_XDPE132G5_PMBUS_ERROR(fmt, args...) do {                                        \
+    if (g_wb_xdpe132g5_pmbus_error) { \
+        printk(KERN_ERR "[WB_XDPE132G5_PMBUS][ERR][func:%s line:%d]\n"fmt, __func__, __LINE__, ## args); \
+    } \
 } while (0)
 
 #define BUF_SIZE                    (256)
@@ -49,6 +37,19 @@ module_param(debuglevel, int, S_IRUGO);
 #define XDPE132G5C_PROT_IMVP8_5MV   (0x05) /* IMVP8 mode, 5-mV DAC */
 #define XDPE132G5C_PROT_VR13_5MV    (0x07) /* VR13.0 mode, 5-mV DAC */
 #define RETRY_TIME                  (15)
+
+typedef struct xdpe_vout_data_s {
+    u8 vout_mode;
+    int vout_precision;
+} xdpe_vout_data_t;
+
+static xdpe_vout_data_t g_xdpe_vout_group[] = {
+    {.vout_mode = 0x18, .vout_precision = 256},
+    {.vout_mode = 0x17, .vout_precision = 512},
+    {.vout_mode = 0x16, .vout_precision = 1024},
+    {.vout_mode = 0x15, .vout_precision = 2048},
+    {.vout_mode = 0x14, .vout_precision = 4096},
+};
 
 static ssize_t set_xdpe132g5c_avs(struct device *dev, struct device_attribute *da, const char *buf, size_t count)
 {
@@ -67,7 +68,7 @@ static ssize_t set_xdpe132g5c_avs(struct device *dev, struct device_attribute *d
     /* set value */
     ret = wb_pmbus_write_word_data(client, attr->index, PMBUS_VOUT_COMMAND, (u16)val);
     if (ret < 0) {
-        DBG_ERROR("set pmbus_vout_command fail\n");
+        WB_XDPE132G5_PMBUS_ERROR("set pmbus_vout_command fail\n");
         goto finish_set;
     }
 finish_set:
@@ -88,7 +89,7 @@ static ssize_t show_xdpe132g5c_avs(struct device *dev, struct device_attribute *
     mutex_lock(&data->update_lock);
     val = wb_pmbus_read_word_data(client, attr->index, 0xff, PMBUS_VOUT_COMMAND);
     if (val < 0) {
-        DBG_ERROR("fail val = %d\n", val);
+        WB_XDPE132G5_PMBUS_ERROR("fail val = %d\n", val);
         goto finish_show;
     }
 finish_show:
@@ -96,6 +97,262 @@ finish_show:
     mutex_unlock(&data->update_lock);
     return snprintf(buf, BUF_SIZE, "0x%04x\n", val);
 }
+
+static int xdpe_get_vout_precision(struct i2c_client *client, int page, int *vout_precision)
+{
+    int i, vout_mode, a_size;
+
+    vout_mode = wb_pmbus_read_byte_data(client, page, PMBUS_VOUT_MODE);
+    if (vout_mode < 0) {
+        WB_XDPE132G5_PMBUS_ERROR("%d-%04x: read xdpe page%d vout mode reg: 0x%x failed, ret: %d\n",
+            client->adapter->nr, client->addr, page, PMBUS_VOUT_MODE, vout_mode);
+        return vout_mode;
+    }
+
+    a_size = ARRAY_SIZE(g_xdpe_vout_group);
+    for (i = 0; i < a_size; i++) {
+        if (g_xdpe_vout_group[i].vout_mode == vout_mode) {
+            *vout_precision = g_xdpe_vout_group[i].vout_precision;
+            WB_XDPE132G5_PMBUS_DEBUG("%d-%04x: match, page%d, vout mode: 0x%x, precision: %d\n",
+                client->adapter->nr, client->addr, page, vout_mode, *vout_precision);
+            break;
+        }
+    }
+    if (i == a_size) {
+        WB_XDPE132G5_PMBUS_ERROR("%d-%04x: invalid, page%d, vout mode: 0x%x\n",client->adapter->nr, client->addr,
+            page, vout_mode);
+        return -EINVAL;
+    }
+    return 0;
+}
+
+static ssize_t xdpe132g5_avs_vout_show(struct device *dev, struct device_attribute *devattr,
+                   char *buf)
+{
+    struct i2c_client *client = to_i2c_client(dev->parent);
+    struct sensor_device_attribute *attr = to_sensor_dev_attr(devattr);
+    struct pmbus_data *data = i2c_get_clientdata(client);
+    int vout_cmd, ret, vout_precision;
+    long vout;
+
+    mutex_lock(&data->update_lock);
+    ret = xdpe_get_vout_precision(client, attr->index, &vout_precision);
+    if (ret < 0) {
+        WB_XDPE132G5_PMBUS_ERROR("%d-%04x: get xdpe avs%d vout precision failed, ret: %d\n",
+            client->adapter->nr, client->addr, attr->index, ret);
+        mutex_unlock(&data->update_lock);
+        return ret;
+    }
+
+    vout_cmd = wb_pmbus_read_word_data(client, attr->index, 0xff, PMBUS_VOUT_COMMAND);
+    if (vout_cmd < 0) {
+        WB_XDPE132G5_PMBUS_ERROR("%d-%04x: read page%d, vout command reg: 0x%x failed, ret: %d\n",
+            client->adapter->nr, client->addr, attr->index, PMBUS_VOUT_COMMAND, vout_cmd);
+        mutex_unlock(&data->update_lock);
+        return vout_cmd;
+    }
+
+    mutex_unlock(&data->update_lock);
+    vout = vout_cmd * 1000L * 1000L / vout_precision;
+    WB_XDPE132G5_PMBUS_DEBUG("%d-%04x: page%d vout: %ld, vout_cmd: 0x%x, precision: %d\n", client->adapter->nr,
+        client->addr, attr->index, vout, vout_cmd, vout_precision);
+    return snprintf(buf, PAGE_SIZE, "%ld\n", vout);
+}
+
+static ssize_t xdpe132g5_avs_vout_store(struct device *dev, struct device_attribute *devattr,
+                   const char *buf, size_t count)
+{
+    struct i2c_client *client = to_i2c_client(dev->parent);
+    struct sensor_device_attribute *attr = to_sensor_dev_attr(devattr);
+    struct pmbus_data *data = i2c_get_clientdata(client);
+    int vout_max, vout_min;
+    int ret, vout_cmd, vout_cmd_set;
+    int vout_precision;
+    long vout;
+
+    if ((attr->index < 0) || (attr->index >= PMBUS_PAGES)) {
+        WB_XDPE132G5_PMBUS_ERROR("%d-%04x: invalid index: %d \n", client->adapter->nr, client->addr,
+            attr->index);
+        return -EINVAL;
+    }
+
+    ret = kstrtol(buf, 0, &vout);
+    if (ret) {
+        WB_XDPE132G5_PMBUS_ERROR("%d-%04x: invalid value: %s \n", client->adapter->nr, client->addr, buf);
+        return -EINVAL;
+    }
+
+    if (vout <= 0) {
+        WB_XDPE132G5_PMBUS_ERROR("%d-%04x: invalid value: %ld \n", client->adapter->nr, client->addr, vout);
+        return -EINVAL;
+    }
+
+    vout_max = data->vout_max[attr->index];
+    vout_min = data->vout_min[attr->index];
+    if ((vout > vout_max) || (vout < vout_min)) {
+        WB_XDPE132G5_PMBUS_ERROR("%d-%04x: vout value: %ld, out of range [%d, %d] \n", client->adapter->nr,
+            client->addr, vout, vout_min, vout_max);
+        return -EINVAL;
+    }
+
+    mutex_lock(&data->update_lock);
+    ret = xdpe_get_vout_precision(client, attr->index, &vout_precision);
+    if (ret < 0) {
+        WB_XDPE132G5_PMBUS_ERROR("%d-%04x: get xdpe avs%d vout precision failed, ret: %d\n",
+            client->adapter->nr, client->addr, attr->index, ret);
+        mutex_unlock(&data->update_lock);
+        return ret;
+    }
+
+    vout_cmd_set = (vout * vout_precision) / (1000L * 1000L);
+    if (vout_cmd_set > 0xffff) {
+        WB_XDPE132G5_PMBUS_ERROR("%d-%04x: invalid value, page%d, vout: %ld, vout_precision: %d, vout_cmd_set: 0x%x\n",
+            client->adapter->nr, client->addr, attr->index, vout, vout_precision, vout_cmd_set);
+        mutex_unlock(&data->update_lock);
+        return -EINVAL;
+    }
+
+    /* set VOUT_COMMAND */
+    ret = wb_pmbus_write_word_data(client, attr->index, PMBUS_VOUT_COMMAND, (u16)vout_cmd_set);
+    if (ret < 0) {
+        WB_XDPE132G5_PMBUS_ERROR("%d-%04x: set xdpe page%d vout cmd reg: 0x%x, value: 0x%x failed, ret: %d\n",
+            client->adapter->nr, client->addr, attr->index, PMBUS_VOUT_COMMAND, vout_cmd_set, ret);
+        mutex_unlock(&data->update_lock);
+        return ret;
+    }
+
+    /* read back VOUT_COMMAND */
+    vout_cmd = wb_pmbus_read_word_data(client, attr->index, 0xff, PMBUS_VOUT_COMMAND);
+    if (vout_cmd < 0) {
+        WB_XDPE132G5_PMBUS_ERROR("%d-%04x: read page%d, vout command reg: 0x%x failed, ret: %d\n",
+            client->adapter->nr, client->addr, attr->index, PMBUS_VOUT_COMMAND, vout_cmd);
+        mutex_unlock(&data->update_lock);
+        return vout_cmd;
+    }
+
+    if (vout_cmd != vout_cmd_set) {
+        WB_XDPE132G5_PMBUS_ERROR("%d-%04x: page%d vout cmd value check error, vout cmd read: 0x%x, vout cmd set: 0x%x\n",
+            client->adapter->nr, client->addr, attr->index, vout_cmd, vout_cmd_set);
+        mutex_unlock(&data->update_lock);
+        return -EIO;
+    }
+    mutex_unlock(&data->update_lock);
+    WB_XDPE132G5_PMBUS_DEBUG("%d-%04x: set page%d vout cmd success, vout: %ld uV, vout_cmd_set: 0x%x\n",
+        client->adapter->nr, client->addr, attr->index, vout, vout_cmd_set);
+    return count;
+}
+
+static ssize_t xdpe132g5_avs_vout_max_store(struct device *dev,
+                   struct device_attribute *devattr, const char *buf, size_t count)
+{
+    struct i2c_client *client = to_i2c_client(dev->parent);
+    struct sensor_device_attribute *attr = to_sensor_dev_attr(devattr);
+    struct pmbus_data *data = i2c_get_clientdata(client);
+    int ret, vout_threshold;
+
+    if ((attr->index < 0) || (attr->index >= PMBUS_PAGES)) {
+        WB_XDPE132G5_PMBUS_ERROR("%d-%04x: invalid index: %d \n", client->adapter->nr, client->addr,
+            attr->index);
+        return -EINVAL;
+    }
+
+    ret = kstrtoint(buf, 0, &vout_threshold);
+    if (ret) {
+        WB_XDPE132G5_PMBUS_ERROR("%d-%04x: invalid value: %s \n", client->adapter->nr, client->addr, buf);
+        return -EINVAL;
+    }
+
+    WB_XDPE132G5_PMBUS_DEBUG("%d-%04x: vout%d max threshold: %d", client->adapter->nr, client->addr,
+        attr->index, vout_threshold);
+
+    data->vout_max[attr->index] = vout_threshold;
+    return count;
+}
+
+static ssize_t xdpe132g5_avs_vout_max_show(struct device *dev,
+                   struct device_attribute *devattr, char *buf)
+{
+    struct i2c_client *client = to_i2c_client(dev->parent);
+    struct sensor_device_attribute *attr = to_sensor_dev_attr(devattr);
+    struct pmbus_data *data = i2c_get_clientdata(client);
+
+    if ((attr->index < 0) || (attr->index >= PMBUS_PAGES)) {
+        WB_XDPE132G5_PMBUS_ERROR("%d-%04x: invalid index: %d \n", client->adapter->nr, client->addr,
+            attr->index);
+        return -EINVAL;
+    }
+
+    return snprintf(buf, PAGE_SIZE, "%d\n", data->vout_max[attr->index]);
+}
+
+static ssize_t xdpe132g5_avs_vout_min_store(struct device *dev,
+                   struct device_attribute *devattr, const char *buf, size_t count)
+{
+    struct i2c_client *client = to_i2c_client(dev->parent);
+    struct sensor_device_attribute *attr = to_sensor_dev_attr(devattr);
+    struct pmbus_data *data = i2c_get_clientdata(client);
+    int ret, vout_threshold;
+
+    if ((attr->index < 0) || (attr->index >= PMBUS_PAGES)) {
+        WB_XDPE132G5_PMBUS_ERROR("%d-%04x: invalid index: %d \n", client->adapter->nr, client->addr,
+            attr->index);
+        return -EINVAL;
+    }
+
+    ret = kstrtoint(buf, 0, &vout_threshold);
+    if (ret) {
+        WB_XDPE132G5_PMBUS_ERROR("%d-%04x: invalid value: %s \n", client->adapter->nr, client->addr, buf);
+        return -EINVAL;
+    }
+
+    WB_XDPE132G5_PMBUS_DEBUG("%d-%04x: vout%d min threshold: %d", client->adapter->nr, client->addr,
+        attr->index, vout_threshold);
+
+    data->vout_min[attr->index] = vout_threshold;
+    return count;
+}
+
+static ssize_t xdpe132g5_avs_vout_min_show(struct device *dev,
+                   struct device_attribute *devattr, char *buf)
+{
+    struct i2c_client *client = to_i2c_client(dev->parent);
+    struct sensor_device_attribute *attr = to_sensor_dev_attr(devattr);
+    struct pmbus_data *data = i2c_get_clientdata(client);
+
+    if ((attr->index < 0) || (attr->index >= PMBUS_PAGES)) {
+        WB_XDPE132G5_PMBUS_ERROR("%d-%04x: invalid index: %d \n", client->adapter->nr, client->addr,
+            attr->index);
+        return -EINVAL;
+    }
+
+    return snprintf(buf, PAGE_SIZE, "%d\n", data->vout_min[attr->index]);
+}
+
+static SENSOR_DEVICE_ATTR_RW(avs0_vout, xdpe132g5_avs_vout, 0);
+static SENSOR_DEVICE_ATTR_RW(avs1_vout, xdpe132g5_avs_vout, 1);
+static SENSOR_DEVICE_ATTR_RW(avs0_vout_max, xdpe132g5_avs_vout_max, 0);
+static SENSOR_DEVICE_ATTR_RW(avs0_vout_min, xdpe132g5_avs_vout_min, 0);
+static SENSOR_DEVICE_ATTR_RW(avs1_vout_max, xdpe132g5_avs_vout_max, 1);
+static SENSOR_DEVICE_ATTR_RW(avs1_vout_min, xdpe132g5_avs_vout_min, 1);
+
+static struct attribute *avs_ctrl_attrs[] = {
+    &sensor_dev_attr_avs0_vout.dev_attr.attr,
+    &sensor_dev_attr_avs1_vout.dev_attr.attr,
+    &sensor_dev_attr_avs0_vout_max.dev_attr.attr,
+    &sensor_dev_attr_avs0_vout_min.dev_attr.attr,
+    &sensor_dev_attr_avs1_vout_max.dev_attr.attr,
+    &sensor_dev_attr_avs1_vout_min.dev_attr.attr,
+    NULL,
+};
+
+static const struct attribute_group avs_ctrl_group = {
+    .attrs = avs_ctrl_attrs,
+};
+
+static const struct attribute_group *xdpe132g5_attribute_groups[] = {
+    &avs_ctrl_group,
+    NULL,
+};
 
 static SENSOR_DEVICE_ATTR(avs0_vout_command, S_IRUGO | S_IWUSR, show_xdpe132g5c_avs, set_xdpe132g5c_avs, 0);
 static SENSOR_DEVICE_ATTR(avs1_vout_command, S_IRUGO | S_IWUSR, show_xdpe132g5c_avs, set_xdpe132g5c_avs, 1);
@@ -109,27 +366,6 @@ static struct attribute *xdpe132g5c_sysfs_attrs[] = {
 static const struct attribute_group xdpe132g5c_sysfs_attrs_group = {
     .attrs = xdpe132g5c_sysfs_attrs,
 };
-
-static int xdpe132g5c_read_word_data(struct i2c_client *client, int page, int phase, int reg)
-{
-    int rv;
-    int retry;
-    int value;
-
-    rv = wb_pmbus_set_page(client, page, 0xff);
-    if (rv < 0) {
-        return rv;
-    }
-
-    retry = 3;
-    while (retry--) {
-        value = i2c_smbus_read_word_data(client, reg);
-        if ((value == 0xffff) || (value < 0)) {
-            continue;
-        }
-    }
-    return value;
-}
 
 static int xdpe132g5c_identify(struct i2c_client *client, struct pmbus_driver_info *info)
 {
@@ -209,8 +445,8 @@ static struct pmbus_driver_info xdpe132g5c_info = {
         | PMBUS_HAVE_STATUS_INPUT
         | PMBUS_HAVE_VOUT | PMBUS_HAVE_STATUS_VOUT
         | PMBUS_HAVE_IOUT | PMBUS_HAVE_STATUS_IOUT | PMBUS_HAVE_POUT,
+    .groups = xdpe132g5_attribute_groups,
     .identify = xdpe132g5c_identify,
-    .read_word_data = xdpe132g5c_read_word_data,
 };
 
 static int xdpe132g5c_probe(struct i2c_client *client,
@@ -226,29 +462,24 @@ static int xdpe132g5c_probe(struct i2c_client *client,
 
     status = wb_pmbus_do_probe(client, &xdpe132g5c_info);
     if (status != 0) {
-        DBG_ERROR("pmbus probe error %d\n", status);
+        WB_XDPE132G5_PMBUS_ERROR("pmbus probe error %d\n", status);
         return status;
     }
 
     status = sysfs_create_group(&client->dev.kobj, &xdpe132g5c_sysfs_attrs_group);
     if (status != 0) {
-        DBG_ERROR("sysfs_create_group error %d\n", status);
+        WB_XDPE132G5_PMBUS_ERROR("sysfs_create_group error %d\n", status);
         return status;
     }
 
     return status;
 }
 
-static int xdpe132g5c_remove(struct i2c_client *client)
+static void xdpe132g5c_remove(struct i2c_client *client)
 {
-    int ret;
-
     sysfs_remove_group(&client->dev.kobj, &xdpe132g5c_sysfs_attrs_group);
-    ret = wb_pmbus_do_remove(client);
-    if (ret != 0){
-        DBG_ERROR("fail remove xdpe132g5c %d\n", ret);
-    }
-    return ret;
+    wb_pmbus_do_remove(client);
+    return;
 }
 
 static const struct i2c_device_id xdpe132g5c_id[] = {
@@ -277,5 +508,5 @@ static struct i2c_driver xdpe132g5c_driver = {
 module_i2c_driver(xdpe132g5c_driver);
 
 MODULE_AUTHOR("support");
-MODULE_DESCRIPTION("PMBus driver for Infineon XDPE132 family");
+MODULE_DESCRIPTION("PMBus driver for Infineon XDPE132g5 family");
 MODULE_LICENSE("GPL");

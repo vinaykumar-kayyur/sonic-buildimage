@@ -206,6 +206,11 @@ static ssize_t isl68137_avs_vout_store(struct device *dev, struct device_attribu
         return -EINVAL;
     }
 
+    if (vout <= 0) {
+        WB_ISL68137_ERROR("%d-%04x: invalid value: %d \n", client->adapter->nr, client->addr, vout);
+        return -EINVAL;
+    }
+
     vout_max = data->vout_max[attr->index];
     vout_min = data->vout_min[attr->index];
     if ((vout > vout_max) || (vout < vout_min)) {

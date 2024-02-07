@@ -2740,13 +2740,13 @@ int wb_pmbus_do_probe(struct i2c_client *client, struct pmbus_driver_info *info)
 }
 EXPORT_SYMBOL_GPL(wb_pmbus_do_probe);
 
-int wb_pmbus_do_remove(struct i2c_client *client)
+void wb_pmbus_do_remove(struct i2c_client *client)
 {
     struct pmbus_data *data = i2c_get_clientdata(client);
 
     debugfs_remove_recursive(data->debugfs);
 
-    return 0;
+    return;
 }
 EXPORT_SYMBOL_GPL(wb_pmbus_do_remove);
 

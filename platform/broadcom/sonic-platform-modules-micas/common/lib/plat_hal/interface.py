@@ -185,6 +185,12 @@ class interface(object):
             return -1
         return psu.present
 
+    def get_psu_fan_number(self, psu_name):
+        psu = self.chas.get_psu_byname(psu_name)
+        if psu is None:
+            return -1
+        return psu.PsuFanNumber
+
     def get_psu_fru_info(self, psu_name):
         '''
                     {
@@ -864,8 +870,13 @@ class interface(object):
             tmp = dcdc.sensor.Value
             if tmp is not None:
                 dicttmp['Value'] = tmp
+                if tmp > dicttmp['Max'] or tmp < dicttmp['Min']:
+                    dicttmp["Status"] = "NOT OK"
+                else:
+                    dicttmp["Status"] = "OK"
             else:
                 dicttmp['Value'] = self.error_ret
+                dicttmp["Status"] = "NOT OK"
             dicttmp['Unit'] = dcdc.sensor.Unit
             val_list[sensorname] = dicttmp
         return val_list

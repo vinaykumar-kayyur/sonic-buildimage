@@ -90,4 +90,4 @@ module_init(wb_spi_ocores_device_init);
 module_exit(wb_spi_ocores_device_exit);
 MODULE_DESCRIPTION("SPI OCORES Devices");
 MODULE_LICENSE("GPL");
-MODULE_AUTHOR("sonic_rd@ruijie.com.cn");
+MODULE_AUTHOR("support");

@@ -1,10 +1,13 @@
 #include <linux/module.h>
 #include <linux/io.h>
 #include <linux/device.h>
+#include <linux/platform_device.h>
 #include <linux/delay.h>
 #include <linux/spi/spi.h>
 
 #include <wb_spi_dev.h>
+
+#define PROXY_NAME "wb-spi-dev-device"
 
 #define SPI_DEVICE_MAX_NUM (64)
 
@@ -48,10 +51,23 @@ struct spi_board_info spi_dev_device_info[] = {
     },
 };
 
-static int __init wb_spi_dev_device_init(void)
+static struct class *class_spi_master = NULL;
+
+static int spi_controller_match(struct device *dev, const void *data)
+{
+    struct spi_controller *ctlr;
+    const u16 *bus_num = data;
+
+    ctlr = container_of(dev, struct spi_controller, dev);
+    return ctlr->bus_num == *bus_num;
+}
+
+static int wb_spi_dev_device_probe(struct platform_device *pdev)
 {
     int i;
     struct spi_master *master;
+    struct spi_controller *controller;
+    struct device *dev;
     struct spi_device *spi;
     int spi_dev_num;
 
@@ -64,13 +80,37 @@ static int __init wb_spi_dev_device_init(void)
         return -EINVAL;
     }
 
+    controller = devm_spi_alloc_master(&pdev->dev, sizeof(struct spi_board_info));
+    if (!controller) {
+        WB_SPI_DEV_DEVICE_DEBUG_ERROR("spi_alloc_master failed.\n");
+        return -ENOMEM;
+    }
+
+    class_spi_master = controller->dev.class;
+    if (!class_spi_master) {
+        WB_SPI_DEV_DEVICE_DEBUG_ERROR("get class_spi_master failed.\n");
+        return -ENOMEM;
+    }
+
     for (i = 0; i < ARRAY_SIZE(spi_dev_device_info); i++) {
-        master = spi_busnum_to_master(spi_dev_device_info[i].bus_num);
+        dev = class_find_device(class_spi_master, NULL, &spi_dev_device_info[i].bus_num,
+                spi_controller_match);
+        if (dev) {
+            master = container_of(dev, struct spi_master, dev);
+        } else {
+            printk(KERN_ERR "class_find_device bus_num %u dev failed.\n",
+                spi_dev_device_info[i].bus_num);
+            continue;
+        }
         if (!master) {
             printk(KERN_ERR "get bus_num %u spi master failed.\n",
                 spi_dev_device_info[i].bus_num);
             continue;
         }
+
+        WB_SPI_DEV_DEVICE_DEBUG_VERBOSE("master->bus_num = %d.\n", master->bus_num);
+        WB_SPI_DEV_DEVICE_DEBUG_VERBOSE("master->num_chipselect = %d.\n", master->num_chipselect);
+
         spi = spi_new_device(master, &spi_dev_device_info[i]);
         put_device(&master->dev);
         if (spi) {
@@ -81,11 +121,16 @@ static int __init wb_spi_dev_device_init(void)
                 spi_dev_device_info[i].modalias, spi_dev_device_info[i].bus_num);
             continue;
         }
+
+        WB_SPI_DEV_DEVICE_DEBUG_VERBOSE("g_spi_device[%d]->modalias = %s.\n", i, g_spi_device[i]->modalias);
+        WB_SPI_DEV_DEVICE_DEBUG_VERBOSE("g_spi_device[%d]->chip_select = %d.\n", i, g_spi_device[i]->chip_select);
+        WB_SPI_DEV_DEVICE_DEBUG_VERBOSE("g_spi_device[%d]->max_speed_hz = %d.\n", i, g_spi_device[i]->max_speed_hz);
     }
+
     return 0;
 }
 
-static void __exit wb_spi_dev_device_exit(void)
+static int wb_spi_dev_device_remove(struct platform_device *pdev)
 {
     int i;
 
@@ -96,10 +141,30 @@ static void __exit wb_spi_dev_device_exit(void)
             g_spi_device[i] = NULL;
         }
     }
+
+    return 0;
 }
 
-module_init(wb_spi_dev_device_init);
-module_exit(wb_spi_dev_device_exit);
+static const struct of_device_id spi_dev_device_match[] = {
+    {
+        .compatible = "wb_spi_dev_device",
+    },
+    {},
+};
+MODULE_DEVICE_TABLE(of, spi_dev_device_match);
+
+static struct platform_driver wb_spi_dev_device_driver = {
+    .driver = {
+        .name        = PROXY_NAME,
+        .of_match_table = spi_dev_device_match,
+    },
+    .probe      = wb_spi_dev_device_probe,
+    .remove     = wb_spi_dev_device_remove,
+};
+
+module_platform_driver(wb_spi_dev_device_driver);
+
 MODULE_DESCRIPTION("SPI DEV Devices");
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("support");
+

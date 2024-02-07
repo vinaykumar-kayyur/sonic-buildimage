@@ -34,6 +34,7 @@ class psu(devicebase):
     __Temperature = None
     __FanSpeedMin = None
     __FanSpeedMax = None
+    __PsuFanNumber = None
     __FanSpeedTolerance = None
     __InputsVoltage_config = None
     __InputsCurrent_config = None
@@ -71,6 +72,7 @@ class psu(devicebase):
         self.Temperature_config = conf.get("Temperature", None)
         self.Temperature = sensor(self.Temperature_config, self.get_psu_model)
 
+        self.PsuFanNumber = conf.get('psu_fan_number', 1)
         self.FanSpeedTolerance = conf.get('psu_fan_tolerance', 30)
         self.FanSpeed_config = conf.get("FanSpeed", None)
         self.FanSpeed = sensor(self.FanSpeed_config, self.get_psu_model)
@@ -310,6 +312,14 @@ class psu(devicebase):
         self.__FanSpeedMax = val
 
     @property
+    def PsuFanNumber(self):
+        return self.__PsuFanNumber
+
+    @PsuFanNumber.setter
+    def PsuFanNumber(self, val):
+        self.__PsuFanNumber = val
+
+    @property
     def FanSpeedTolerance(self):
         return self.__FanSpeedTolerance
 
@@ -428,7 +438,7 @@ class psu(devicebase):
     @property
     def present(self):
         ret, val = self.get_value(self.__presentconfig)
-        if ret is False or val is None:
+        if ret is False or val is None or val == "no_support" or val == "NA":
             return False
         mask = self.__presentconfig.get("mask")
         if isinstance(val, str):
