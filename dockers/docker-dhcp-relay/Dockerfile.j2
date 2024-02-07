@@ -13,13 +13,11 @@ ENV IMAGE_VERSION=$image_version
 # Update apt's cache of available packages
 RUN apt-get update
 
-RUN apt-get install -y libjsoncpp-dev {%- if INCLUDE_DHCP_SERVER == "y" %}\
-                       python3-dev         \
-                       build-essential{%- endif %}
+RUN apt-get install -y libjsoncpp-dev \
+                       python3-dev    \
+                       build-essential
 
-{% if INCLUDE_DHCP_SERVER == "y" -%}
 RUN pip3 install psutil
-{%- endif %}
 
 RUN apt-get install -y libjsoncpp-dev
 
@@ -40,10 +38,8 @@ RUN apt-get install -y libjsoncpp-dev
 {% endif %}
 
 # Clean up
-{% if INCLUDE_DHCP_SERVER == "y" -%}
 RUN apt-get remove -y build-essential     \
                 python3-dev
-{%- endif %}
 RUN apt-get clean -y         && \
     apt-get autoclean -y     && \
     apt-get autoremove -y    && \
@@ -55,13 +51,17 @@ COPY ["dhcp-relay.programs.j2", "dhcpv4-relay.agents.j2", "dhcpv6-relay.agents.j
 COPY ["files/supervisor-proc-exit-listener", "/usr/bin"]
 COPY ["critical_processes", "/etc/supervisor"]
 COPY ["cli", "/cli/"]
+
+{% if include_system_eventd == "y" %}
+{% if build_reduce_image_size != "y" or sonic_asic_platform != "broadcom" %}
 # Copy regex json and rsyslog_plugin.conf file into rsyslog.d
 COPY ["*.json", "/etc/rsyslog.d/"]
 COPY ["files/rsyslog_plugin.conf.j2", "/etc/rsyslog.d/"]
-
 # Create dhcp_relay_regex.conf
 RUN j2 -f json /etc/rsyslog.d/rsyslog_plugin.conf.j2 /etc/rsyslog.d/events_info.json  > /etc/rsyslog.d/dhcp_relay_events.conf
 RUN rm -f /etc/rsyslog.d/rsyslog_plugin.conf.j2
 RUN rm -f /etc/rsyslog.d/events_info.json
+{% endif %}
+{% endif %}
 
 ENTRYPOINT ["/usr/bin/docker_init.sh"]

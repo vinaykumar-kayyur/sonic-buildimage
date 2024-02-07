@@ -16,6 +16,7 @@ from natsort import natsorted, ns as natsortns
 
 from portconfig import get_port_config, get_fabric_port_config, get_fabric_monitor_config
 from sonic_py_common.interface import backplane_prefix
+from sonic_py_common.multi_asic import is_multi_asic
 
 # TODO: Remove this once we no longer support Python 2
 if sys.version_info.major == 3:
@@ -679,12 +680,23 @@ def parse_dpg(dpg, hname):
                 vdhcpserver_list = vintfdhcpservers.split(';')
                 vlan_attributes['dhcpv6_servers'] = vdhcpserver_list
                 dhcp_attributes['dhcpv6_servers'] = vdhcpserver_list
-            sonic_vlan_member_name = "Vlan%s" % (vlanid)
-            dhcp_relay_table[sonic_vlan_member_name] = dhcp_attributes
+                sonic_vlan_member_name = "Vlan%s" % (vlanid)
+                dhcp_relay_table[sonic_vlan_member_name] = dhcp_attributes
 
             vlanmac = vintf.find(str(QName(ns, "MacAddress")))
             if vlanmac is not None and vlanmac.text is not None:
                 vlan_attributes['mac'] = vlanmac.text
+
+            vintf_node = vintf.find(str(QName(ns, "SecondarySubnets")))
+            if vintf_node is not None and vintf_node.text is not None:
+                subnets = vintf_node.text.split(';')
+                for subnet in subnets:
+                    if sys.version_info >= (3, 0):
+                        network_def = ipaddress.ip_network(subnet, strict=False)
+                    else:
+                        network_def = ipaddress.ip_network(unicode(subnet), strict=False)
+                    prefix = str(network_def[1]) + "/" + str(network_def.prefixlen)
+                    intfs[(vintfname, prefix)]["secondary"] = "true"
 
             sonic_vlan_name = "Vlan%s" % vlanid
             if sonic_vlan_name != vintfname:
@@ -1447,6 +1459,33 @@ def select_mmu_profiles(profile, platform, hwsku):
                 base_file = os.path.join(path, file_item)
                 exec_cmd(["sudo", "cp", file_in_dir, base_file])
 
+def address_type(address):
+    # encode and decode to unicode, because when address is bytes type, ip_network will throw AddressValueError
+    # set strict to False because address may set host bit, for example 192.168.0.1/24
+    return type(ipaddress.ip_network(UNICODE_TYPE(address), False))
+
+def update_forced_mgmt_route(mgmt_intf, mgmt_routes):
+    for mgmt_intf_key in mgmt_intf.keys():
+        forced_mgmt_routes = []
+
+        try:
+            # get mgmt interface type
+            mgmt_intf_addr = mgmt_intf_key[1]
+            mgmt_iftype = address_type(mgmt_intf_addr)
+
+            # add mgmt route to different mgmt interface by address type
+            for mgmt_route in mgmt_routes:
+                route_iftype = address_type(mgmt_route)
+                if mgmt_iftype == route_iftype:
+                    forced_mgmt_routes.append(mgmt_route)
+        except ValueError as e:
+            print("Warning: invalid management routes in minigraph, exception: {}".format(e), file=sys.stderr)
+            continue
+
+        # forced_mgmt_routes yang model not support empty list
+        if len(forced_mgmt_routes) > 0:
+            mgmt_intf[mgmt_intf_key]['forced_mgmt_routes'] = forced_mgmt_routes
+
 ###############################################################################
 #
 # Main functions
@@ -1688,8 +1727,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     results['BGP_VOQ_CHASSIS_NEIGHBOR'] = bgp_voq_chassis_sessions
     results['BGP_SENTINELS'] = bgp_sentinel_sessions
     if mgmt_routes:
-        # TODO: differentiate v4 and v6
-        next(iter(mgmt_intf.values()))['forced_mgmt_routes'] = mgmt_routes
+        update_forced_mgmt_route(mgmt_intf, mgmt_routes)
     results['MGMT_PORT'] = {}
     results['MGMT_INTERFACE'] = {}
     mgmt_intf_count = 0
@@ -1719,6 +1757,21 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
 
     results['MGMT_VRF_CONFIG'] = mvrf
 
+    # Update SNMP_AGENT_ADDRESS_CONFIG with Management IP and Loopback IP
+    # if available.
+    if not is_multi_asic() and asic_name is None:
+        results['SNMP_AGENT_ADDRESS_CONFIG'] = {}
+        port = '161'
+        for mgmt_intf in mgmt_intf.keys():
+            snmp_key = mgmt_intf[1].split('/')[0] + '|' + port + '|'
+            results['SNMP_AGENT_ADDRESS_CONFIG'][snmp_key] = {}
+        # Add Loopback IP as agent address for single asic
+        for loip in lo_intfs.keys():
+            snmp_key = loip[1].split('/')[0] + '|' + port + '|'
+            results['SNMP_AGENT_ADDRESS_CONFIG'][snmp_key] = {}
+    else:
+        results['SNMP_AGENT_ADDRESS_CONFIG'] = {}
+
     phyport_intfs = {}
     vlan_intfs = {}
     pc_intfs = {}
@@ -1729,6 +1782,9 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         if intf[0][0:4] == 'Vlan':
             vlan_intfs[intf] = {}
 
+            if "secondary" in intfs[intf]:
+                vlan_intfs[intf]["secondary"] = "true"
+
             if bool(results['PEER_SWITCH']):
                 vlan_intfs[intf[0]] = {
                     'proxy_arp': 'enabled',
@@ -1738,6 +1794,9 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
                 vlan_intfs[intf[0]] = {}
         elif intf[0] in vlan_invert_mapping:
             vlan_intfs[(vlan_invert_mapping[intf[0]], intf[1])] = {}
+
+            if "secondary" in intfs[intf]:
+                vlan_intfs[(vlan_invert_mapping[intf[0]], intf[1])]["secondary"] = "true"
 
             if bool(results['PEER_SWITCH']):
                 vlan_intfs[vlan_invert_mapping[intf[0]]] = {
@@ -2046,7 +2105,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     results['ACL_TABLE'] = filter_acl_table_bindings(acls, neighbors, pcs, pc_members, sub_role, current_device['type'] if current_device else None, is_storage_device, vlan_members)
     results['FEATURE'] = {
         'telemetry': {
-            'state': 'enabled'
+            'state': 'disabled'
         }
     }
     results['TELEMETRY'] = {
