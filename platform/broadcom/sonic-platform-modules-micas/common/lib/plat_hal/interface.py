@@ -185,6 +185,12 @@ class interface(object):
             return -1
         return psu.present
 
+    def get_psu_fan_number(self, psu_name):
+        psu = self.chas.get_psu_byname(psu_name)
+        if psu is None:
+            return -1
+        return psu.PsuFanNumber
+
     def get_psu_fru_info(self, psu_name):
         '''
                     {
@@ -216,7 +222,10 @@ class interface(object):
         if psu is None:
             return -1
         psu.InputsCurrent.Value  # just for clear faults
-        if (psu.InputStatus is True) and (psu.OutputStatus is True):
+        if psu.InputStatus is True and psu.OutputStatus is True:
+            return True
+        # only has outputstatus
+        if psu.InputStatus is None and psu.OutputStatus is True:
             return True
         return False
 
@@ -245,6 +254,9 @@ class interface(object):
         psu = self.chas.get_psu_byname(psu_name)
         if psu is None:
             return -1
+
+        if psu.get_threshold_by_model == 1:
+            psu.get_fru_info()
 
         dic = collections.OrderedDict()
         # psu.get_Temperature()
@@ -327,7 +339,8 @@ class interface(object):
         psu = self.chas.get_psu_byname(psu_name)
         if psu is None:
             return -1
-
+        if psu.get_threshold_by_model == 1:
+            psu.get_fru_info()
         dic = collections.OrderedDict()
         inputdic = collections.OrderedDict()
         Outputsdic = collections.OrderedDict()
@@ -857,8 +870,13 @@ class interface(object):
             tmp = dcdc.sensor.Value
             if tmp is not None:
                 dicttmp['Value'] = tmp
+                if tmp > dicttmp['Max'] or tmp < dicttmp['Min']:
+                    dicttmp["Status"] = "NOT OK"
+                else:
+                    dicttmp["Status"] = "OK"
             else:
                 dicttmp['Value'] = self.error_ret
+                dicttmp["Status"] = "NOT OK"
             dicttmp['Unit'] = dcdc.sensor.Unit
             val_list[sensorname] = dicttmp
         return val_list

@@ -149,7 +149,7 @@ static int mdiobb_cmd_addr(struct mdiobb_ctrl *ctrl, int phy, u32 addr)
 	return dev_addr;
 }
 
-static int mdiobb_read(struct mii_bus *bus, int phy, int reg)
+int mdiobb_read(struct mii_bus *bus, int phy, int reg)
 {
 	struct mdiobb_ctrl *ctrl = bus->priv;
 	int ret, i;
@@ -181,7 +181,7 @@ static int mdiobb_read(struct mii_bus *bus, int phy, int reg)
 	return ret;
 }
 
-static int mdiobb_write(struct mii_bus *bus, int phy, int reg, u16 val)
+int mdiobb_write(struct mii_bus *bus, int phy, int reg, u16 val)
 {
 	struct mdiobb_ctrl *ctrl = bus->priv;
 

@@ -109,6 +109,10 @@ class Fan(FanBase):
             tolerance = 30
 
         if isinstance(value, str) or value is None:
+            if self.is_psu_fan:
+                psu_status_dict = self.int_case.get_psu_status(self.name)
+                if psu_status_dict["OutputStatus"] is True:
+                    return True
             return False
 
         if value < min_speed:
@@ -186,7 +190,7 @@ class Fan(FanBase):
             max_speed = psu_status_dict["FanSpeed"]["Max"]
 
         if isinstance(value, str) or value is None:
-            return 0
+            return None
         pwm = value * 100 / max_speed
         if pwm > 100:
             pwm = 100
@@ -277,11 +281,9 @@ class Fan(FanBase):
             # get fan rotor pwm
             pwm = int(self.int_case.get_fan_speed_pwm(self.name, self.fan_index))
         else:
-            psu_status_dict = self.int_case.get_psu_status(self.name)
-            if psu_status_dict["InputStatus"] is False:
-                pwm = 0
-            else:
-                pwm = self.get_speed()  # target equal to real pwm, to avoid alarm
+            pwm = self.get_speed()  # target equal to real pwm, to avoid alarm
+        if pwm is None:
+            return None
         return int(pwm)
 
     def get_vendor(self):
@@ -292,7 +294,7 @@ class Fan(FanBase):
             string: Vendor name of fan
         """
         if not self.is_psu_fan:
-            return "WB"
+            return "Micas"
         return 'N/A'
 
     def get_revision(self):

@@ -164,7 +164,7 @@ def doAvsCtrol(avs_conf):
         ret, log = doAvsCtrol_single(avs_conf)
         if ret is True:
             return True, log
-        time.sleep(1)
+        time.sleep(10)
     return False, log
 
 

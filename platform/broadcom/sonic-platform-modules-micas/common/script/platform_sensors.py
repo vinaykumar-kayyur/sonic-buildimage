@@ -91,7 +91,7 @@ def print_cputemp_sensors():
         print_info_str += toptile + '\n'
         for item in val_ret:
             print_info_str += formatstr.format(**item) + '\n'
-    print_console(print_info_str)
+        print_console(print_info_str)
 
 
 def print_boardtemp():
@@ -106,7 +106,7 @@ def print_boardtemp():
         for item in val_ret:
             realformat = formatstr if item.get('errcode', 0) == 0 else errformat
             print_info_str += realformat.format(**item) + '\n'
-    print_console(print_info_str)
+        print_console(print_info_str)
 
 
 def print_mactemp_sensors():
@@ -145,19 +145,19 @@ def print_fan_sensor():
     toptile = "Onboard fan Sensors:"
     errformat = "    {id} : {errmsg}\n"  # "    {id:<20} : {errmsg}"
     fan_signle_rotor_format = "    {id} : \n"  \
-        "        fan_type  :{fan_type}\n"  \
-        "        sn        :{sn}\n"  \
-        "        hw_version:{hw_version}\n"  \
-        "        Speed     :{Speed} RPM\n"     \
-        "        status    :{errmsg} \n"
+        "        fan_type  : {fan_type}\n"  \
+        "        sn        : {sn}\n"  \
+        "        hw_version: {hw_version}\n"  \
+        "        Speed     : {Speed} RPM\n"     \
+        "        status    : {errmsg} \n"
     fan_double_rotor_format = "    {id} : \n"  \
-        "        fan_type  :{fan_type}\n"  \
-        "        sn        :{sn}\n"  \
-        "        hw_version:{hw_version}\n"  \
+        "        fan_type  : {fan_type}\n"  \
+        "        sn        : {sn}\n"  \
+        "        hw_version: {hw_version}\n"  \
         "        Speed     :\n"     \
-        "            speed_front :{rotor1_speed:<5} RPM\n"     \
-        "            speed_rear  :{rotor2_speed:<5} RPM\n"     \
-        "        status    :{errmsg} \n"
+        "            speed_front : {rotor1_speed:<5} RPM\n"     \
+        "            speed_rear  : {rotor2_speed:<5} RPM\n"     \
+        "        status    : {errmsg} \n"
 
     if len(val_ret) != 0:
         print_info_str += toptile + '\n'
@@ -167,7 +167,7 @@ def print_fan_sensor():
             else:
                 realformat = fan_signle_rotor_format if item.get('errcode', 0) == 0 else errformat
             print_info_str += realformat.format(**item)
-    print_console(print_info_str)
+        print_console(print_info_str)
 
 
 def print_psu_sensor():
@@ -176,23 +176,41 @@ def print_psu_sensor():
     toptile = "Onboard Power Supply Unit Sensors:"
     errformat = "    {id} : {errmsg}\n"  # "    {id:<20} : {errmsg}"
     psuformat = "    {id} : \n"  \
-                "        type       :{type1}\n"  \
-                "        sn         :{sn}\n"  \
-                "        in_current :{in_current} A\n"  \
-                "        in_voltage :{in_voltage} V\n"     \
-                "        out_current:{out_current} A\n"     \
-                "        out_voltage:{out_voltage} V\n"     \
-                "        temp       :{temp} C        \n"     \
-                "        fan_speed  :{fan_speed} RPM\n"     \
-                "        in_power   :{in_power} W\n"        \
-                "        out_power  :{out_power} W\n"
+                "        type       : {type1}\n"  \
+                "        sn         : {sn}\n"  \
+                "        in_current : {in_current} A\n"  \
+                "        in_voltage : {in_voltage} V\n"     \
+                "        out_current: {out_current} A\n"     \
+                "        out_voltage: {out_voltage} V\n"     \
+                "        temp       : {temp} C        \n"     \
+                "        fan_speed  : {fan_speed} RPM\n"     \
+                "        in_power   : {in_power} W\n"        \
+                "        out_power  : {out_power} W\n"
 
     if len(val_ret) != 0:
         print_info_str += toptile + '\r\n'
         for item in val_ret:
             realformat = psuformat if item.get('errcode', 0) == 0 else errformat
             print_info_str += realformat.format(**item)
-    print_console(print_info_str)
+        print_console(print_info_str)
+
+def print_cust_psu_sensor():
+    val_ret = get_call_value_by_function("getCustPsu")
+    print_info_str = ""
+    toptile = "Onboard Power Supply Unit Sensors:"
+    errformat = "    {id} : {errmsg}\n"  # "    {id:<20} : {errmsg}"
+    psuformat = "    {id} : \n"  \
+                "        Model      : {type1}\n"  \
+                "        Serial     : {sn}\n"  \
+                "        HW Rev     : {hw_version}\n" \
+                "        Status     : {errmsg}\n"
+
+    if len(val_ret) != 0:
+        print_info_str += toptile + '\r\n'
+        for item in val_ret:
+            realformat = psuformat if item.get('errcode', 0) == 0 else errformat
+            print_info_str += realformat.format(**item)
+        print_console(print_info_str)
 
 
 def print_slot_sensor():
@@ -201,10 +219,10 @@ def print_slot_sensor():
     toptile = "Onboard slot Sensors:"
     errformat = "    {id} : {errmsg}\n"  # "    {id:<20} : {errmsg}"
     psuformat = "    {id} : \n"  \
-                "        slot_type  :{slot_type}\n"  \
-                "        sn         :{sn}\n"  \
-                "        hw_version :{hw_version} \n"  \
-                "        status     :{errmsg}\n"
+                "        slot_type  : {slot_type}\n"  \
+                "        sn         : {sn}\n"  \
+                "        hw_version : {hw_version} \n"  \
+                "        status     : {errmsg}\n"
 
     if len(val_ret) != 0:
         print_info_str += toptile + '\r\n'
@@ -219,11 +237,17 @@ def print_boarddcdc():
     print_info_str = ""
     toptile = "Onboard DCDC Sensors:"
     errformat = "    {id:<26} : {errmsg}"
-    formatstr = "    {id:<26} : {dcdc_input:<6} {dcdc_unit:<1} (Min = {dcdc_min:<6} {dcdc_unit:<1}, Max = {dcdc_max:<6} {dcdc_unit:<1})"
+    ok_formatstr = "    {id:<26} : {dcdc_input:<6} {dcdc_unit:<1} (Min = {dcdc_min:<6} {dcdc_unit:<1}, Max = {dcdc_max:<6} {dcdc_unit:<1})"
+    nok_formatstr = "    {id:<26} : {dcdc_input:<6} {dcdc_unit:<1} (Min = {dcdc_min:<6} {dcdc_unit:<1}, Max = {dcdc_max:<6} {dcdc_unit:<1}) ({dcdc_status:<6})"
 
     if len(val_ret) != 0:
         print_info_str += toptile + '\n'
         for item in val_ret:
+            if float(item["dcdc_input"]) > float(item["dcdc_max"]) or float(item["dcdc_input"]) < float(item["dcdc_min"]):
+                item["dcdc_status"] = "NOT OK"
+                formatstr = nok_formatstr
+            else:
+                formatstr = ok_formatstr
             realformat = formatstr if item.get('errcode', 0) == 0 else errformat
             print_info_str += realformat.format(**item) + '\n'
         print_console(print_info_str)
@@ -245,6 +269,7 @@ def getsensors():
     print_macpower_sensors()
     print_fan_sensor()
     print_psu_sensor()
+    print_cust_psu_sensor()
     print_slot_sensor()
     print_boarddcdc()
 

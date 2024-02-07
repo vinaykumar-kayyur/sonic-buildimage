@@ -21,6 +21,7 @@ import json
 from platform_config import AIR_FLOW_CONF, AIRFLOW_RESULT_FILE
 from platform_util import dev_file_read, byteTostr
 from eepromutil.fru import ipmifru
+from eepromutil.cust_fru import CustFru
 from eepromutil.fantlv import fan_tlv
 
 
@@ -84,6 +85,21 @@ def get_model_fru(device, eeprom):
     except Exception as e:
         return False, str(e)
 
+def get_model_custfru(device, eeprom):
+    try:
+        custfru = CustFru()
+        custfru.decode(eeprom)
+        dev_name = device.get("name")
+        field = device.get("field")
+        model = getattr(custfru, field, None)
+        if model is None:
+            msg = "%s get model error, field: %s" % (dev_name, field)
+            return False, msg
+        airflow_debug("%s get model success, model: %s" % (dev_name, model))
+        return True, model
+    except Exception as e:
+        return False, str(e)
+
 
 def get_model_fantlv(device, eeprom):
     try:
@@ -107,7 +123,7 @@ def get_model_fantlv(device, eeprom):
 def get_device_modele(device):
     e2_type = device.get("e2_type")
     dev_name = device.get("name")
-    support_e2_type = ("fru", "fantlv")
+    support_e2_type = ("fru", "fantlv", "custfru")
     if e2_type not in support_e2_type:
         msg = "%s unsupport e2_type: %s" % (dev_name, e2_type)
         return False, msg
@@ -122,6 +138,8 @@ def get_device_modele(device):
     binval = byteTostr(binval_bytes)
     if e2_type == "fru":
         return get_model_fru(device, binval)
+    if e2_type == "custfru":
+        return get_model_custfru(device, binval)
     return get_model_fantlv(device, binval)
 
 
@@ -134,7 +152,7 @@ def get_board_air_flow(fan_intake_num, fan_exhaust_num, psu_intake_num, psu_exha
         return "N/A"
 
     if fan_intake_num > fan_exhaust_num:
-        airflow_debug("fan intake number %d more than fan exhaust number %s, set board air flow: intake")
+        airflow_debug("fan intake number more than fan exhaust number, set board air flow: intake")
         return "intake"
 
     if fan_intake_num < fan_exhaust_num:
