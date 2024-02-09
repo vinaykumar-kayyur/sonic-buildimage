@@ -38,8 +38,8 @@ RUN apt-get clean -y         && \
     apt-get autoremove -y    && \
     rm -rf /debs
 
-COPY ["docker_init.sh", "start.sh", "/usr/bin/"]
-COPY ["lom.supervisord.conf.j2", "/usr/share/sonic/templates/"]
+COPY ["docker_init.sh", "start.sh", "gNMIServer_start.sh", "/usr/bin/"]
+COPY ["lom.supervisord.conf.j2", "telemetry_vars.j2", "/usr/share/sonic/templates/"]
 COPY ["files/supervisor-proc-exit-listener", "/usr/bin"]
 COPY ["critical_processes", "/etc/supervisor"]
 

@@ -50,6 +50,16 @@ stderr_logfile=syslog
 dependent_startup=true
 dependent_startup_wait_for=start:exited
 
+[program:LoMgNMIServer]
+command=/usr/bin/gNMIServer_start.sh
+priority=3
+autostart=false
+autorestart=false
+stdout_logfile=syslog
+stderr_logfile=syslog
+dependent_startup=true
+dependent_startup_wait_for=start:exited
+
 {% for proc in procs %}
 [program:LoMPluginMgr-{{ proc }}]
 command=/usr/bin/LoMPluginMgr -proc_id={{ proc }} -syslog_level 4
