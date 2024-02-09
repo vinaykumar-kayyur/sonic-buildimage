@@ -15,6 +15,7 @@ docker_inram=false
 docker_inram_algo=tmpfs
 docker_inram_size={{ DOCKER_RAMFS_SIZE }}
 logs_inram=false
+mount_pmem=false
 secureboot=false
 bootloader=generic
 in_kdump=false
@@ -37,6 +38,9 @@ for x in $(cat /proc/cmdline); do
             ;;
         logs_inram=on)
             logs_inram=true
+            ;;
+        mount_pmem=on)
+            mount_pmem=true
             ;;
         varlog_size=*)
             varlog_size="${x#varlog_size=}"
@@ -232,6 +236,14 @@ else
     if [ -f ${rootmnt}/host/disk-img/var-log.ext4 ]; then
         fsck.ext4 -v -p ${rootmnt}/host/disk-img/var-log.ext4 2>&1 | gzip -c >> /tmp/fsck.log.gz
         mount -t ext4 -o loop,rw ${rootmnt}/host/disk-img/var-log.ext4 ${rootmnt}/var/log
+    fi
+fi
+
+if $mount_pmem; then
+    if [ -f ${rootmnt}/pmem ]; then
+        sudo mkfs.ext4 /dev/pmem0
+        sudo mkdir ${rootmnt}/pmem
+        sudo mount /dev/pmem0 ${rootmnt}/pmem
     fi
 fi
 
