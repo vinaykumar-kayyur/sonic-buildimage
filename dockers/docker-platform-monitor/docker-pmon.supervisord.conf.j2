@@ -184,7 +184,7 @@ dependent_startup=true
 dependent_startup_wait_for=rsyslogd:running
 {% endif %}
 
-{% if not skip_sensormond %}
+{% if include_sensormond %}
 [program:sensormond]
 command=/usr/local/bin/sensormond
 priority=10
