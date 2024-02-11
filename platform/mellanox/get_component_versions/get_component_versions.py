@@ -16,21 +16,47 @@ COMMANDS_FOR_ACTUAL = {
     "FW": ["mlxfwmanager --query | grep -e 'FW *[0-9.]*'", "FW * [0-9]{2}\.([0-9.]*)"],
     "Kernel": ["uname -r", "([0-9][0-9.-]*)-.*"]
 }
+UNAVAILABLE_PLATFORM_VERSIONS = {
+    "SSD": "N/A",
+    "BIOS": "N/A",
+    "CPLD": "N/A"
+}
+
+UNAVAILABLE_COMPILED_VERSIONS = {
+    "SDK": "N/A",
+    "FW": "N/A",
+    "SAI": "N/A",
+    "HW-MGMT": "N/A",
+    "MFT": "N/A",
+    "Kernel": "N/A"
+}
 
 
 def parse_compiled_components_file():
     compiled_versions = {}
+
+    if not os.path.exists(COMPONENT_VERSIONS_FILE):
+        return UNAVAILABLE_COMPILED_VERSIONS
+
     with open(COMPONENT_VERSIONS_FILE, 'r') as component_versions:
         for line in component_versions.readlines():
             comp, version = line.split()
             compiled_versions[comp] = version
 
+    if len(compiled_versions.keys()) < len(UNAVAILABLE_COMPILED_VERSIONS.keys()):
+        for component in UNAVAILABLE_COMPILED_VERSIONS.keys():
+            if not compiled_versions.get(component):
+                compiled_versions[component] = "N/A"
+                
     return compiled_versions
 
 
 def get_platform_component_versions():
     csp = ComponentStatusProvider()
     version_table = csp.get_status()
+
+    if not version_table or version_table == "":
+        return UNAVAILABLE_PLATFORM_VERSIONS
 
     lines = version_table.split("\n")
     lines  = lines[2:]
