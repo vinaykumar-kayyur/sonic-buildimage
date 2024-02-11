@@ -1,4 +1,20 @@
 #!/usr/bin/env python3
+#
+# Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
+# Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 
 from fwutil.lib import ComponentStatusProvider
 from tabulate import tabulate
@@ -10,10 +26,10 @@ COMPONENT_VERSIONS_FILE = "/etc/mlnx/component-versions"
 HEADERS = ["COMPONENT", "COMPILATION", "ACTUAL"]
 COMMANDS_FOR_ACTUAL = {
     "MFT": ["dpkg -l | grep -e 'mft '", "mft *([0-9.]*)"],
-    "HW-MGMT": ["dpkg -l | grep hw", ".*1\.mlnx\.([0-9.]*)"],
-    "SDK": ["docker exec -it syncd bash -c 'dpkg -l | grep sdk'", ".*1\.mlnx\.([0-9.]*)"],
-    "SAI": ["docker exec -it syncd bash -c 'dpkg -l | grep mlnx-sai'", ".*1\.mlnx\.([A-Za-z0-9.]*)"],
-    "FW": ["mlxfwmanager --query | grep -e 'FW *[0-9.]*'", "FW * [0-9]{2}\.([0-9.]*)"],
+    "HW-MGMT": ["dpkg -l | grep hw", ".*1\\.mlnx\\.([0-9.]*)"],
+    "SDK": ["docker exec -it syncd bash -c 'dpkg -l | grep sdk'", ".*1\\.mlnx\\.([0-9.]*)"],
+    "SAI": ["docker exec -it syncd bash -c 'dpkg -l | grep mlnx-sai'", ".*1\\.mlnx\\.([A-Za-z0-9.]*)"],
+    "FW": ["mlxfwmanager --query | grep -e 'FW *[0-9.]*'", "FW * [0-9]{2}\\.([0-9.]*)"],
     "Kernel": ["uname -r", "([0-9][0-9.-]*)-.*"]
 }
 UNAVAILABLE_PLATFORM_VERSIONS = {
@@ -47,7 +63,7 @@ def parse_compiled_components_file():
         for component in UNAVAILABLE_COMPILED_VERSIONS.keys():
             if not compiled_versions.get(component):
                 compiled_versions[component] = "N/A"
-                
+
     return compiled_versions
 
 
@@ -59,7 +75,7 @@ def get_platform_component_versions():
         return UNAVAILABLE_PLATFORM_VERSIONS
 
     lines = version_table.split("\n")
-    lines  = lines[2:]
+    lines = lines[2:]
 
     parsed_lines = []
     for line in lines:
@@ -87,11 +103,12 @@ def get_platform_component_versions():
 def get_current_version(comp):
     version = subprocess.run(COMMANDS_FOR_ACTUAL[comp][0], shell=True, executable="/usr/bin/bash", stdout=subprocess.PIPE)
     parsed_version = re.search(COMMANDS_FOR_ACTUAL[comp][1], str(version.stdout))
-    return parsed_version.group(1) if parsed_version else "N/A"   
+    return parsed_version.group(1) if parsed_version else "N/A"
 
 
 def format_output_table(table):
     return tabulate(table, HEADERS)
+
 
 def main():
 
@@ -111,8 +128,7 @@ def main():
         output_table.append([comp, "-", platform_versions[comp]])
 
     print(format_output_table(output_table))
-    
+
 
 if __name__ == "__main__":
     main()
-

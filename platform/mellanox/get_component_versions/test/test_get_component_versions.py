@@ -1,4 +1,20 @@
 #!/usr/bin/env python3
+#
+# Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
+# Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 
 import unittest
 from unittest.mock import patch, MagicMock, Mock, mock_open
@@ -22,16 +38,15 @@ class TestGetComponentVersions(unittest.TestCase):
         result = get_platform_component_versions()
 
         expected_dict = {
-        "ONIE": "2022.08-5.3.0010-9600",
-        "SSD": "0202-000",
-        "BIOS": "0ACLH004_02.02.010_9600",
-        "CPLD1": "CPLD000120_REV0900",
-        "CPLD2": "CPLD000254_REV0600",
-        "CPLD3": "CPLD000191_REV0102"
-    }
+            "ONIE": "2022.08-5.3.0010-9600",
+            "SSD": "0202-000",
+            "BIOS": "0ACLH004_02.02.010_9600",
+            "CPLD1": "CPLD000120_REV0900",
+            "CPLD2": "CPLD000254_REV0600",
+            "CPLD3": "CPLD000191_REV0102"
+        }
 
         self.assertEqual(result, expected_dict)
-
 
     @patch('fwutil.lib.ComponentStatusProvider')
     def test_unavailable_platform_component(self, mock_csp):
@@ -41,11 +56,10 @@ class TestGetComponentVersions(unittest.TestCase):
             "BIOS": "N/A",
             "CPLD": "N/A"
         }
-        
+
         component_table = get_platform_component_versions()
         assert component_table == expected_table
 
-    
     @patch('os.path.exists')
     def test_parse_compiled_components_file(self, mock_path):
         # Mock the open function and simulate the file content
@@ -89,7 +103,7 @@ class TestGetComponentVersions(unittest.TestCase):
     @patch('os.path.exists')
     def test_missing_compiled_versions(self, mock_os_path):
         mock_os_path.return_value = False
-        
+
         expected_dict = {
             "SDK": "N/A",
             "FW": "N/A",

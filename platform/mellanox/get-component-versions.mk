@@ -16,8 +16,8 @@
 #
 # Firmware pending update checker and installer
 
-MLNX_GET_COMPONENT_VERSIONS = get-component-versions.py
-$(MLNX_GET_COMPONENT_VERSIONS)_PATH = $(PLATFORM_PATH)/
+MLNX_GET_COMPONENT_VERSIONS = get_component_versions.py
+$(MLNX_GET_COMPONENT_VERSIONS)_PATH = $(PLATFORM_PATH)/get_component_versions
 SONIC_COPY_FILES += $(MLNX_GET_COMPONENT_VERSIONS)
 
 MLNX_FILES += $(MLNX_GET_COMPONENT_VERSIONS)
