@@ -27,15 +27,10 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # Configure data sources for apt/dpkg
 COPY ["dpkg_01_drop", "/etc/dpkg/dpkg.cfg.d/01_drop"]
-{% if CONFIGURED_ARCH == "armhf" %}
-COPY ["sources.list.armhf", "/etc/apt/sources.list"]
-{% elif CONFIGURED_ARCH == "arm64" %}
-COPY ["sources.list.arm64", "/etc/apt/sources.list"]
-{% else %}
-COPY ["sources.list", "/etc/apt/sources.list"]
-{% endif %}
+COPY ["sources.list.{{ CONFIGURED_ARCH }}", "/etc/apt/sources.list"]
 COPY ["no_install_recommend_suggest", "/etc/apt/apt.conf.d"]
 COPY ["no-check-valid-until", "/etc/apt/apt.conf.d"]
+COPY ["apt-multiple-retries", "/etc/apt/apt.conf.d"]
 
 # Update apt cache and
 # pre-install fundamental packages
@@ -86,7 +81,22 @@ RUN pip3 install supervisor==4.2.1
 # Add support for supervisord to handle startup dependencies
 RUN pip3 install supervisord-dependent-startup==1.4.0
 
-RUN mkdir -p /etc/supervisor /var/log/supervisor
+RUN mkdir -p /var/log/supervisor /etc/supervisor/conf.d
+
+# Install gcc, libc6-dev and python3-dev for compiling python-lzf
+RUN apt-get -y install build-essential libc6-dev python3-dev
+
+# Install python-lzf
+RUN pip3 install 'python-lzf==0.2.4'
+
+# Install rdbtools
+RUN pip3 install 'rdbtools==0.1.15'
+
+# Uninstall gcc, libc6-dev and python3-dev for compiling python-lzf
+RUN apt-get -y purge build-essential libc6-dev python3-dev
+
+# Uninstall unused dependencies
+RUN apt autoremove -y --purge
 
 RUN apt-get -y purge   \
     exim4              \

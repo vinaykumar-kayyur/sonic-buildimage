@@ -24,6 +24,11 @@ module sonic-feature{
         }
     }
 
+    typedef feature-scope-status {
+        description "configuration to set the feature has asic scope as true/false";
+        type string;
+    }
+
     container sonic-feature {
 
         container FEATURE {
@@ -52,9 +57,9 @@ module sonic-feature{
                     default "enabled";
                 }
 
-                leaf has_timer {
-                    description "This configuration identicates if there is
-                                timer associated to this feature";
+                leaf delayed {
+                    description "This configuration identicates if the feature needs to be delayed until
+                                 system initialization";
                     type stypes:boolean_type;
                     default "false";
                 }
@@ -69,7 +74,14 @@ module sonic-feature{
                 leaf has_per_asic_scope {
                     description "This configuration identicates there will only one service
                                 spawned per asic";
-                    type stypes:boolean_type;
+                    type feature-scope-status;
+                    default "false";
+                }
+
+                leaf has_per_dpu_scope {
+                    description "This configuration identicates there will only one service
+                                spawned per DPU";
+                    type feature-scope-status;
                     default "false";
                 }
 
@@ -90,6 +102,13 @@ module sonic-feature{
                 leaf check_up_status {
                     description "This configuration controls the system ready tool to check
                         the app ready/up status";
+                    type stypes:boolean_type;
+                    default "false";
+                }
+
+                leaf support_syslog_rate_limit {
+                    description "This configuration indicates the feature support configuring
+                                 syslog rate limit";
                     type stypes:boolean_type;
                     default "false";
                 }

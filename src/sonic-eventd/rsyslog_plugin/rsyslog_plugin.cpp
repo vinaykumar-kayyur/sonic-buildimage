@@ -5,7 +5,7 @@
 #include <ctime>
 #include <unordered_map>
 #include "rsyslog_plugin.h"
-#include "json.hpp"
+#include <nlohmann/json.hpp>
 
 using json = nlohmann::json;
 
@@ -28,7 +28,7 @@ bool RsyslogPlugin::onMessage(string msg, lua_State* luaState) {
 void parseParams(vector<string> params, vector<EventParam>& eventParams) {
     for(long unsigned int i = 0; i < params.size(); i++) {
         if(params[i].empty()) {
-            SWSS_LOG_ERROR("Empty param provided in regex file\n");	
+            SWSS_LOG_ERROR("Empty param provided in regex file\n");
             continue;
        	}
         EventParam ep = EventParam();
@@ -56,13 +56,13 @@ bool RsyslogPlugin::createRegexList() {
     }
     try {
         regexFile >> jsonList;
-    } catch (invalid_argument& iaException) {
+    } catch (nlohmann::detail::parse_error& iaException) {
         SWSS_LOG_ERROR("Invalid JSON file: %s, throws exception: %s\n", m_regexPath.c_str(), iaException.what());
         return false;
     }
 
     string regexString;
-    string timestampRegex = "^([a-zA-Z]{3})?\\s*([0-9]{1,2})?\\s*([0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{0,6})?\\s*"; 
+    string timestampRegex = "^([a-zA-Z]{3})?\\s*([0-9]{1,2})?\\s*([0-9]{2}:[0-9]{2}:[0-9]{2}.[0-9]{0,6})?\\s*";
     regex expression;
     vector<RegexStruct> regexList;
 
@@ -71,7 +71,7 @@ bool RsyslogPlugin::createRegexList() {
         vector<EventParam> eventParams;
         try {
             string eventRegex = jsonList[i]["regex"];
-	    regexString = timestampRegex + eventRegex; 
+	    regexString = timestampRegex + eventRegex;
             string tag = jsonList[i]["tag"];
             vector<string> params = jsonList[i]["params"];
 	    vector<string> timestampParams = { "month", "day", "time" };
@@ -83,7 +83,7 @@ bool RsyslogPlugin::createRegexList() {
             rs.tag = tag;
             rs.regexExpression = expression;
             regexList.push_back(rs);
-	} catch (domain_error& deException) {
+	} catch (nlohmann::detail::type_error& deException) {
             SWSS_LOG_ERROR("Missing required key, throws exception: %s\n", deException.what());
             return false;
         } catch (regex_error& reException) {

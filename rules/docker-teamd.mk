@@ -23,14 +23,19 @@ $(DOCKER_TEAMD)_FAST_SHUTDOWN_BEFORE = syncd
 $(DOCKER_TEAMD)_FAST_SHUTDOWN_AFTER = swss
 
 SONIC_DOCKER_IMAGES += $(DOCKER_TEAMD)
+ifeq ($(INCLUDE_TEAMD), y)
 SONIC_INSTALL_DOCKER_IMAGES += $(DOCKER_TEAMD)
+endif
 
 SONIC_DOCKER_DBG_IMAGES += $(DOCKER_TEAMD_DBG)
+ifeq ($(INCLUDE_TEAMD), y)
 SONIC_INSTALL_DOCKER_DBG_IMAGES += $(DOCKER_TEAMD_DBG)
+endif
 
 $(DOCKER_TEAMD)_CONTAINER_NAME = teamd
-$(DOCKER_TEAMD)_RUN_OPT += --privileged -t
+$(DOCKER_TEAMD)_RUN_OPT += -t --cap-add=NET_ADMIN
 $(DOCKER_TEAMD)_RUN_OPT += -v /etc/sonic:/etc/sonic:ro
+$(DOCKER_TEAMD)_RUN_OPT += -v /etc/timezone:/etc/timezone:ro 
 $(DOCKER_TEAMD)_RUN_OPT += -v /host/warmboot:/var/warmboot
 
 $(DOCKER_TEAMD)_BASE_IMAGE_FILES += teamdctl:/usr/bin/teamdctl

@@ -159,11 +159,19 @@ void run_cap(void *zctx, bool &term, string &read_source,
     internal_event_t ev_int;
     int block_ms = 200;
     int i=0;
+    static int proxy_finished_init = false;
 
     EXPECT_TRUE(NULL != mock_cap);
     EXPECT_EQ(0, zmq_connect(mock_cap, get_config(CAPTURE_END_KEY).c_str()));
     EXPECT_EQ(0, zmq_setsockopt(mock_cap, ZMQ_SUBSCRIBE, "", 0));
     EXPECT_EQ(0, zmq_setsockopt(mock_cap, ZMQ_RCVTIMEO, &block_ms, sizeof (block_ms)));
+
+    if(!proxy_finished_init) {
+        zmq_msg_t msg;
+        zmq_msg_init(&msg);
+        EXPECT_EQ(1, zmq_msg_recv(&msg, mock_cap, 0)); // Subscription message
+        proxy_finished_init = true;
+    }
 
     while(!term) {
         string source;
@@ -699,7 +707,7 @@ TEST(eventd, service)
 
 void
 wait_for_heartbeat(stats_collector &stats_instance, long unsigned int cnt,
-        int wait_ms = 3000) 
+        int wait_ms = 3000)
 {
     int diff = 0;
 
@@ -749,7 +757,7 @@ TEST(eventd, heartbeat)
 
     /* Pause heartbeat */
     stats_instance.heartbeat_ctrl(true);
-    
+
     /* Sleep to ensure the other thread noticed the pause request. */
     this_thread::sleep_for(chrono::milliseconds(200));
 
@@ -870,7 +878,7 @@ TEST(eventd, testDB)
         if (db.exists(key)) {
             try {
                 m = db.hgetall(key);
-                unordered_map<string, string>::const_iterator itc = 
+                unordered_map<string, string>::const_iterator itc =
                     m.find(string(EVENTS_STATS_FIELD_NAME));
                 if (itc != m.end()) {
                     int expect =  (counter_keys[i] == string(COUNTERS_EVENTS_PUBLISHED) ?
