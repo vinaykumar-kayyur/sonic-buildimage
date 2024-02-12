@@ -15,9 +15,11 @@ SONIC_ALL += $(SONIC_INVM_ONE_IMAGE) \
              $(DOCKER_PTF_INVM) \
              $(DOCKER_SYNCD_INVM_RPC)
 
+INVM_CONFLICT_DEB = innovium-sai-headers
+
 # Inject invm sai into syncd
 $(SYNCD)_DEPENDS += $(INVM_HSAI) $(INVM_LIBSAI) $(LIBSAITHRIFT_DEV_INVM) $(INVM_SHELL)
-$(SYNCD)_UNINSTALLS += $(INVM_HSAI)
+$(SYNCD)_UNINSTALLS += $(INVM_CONFLICT_DEB) $(INVM_HSAI)
 
 # Runtime dependency on invm sai is set only for syncd
 $(SYNCD)_RDEPENDS += $(INVM_HSAI)
