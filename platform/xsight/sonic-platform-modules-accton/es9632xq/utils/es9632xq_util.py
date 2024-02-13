@@ -29,6 +29,7 @@ command:
     set         : change board setting with fan|led|sfp
 """
 
+import shlex
 import subprocess
 import getopt
 import sys
@@ -153,11 +154,30 @@ def my_log(txt):
         print('[DBG]' + txt)
     return
 
+def echo_to_file(cmd, show):
+    logging.info('Run :' + cmd)
+    split_strings = cmd.split(">")
+    split_strings = [s.strip() for s in split_strings]
+    echo_cmd = split_strings[0]
+    file_path = split_strings[1]
+    my_log('Run :' + echo_cmd + ' > ' + file_path)
+    with open(file_path, 'w') as f:
+        process = subprocess.run(shlex.split(echo_cmd), stdout=f, shell=False)
+
+    my_log(cmd + ' with result:' + str(process.returncode))
+    my_log('      output:' + str(process.stdout))
+    if process.returncode:
+        logging.info('Failed :' + cmd)
+        if show:
+            print('Failed :' + cmd)
+    return (process.returncode, process.stdout)
+
+
 def log_os_system(cmd, show):
     logging.info('Run :' + cmd)
-    process = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, universal_newlines=True)
-    my_log(cmd + 'with result:' + str(process.returncode))
-    my_log('      output:' + process.stdout)
+    process = subprocess.run(shlex.split(cmd), shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+    my_log(cmd + ' with result:' + str(process.returncode))
+    my_log('      output:' + str(process.stdout))
     if process.returncode:
         logging.info('Failed :' + cmd)
         if show:
@@ -167,7 +187,7 @@ def log_os_system(cmd, show):
 
 def driver_check():
     ret, lsmod = log_os_system("ls /sys/module/es9632*", 0)
-    logging.info('mods:'+lsmod)
+    logging.info('mods:'+ str(lsmod))
     if ret :
         return False
     else :
@@ -191,7 +211,7 @@ kos = [
 
 def driver_install():
     global FORCE
-    log_os_system('depmod', 1)
+    log_os_system('/usr/sbin/depmod', 1)
     for i in range(0, len(kos)):
         ret = log_os_system(kos[i], 1)
         if ret[0] and FORCE == 0:
@@ -270,7 +290,7 @@ def device_install():
     global FORCE
 
     for i in range(0, len(mknod)):
-        (status, output) = log_os_system(mknod[i], 1)
+        (status, output) = echo_to_file(mknod[i], 1)
         if status:
             print(output)
             if FORCE == 0:
@@ -284,7 +304,7 @@ def device_install():
             node = temp[len(temp)-2].split('-')[1] + \
                     '-00' + re.split('x| ', temp[0])[3]
             (status, output) = \
-                log_os_system('echo -2 > /sys/bus/i2c/devices/'
+                echo_to_file('echo -2 > /sys/bus/i2c/devices/'
                                 + node + '/idle_state', 1)
             if status:
                 print(output)
@@ -293,7 +313,7 @@ def device_install():
 
     for i in range(0, len(sfp_map)):
         (status, output) = \
-            log_os_system('echo optoe3 0x50 > /sys/bus/i2c/devices/i2c-'
+            echo_to_file('echo optoe3 0x50 > /sys/bus/i2c/devices/i2c-'
                             + str(sfp_map[i]) + '/new_device', 1)
         if status:
             print(output)
@@ -302,7 +322,7 @@ def device_install():
 
         num = i + 1
         (status, output) = \
-            log_os_system('echo port' + str(num) + ' > /sys/bus/i2c/devices/'
+            echo_to_file('echo port' + str(num) + ' > /sys/bus/i2c/devices/'
                             + str(sfp_map[i]) + '-0050/port_name', 1)
         if status:
             print(output)
@@ -316,7 +336,7 @@ def device_uninstall():
     for i in range(0, len(sfp_map)):
         target = '/sys/bus/i2c/devices/i2c-' + str(sfp_map[i]) \
             + '/delete_device'
-        (status, output) = log_os_system('echo 0x50 > ' + target, 1)
+        (status, output) = echo_to_file('echo 0x50 > ' + target, 1)
         if status:
             print(output)
             if FORCE == 0:
@@ -328,7 +348,7 @@ def device_uninstall():
         temp = target.split()
         del temp[1]
         temp[-1] = temp[-1].replace('new_device', 'delete_device')
-        (status, output) = log_os_system(' '.join(temp), 1)
+        (status, output) = echo_to_file(' '.join(temp), 1)
         if status:
             print(output)
             if FORCE == 0:
@@ -368,10 +388,10 @@ def do_sonic_platform_install():
         print('{} has installed'.format(PLATFORM_API2_WHL_FILE_PY3))
 
     #Check API2.0 on py2.7 whl file
-    status, output = log_os_system("pip2 show sonic-platform > /dev/null 2>&1", 0)
+    status, output = log_os_system("pip3 show sonic-platform > /dev/null 2>&1", 0)
     if status:
         if os.path.exists(SONIC_PLATFORM_BSP_WHL_PKG_PY2):
-            status, output = log_os_system("pip2 install "+ SONIC_PLATFORM_BSP_WHL_PKG_PY2, 1)
+            status, output = log_os_system("pip3 install "+ SONIC_PLATFORM_BSP_WHL_PKG_PY2, 1)
             if status:
                 print("Error: Failed to install {}".format(PLATFORM_API2_WHL_FILE_PY2))
                 return status
@@ -396,12 +416,12 @@ def do_sonic_platform_clean():
         else:
             print('{} is uninstalled'.format(PLATFORM_API2_WHL_FILE_PY3))
 
-    status, output = log_os_system("pip2 show sonic-platform > /dev/null 2>&1", 0)
+    status, output = log_os_system("pip3 show sonic-platform > /dev/null 2>&1", 0)
     if status:
         print('{} does not install, not need to uninstall'.format(PLATFORM_API2_WHL_FILE_PY2))
 
     else:
-        status, output = log_os_system("pip2 uninstall sonic-platform -y", 0)
+        status, output = log_os_system("pip3 uninstall sonic-platform -y", 0)
         if status:
             print('Error: Failed to uninstall {}'.format(PLATFORM_API2_WHL_FILE_PY2))
             return status
