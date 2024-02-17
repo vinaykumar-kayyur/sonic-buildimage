@@ -114,12 +114,19 @@ jobs:
             docker_syncd_rpc_image: yes
             platform_rpc: nephos
 
+        - name: pensando
+          pool: sonicbld-arm64
+          variables:
+            PLATFORM_ARCH: arm64
+
     buildSteps:
       - template: .azure-pipelines/template-skipvstest.yml@buildimage
       - template: .azure-pipelines/template-daemon.yml@buildimage
       - bash: |
           set -ex
-          if [ $(GROUP_NAME) == vs ]; then
+          if [ $(GROUP_NAME) == pensando ]; then
+            make $BUILD_OPTIONS target/sonic-pensando.tar
+          elif [ $(GROUP_NAME) == vs ]; then
             if [ $(dbg_image) == yes ]; then
               make $BUILD_OPTIONS INSTALL_DEBUG_TOOLS=y target/sonic-vs.img.gz
               mv target/sonic-vs.img.gz target/sonic-vs-dbg.img.gz
@@ -128,7 +135,7 @@ jobs:
               make $BUILD_OPTIONS ENABLE_ASAN=y target/docker-sonic-vs.gz
               mv target/docker-sonic-vs.gz target/docker-sonic-vs-asan.gz
             fi
-            if [ $(K8S_OPTIONS) == 'INCLUDE_KUBERNETES_MASTER=y' ]; then
+            if [ "$(K8S_OPTIONS)" == 'INCLUDE_KUBERNETES_MASTER=y' ]; then
               make $BUILD_OPTIONS $(K8S_OPTIONS) target/sonic-vs.img.gz
               mv target/sonic-vs.img.gz target/sonic-vs-k8s.img.gz
             fi
