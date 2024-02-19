@@ -21,7 +21,24 @@ function startplatform() {
     # start mellanox drivers regardless of
     # boot type
     if [[ x"$sonic_asic_platform" == x"mellanox" ]]; then
-        BOOT_TYPE=`getBootType`
+        metadata=$(sonic-cfggen -d -v 'DEVICE_METADATA["localhost"]')
+        PLATFORM=$(echo "$metadata" | grep -oP "'platform': '\K[^']+")
+        PLATFORM_DIR="/usr/share/sonic/device/$PLATFORM"
+        HWSKU=$(echo "$metadata" | grep -oP "'hwsku': '\K[^']+")
+        HWSKU_DIR="$PLATFORM_DIR/$HWSKU"
+
+        sai_profile_json_file="$HWSKU_DIR/sai.profile"
+        INDEPENDENT_MODE=$(grep '^SAI_INDEPENDENT_MODULE_MODE=' $sai_profile_json_file | cut -d '=' -f 2)
+        if [[ "$INDEPENDENT_MODE" == "1" ]]; then
+            cat $PLATFORM_DIR/media_settings_src.json > $PLATFORM_DIR/media_settings.json
+        else
+            if [[ -f $PLATFORM_DIR/media_settings.json ]]; then
+                rm $PLATFORM_DIR/media_settings.json
+            fi
+        fi
+
+
+	BOOT_TYPE=`getBootType`
         if [[ x"$WARM_BOOT" == x"true" || x"$BOOT_TYPE" == x"fast" ]]; then
             export FAST_BOOT=1
         fi
