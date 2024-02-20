@@ -180,7 +180,7 @@ index 79e62b9..ecfa0b0 100644
  
  /*
   * pwbuf is used to reduce number of arguments passed around; the strings in
-@@ -63,255 +59,239 @@ struct pwbuf {
+@@ -63,255 +59,243 @@ struct pwbuf {
  typedef struct {
      struct addrinfo *addr;
      char *key;
