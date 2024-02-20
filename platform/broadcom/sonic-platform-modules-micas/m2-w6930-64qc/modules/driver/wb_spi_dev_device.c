@@ -75,7 +75,7 @@ static int wb_spi_dev_device_probe(struct platform_device *pdev)
 
     spi_dev_num = ARRAY_SIZE(spi_dev_device_info);
     if (spi_dev_num > SPI_DEVICE_MAX_NUM) {
-        printk(KERN_ERR "spi_dev_num[%d] is bigger than max_num[%d].\n",
+        dev_err(&pdev->dev, "spi_dev_num[%d] is bigger than max_num[%d].\n",
             spi_dev_num, SPI_DEVICE_MAX_NUM);
         return -EINVAL;
     }
@@ -98,12 +98,12 @@ static int wb_spi_dev_device_probe(struct platform_device *pdev)
         if (dev) {
             master = container_of(dev, struct spi_master, dev);
         } else {
-            printk(KERN_ERR "class_find_device bus_num %u dev failed.\n",
+            dev_err(&pdev->dev, "class_find_device bus_num %u dev failed.\n",
                 spi_dev_device_info[i].bus_num);
             continue;
         }
         if (!master) {
-            printk(KERN_ERR "get bus_num %u spi master failed.\n",
+            dev_err(&pdev->dev, "get bus_num %u spi master failed.\n",
                 spi_dev_device_info[i].bus_num);
             continue;
         }
@@ -115,9 +115,10 @@ static int wb_spi_dev_device_probe(struct platform_device *pdev)
         put_device(&master->dev);
         if (spi) {
             g_spi_device[i] = spi;
+            dev_info(&g_spi_device[i]->dev, "spi_bus %d spi_new_device success.\n", spi_dev_device_info[i].bus_num);
         } else {
             g_spi_device[i] = NULL;
-            printk(KERN_ERR "Failed to register spi dev device %s at bus %d!\n",
+            dev_err(&pdev->dev, "Failed to register spi dev device %s at bus %d!\n",
                 spi_dev_device_info[i].modalias, spi_dev_device_info[i].bus_num);
             continue;
         }
