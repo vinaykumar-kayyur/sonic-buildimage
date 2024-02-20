@@ -9,7 +9,11 @@ set -x -e
 CONFIGURED_ARCH=$([ -f .arch ] && cat .arch || echo amd64)
 
 if [[ $CONFIGURED_ARCH == armhf || $CONFIGURED_ARCH == arm64 ]]; then
-    . ./onie-image-${CONFIGURED_ARCH}.conf
+    if [ -r ./platform/${CONFIGURED_PLATFORM}/onie-image-${CONFIGURED_ARCH}.conf ]; then
+        . ./platform/${CONFIGURED_PLATFORM}/onie-image-${CONFIGURED_ARCH}.conf
+    else
+        . ./onie-image-${CONFIGURED_ARCH}.conf
+    fi
 else
     . ./onie-image.conf
 fi
