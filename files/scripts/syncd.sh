@@ -22,21 +22,20 @@ function startplatform() {
     # boot type
     if [[ x"$sonic_asic_platform" == x"mellanox" ]]; then
         metadata=$(sonic-cfggen -d -v 'DEVICE_METADATA["localhost"]')
-        PLATFORM=$(echo "$metadata" | grep -oP "'platform': '\K[^']+")
-        PLATFORM_DIR="/usr/share/sonic/device/$PLATFORM"
-        HWSKU=$(echo "$metadata" | grep -oP "'hwsku': '\K[^']+")
-        HWSKU_DIR="$PLATFORM_DIR/$HWSKU"
+        platform=$(echo "$metadata" | grep -oP "'platform': '\K[^']+")
+        platform_dir="/usr/share/sonic/device/$platform"
+        hwsku=$(echo "$metadata" | grep -oP "'hwsku': '\K[^']+")
+        hwsku_dir="$platform_dir/$hwsku"
 
-        sai_profile_json_file="$HWSKU_DIR/sai.profile"
-        INDEPENDENT_MODE=$(grep '^SAI_INDEPENDENT_MODULE_MODE=' $sai_profile_json_file | cut -d '=' -f 2)
-        if [[ "$INDEPENDENT_MODE" == "1" ]]; then
-            cat $PLATFORM_DIR/media_settings_src.json > $PLATFORM_DIR/media_settings.json
+        sai_profile_json_file="$hwsku_dir/sai.profile"
+        independent_mode=$(grep '^SAI_INDEPENDENT_MODULE_MODE=' $sai_profile_json_file | cut -d '=' -f 2)
+        if [[ "$independent_mode" == "1" ]]; then
+            cat $platform_dir/media_settings_src.json > $platform_dir/media_settings.json
         else
-            if [[ -f $PLATFORM_DIR/media_settings.json ]]; then
-                rm $PLATFORM_DIR/media_settings.json
+            if [[ -f $platform_dir/media_settings.json ]]; then
+                rm $platform_dir/media_settings.json
             fi
         fi
-
 
 	BOOT_TYPE=`getBootType`
         if [[ x"$WARM_BOOT" == x"true" || x"$BOOT_TYPE" == x"fast" ]]; then
