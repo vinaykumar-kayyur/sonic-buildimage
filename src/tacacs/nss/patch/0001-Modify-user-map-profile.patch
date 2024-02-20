@@ -446,8 +446,12 @@ index 79e62b9..ecfa0b0 100644
 +            }
 +            else if(!strncmp(token, "timeout=", 8)) {
 +                tac_srv[tac_srv_no].timeout = (int)strtoul(token + 8, NULL, 0);
-+                if(tac_srv[tac_srv_no].timeout < 0)
-+                    tac_srv[tac_srv_no].timeout = 0;
++                if(tac_srv[tac_srv_no].timeout < 0) {
++                   tac_srv[tac_srv_no].timeout = 0;
++                }
++                else {
++                   tac_readtimeout_enable = 1;
++                }
 +                /* Limit timeout to make sure upper application not wait
 +                 * for a long time*/
 +                if(tac_srv[tac_srv_no].timeout > 5)
