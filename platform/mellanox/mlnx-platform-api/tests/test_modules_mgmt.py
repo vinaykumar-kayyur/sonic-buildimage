@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2021-2024 NVIDIA CORPORATION & AFFILIATES.
+# Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 # Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,6 +19,7 @@ import os
 import queue
 import sys
 import threading
+import time
 import types
 import unittest
 
@@ -42,10 +43,12 @@ from sonic_platform_base.sonic_xcvr.codes.public.cmis import CmisCodes
 from sonic_platform_base.sonic_xcvr.mem_maps.public.cmis import CmisMemMap
 from sonic_platform_base.sonic_xcvr.fields import consts
 
+DEFAULT_NUM_OF_PORTS_1 = 1
+DEFAULT_NUM_OF_PORTS_3 = 3
+DEFAULT_NUM_OF_PORTS_32 = 32
+POLLER_EXECUTED = False
 
-TESTED = False
-
-def _mock_sysfs_file_content():
+def _mock_sysfs_default_file_content():
     return {
         modules_mgmt.SYSFS_INDEPENDENT_FD_PRESENCE.format("0"): "1",
         modules_mgmt.SYSFS_INDEPENDENT_FD_PRESENCE.format("1"): "1",
@@ -73,15 +76,15 @@ def _mock_sysfs_file_content():
     }
 
 
-mock_file_content = _mock_sysfs_file_content()
+mock_file_content = _mock_sysfs_default_file_content()
 
 
 class MockPoller:
 
     def __init__(self, modules_mgmt_task_stopping_event, modules_mgmt_thrd=None, num_of_ports=3, port_plug_out=False
-                 , feature_enabled=True, warm_reboot=False, port_plug_in=False, check_ports=True):
+                 , feature_enabled=True, warm_reboot=False, port_plug_in=False, sleep_timeout=False):
         self.fds_dict = {}
-        self.poller_count = 0
+        self.poller_iteration_count = 0
         self.modules_mgmt_task_stopping_event = modules_mgmt_task_stopping_event
         self.modules_mgmt_thrd = modules_mgmt_thrd
         self.num_of_ports = num_of_ports
@@ -89,10 +92,12 @@ class MockPoller:
         self.port_plug_in = port_plug_in
         self.feature_enabled = feature_enabled
         self.warm_reboot = warm_reboot
-        self.check_ports = check_ports
+        self.port_plug_out_changed = False
+        self.port_plug_in_changed = False
+        self.sleep_timeout = sleep_timeout
 
     def register(self, fd, attrs):
-        self.fds_dict[fd.fileno()] = fd
+        self.fds_dict[fd.fileno()] = { fd : attrs }
         assert fd.fileno() in self.fds_dict
 
     def unregister(self, fd):
@@ -101,31 +106,39 @@ class MockPoller:
         assert fd.fileno() not in self.fds_dict.keys()
 
     def poll(self, timeout=1000):
-        global TESTED
-        # when simulating port plug out or plug in need to change both presence and power_good sysfs
-        self.poller_count += 1
-        if self.check_ports:
-            if 1 == self.poller_count:
+        global POLLER_EXECUTED
+        assert len(self.modules_mgmt_thrd.sfp_port_dict_initial) == self.num_of_ports
+        assert self.modules_mgmt_thrd.is_supported_indep_mods_system == self.feature_enabled
+        # counting the number of poller iterations to know when to do the checks after plug out (and plug in)
+        # have to check at least on iteration 7 to let ports reach final state
+        self.poller_iteration_count += 1
+        if self.num_of_ports > 0:
+            if not self.port_plug_out_changed:
                 if self.port_plug_out:
                     # return first fd registered with some made up event number 870
-                    fd_to_return = list(self.fds_dict.keys())[0]
-                    fd = self.fds_dict[fd_to_return]
+                    fd_no_to_return = list(self.fds_dict.keys())[0]
+                    fd = list(self.fds_dict[fd_no_to_return].keys())[0]
                     fd.set_file_int_content(0)
                     event_to_return = 870
-                    return [(fd_to_return, event_to_return)]
-            elif 2 == self.poller_count:
+                    self.port_plug_out_changed = True
+                    return [(fd_no_to_return, event_to_return)]
+            if not self.port_plug_in_changed:
                 if self.port_plug_in:
-                    # return first fd registered with some made up event number 870
-                    fd_to_return = list(self.fds_dict.keys())[0]
-                    fd = self.fds_dict[fd_to_return]
+                    # return first fd registered with some made up event number 871
+                    fd_no_to_return = list(self.fds_dict.keys())[0]
+                    fd = list(self.fds_dict[fd_no_to_return].keys())[0]
                     fd.set_file_int_content(1)
                     event_to_return = 871
-                    return [(fd_to_return, event_to_return)]
-            elif 7 == self.poller_count:
-                ports_to_test = self.num_of_ports if (not self.port_plug_out or not self.feature_enabled or self.warm_reboot)\
-                    else self.num_of_ports * 2
-                for i in range(ports_to_test):
+                    self.port_plug_in_changed = True
+                    return [(fd_no_to_return, event_to_return)]
+            if 7 == self.poller_iteration_count:
+                # when feature is enabled, need to check for each port both power_good and hw_present sysfs for
+                # cmis non-flat memory cables
+                num_of_sysfs_to_check = self.num_of_ports if (not self.port_plug_out or not self.feature_enabled
+                                                              or self.warm_reboot) else self.num_of_ports * 2
+                for i in range(num_of_sysfs_to_check):
                     # when feature is enabled, power_good sysfs is also registered for cmis non-flat memory cables
+                    # so each SW controlled port has 2 fds registered
                     port_to_test = i if not self.feature_enabled else int(i / 2)
                     assert self.modules_mgmt_thrd.sfp_port_dict_initial[port_to_test].port_num == port_to_test
                     assert self.modules_mgmt_thrd.sfp_port_dict_initial[
@@ -135,6 +148,7 @@ class MockPoller:
                             'module_obj']
                         assert module_obj.port_num == port_to_test
                         if not self.warm_reboot:
+                            # in tests other than warm reboot it creates only SW control ports
                             if not self.port_plug_out:
                                 assert module_obj.final_state == modules_mgmt.STATE_SW_CONTROL
                             else:
@@ -142,45 +156,47 @@ class MockPoller:
                         else:
                             if not self.port_plug_out:
                                 assert module_obj.final_state == modules_mgmt.STATE_HW_PRESENT
+                            # in warm reboot test with plug out plug in test creates only FW control ports
                             elif self.port_plug_out and self.port_plug_in:
                                 assert module_obj.final_state == modules_mgmt.STATE_FW_CONTROL
                             else:
                                 assert module_obj.final_state == modules_mgmt.STATE_HW_NOT_PRESENT
-                        TESTED = True
-            if 10 == self.poller_count:
-                assert len(self.modules_mgmt_thrd.sfp_port_dict_initial) == self.num_of_ports
-                assert self.modules_mgmt_thrd.is_supported_indep_mods_system == self.feature_enabled
+                        POLLER_EXECUTED = True
                 self.modules_mgmt_task_stopping_event.set()
+        if self.sleep_timeout:
+            time.sleep(timeout/1000)
         return []
 
 
-class MockOpenNew:
+class MockOpen:
 
-    def __init__(self, name='', file_no=190, indep_mode=True):
+    def __init__(self, name='', file_no=None, indep_mode_supported=True):
         self.name = name
         self.file_no = file_no
-        self.indep_mode = indep_mode
+        self.indep_mode_supported = indep_mode_supported
         self.retint = None
-        self.seek_cursor = False
         self.curr = 0
 
     def read(self):
-        if self.fileno() in [99]:
-            return "S"
+        if self.fileno() in [SAI_PROFILE_FD_FILENO]:
+            pass
         else:
+            # if return value was changed, i.e. sysfs content changed from 1 to 0 to simulate plug out
             if self.retint is not None:
                 return str(self.retint)
+            # return default values (can be changed per test)
             else:
                 return mock_file_content[self.name]
 
     def readline(self):
-        if self.fileno() in [99]:
-            if self.indep_mode:
+        # if trying to read sai profile file, according to fd fileno
+        if self.fileno() in [SAI_PROFILE_FD_FILENO]:
+            if self.indep_mode_supported:
                 return "SAI_INDEPENDENT_MODULE_MODE=1"
             else:
                 return ""
         else:
-            return _mock_sysfs_file_content()[self.name]
+            return mock_file_content[self.name]
 
     def fileno(self):
         return self.file_no
@@ -204,56 +220,56 @@ class MockOpenNew:
     def __exit__(self, filename, *args, **kwargs):
         pass
 
-
 class MockPollerStopEvent:
 
-    def __init__(self, modules_mgmt_task_stopping_event, modules_mgmt_thrd=None, num_of_ports=3, feature_enabled=True
-                 , check_ports=True, ports_connected=True, ports_error=False, fw_controlled_ports=False):
+    def __init__(self, modules_mgmt_task_stopping_event, modules_mgmt_thrd=None, num_of_ports=DEFAULT_NUM_OF_PORTS_3
+                 , feature_enabled=True, ports_connected=True, fw_controlled_ports=False, sleep_timeout=False):
         self.fds_dict = {}
         self.modules_mgmt_task_stopping_event = modules_mgmt_task_stopping_event
         self.modules_mgmt_thrd = modules_mgmt_thrd
         self.num_of_ports = num_of_ports
         self.feature_enabled = feature_enabled
-        self.check_ports = check_ports
         self.ports_connected = ports_connected
-        self.ports_error = ports_error
+        self.sleep_timeout = sleep_timeout
         self.fw_controlled_ports = fw_controlled_ports
-        self.tested = False
 
     def register(self, fd, attrs):
         self.fds_dict[fd.fileno()] = 1 & attrs
         assert fd.fileno() in self.fds_dict
 
-    def poll(self, timeout=1000):
+    def poll(self, timeout=0):
         assert len(self.modules_mgmt_thrd.sfp_port_dict_initial) == self.num_of_ports
         assert self.modules_mgmt_thrd.is_supported_indep_mods_system == self.feature_enabled
-        if self.check_ports:
-            ports_to_test = self.num_of_ports if (not self.feature_enabled or not self.ports_connected or self.ports_error
+        global POLLER_EXECUTED
+        if self.num_of_ports > 0:
+            # when feature is enabled, need to check for each port both power_good and hw_present sysfs for
+            # cmis non-flat memory cables
+            ports_to_test = self.num_of_ports if (not self.feature_enabled or not self.ports_connected
                                                   or self.fw_controlled_ports) else self.num_of_ports * 2
             for i in range(ports_to_test):
                 # when feature is enabled, power_good sysfs is also registered for cmis non-flat memory cables
-                port_to_test = i if (not self.feature_enabled or not self.ports_connected or self.ports_error
+                port_to_test = i if (not self.feature_enabled or not self.ports_connected
                                      or self.fw_controlled_ports) else int(i / 2)
                 assert self.modules_mgmt_thrd.sfp_port_dict_initial[port_to_test].port_num == port_to_test
                 assert self.modules_mgmt_thrd.sfp_port_dict_initial[port_to_test].initial_state == modules_mgmt.STATE_HW_NOT_PRESENT
                 module_obj = self.modules_mgmt_thrd.fds_mapping_to_obj[list(self.fds_dict.keys())[i]]['module_obj']
                 assert module_obj.port_num == port_to_test
-                if self.ports_error:
-                    assert module_obj.final_state == modules_mgmt.STATE_ERROR_HANDLER
-                else:
-                    if self.ports_connected:
-                        if self.feature_enabled:
-                            if self.fw_controlled_ports:
-                                assert module_obj.final_state == modules_mgmt.STATE_FW_CONTROL
-                            else:
-                                assert module_obj.final_state == modules_mgmt.STATE_SW_CONTROL
+                if self.ports_connected:
+                    if self.feature_enabled:
+                        if self.fw_controlled_ports:
+                            assert module_obj.final_state == modules_mgmt.STATE_FW_CONTROL
                         else:
-                            assert module_obj.final_state == modules_mgmt.STATE_HW_PRESENT
+                            assert module_obj.final_state == modules_mgmt.STATE_SW_CONTROL
                     else:
-                        assert module_obj.final_state == modules_mgmt.STATE_HW_NOT_PRESENT
+                        assert module_obj.final_state == modules_mgmt.STATE_HW_PRESENT
+                else:
+                    assert module_obj.final_state == modules_mgmt.STATE_HW_NOT_PRESENT
+                POLLER_EXECUTED = True
+        else:
+            POLLER_EXECUTED = True
         self.modules_mgmt_task_stopping_event.set()
-        global TESTED
-        TESTED = True
+        if self.sleep_timeout:
+            time.sleep(timeout/1000)
         return []
 
 
@@ -271,13 +287,10 @@ def _mock_is_file_indep_mode_disabled_content():
         '//usr/share/sonic/platform/ACS-MSN4700/sai.profile' : True
     }
 
-
 mock_is_file_indep_mode_disabled_content = _mock_is_file_indep_mode_disabled_content()
-
 
 def mock_is_file_indep_mode_disabled(file_path, **kwargs):
     return mock_is_file_indep_mode_disabled_content[file_path]
-
 
 def _mock_is_file_indep_mode_enabled_content():
     return {
@@ -299,7 +312,6 @@ def _mock_is_file_indep_mode_enabled_content():
         modules_mgmt.SYSFS_INDEPENDENT_FD_POWER_ON.format("2"): True,
         '//usr/share/sonic/platform/ACS-MSN4700/sai.profile'    :   True
     }
-
 
 mock_is_file_indep_mode_enabled_content = _mock_is_file_indep_mode_enabled_content()
 
@@ -366,10 +378,12 @@ class MockSFPxcvrapi:
 def check_power_cap(port, module_sm_obj):
     pass
 
+SAI_PROFILE_FD_FILENO = 99
+
 
 class TestModulesMgmt(unittest.TestCase):
     """Test class to test modules_mgmt.py. The test cases covers:
-        1. cables detection for 1 to 3 32 ports - feature disabled / enabled / poller
+        1. cables detection for 1 to 3 ports - feature disabled / enabled / poller
         2. cable disconnection - plug out
         3. cable reconnection - plug in
         4. warm reboot normal flow with FW ports
@@ -395,32 +409,35 @@ class TestModulesMgmt(unittest.TestCase):
 
     def mock_open_builtin(self, file_name, feature_enabled=True):
         return_dict = {
-            (modules_mgmt.SYSFS_LEGACY_FD_PRESENCE.format("0"), 'r') : MockOpenNew(modules_mgmt.SYSFS_LEGACY_FD_PRESENCE.format("0"), 100),
-            (modules_mgmt.SYSFS_LEGACY_FD_PRESENCE.format("1"), 'r') : MockOpenNew(modules_mgmt.SYSFS_LEGACY_FD_PRESENCE.format("1"), 101),
-            (modules_mgmt.SYSFS_LEGACY_FD_PRESENCE.format("2"), 'r') : MockOpenNew(modules_mgmt.SYSFS_LEGACY_FD_PRESENCE.format("2"), 102),
-            '//usr/share/sonic/platform/ACS-MSN4700/sai.profile' : MockOpenNew('//usr/share/sonic/platform/ACS-MSN4700/sai.profile', 99, feature_enabled),
-            modules_mgmt.SYSFS_LEGACY_FD_PRESENCE.format("0") : MockOpenNew(name=modules_mgmt.SYSFS_LEGACY_FD_PRESENCE.format("0"), file_no=100),
-            modules_mgmt.SYSFS_LEGACY_FD_PRESENCE.format("1") : MockOpenNew(modules_mgmt.SYSFS_LEGACY_FD_PRESENCE.format("1"), 101),
-            modules_mgmt.SYSFS_LEGACY_FD_PRESENCE.format("2") : MockOpenNew(modules_mgmt.SYSFS_LEGACY_FD_PRESENCE.format("2"), 102),
-            modules_mgmt.SYSFS_INDEPENDENT_FD_PRESENCE.format("0"): MockOpenNew(modules_mgmt.SYSFS_INDEPENDENT_FD_PRESENCE.format("0"), 0),
-            modules_mgmt.SYSFS_INDEPENDENT_FD_PRESENCE.format("1"): MockOpenNew(modules_mgmt.SYSFS_INDEPENDENT_FD_PRESENCE.format("1"), 1),
-            modules_mgmt.SYSFS_INDEPENDENT_FD_PRESENCE.format("2"): MockOpenNew(modules_mgmt.SYSFS_INDEPENDENT_FD_PRESENCE.format("2"), 2),
-            modules_mgmt.SYSFS_INDEPENDENT_FD_POWER_GOOD.format("0"): MockOpenNew(modules_mgmt.SYSFS_INDEPENDENT_FD_POWER_GOOD.format("0"), 200),
-            modules_mgmt.SYSFS_INDEPENDENT_FD_POWER_GOOD.format("1"): MockOpenNew(modules_mgmt.SYSFS_INDEPENDENT_FD_POWER_GOOD.format("1"), 201),
-            modules_mgmt.SYSFS_INDEPENDENT_FD_POWER_GOOD.format("2"): MockOpenNew(modules_mgmt.SYSFS_INDEPENDENT_FD_POWER_GOOD.format("2"), 202),
-            modules_mgmt.SYSFS_INDEPENDENT_FD_POWER_ON.format("0"): MockOpenNew(modules_mgmt.SYSFS_INDEPENDENT_FD_POWER_ON.format("0"), 300),
-            modules_mgmt.SYSFS_INDEPENDENT_FD_POWER_ON.format("1"): MockOpenNew(modules_mgmt.SYSFS_INDEPENDENT_FD_POWER_ON.format("1"), 301),
-            modules_mgmt.SYSFS_INDEPENDENT_FD_POWER_ON.format("2"): MockOpenNew(modules_mgmt.SYSFS_INDEPENDENT_FD_POWER_ON.format("2"), 302),
-            modules_mgmt.SYSFS_INDEPENDENT_FD_POWER_LIMIT.format("0"): MockOpenNew(modules_mgmt.SYSFS_INDEPENDENT_FD_POWER_LIMIT.format("0"), 500),
-            modules_mgmt.SYSFS_INDEPENDENT_FD_POWER_LIMIT.format("1"): MockOpenNew(modules_mgmt.SYSFS_INDEPENDENT_FD_POWER_LIMIT.format("1"), 501),
-            modules_mgmt.SYSFS_INDEPENDENT_FD_POWER_LIMIT.format("2"): MockOpenNew(modules_mgmt.SYSFS_INDEPENDENT_FD_POWER_LIMIT.format("2"), 502),
-            modules_mgmt.SYSFS_INDEPENDENT_FD_FREQ_SUPPORT.format("0"): MockOpenNew(modules_mgmt.SYSFS_INDEPENDENT_FD_FREQ_SUPPORT.format("0"), 602),
-            modules_mgmt.SYSFS_INDEPENDENT_FD_FREQ_SUPPORT.format("1"): MockOpenNew(modules_mgmt.SYSFS_INDEPENDENT_FD_FREQ_SUPPORT.format("1"), 602),
-            modules_mgmt.SYSFS_INDEPENDENT_FD_FREQ_SUPPORT.format("2"): MockOpenNew(modules_mgmt.SYSFS_INDEPENDENT_FD_FREQ_SUPPORT.format("2"), 602),
-            modules_mgmt.PROC_CMDLINE: MockOpenNew(modules_mgmt.PROC_CMDLINE, 200)
+            (modules_mgmt.SYSFS_LEGACY_FD_PRESENCE.format("0"), 'r') : MockOpen(modules_mgmt.SYSFS_LEGACY_FD_PRESENCE.format("0"), 100),
+            (modules_mgmt.SYSFS_LEGACY_FD_PRESENCE.format("1"), 'r') : MockOpen(modules_mgmt.SYSFS_LEGACY_FD_PRESENCE.format("1"), 101),
+            (modules_mgmt.SYSFS_LEGACY_FD_PRESENCE.format("2"), 'r') : MockOpen(modules_mgmt.SYSFS_LEGACY_FD_PRESENCE.format("2"), 102),
+            '//usr/share/sonic/platform/ACS-MSN4700/sai.profile' : MockOpen('//usr/share/sonic/platform/ACS-MSN4700/sai.profile'
+                                                                            , SAI_PROFILE_FD_FILENO, feature_enabled),
+            modules_mgmt.SYSFS_LEGACY_FD_PRESENCE.format("0") : MockOpen(modules_mgmt.SYSFS_LEGACY_FD_PRESENCE.format("0"), 100),
+            modules_mgmt.SYSFS_LEGACY_FD_PRESENCE.format("1") : MockOpen(modules_mgmt.SYSFS_LEGACY_FD_PRESENCE.format("1"), 101),
+            modules_mgmt.SYSFS_LEGACY_FD_PRESENCE.format("2") : MockOpen(modules_mgmt.SYSFS_LEGACY_FD_PRESENCE.format("2"), 102),
+            modules_mgmt.SYSFS_INDEPENDENT_FD_PRESENCE.format("0"): MockOpen(modules_mgmt.SYSFS_INDEPENDENT_FD_PRESENCE.format("0"), 0),
+            modules_mgmt.SYSFS_INDEPENDENT_FD_PRESENCE.format("1"): MockOpen(modules_mgmt.SYSFS_INDEPENDENT_FD_PRESENCE.format("1"), 1),
+            modules_mgmt.SYSFS_INDEPENDENT_FD_PRESENCE.format("2"): MockOpen(modules_mgmt.SYSFS_INDEPENDENT_FD_PRESENCE.format("2"), 2),
+            modules_mgmt.SYSFS_INDEPENDENT_FD_POWER_GOOD.format("0"): MockOpen(modules_mgmt.SYSFS_INDEPENDENT_FD_POWER_GOOD.format("0"), 200),
+            modules_mgmt.SYSFS_INDEPENDENT_FD_POWER_GOOD.format("1"): MockOpen(modules_mgmt.SYSFS_INDEPENDENT_FD_POWER_GOOD.format("1"), 201),
+            modules_mgmt.SYSFS_INDEPENDENT_FD_POWER_GOOD.format("2"): MockOpen(modules_mgmt.SYSFS_INDEPENDENT_FD_POWER_GOOD.format("2"), 202),
+            modules_mgmt.SYSFS_INDEPENDENT_FD_POWER_ON.format("0"): MockOpen(modules_mgmt.SYSFS_INDEPENDENT_FD_POWER_ON.format("0"), 300),
+            modules_mgmt.SYSFS_INDEPENDENT_FD_POWER_ON.format("1"): MockOpen(modules_mgmt.SYSFS_INDEPENDENT_FD_POWER_ON.format("1"), 301),
+            modules_mgmt.SYSFS_INDEPENDENT_FD_POWER_ON.format("2"): MockOpen(modules_mgmt.SYSFS_INDEPENDENT_FD_POWER_ON.format("2"), 302),
+            modules_mgmt.SYSFS_INDEPENDENT_FD_POWER_LIMIT.format("0"): MockOpen(modules_mgmt.SYSFS_INDEPENDENT_FD_POWER_LIMIT.format("0"), 500),
+            modules_mgmt.SYSFS_INDEPENDENT_FD_POWER_LIMIT.format("1"): MockOpen(modules_mgmt.SYSFS_INDEPENDENT_FD_POWER_LIMIT.format("1"), 501),
+            modules_mgmt.SYSFS_INDEPENDENT_FD_POWER_LIMIT.format("2"): MockOpen(modules_mgmt.SYSFS_INDEPENDENT_FD_POWER_LIMIT.format("2"), 502),
+            modules_mgmt.SYSFS_INDEPENDENT_FD_FREQ_SUPPORT.format("0"): MockOpen(modules_mgmt.SYSFS_INDEPENDENT_FD_FREQ_SUPPORT.format("0"), 602),
+            modules_mgmt.SYSFS_INDEPENDENT_FD_FREQ_SUPPORT.format("1"): MockOpen(modules_mgmt.SYSFS_INDEPENDENT_FD_FREQ_SUPPORT.format("1"), 602),
+            modules_mgmt.SYSFS_INDEPENDENT_FD_FREQ_SUPPORT.format("2"): MockOpen(modules_mgmt.SYSFS_INDEPENDENT_FD_FREQ_SUPPORT.format("2"), 602),
+            modules_mgmt.PROC_CMDLINE: MockOpen(modules_mgmt.PROC_CMDLINE, self.fd_number_by_fd_name_dict[modules_mgmt.PROC_CMDLINE])
         }
         return return_dict[file_name]
 
+    # side effects are used in mock when want to create different mocks per variable, i.e. here it's filename
+    # see below mock_open_new_side_effect_poller_test where returning a new MockOpen passing it the filename
     def mock_open_new_side_effect_feature_disabled(self, filename, *args, **kwargs):
         mock_context = MagicMock()
         mock_context.__enter__.return_value = self.mock_open_builtin(filename, False)
@@ -436,12 +453,12 @@ class TestModulesMgmt(unittest.TestCase):
     def mock_open_new_side_effect_poller_test(self, filename, *args, **kwargs):
         if filename in ['//usr/share/sonic/platform/ACS-MSN4700/sai.profile']:
             mock_context = MagicMock()
-            mock_context.__enter__.return_value = MockOpenNew(filename, 99)
+            mock_context.__enter__.return_value = MockOpen(filename, SAI_PROFILE_FD_FILENO)
             mock_context.__exit__.return_value = False
             return mock_context
         else:
             mock_context = MagicMock()
-            mock_open_new = MockOpenNew(filename, self.fd_number_by_fd_name_dict[filename])
+            mock_open_new = MockOpen(filename, self.fd_number_by_fd_name_dict[filename])
             mock_context.return_value = mock_open_new
             mock_context.__enter__.return_value = mock_open_new
             mock_context.__exit__.return_value = False
@@ -453,22 +470,32 @@ class TestModulesMgmt(unittest.TestCase):
     def mock_open_new_side_effect_warm_reboot(self, filename, *args, **kwargs):
         if filename in ['//usr/share/sonic/platform/ACS-MSN4700/sai.profile']:
             mock_context = MagicMock()
-            mock_context.__enter__.return_value = MockOpenNew(filename, 99)
+            mock_context.__enter__.return_value = MockOpen(filename, SAI_PROFILE_FD_FILENO)
             mock_context.__exit__.return_value = False
             return mock_context
         else:
-            mock_open_new = MockOpenNew(filename, self.fd_number_by_fd_name_dict[filename])
+            mock_open_new = MockOpen(filename, self.fd_number_by_fd_name_dict[filename])
             return mock_open_new
 
+    def setUp(cls):
+        cls.modules_mgmt_task_stopping_event = threading.Event()
+        cls.modules_changes_queue = queue.Queue()
+        global POLLER_EXECUTED
+        POLLER_EXECUTED = False
+        # start modules_mgmt thread and the test in poller part
+        cls.modules_mgmt_thrd = ModulesMgmtTask(main_thread_stop_event=cls.modules_mgmt_task_stopping_event,
+                                            q=cls.modules_changes_queue)
+        cls.modules_mgmt_thrd.check_power_cap = check_power_cap
+        assert cls.modules_mgmt_thrd.sfp_port_dict_initial == {}
 
-    #@classmethod
+    @classmethod
     def setup_class(cls):
         os.environ["MLNX_PLATFORM_API_UNIT_TESTING"] = "1"
         cls.fd_number_by_fd_name_dict = {
                 modules_mgmt.SYSFS_LEGACY_FD_PRESENCE.format("0") : 100,
                 modules_mgmt.SYSFS_LEGACY_FD_PRESENCE.format("1") : 101,
                 modules_mgmt.SYSFS_LEGACY_FD_PRESENCE.format("2") : 102,
-                '//usr/share/sonic/platform/ACS-MSN4700/sai.profile' : 99,
+                '//usr/share/sonic/platform/ACS-MSN4700/sai.profile' : SAI_PROFILE_FD_FILENO,
                 modules_mgmt.SYSFS_INDEPENDENT_FD_PRESENCE.format("0") : 0,
                 modules_mgmt.SYSFS_INDEPENDENT_FD_PRESENCE.format("1") : 1,
                 modules_mgmt.SYSFS_INDEPENDENT_FD_PRESENCE.format("2") : 2,
@@ -487,106 +514,68 @@ class TestModulesMgmt(unittest.TestCase):
                 modules_mgmt.SYSFS_INDEPENDENT_FD_FW_CONTROL.format("0") : 700,
                 modules_mgmt.SYSFS_INDEPENDENT_FD_FW_CONTROL.format("1") : 701,
                 modules_mgmt.SYSFS_INDEPENDENT_FD_FW_CONTROL.format("2") : 702,
-                modules_mgmt.PROC_CMDLINE : 200
+                modules_mgmt.PROC_CMDLINE : 800
         }
         # mock the directory holding relevant sai.profile
         device_info.get_paths_to_platform_and_hwsku_dirs = mock.MagicMock(return_value=('', '/usr/share/sonic/platform/ACS-MSN4700'))
 
 
-    @patch('sonic_platform.device_data.DeviceDataManager.get_sfp_count', MagicMock(return_value=3))
+    @patch('sonic_platform.device_data.DeviceDataManager.get_sfp_count', MagicMock(return_value=DEFAULT_NUM_OF_PORTS_3))
     @patch('os.path.isfile', MagicMock(side_effect=mock_is_file_indep_mode_disabled))
     @patch('sonic_platform.utils.read_int_from_file', MagicMock(side_effect=mock_read_int_from_file))
     @patch('builtins.open', spec=open)
     def test_mdf_all_ports_feature_disabled(self, mock_open):
         mock_open.side_effect = self.mock_open_new_side_effect_feature_disabled
-        global TESTED
-        TESTED = False
         num_of_tested_ports = DeviceDataManager.get_sfp_count()
-        assert num_of_tested_ports == 3
+        assert num_of_tested_ports == DEFAULT_NUM_OF_PORTS_3
 
         # start modules_mgmt thread and the test in poller part
-        modules_mgmt_task_stopping_event = threading.Event()
-        modules_changes_queue = queue.Queue()
-        modules_mgmt_thrd = ModulesMgmtTask(main_thread_stop_event=modules_mgmt_task_stopping_event,
-                                            q=modules_changes_queue)
-        with patch('select.poll', MagicMock(return_value=MockPollerStopEvent(modules_mgmt_task_stopping_event
-                                                                    , modules_mgmt_thrd, feature_enabled=False))):
-            assert modules_mgmt_thrd.sfp_port_dict_initial == {}
-            assert modules_mgmt_thrd.is_supported_indep_mods_system == False
-            modules_mgmt_thrd.run()
-        # a check that modules mgmt thread ran and got into the poller part
-        assert TESTED
+        with patch('select.poll', MagicMock(return_value=MockPollerStopEvent(self.modules_mgmt_task_stopping_event
+                                                                    , self.modules_mgmt_thrd, feature_enabled=False))):
+            self.modules_mgmt_thrd.run()
 
-    @patch('sonic_platform.device_data.DeviceDataManager.get_sfp_count', MagicMock(return_value=3))
+    @patch('sonic_platform.device_data.DeviceDataManager.get_sfp_count', MagicMock(return_value=DEFAULT_NUM_OF_PORTS_3))
     @patch('os.path.isfile', MagicMock(side_effect=mock_is_file_indep_mode_enabled))
     @patch('builtins.open', spec=open)
     def test_mdf_all_ports_feature_enabled(self, mock_open):
         mock_open.side_effect = self.mock_open_new_side_effect_feature_enabled
-        global TESTED
-        TESTED = False
         num_of_tested_ports = DeviceDataManager.get_sfp_count()
-        assert num_of_tested_ports == 3
+        assert num_of_tested_ports == DEFAULT_NUM_OF_PORTS_3
 
         # start modules_mgmt thread and the test in poller part
-        modules_mgmt_task_stopping_event = threading.Event()
-        modules_changes_queue = queue.Queue()
-        modules_mgmt_thrd = ModulesMgmtTask(main_thread_stop_event=modules_mgmt_task_stopping_event,
-                                            q=modules_changes_queue)
-        assert modules_mgmt_thrd.sfp_port_dict_initial == {}
-        with patch('select.poll', MagicMock(return_value=MockPollerStopEvent(modules_mgmt_task_stopping_event
-                , modules_mgmt_thrd))):
+        with patch('select.poll', MagicMock(return_value=MockPollerStopEvent(self.modules_mgmt_task_stopping_event
+                , self.modules_mgmt_thrd))):
             with patch('sonic_platform.sfp.SFP', MagicMock(return_value=MockSFPxcvrapi())):
-                modules_mgmt_thrd.check_power_cap = check_power_cap
-                modules_mgmt_thrd.run()
-        # a check that modules mgmt thread ran and got into the poller part
-        assert TESTED
+                self.modules_mgmt_thrd.run()
 
     @patch('os.path.isfile', MagicMock(side_effect=mock_is_file_indep_mode_enabled))
     @patch('builtins.open', spec=open)
     @patch('sonic_platform.sfp.SFP', MagicMock(return_value=MockSFPxcvrapi()))
     def test_modules_mgmt_poller_events_3_ports(self, mock_open):
         mock_open.side_effect = self.mock_open_new_side_effect_poller_test
-        mock_file_content[modules_mgmt.PROC_CMDLINE] = ''
-        global TESTED
-        TESTED = False
-        DeviceDataManager.get_sfp_count = mock.MagicMock(return_value=3)
+        DeviceDataManager.get_sfp_count = mock.MagicMock(return_value=DEFAULT_NUM_OF_PORTS_3)
         num_of_tested_ports = DeviceDataManager.get_sfp_count()
-        assert num_of_tested_ports == 3
+        assert num_of_tested_ports == DEFAULT_NUM_OF_PORTS_3
 
         # start modules_mgmt thread and the test in poller part
-        modules_mgmt_task_stopping_event = threading.Event()
-        modules_changes_queue = queue.Queue()
-        modules_mgmt_thrd = ModulesMgmtTask(main_thread_stop_event=modules_mgmt_task_stopping_event
-                                            , q=modules_changes_queue)
-        with patch('select.poll', MagicMock(return_value=MockPoller(modules_mgmt_task_stopping_event, modules_mgmt_thrd))):
-            modules_mgmt_thrd.check_power_cap = check_power_cap
-            modules_mgmt_thrd.run()
-        # a check that modules mgmt thread ran and got into the poller part
-        assert TESTED
+        with patch('select.poll', MagicMock(return_value=MockPollerStopEvent(self.modules_mgmt_task_stopping_event
+                , self.modules_mgmt_thrd))):
+            self.modules_mgmt_thrd.run()
 
     @patch('os.path.isfile', MagicMock(side_effect=mock_is_file_indep_mode_enabled))
     @patch('builtins.open', spec=open)
     @patch('sonic_platform.sfp.SFP', MagicMock(return_value=MockSFPxcvrapi()))
     def test_modules_mgmt_poller_events_single_port(self, mock_open):
         mock_open.side_effect = self.mock_open_new_side_effect_poller_test
-        global TESTED
-        TESTED = False
-        DeviceDataManager.get_sfp_count = mock.MagicMock(return_value=1)
+        DeviceDataManager.get_sfp_count = mock.MagicMock(return_value=DEFAULT_NUM_OF_PORTS_1)
         num_of_tested_ports = DeviceDataManager.get_sfp_count()
-        assert num_of_tested_ports == 1
+        assert num_of_tested_ports == DEFAULT_NUM_OF_PORTS_1
 
         # start modules_mgmt thread and the test in poller part
-        modules_mgmt_task_stopping_event = threading.Event()
-        modules_changes_queue = queue.Queue()
-        modules_mgmt_thrd = ModulesMgmtTask(main_thread_stop_event=modules_mgmt_task_stopping_event
-                                            , q=modules_changes_queue)
-        with patch('select.poll', MagicMock(return_value=MockPoller(modules_mgmt_task_stopping_event
-                , modules_mgmt_thrd, num_of_tested_ports))):
-            with patch('builtins.open', MagicMock(side_effect=self.mock_open_new_side_effect_poller_test)):
-                modules_mgmt_thrd.check_power_cap = check_power_cap
-                modules_mgmt_thrd.run()
-        # a check that modules mgmt thread ran and got into the poller part
-        assert TESTED
+        with patch('select.poll', MagicMock(return_value=MockPollerStopEvent(self.modules_mgmt_task_stopping_event
+                , self.modules_mgmt_thrd, num_of_tested_ports))):
+            #with patch('builtins.open', MagicMock(side_effect=self.mock_open_new_side_effect_poller_test)):
+            self.modules_mgmt_thrd.run()
 
     @patch('os.path.isfile', MagicMock(side_effect=mock_is_file_indep_mode_enabled))
     @patch('builtins.open', spec=open)
@@ -595,24 +584,16 @@ class TestModulesMgmt(unittest.TestCase):
         mock_open.side_effect = self.mock_open_new_side_effect_warm_reboot
         # mock /proc/cmdline with warm reboot boot type key value
         mock_file_content[modules_mgmt.PROC_CMDLINE] = f'{modules_mgmt.CMDLINE_STR_TO_LOOK_FOR}{modules_mgmt.CMDLINE_VAL_TO_LOOK_FOR}'
-        global TESTED
-        TESTED = False
-        DeviceDataManager.get_sfp_count = mock.MagicMock(return_value=1)
+        DeviceDataManager.get_sfp_count = mock.MagicMock(return_value=DEFAULT_NUM_OF_PORTS_1)
         num_of_tested_ports = DeviceDataManager.get_sfp_count()
-        assert num_of_tested_ports == 1
+        assert num_of_tested_ports == DEFAULT_NUM_OF_PORTS_1
         # set the port to start with FW controlled before warm reboot takes place
         mock_file_content[modules_mgmt.SYSFS_INDEPENDENT_FD_FW_CONTROL.format("0")] = "0"
 
         # start modules_mgmt thread and the test in poller part
-        modules_mgmt_task_stopping_event = threading.Event()
-        modules_changes_queue = queue.Queue()
-        modules_mgmt_thrd = ModulesMgmtTask(main_thread_stop_event=modules_mgmt_task_stopping_event, q=modules_changes_queue)
-        with patch('select.poll', MagicMock(return_value=MockPoller(modules_mgmt_task_stopping_event, modules_mgmt_thrd
-                , num_of_tested_ports, warm_reboot=True))):
-            modules_mgmt_thrd.check_power_cap = check_power_cap
-            modules_mgmt_thrd.run()
-        # a check that modules mgmt thread ran and got into the poller part
-        assert TESTED
+        with patch('select.poll', MagicMock(return_value=MockPoller(self.modules_mgmt_task_stopping_event
+                , self.modules_mgmt_thrd, num_of_tested_ports, warm_reboot=True))):
+            self.modules_mgmt_thrd.run()
 
     @patch('os.path.isfile', MagicMock(side_effect=mock_is_file_indep_mode_enabled))
     @patch('builtins.open', spec=open)
@@ -621,26 +602,17 @@ class TestModulesMgmt(unittest.TestCase):
         mock_open.side_effect = self.mock_open_new_side_effect_warm_reboot
         # mock /proc/cmdline with warm reboot boot type key value
         mock_file_content[modules_mgmt.PROC_CMDLINE] = f'{modules_mgmt.CMDLINE_STR_TO_LOOK_FOR}{modules_mgmt.CMDLINE_VAL_TO_LOOK_FOR}'
-        global TESTED
-        TESTED = False
-        DeviceDataManager.get_sfp_count = mock.MagicMock(return_value=1)
+        DeviceDataManager.get_sfp_count = mock.MagicMock(return_value=DEFAULT_NUM_OF_PORTS_1)
         num_of_tested_ports = DeviceDataManager.get_sfp_count()
-        assert num_of_tested_ports == 1
+        assert num_of_tested_ports == DEFAULT_NUM_OF_PORTS_1
 
         # set the port to start with FW controlled before warm reboot takes place
         mock_file_content[modules_mgmt.SYSFS_INDEPENDENT_FD_FW_CONTROL.format("0")] = "0"
 
         # start modules_mgmt thread and the test in poller part
-        modules_mgmt_task_stopping_event = threading.Event()
-        modules_changes_queue = queue.Queue()
-        modules_mgmt_thrd = ModulesMgmtTask(main_thread_stop_event=modules_mgmt_task_stopping_event
-                                            , q=modules_changes_queue)
-        with patch('select.poll', MagicMock(return_value=MockPoller(modules_mgmt_task_stopping_event
-                , modules_mgmt_thrd, num_of_tested_ports, port_plug_out=True, warm_reboot=True))):
-            modules_mgmt_thrd.check_power_cap = check_power_cap
-            modules_mgmt_thrd.run()
-        # a check that modules mgmt thread ran and got into the poller part
-        assert TESTED
+        with patch('select.poll', MagicMock(return_value=MockPoller(self.modules_mgmt_task_stopping_event
+                , self.modules_mgmt_thrd, num_of_tested_ports, port_plug_out=True, warm_reboot=True))):
+            self.modules_mgmt_thrd.run()
 
     @patch('os.path.isfile', MagicMock(side_effect=mock_is_file_indep_mode_enabled))
     @patch('builtins.open', spec=open)
@@ -649,60 +621,39 @@ class TestModulesMgmt(unittest.TestCase):
         mock_open.side_effect = self.mock_open_new_side_effect_warm_reboot
         # mock /proc/cmdline with warm reboot boot type key value
         mock_file_content[modules_mgmt.PROC_CMDLINE] = f'{modules_mgmt.CMDLINE_STR_TO_LOOK_FOR}{modules_mgmt.CMDLINE_VAL_TO_LOOK_FOR}'
-        global TESTED
-        TESTED = False
-        DeviceDataManager.get_sfp_count = mock.MagicMock(return_value=1)
+        DeviceDataManager.get_sfp_count = mock.MagicMock(return_value=DEFAULT_NUM_OF_PORTS_1)
         num_of_tested_ports = DeviceDataManager.get_sfp_count()
-        assert num_of_tested_ports == 1
+        assert num_of_tested_ports == DEFAULT_NUM_OF_PORTS_1
 
         mock_file_content[modules_mgmt.SYSFS_INDEPENDENT_FD_FW_CONTROL.format("0")] = "0"
 
         # start modules_mgmt thread and the test in poller part
-        modules_mgmt_task_stopping_event = threading.Event()
-        modules_changes_queue = queue.Queue()
-        modules_mgmt_thrd = ModulesMgmtTask(main_thread_stop_event=modules_mgmt_task_stopping_event
-                                            , q=modules_changes_queue)
-        with patch('select.poll', MagicMock(return_value=MockPoller(modules_mgmt_task_stopping_event
-                , modules_mgmt_thrd, num_of_tested_ports, port_plug_out=True, warm_reboot=True, port_plug_in=True))):
-            modules_mgmt_thrd.check_power_cap = check_power_cap
-            modules_mgmt_thrd.run()
-        # a check that modules mgmt thread ran and got into the poller part
-        assert TESTED
+        with patch('select.poll', MagicMock(return_value=MockPoller(self.modules_mgmt_task_stopping_event
+                , self.modules_mgmt_thrd, num_of_tested_ports, port_plug_out=True, warm_reboot=True, port_plug_in=True))):
+            self.modules_mgmt_thrd.run()
 
     @patch('os.path.isfile', MagicMock(side_effect=mock_is_file_indep_mode_enabled))
     @patch('builtins.open', spec=open)
     @patch('sonic_platform.sfp.SFP', MagicMock(return_value=MockSFPxcvrapi(False, True)))
     def test_modules_mgmt_no_ports(self, mock_open):
         mock_open.side_effect = self.mock_open_new_side_effect_poller_test
-        global TESTED
-        TESTED = False
         DeviceDataManager.get_sfp_count = mock.MagicMock(return_value=0)
         num_of_tested_ports = DeviceDataManager.get_sfp_count()
         assert num_of_tested_ports == 0
 
         # start modules_mgmt thread and the test in poller part
-        modules_mgmt_task_stopping_event = threading.Event()
-        modules_changes_queue = queue.Queue()
-        modules_mgmt_thrd = ModulesMgmtTask(main_thread_stop_event=modules_mgmt_task_stopping_event
-                                            , q=modules_changes_queue)
-        with patch('select.poll', MagicMock(return_value=MockPollerStopEvent(modules_mgmt_task_stopping_event
-                , modules_mgmt_thrd, num_of_tested_ports, check_ports=False))):
-            modules_mgmt_thrd.check_power_cap = check_power_cap
-            modules_mgmt_thrd.run()
-        # a check that modules mgmt thread ran and got into the poller part
-        assert TESTED
+        with patch('select.poll', MagicMock(return_value=MockPollerStopEvent(self.modules_mgmt_task_stopping_event
+                , self.modules_mgmt_thrd, num_of_tested_ports))):
+            self.modules_mgmt_thrd.run()
 
     @patch('os.path.isfile', MagicMock(side_effect=mock_is_file_indep_mode_enabled))
     @patch('builtins.open', spec=open)
     @patch('sonic_platform.sfp.SFP', MagicMock(return_value=MockSFPxcvrapi(False, True)))
     def test_modules_mgmt_ports_disconnected(self, mock_open):
         mock_open.side_effect = self.mock_open_new_side_effect_poller_test
-        global TESTED
-        TESTED = False
-        num_of_ports = 3
-        DeviceDataManager.get_sfp_count = mock.MagicMock(return_value=num_of_ports)
+        DeviceDataManager.get_sfp_count = mock.MagicMock(return_value=DEFAULT_NUM_OF_PORTS_3)
         num_of_tested_ports = DeviceDataManager.get_sfp_count()
-        assert num_of_tested_ports == num_of_ports
+        assert num_of_tested_ports == DEFAULT_NUM_OF_PORTS_3
 
         # update hw_present sysfs with value of 0 for each port
         for i in range(num_of_tested_ports):
@@ -710,28 +661,18 @@ class TestModulesMgmt(unittest.TestCase):
             mock_file_content[modules_sysfs] = "0"
 
         # start modules_mgmt thread and the test in poller part
-        modules_mgmt_task_stopping_event = threading.Event()
-        modules_changes_queue = queue.Queue()
-        modules_mgmt_thrd = ModulesMgmtTask(main_thread_stop_event=modules_mgmt_task_stopping_event
-                                            , q=modules_changes_queue)
-        with patch('select.poll', MagicMock(return_value=MockPollerStopEvent(modules_mgmt_task_stopping_event
-                , modules_mgmt_thrd, num_of_tested_ports, ports_connected=False))):
-            modules_mgmt_thrd.check_power_cap = check_power_cap
-            modules_mgmt_thrd.run()
-        # a check that modules mgmt thread ran and got into the poller part
-        assert TESTED
+        with patch('select.poll', MagicMock(return_value=MockPollerStopEvent(self.modules_mgmt_task_stopping_event
+                , self.modules_mgmt_thrd, num_of_tested_ports, ports_connected=False))):
+            self.modules_mgmt_thrd.run()
 
     @patch('os.path.isfile', MagicMock(side_effect=mock_is_file_indep_mode_enabled))
     @patch('builtins.open', spec=open)
     @patch('sonic_platform.sfp.SFP', MagicMock(return_value=MockSFPxcvrapi(False, True)))
     def test_modules_mgmt_bad_flows_port_disconnected(self, mock_open):
         mock_open.side_effect = self.mock_open_new_side_effect_poller_test
-        global TESTED
-        TESTED = False
-        num_of_ports = 1
-        DeviceDataManager.get_sfp_count = mock.MagicMock(return_value=num_of_ports)
+        DeviceDataManager.get_sfp_count = mock.MagicMock(return_value=DEFAULT_NUM_OF_PORTS_1)
         num_of_tested_ports = DeviceDataManager.get_sfp_count()
-        assert num_of_tested_ports == num_of_ports
+        assert num_of_tested_ports == DEFAULT_NUM_OF_PORTS_1
 
         # update hw_present sysfs with value of 0 for each port
         for i in range(num_of_tested_ports):
@@ -739,28 +680,18 @@ class TestModulesMgmt(unittest.TestCase):
             mock_file_content[modules_sysfs] = "0"
 
         # start modules_mgmt thread and the test in poller part
-        modules_mgmt_task_stopping_event = threading.Event()
-        modules_changes_queue = queue.Queue()
-        modules_mgmt_thrd = ModulesMgmtTask(main_thread_stop_event=modules_mgmt_task_stopping_event
-                                            , q=modules_changes_queue)
-        with patch('select.poll', MagicMock(return_value=MockPollerStopEvent(modules_mgmt_task_stopping_event
-                , modules_mgmt_thrd, num_of_tested_ports, ports_connected=False))):
-            modules_mgmt_thrd.check_power_cap = check_power_cap
-            modules_mgmt_thrd.run()
-        # a check that modules mgmt thread ran and got into the poller part
-        assert TESTED
+        with patch('select.poll', MagicMock(return_value=MockPollerStopEvent(self.modules_mgmt_task_stopping_event
+                , self.modules_mgmt_thrd, num_of_tested_ports, ports_connected=False))):
+            self.modules_mgmt_thrd.run()
 
     @patch('os.path.isfile', MagicMock(side_effect=mock_is_file_indep_mode_enabled))
     @patch('builtins.open', spec=open)
     @patch('sonic_platform.sfp.SFP', MagicMock(return_value=MockSFPxcvrapi(False, True)))
     def test_modules_mgmt_bad_flows_power_good(self, mock_open):
         mock_open.side_effect = self.mock_open_new_side_effect_poller_test
-        global TESTED
-        TESTED = False
-        num_of_ports = 1
-        DeviceDataManager.get_sfp_count = mock.MagicMock(return_value=num_of_ports)
+        DeviceDataManager.get_sfp_count = mock.MagicMock(return_value=DEFAULT_NUM_OF_PORTS_1)
         num_of_tested_ports = DeviceDataManager.get_sfp_count()
-        assert num_of_tested_ports == num_of_ports
+        assert num_of_tested_ports == DEFAULT_NUM_OF_PORTS_1
 
         # update power_good sysfs with value of 0 for each port
         for i in range(num_of_tested_ports):
@@ -768,31 +699,21 @@ class TestModulesMgmt(unittest.TestCase):
             mock_file_content[modules_sysfs] = "0"
 
         # start modules_mgmt thread and the test in poller part
-        modules_mgmt_task_stopping_event = threading.Event()
-        modules_changes_queue = queue.Queue()
-        modules_mgmt_thrd = ModulesMgmtTask(main_thread_stop_event=modules_mgmt_task_stopping_event
-                                            , q=modules_changes_queue)
-        with patch('select.poll', MagicMock(return_value=MockPollerStopEvent(modules_mgmt_task_stopping_event
-                , modules_mgmt_thrd, num_of_tested_ports, ports_connected=False))):
-            modules_mgmt_thrd.check_power_cap = check_power_cap
-            modules_mgmt_thrd.run()
+        with patch('select.poll', MagicMock(return_value=MockPollerStopEvent(self.modules_mgmt_task_stopping_event
+                , self.modules_mgmt_thrd, num_of_tested_ports, ports_connected=False))):
+            self.modules_mgmt_thrd.run()
         for i in range(num_of_tested_ports):
             modules_sysfs = modules_mgmt.SYSFS_INDEPENDENT_FD_POWER_GOOD.format(f"{i}")
             mock_file_content[modules_sysfs] = "1"
-        # a check that modules mgmt thread ran and got into the poller part
-        assert TESTED
 
     @patch('os.path.isfile', MagicMock(side_effect=mock_is_file_indep_mode_enabled))
     @patch('builtins.open', spec=open)
     @patch('sonic_platform.sfp.SFP', MagicMock(return_value=MockSFPxcvrapi(False, True)))
     def test_modules_mgmt_bad_flows_ports_powered_off_fw_controlled(self, mock_open):
         mock_open.side_effect = self.mock_open_new_side_effect_poller_test
-        global TESTED
-        TESTED = False
-        num_of_ports = 32
-        DeviceDataManager.get_sfp_count = mock.MagicMock(return_value=num_of_ports)
+        DeviceDataManager.get_sfp_count = mock.MagicMock(return_value=DEFAULT_NUM_OF_PORTS_32)
         num_of_tested_ports = DeviceDataManager.get_sfp_count()
-        assert num_of_tested_ports == num_of_ports
+        assert num_of_tested_ports == DEFAULT_NUM_OF_PORTS_32
 
         # create or update different sysfs and is_file mocking with relevant value for each port
         for i in range(num_of_tested_ports):
@@ -817,33 +738,23 @@ class TestModulesMgmt(unittest.TestCase):
             self.fd_number_by_fd_name_dict[modules_sysfs] = 400 + i
 
         # start modules_mgmt thread and the test in poller part
-        modules_mgmt_task_stopping_event = threading.Event()
-        modules_changes_queue = queue.Queue()
-        modules_mgmt_thrd = ModulesMgmtTask(main_thread_stop_event=modules_mgmt_task_stopping_event
-                                            , q=modules_changes_queue)
-        with patch('select.poll', MagicMock(return_value=MockPollerStopEvent(modules_mgmt_task_stopping_event
-                , modules_mgmt_thrd, num_of_tested_ports, fw_controlled_ports=True))):
-            modules_mgmt_thrd.check_power_cap = check_power_cap
-            modules_mgmt_thrd.run()
+        with patch('select.poll', MagicMock(return_value=MockPollerStopEvent(self.modules_mgmt_task_stopping_event
+                , self.modules_mgmt_thrd, num_of_tested_ports, fw_controlled_ports=True))):
+            self.modules_mgmt_thrd.run()
 
         # change power_on sysfs values back to the default ones
         for i in range(num_of_tested_ports):
             modules_sysfs = modules_mgmt.SYSFS_INDEPENDENT_FD_POWER_ON.format(f"{i}")
             mock_file_content[modules_sysfs] = "1"
-        # a check that modules mgmt thread ran and got into the poller part
-        assert TESTED
 
     @patch('os.path.isfile', MagicMock(side_effect=mock_is_file_indep_mode_enabled))
     @patch('builtins.open', spec=open)
     @patch('sonic_platform.sfp.SFP', MagicMock(return_value=MockSFPxcvrapi()))
     def test_modules_mgmt_bad_flows_ports_powered_off_sw_controlled(self, mock_open):
         mock_open.side_effect = self.mock_open_new_side_effect_poller_test
-        global TESTED
-        TESTED = False
-        num_of_ports = 32
-        DeviceDataManager.get_sfp_count = mock.MagicMock(return_value=num_of_ports)
+        DeviceDataManager.get_sfp_count = mock.MagicMock(return_value=DEFAULT_NUM_OF_PORTS_32)
         num_of_tested_ports = DeviceDataManager.get_sfp_count()
-        assert num_of_tested_ports == num_of_ports
+        assert num_of_tested_ports == DEFAULT_NUM_OF_PORTS_32
 
         # create or update different sysfs and is_file mocking with relevant value for each port
         for i in range(num_of_tested_ports):
@@ -873,21 +784,17 @@ class TestModulesMgmt(unittest.TestCase):
             self.fd_number_by_fd_name_dict[modules_sysfs] = 600 + i
 
         # start modules_mgmt thread and the test in poller part
-        modules_mgmt_task_stopping_event = threading.Event()
-        modules_changes_queue = queue.Queue()
-        modules_mgmt_thrd = ModulesMgmtTask(main_thread_stop_event=modules_mgmt_task_stopping_event
-                                            , q=modules_changes_queue)
-        with patch('select.poll', MagicMock(return_value=MockPollerStopEvent(modules_mgmt_task_stopping_event
-                , modules_mgmt_thrd, num_of_tested_ports))):
-            modules_mgmt_thrd.check_power_cap = check_power_cap
-            modules_mgmt_thrd.run()
+        with patch('select.poll', MagicMock(return_value=MockPollerStopEvent(self.modules_mgmt_task_stopping_event
+                , self.modules_mgmt_thrd, num_of_tested_ports))):
+            self.modules_mgmt_thrd.run()
 
         # change power_on sysfs values back to the default ones
         for i in range(num_of_tested_ports):
             modules_sysfs = modules_mgmt.SYSFS_INDEPENDENT_FD_POWER_ON.format(f"{i}")
             mock_file_content[modules_sysfs] = "1"
-        # a check that modules mgmt thread ran and got into the poller part
-        assert TESTED
 
-    def teardown_class(cls):
+    def tearDown(cls):
         mock_file_content[modules_mgmt.PROC_CMDLINE] = ''
+        cls.modules_mgmt_thrd = None
+        # a check that modules mgmt thread ran and got into the poller part where the tests here has all checks
+        assert POLLER_EXECUTED
