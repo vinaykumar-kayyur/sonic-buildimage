@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2019-2023 NVIDIA CORPORATION & AFFILIATES.
+# Copyright (c) 2019-2024 NVIDIA CORPORATION & AFFILIATES.
 # Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,10 +24,10 @@
 
 try:
     from sonic_platform_base.chassis_base import ChassisBase
-    from sonic_py_common.logger import Logger
     import os
     from functools import reduce
     from .utils import extract_RJ45_ports_index
+    from .logger_for_watchdog import LoggerForWatchdog
     from . import utils
     from .device_data import DeviceDataManager
     import re
@@ -70,8 +70,9 @@ REBOOT_TYPE_KEXEC_FILE = "/proc/cmdline"
 REBOOT_TYPE_KEXEC_PATTERN_WARM = ".*SONIC_BOOT_TYPE=(warm|fastfast).*"
 REBOOT_TYPE_KEXEC_PATTERN_FAST = ".*SONIC_BOOT_TYPE=(fast|fast-reboot).*"
 
-# Global logger class instance
-logger = Logger()
+# Global logger class instance - will be set later with the set on the fly flag
+# watchdogutil will call it with the flag set to False through Platform
+logger = None
 
 class Chassis(ChassisBase):
     """Platform-specific Chassis class"""
@@ -84,7 +85,7 @@ class Chassis(ChassisBase):
 
     chassis_instance = None
 
-    def __init__(self):
+    def __init__(self, enable_set_log_level_on_fly):
         super(Chassis, self).__init__()
 
         # Initialize DMI data
@@ -135,6 +136,10 @@ class Chassis(ChassisBase):
         self.modules_mgmt_thread = threading.Thread()
         self.modules_changes_queue = queue.Queue()
         self.modules_mgmt_task_stopping_event = threading.Event()
+
+        # set Global logger class instance
+        global logger
+        logger = LoggerForWatchdog(enable_set_log_level_on_fly).get_logger()
 
         logger.log_info("Chassis loaded successfully")
 
@@ -423,11 +428,11 @@ class Chassis(ChassisBase):
         i = 0
         while True:
             try:
-                logger.log_info(f'get_change_event() trying to get changes from queue on iteration {i}')
+                logger.log_debug(f'get_change_event() trying to get changes from queue on iteration {i}')
                 port_dict = self.modules_changes_queue.get(timeout=timeout / 1000)
                 logger.log_info(f'get_change_event() iteration {i} port_dict: {port_dict}')
             except queue.Empty:
-                logger.log_info(f"failed to get item from modules changes queue on itertaion {i}")
+                logger.log_debugf"failed to get item from modules changes queue on iteration {i}")
 
             if port_dict:
                 self.reinit_sfps(port_dict)
@@ -437,9 +442,9 @@ class Chassis(ChassisBase):
             else:
                 if not wait_for_ever:
                     elapse = time.time() - begin
-                    logger.log_info(f"get_change_event: wait_for_ever {wait_for_ever} elapse {elapse} iteartion {i}")
+                    logger.log_debug(f"get_change_event: wait_for_ever {wait_for_ever} elapse {elapse} iteration {i}")
                     if elapse * 1000 >= timeout:
-                        logger.log_info(f"elapse {elapse} > timeout {timeout} iteartion {i} returning empty dict")
+                        logger.log_debug(f"elapse {elapse} > timeout {timeout} iteration {i} returning empty dict")
                         return True, {'sfp': {}}
             i += 1
 

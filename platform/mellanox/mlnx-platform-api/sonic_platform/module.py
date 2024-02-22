@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES.
+# Copyright (c) 2021-2024 NVIDIA CORPORATION & AFFILIATES.
 # Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,14 +18,11 @@
 import redis
 import threading
 from sonic_platform_base.module_base import ModuleBase
-from sonic_py_common.logger import Logger
+from .logger import logger
 
 from . import utils
 from .device_data import DeviceDataManager
 from .vpd_parser import VpdParser
-
-# Global logger class instance
-logger = Logger()
 
 
 class Module(ModuleBase):

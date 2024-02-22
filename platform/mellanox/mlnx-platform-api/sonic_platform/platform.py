@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2019-2021 NVIDIA CORPORATION & AFFILIATES.
+# Copyright (c) 2019-2024 NVIDIA CORPORATION & AFFILIATES.
 # Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,9 +28,9 @@ except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
 class Platform(PlatformBase):
-    def __init__(self):
+    def __init__(self, enable_set_log_level_on_fly=True):
         PlatformBase.__init__(self)
         if DeviceDataManager.get_linecard_count() == 0:
-            self._chassis = Chassis()
+            self._chassis = Chassis(enable_set_log_level_on_fly)
         else:
             self._chassis = ModularChassis()

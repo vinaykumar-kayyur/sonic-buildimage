@@ -36,7 +36,7 @@ try:
         new_sx_user_channel_t_p = MagicMock()
 except KeyError:
     pass
-from sonic_py_common.logger import Logger
+from .logger import logger
 from .sfp import SFP
 
 # SFP status from PMAOS register
@@ -125,8 +125,6 @@ SYSTEM_FAIL = 'system_fail'
 SDK_DAEMON_READY_FILE = '/tmp/sdk_ready'
 
 PMPE_PACKET_SIZE = 2000
-
-logger = Logger()
 
 class sfp_event:
     ''' Listen to plugin/plugout cable events '''
