@@ -1,5 +1,6 @@
 import click
 import ipaddress
+import subprocess
 import utilities_common.cli as clicommon
 
 DHCP_RELAY_TABLE = "DHCP_RELAY"
@@ -184,6 +185,19 @@ def del_dhcp_relay_ipv4_helper(db, vid, dhcp_relay_helpers):
         return
     del_dhcp_relay(vid, dhcp_relay_helpers, db, IPV4)
 
+
+@dhcp_relay.group(cls=clicommon.AbbreviationGroup, name="discover-rate")
+def dhcp_relay_discover_rate():
+    pass
+
+@dhcp_relay_discover_rate.command("add")
+@click.argument("num_packets", metavar="<number of packets>", required=True, type=int)
+def add_dhcp_relay_discover_rate(num_packets):
+    # Generate the iptables command with the specified rate
+    iptables_command = f"sudo iptables -I INPUT -p udp --dport 67 --sport 68 -m hashlimit --hashlimit-above {num_packets}/sec --hashlimit-burst {num_packets} --hashlimit-mode srcip,dstip --hashlimit-name dhcp-limit -j DROP"
+    
+    # Apply the iptables rule
+    subprocess.run(iptables_command, shell=True)
 
 # subcommand of vlan
 @click.group(cls=clicommon.AbbreviationGroup, name='dhcp_relay')
