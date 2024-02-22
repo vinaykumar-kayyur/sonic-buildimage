@@ -297,6 +297,30 @@ def del_vlan_dhcp_relay_destination(db, vid, dhcp_relay_destination_ips):
             dhcpv6_servers.remove(ip_addr)
 
     # Update dhcp servers to config DB
+    if len(dhcp_servers):
+        vlan['dhcp_servers'] = dhcp_servers
+    else:
+        if 'dhcp_servers' in vlan.keys():
+            del vlan['dhcp_servers']
+
+    if len(dhcpv6_servers):
+        vlan['dhcpv6_servers'] = dhcpv6_servers
+    else:
+        if 'dhcpv6_servers' in vlan.keys():
+            del vlan['dhcpv6_servers']
+
+    db.cfgdb.set_entry('VLAN', vlan_name, vlan)
+    click.echo("Removed DHCP relay destination addresses {} from {}".format(dhcp_relay_destination_ips, vlan_name))
+    try:
+        restart_dhcp_relay_service()
+    except SystemExit as e:
+        ctx.fail("Restart service dhcp_relay failed with error {}".format(e))
+        
+
+
+def register(cli):
+    cli.add_command(dhcp_relay)
+    cli.commands['vlan'].add_command(vlan_dhcp_relay)
 
 
 if __name__ == '__main__':
