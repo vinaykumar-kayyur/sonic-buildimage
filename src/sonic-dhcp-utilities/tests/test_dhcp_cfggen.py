@@ -267,10 +267,11 @@ tested_options_data = [
 
 
 def test_parse_port_alias(mock_swsscommon_dbconnector_init, mock_get_render_template):
-    dhcp_db_connector = DhcpDbConnector()
-    dhcp_cfg_generator = DhcpServCfgGenerator(dhcp_db_connector,
-                                              port_map_path="tests/test_data/port-name-alias-map.txt")
-    assert dhcp_cfg_generator.port_alias_map == {"Ethernet24": "etp7", "Ethernet28": "etp8"}
+    with patch.object(DhcpDbConnector, "get_config_db_table", side_effect=mock_get_config_db_table):
+        dhcp_db_connector = DhcpDbConnector()
+        dhcp_cfg_generator = DhcpServCfgGenerator(dhcp_db_connector)
+        assert dhcp_cfg_generator.port_alias_map == {"Ethernet0": "etp1", "Ethernet1": "etp2",
+                                                     "PortChannel101": "PortChannel101"}
 
 
 @pytest.mark.parametrize("is_success", [True, False])
@@ -302,7 +303,8 @@ def test_parse_vlan(mock_swsscommon_dbconnector_init, mock_parse_port_map_alias,
     vlan_interfaces, vlan_members = dhcp_cfg_generator._parse_vlan(mock_config_db.config_db.get("VLAN_INTERFACE"),
                                                                    mock_config_db.config_db.get("VLAN_MEMBER"))
     assert vlan_interfaces == expected_vlan_ipv4_interface
-    assert list(vlan_members) == ["Vlan1000|Ethernet24", "Vlan1000|Ethernet28", "Vlan1000|Ethernet40"]
+    expeceted_members = ["Vlan1000|Ethernet24", "Vlan1000|Ethernet28", "Vlan1000|Ethernet40", "Vlan3000|Ethernet44"]
+    assert list(vlan_members) == expeceted_members
 
 
 @pytest.mark.parametrize("test_config_db", ["mock_config_db.json", "mock_config_db_without_port_config.json"])
@@ -351,11 +353,22 @@ def test_construct_obj_for_template(mock_swsscommon_dbconnector_init, mock_parse
     customized_options = {"option223": {"id": "223", "value": "dummy_value", "type": "string", "always_send": "true"}}
     dhcp_cfg_generator = DhcpServCfgGenerator(dhcp_db_connector)
     tested_hostname = "sonic-host"
+    port_ips = {
+        "Vlan1000": {
+            "192.168.0.1/21": {
+                "etp8": [["192.168.0.2", "192.168.0.6"], ["192.168.0.10", "192.168.0.10"]],
+                "etp7": [["192.168.0.7", "192.168.0.7"]],
+                "etp9": []
+            }
+        },
+        "Vlan6000": {
+        }
+    }
     render_obj, enabled_dhcp_interfaces, used_options, subscribe_table = \
         dhcp_cfg_generator._construct_obj_for_template(mock_config_db.config_db.get("DHCP_SERVER_IPV4"),
-                                                       tested_parsed_port, tested_hostname, customized_options)
+                                                       port_ips, tested_hostname, customized_options)
     assert render_obj == expected_render_obj
-    assert enabled_dhcp_interfaces == {"Vlan1000", "Vlan4000", "Vlan3000"}
+    assert enabled_dhcp_interfaces == {"Vlan1000", "Vlan4000", "Vlan3000", "Vlan6000"}
     assert used_options == set(["option223"])
     assert subscribe_table == set(PORT_MODE_CHECKER)
 
