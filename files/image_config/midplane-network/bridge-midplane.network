@@ -1,0 +1,7 @@
+# Midplane network for NPU
+
+[Match]
+Name=bridge-midplane
+
+[Network]
+Address=169.254.200.254/24

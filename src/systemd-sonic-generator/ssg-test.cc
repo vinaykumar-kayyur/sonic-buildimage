@@ -9,6 +9,7 @@
 #include <mutex>
 #include <string>
 #include <sys/stat.h>
+#include <linux/limits.h>
 #include <gtest/gtest.h>
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
@@ -41,6 +42,7 @@ namespace SSGTest {
  */
 const std::string TEST_ROOT_DIR = "tests/ssg-test/";
 const std::string TEST_UNIT_FILE_PREFIX = TEST_ROOT_DIR + "systemd/";
+const std::string TEST_LIB_NETWORK = TEST_UNIT_FILE_PREFIX + "network/";
 const std::string TEST_ASIC_CONF_FORMAT = TEST_ROOT_DIR + "%s/asic.conf";
 const std::string TEST_PLATFORM_CONF_FORMAT = TEST_ROOT_DIR + "%s/platform.json";
 const std::string TEST_MACHINE_CONF = TEST_ROOT_DIR + "machine.conf";
@@ -50,23 +52,26 @@ const std::string TEST_ASIC_CONF = TEST_PLATFORM_DIR + "asic.conf";
 const std::string TEST_PLATFORM_CONF = TEST_PLATFORM_DIR + "platform.json";
 
 const std::string TEST_OUTPUT_DIR = TEST_ROOT_DIR + "generator/";
+const std::string TEST_ETC_NETWORK = TEST_OUTPUT_DIR + "network/"; 
 
 const std::string TEST_CONFIG_FILE = TEST_ROOT_DIR + "generated_services.conf";
 
 const std::string TEST_UNIT_FILES = "tests/testfiles/";
 
+
 /* Input data for generated_services.conf */
 const std::vector<std::string> generated_services = {
-    "multi_inst_a.service",     /* Single instance of a  multi asic service a */
-    "multi_inst_a@.service",    /* Multi-instance of a multi asic service a */
-    "multi_inst_b@.service",    /* Multi-instance of a multi asic service b */
-    "single_inst.service",      /* A single instance service */
-    "test.service",             /* A single instance test service
-                                   to test dependency creation */
-    "test.timer",               /* A timer service */
-    "midplane-network.service", /* A midplane network service for smart switch*/
-    "database.service",         /* A database service*/
-    "database@.service",        /* A database service for multi instances */
+    "multi_inst_a.service",         /* Single instance of a  multi asic service a */
+    "multi_inst_a@.service",        /* Multi-instance of a multi asic service a */
+    "multi_inst_b@.service",        /* Multi-instance of a multi asic service b */
+    "single_inst.service",          /* A single instance service */
+    "test.service",                 /* A single instance test service
+                                       to test dependency creation */
+    "test.timer",                   /* A timer service */
+    "midplane-network-npu.service", /* A midplane network service for smart switch NPU*/
+    "midplane-network-dpu.service", /* A midplane network service for smart switch DPU*/
+    "database.service",             /* A database service*/
+    "database@.service",            /* A database service for multi instances */
 };
 
 static std::mutex g_ssg_test_mutex;
@@ -126,8 +131,13 @@ class SsgFunctionTest : public SystemdSonicGeneratorFixture {
             try {
                 fs::path current(file->path());
                 if(!fs::is_directory(current)) {
+                    std::string ext = boost::filesystem::extension(current);
+                    fs::path dest_path = dest_dir;
+                    if (ext == ".netdev" || ext == ".network" || ext == ".link") {
+                        dest_path = dest_path / "network";
+                    }
                     /* Copy file */
-                    fs::copy_file( current, dest_dir / current.filename());
+                    fs::copy_file( current, dest_path / current.filename());
                 }
             }
             catch(fs::filesystem_error const & e) {
@@ -147,6 +157,10 @@ class SsgFunctionTest : public SystemdSonicGeneratorFixture {
         path = fs::path(TEST_OUTPUT_DIR.c_str());
         fs::create_directories(path);
         path = fs::path(TEST_PLATFORM_DIR.c_str());
+        fs::create_directories(path);
+        path = fs::path(TEST_LIB_NETWORK.c_str());
+        fs::create_directories(path);
+        path = fs::path(TEST_ETC_NETWORK.c_str());
         fs::create_directories(path);
         fp = fopen(TEST_MACHINE_CONF.c_str(), "w");
         ASSERT_NE(fp, nullptr);
@@ -262,7 +276,10 @@ class SsgMainTest : public SsgFunctionTest {
                     finished = true;
                 }
                 fs::path path{TEST_OUTPUT_DIR + target + "/" + str_t};
-                EXPECT_EQ(fs::exists(path), expected_result)
+                char resolved_path[PATH_MAX];
+                realpath(path.c_str(), resolved_path);
+                bool exist = fs::exists(path) && strcmp(resolved_path, "/dev/null") != 0;
+                EXPECT_EQ(exist, expected_result)
                     << "Failed validation: " << path;
             }
         }
@@ -293,7 +310,8 @@ class SsgMainTest : public SsgFunctionTest {
             */
             validate_output_dependency_list(single_asic_dependency_list_split,
                 test_service, IS_SINGLE_ASIC(cfg.num_asics), cfg.num_asics);
-
+            validate_output_dependency_list(npu_dependency_list,
+                "midplane-network-npu.service", true, cfg.num_dpus);
         } else {
             /* Validate Unit file dependency creation for single instance
             * services. These entries should not be present for multi asic
@@ -309,15 +327,6 @@ class SsgMainTest : public SsgFunctionTest {
          */
         validate_output_dependency_list(common_dependency_list,
             test_service, true, cfg.num_asics);
-
-        /* Validate Unit file dependency creation for smart switch
-            * services. These entries should not be present for npu
-            * and dpu of smart switch.
-            */
-        validate_output_dependency_list(smart_switch_dependency_list,
-            "database.service", cfg.is_smart_switch_dpu || cfg.is_smart_switch_npu, cfg.num_asics);
-        validate_output_dependency_list(smart_switch_dependency_list,
-            "database@.service", cfg.is_smart_switch_npu, cfg.num_asics);
     }
 
     /*
@@ -331,8 +340,14 @@ class SsgMainTest : public SsgFunctionTest {
             test_target, IS_SINGLE_ASIC(cfg.num_asics), cfg.num_asics);
         validate_output_unit_files(common_service_list,
             test_target, true, cfg.num_asics);
-        validate_output_unit_files(smart_switch_service_list,
-            test_target, cfg.is_smart_switch_dpu || cfg.is_smart_switch_npu, cfg.num_dpus);
+        validate_output_unit_files(npu_service_list,
+            test_target, cfg.is_smart_switch_npu, cfg.num_dpus);
+        validate_output_unit_files(npu_network_service_list,
+            "network", cfg.is_smart_switch_npu, cfg.num_dpus);
+        validate_output_unit_files(dpu_service_list,
+            test_target, cfg.is_smart_switch_dpu, cfg.num_dpus);
+        validate_output_unit_files(dpu_network_service_list,
+            "network", cfg.is_smart_switch_dpu, cfg.num_dpus);
     }
 
     /* ssg_main test routine.
@@ -353,6 +368,11 @@ class SsgMainTest : public SsgFunctionTest {
         g_machine_config_file = TEST_MACHINE_CONF.c_str();
         g_asic_conf_format = TEST_ASIC_CONF_FORMAT.c_str();
         g_platform_file_format = TEST_PLATFORM_CONF_FORMAT.c_str();
+        std::string lib_systemd = fs::current_path().string() + "/" + TEST_UNIT_FILE_PREFIX;
+        g_lib_systemd = lib_systemd.c_str();
+        std::string etc_systemd = fs::current_path().string() + "/" + TEST_OUTPUT_DIR;
+        g_etc_systemd = etc_systemd.c_str();
+
 
         /* Set NUM_ASIC value in asic.conf */
         fp = fopen(TEST_ASIC_CONF.c_str(), "w");
@@ -402,6 +422,13 @@ class SsgMainTest : public SsgFunctionTest {
     /* Save global variables before running tests */
     virtual void SetUp() {
         SsgFunctionTest::SetUp();
+        // Create /dev/null symlink for simulation disabled service
+        std::vector<std::string> disabled_service;
+        disabled_service.insert(disabled_service.end(), npu_network_service_list.begin(), npu_network_service_list.end());
+        disabled_service.insert(disabled_service.end(), dpu_network_service_list.begin(), dpu_network_service_list.end());
+        for (const auto &service : disabled_service) {
+            fs::create_symlink("/dev/null", TEST_ETC_NETWORK + service);
+        }
     }
 
     /* Restore global vars */
@@ -414,12 +441,15 @@ class SsgMainTest : public SsgFunctionTest {
     static const std::vector<std::string> single_asic_service_list;
     static const std::vector<std::string> multi_asic_service_list;
     static const std::vector<std::string> common_service_list;
-    static const std::vector<std::string> smart_switch_service_list;
+    static const std::vector<std::string> npu_service_list;
+    static const std::vector<std::string> npu_network_service_list;
+    static const std::vector<std::string> dpu_service_list;
+    static const std::vector<std::string> dpu_network_service_list;
     static const std::vector<std::string> single_asic_dependency_list;
     static const std::vector<std::string> single_asic_dependency_list_split;
     static const std::vector<std::string> multi_asic_dependency_list;
+    static const std::vector<std::string> npu_dependency_list;
     static const std::vector<std::string> common_dependency_list;
-    static const std::vector<std::string> smart_switch_dependency_list;
 };
 
 /*
@@ -454,11 +484,31 @@ SsgMainTest::common_service_list = {
     "database.service",
 };
 
-/* Common Systemd service Unit file list for single and multi asic system. */
+/* Systemd service Unit file list for Smart Switch NPU. */
 const std::vector<std::string>
-SsgMainTest::smart_switch_service_list = {
+SsgMainTest::npu_service_list = {
     "database@dpu%1%.service",
-    "midplane-network.service",
+    "midplane-network-npu.service",
+};
+
+/* Systemd service Unit file list for Smart Switch NPU. */
+const std::vector<std::string>
+SsgMainTest::npu_network_service_list = {
+    "bridge-midplane.netdev",
+    "bridge-midplane.network",
+    "midplane-network-npu.network",
+};
+
+/* Systemd service Unit file list for Smart Switch DPU. */
+const std::vector<std::string>
+SsgMainTest::dpu_service_list = {
+    "midplane-network-dpu.service",
+};
+
+/* Systemd service Unit file list for Smart Switch DPU. */
+const std::vector<std::string>
+SsgMainTest::dpu_network_service_list = {
+    "midplane-network-dpu.network",
 };
 
 /*
@@ -503,9 +553,8 @@ SsgMainTest::common_dependency_list = {
 };
 
 const std::vector<std::string>
-SsgMainTest::smart_switch_dependency_list = {
-    "Requires=midplane-network.service",
-    "After=midplane-network.service",
+SsgMainTest::npu_dependency_list = {
+    "Before=database@dpu%1%.service",
 };
 
 /* Test get functions for global vasr*/
@@ -590,15 +639,22 @@ TEST_F(SsgFunctionTest, get_num_of_asic) {
 /* TEST get_unit_files()*/
 TEST_F(SsgFunctionTest, get_unit_files) {
     g_unit_file_prefix = TEST_UNIT_FILE_PREFIX.c_str();
+    g_lib_systemd = TEST_UNIT_FILE_PREFIX.c_str();
+    g_etc_systemd = TEST_OUTPUT_DIR.c_str();
     g_config_file = TEST_CONFIG_FILE.c_str();
     char* unit_files[NUM_UNIT_FILES] = { NULL };
     int num_unit_files = get_unit_files(unit_files);
-    // Exclude the midplane-network.service which is only used for smart switch
+    // Exclude the midplane-network-{npu/dpu}.service which is only used for smart switch
     auto non_smart_switch_generated_services = generated_services;
     non_smart_switch_generated_services.erase(
         std::remove(non_smart_switch_generated_services.begin(),
                     non_smart_switch_generated_services.end(),
-                    "midplane-network.service"),
+                    "midplane-network-npu.service"),
+        non_smart_switch_generated_services.end());
+    non_smart_switch_generated_services.erase(
+        std::remove(non_smart_switch_generated_services.begin(),
+                    non_smart_switch_generated_services.end(),
+                    "midplane-network-dpu.service"),
         non_smart_switch_generated_services.end());
     EXPECT_EQ(num_unit_files, non_smart_switch_generated_services.size());
     for (std::string service : non_smart_switch_generated_services) {

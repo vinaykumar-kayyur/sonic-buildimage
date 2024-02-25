@@ -18,12 +18,25 @@
 
 
 
+const char* LIB_SYSTEMD = "/usr/lib/systemd";
+const char* ETC_SYSTEMD = "/etc/systemd";
 const char* UNIT_FILE_PREFIX = "/usr/lib/systemd/system/";
 const char* CONFIG_FILE = "/etc/sonic/generated_services.conf";
 const char* MACHINE_CONF_FILE = "/host/machine.conf";
 const char* ASIC_CONF_FORMAT = "/usr/share/sonic/device/%s/asic.conf";
 const char* PLATFORM_FILE_FORMAT = "/usr/share/sonic/device/%s/platform.json";
 const char* DPU_PREFIX = "dpu";
+
+
+const char* g_lib_systemd = NULL;
+const char* get_lib_systemd () {
+    return (g_lib_systemd) ? g_lib_systemd : LIB_SYSTEMD;
+}
+
+const char* g_etc_systemd = NULL;
+const char* get_etc_systemd () {
+    return (g_etc_systemd) ? g_etc_systemd : ETC_SYSTEMD;
+}
 
 const char* g_unit_file_prefix = NULL;
 const char* get_unit_file_prefix() {
@@ -112,6 +125,22 @@ void strip_trailing_newline(char* str) {
     size_t l = strlen(str);
     if (l > 0 && str[l-1] == '\n')
         str[l-1] = '\0';
+}
+
+
+/**
+ * Checks if the given path is "/dev/null".
+ *
+ * @param path The path to check.
+ * @return true if the path is "/dev/null", false otherwise.
+ */
+static bool is_devnull(const char* path)
+{
+    char resolved_path[PATH_MAX];
+    if (realpath(path, resolved_path) == NULL) {
+        return false;
+    }
+    return strcmp(resolved_path, "/dev/null") == 0;
 }
 
 
@@ -468,11 +497,11 @@ int get_unit_files(char* unit_files[]) {
         if ((strcmp(line, "topology.service") == 0) &&
                         (num_asics == 1)) {
             continue;
-        }
-
-        /* midplane-network service to be started only for smart switch platform */
-        if ((strcmp(line, "midplane-network.service") == 0) &&
-                        !smart_switch) {
+        } else if ((strcmp(line, "midplane-network-dpu.service") == 0) &&
+                        !smart_switch_dpu) {
+            continue;
+        } else if ((strcmp(line, "midplane-network-npu.service") == 0) &&
+                        !smart_switch_npu) {
             continue;
         }
 
@@ -576,6 +605,13 @@ static int create_symlink(char* unit, char* target, char* install_dir, int insta
         r = chmod(final_install_dir, 0755);
         if (r == -1) {
             fprintf(stderr, "Unable to change permissions of existing target directory %s\n", final_install_dir);
+            return -1;
+        }
+    }
+
+    if (is_devnull(dest_path)) {
+        if (remove(dest_path) == -1) {
+            fprintf(stderr, "Unable to remove existing symlink %s\n", dest_path);
             return -1;
         }
     }
@@ -873,102 +909,196 @@ static int get_num_of_dpu() {
 }
 
 
-static int revise_smart_switch_dependency_chain(int num_unit_files,const char* unit_files[MAX_NUM_UNITS]) {
-    assert(num_unit_files < MAX_NUM_UNITS);
+/**
+ * Installs the network service.
+ * 
+ * This function installs the network service by creating a symlink
+ * to the network service file in the appropriate directory.
+ * 
+ * @param unit_name The name of the network unit to install.
+ * @return 0 if the network unit is installed successfully, or -1 if an error occurs.
+ */
+static int install_network_unit(const char* unit_name) {
+    assert(unit_name);
 
-    if (!smart_switch || num_unit_files <= 0) {
-        return 0;
+    const char* unit_type = strrchr(unit_name, '.');
+    if (unit_type == NULL) {
+        fprintf(stderr, "Invalid network unit %s\n", unit_name);
+        return -1;
     }
+    unit_type++;
 
-    // Check the midplane-network.service is in the target list
-    bool found_midplane_network_service = false;
-    for (int i = 0; i < num_unit_files; i++) {
-        if (strcmp(unit_files[i], "midplane-network.service") == 0) {
-            found_midplane_network_service = true;
-            break;
-        }
-    }
-    if (!found_midplane_network_service) {
-        fprintf(stderr, "midplane-network.service is required in the target list\n");
+    char install_path[PATH_MAX] = {0};
+    char original_path[PATH_MAX] = {0};
+    const char* subdir;
+    if (strcmp(unit_type, "netdev") == 0 || strcmp(unit_type, "network") == 0) {
+        subdir = "/network/";
+    } else {
+        fprintf(stderr, "Invalid network unit %s\n", unit_type);
         return -1;
     }
 
-    // Set the midplane-network.service as before and required
-    const char* after_units[MAX_NUM_UNITS] = {NULL};
-    assert(MAX_NUM_UNITS > 3);
-    after_units[0] = "database.service";
-    if (smart_switch_npu) {
-        after_units[1] = "database@.service";
+    strcpy(install_path, get_etc_systemd());
+    strcat(install_path, subdir);
+    strcat(install_path, unit_name);
+    strcpy(original_path, get_lib_systemd());
+    strcat(original_path, subdir);
+    strcat(original_path, unit_name);
+
+    struct stat st;
+
+    if (stat((const char *)install_path, &st) == 0) {
+        // If the file already exists, remove it
+        if (S_ISDIR(st.st_mode)) {
+            fprintf(stderr, "Error: %s is a directory\n", install_path);
+            return -1;
+        }
+        if (remove(install_path) != 0) {
+            fprintf(stderr, "Error removing existing file %s\n", install_path);
+            return -1;
+        }
     }
 
-    const char** unit = after_units;
-    static const char required_after_statements[] = "\nRequires=midplane-network.service\nAfter=midplane-network.service\n";
-    static const size_t required_after_statements_len = sizeof(required_after_statements) - 1;
-    static const char unit_tag[] = "[Unit]";
-    static const size_t unit_tag_len = sizeof(unit_tag) - 1;
-    while(*unit != NULL) {
-        char unit_path[PATH_MAX] = {0};
-        FILE *fp;
-        strcpy(unit_path, get_unit_file_prefix());
-        strcat(unit_path, *unit);
-        // Read all data from file
-        fp = fopen(unit_path, "r");
-        if (fp == NULL) {
-            fprintf(stderr, "Failed to open %s\n", unit_path);
+    if (is_devnull(install_path)) {
+        if (remove(install_path) == -1) {
+            fprintf(stderr, "Unable to remove existing symlink %s\n", install_path);
             return -1;
         }
-        fseek(fp, 0, SEEK_END);
-        long fsize = ftell(fp);
-        fseek(fp, 0, SEEK_SET);
-        size_t len = fsize + required_after_statements_len + 1;
-        char *data = malloc(len);
-        if (data == NULL) {
-            fprintf(stderr, "Failed to allocate memory for %s\n", unit_path);
-            fclose(fp);
-            return -1;
+    }
+
+    if (symlink(original_path, install_path) != 0) {
+        if (errno == EEXIST)
+            return 0;
+        fprintf(stderr, "Error creating symlink %s -> %s (%s)\n", install_path, original_path, strerror(errno));
+        return -1;
+    }
+
+    return 0;
+}
+
+
+static int render_network_service_for_smart_switch() {
+    if (!smart_switch_npu) {
+        return 0;
+    }
+
+    // Render Before instruction for midplane network with database service
+    if (num_dpus == 0) {
+        return 0;
+    }
+
+    char buffer_instruction[MAX_BUF_SIZE] = {0};
+    strcpy(buffer_instruction, "\nBefore=");
+    for (size_t i = 0; i < num_dpus; i++) {
+        char *unit;
+        asprintf(&unit, "database@dpu%ld.service", i);
+        strcat(buffer_instruction, unit);
+        free(unit);
+        if (i != num_dpus - 1) {
+            strcat(buffer_instruction, " ");
         }
-        if (fread(data, fsize, 1, fp) != 1) {
-            fprintf(stderr, "Failed to read %s\n", unit_path);
-            fclose(fp);
-            free(data);
-            return -1;
-        }
+    }
+
+    char unit_path[PATH_MAX] = { 0 };
+    strcpy(unit_path, get_unit_file_prefix());
+    strcat(unit_path, "/midplane-network-npu.service");
+
+    FILE *fp = fopen(unit_path, "r");
+    if (fp == NULL) {
+        fprintf(stderr, "Failed to open %s\n", unit_path);
+        return -1;
+    }
+    fseek(fp, 0, SEEK_END);
+    size_t file_size = ftell(fp);
+    fseek(fp, 0, SEEK_SET);
+    size_t len = file_size + strlen(buffer_instruction) + 1;
+    char *unit_content = malloc(len);
+    if (unit_content == NULL) {
+        fprintf(stderr, "Failed to allocate memory for %s\n", unit_path);
+    }
+    if (fread(unit_content, file_size, 1, fp) != 1) {
+        fprintf(stderr, "Failed to read %s\n", unit_path);
+        free(unit_content);
         fclose(fp);
-        data[fsize] = '\0';
-        // Check if the unit file already has the required statements
-        if (strstr(data, required_after_statements) != NULL) {
-            free(data);
-            unit++;
-            continue;
+        return -1;
+    }
+    fclose(fp);
+
+    // Find insert point for Before instruction
+    char *insert_point = strstr(unit_content, "[Unit]");
+    insert_point += strlen("[Unit]");
+    // Move the rest of the file to make room for the Before instruction
+    memmove(insert_point + strlen(buffer_instruction), insert_point, file_size - (insert_point - unit_content));
+    // Insert the Before instruction
+    memcpy(insert_point, buffer_instruction, strlen(buffer_instruction));
+    // Remove original Before instruction
+    insert_point += strlen(buffer_instruction);
+    char *before_start = strstr(insert_point, "Before=");
+    while (before_start != NULL) {
+        char *before_end = strchr(before_start, '\n');
+        if (before_end == NULL) {
+            before_end = before_start + strlen(before_start);
+        } else {
+            // Include newline character
+            before_end += 1;
         }
-        // Append the required statements to the Unit section of the unit file
-        char *unit_section = strstr(data, unit_tag);
-        if (unit_section == NULL) {
-            fprintf(stderr, "Failed to find %s section in %s\n", unit_tag, unit_path);
-            free(data);
-            return -1;
+        const char *target_service = strstr(before_start, "database@dpu");
+        if (target_service != NULL && target_service < before_end) {
+            memmove(before_start, before_end, strlen(before_end) + 1);
+        } else {
+            before_start = before_end;
         }
-        unit_section += unit_tag_len;
-        memmove(unit_section + required_after_statements_len, unit_section, strlen(unit_section) + 1);
-        memcpy(unit_section, required_after_statements, required_after_statements_len);
-        // Write the data back to the unit file
-        fp = fopen(unit_path, "w");
-        if (fp == NULL) {
-            fprintf(stderr, "Failed to open %s\n", unit_path);
-            free(data);
-            return -1;
-        }
-        // Don't write the trailing '\0'
-        assert(len > 1);
-        if (fwrite(data, len - 1, 1, fp) != 1) {
-            fprintf(stderr, "Failed to write %s\n", unit_path);
-            fclose(fp);
-            free(data);
-            return -1;
-        }
+        before_start = strstr(before_start, "Before=");
+    }
+    // Write the modified unit file
+    fp = fopen(unit_path, "w");
+    if (fp == NULL) {
+        fprintf(stderr, "Failed to open %s\n", unit_path);
+        free(unit_content);
+        return -1;
+    }
+    if (fwrite(unit_content, strlen(unit_content), 1, fp) != 1) {
+        fprintf(stderr, "Failed to write %s\n", unit_path);
+        free(unit_content);
         fclose(fp);
-        free(data);
-        unit++;
+        return -1;
+    }
+    fclose(fp);
+    free(unit_content);
+
+    return 0;
+}
+
+
+static int install_network_service_for_smart_switch() {
+    const char** network_units = NULL;
+    if (smart_switch_npu) {
+        static const char* npu_network_units[] = {
+            "bridge-midplane.netdev",
+            "bridge-midplane.network",
+            "midplane-network-npu.network",
+            NULL
+        };
+        network_units = npu_network_units;
+    } else if (smart_switch_dpu) {
+        static const char* dpu_network_units[] = {
+            "midplane-network-dpu.network",
+            NULL
+        };
+        network_units = dpu_network_units;
+    } else {
+        return -1;
+    }
+
+    if (network_units == NULL) {
+        return 0;
+    }
+
+    while(*network_units) {
+        if (install_network_unit(*network_units) != 0) {
+            return -1;
+        }
+        network_units++;
     }
 
     return 0;
@@ -1006,10 +1136,13 @@ int ssg_main(int argc, char **argv) {
     strcat(install_dir, "/");
     num_unit_files = get_unit_files(unit_files);
 
-    // Revise dependency chain for smart switch
+    // Install and render midplane network service for smart switch
     if (smart_switch) {
-        if (revise_smart_switch_dependency_chain(num_unit_files, (const char **)unit_files) != 0) {
-            return 1;
+        if (render_network_service_for_smart_switch() != 0) {
+            return -1;
+        }
+        if (install_network_service_for_smart_switch() != 0) {
+            return -1;
         }
     }
 
