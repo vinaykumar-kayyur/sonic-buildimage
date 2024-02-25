@@ -537,6 +537,7 @@ class TestModulesMgmt(unittest.TestCase):
     @patch('sonic_platform.device_data.DeviceDataManager.get_sfp_count', MagicMock(return_value=DEFAULT_NUM_OF_PORTS_3))
     @patch('os.path.isfile', MagicMock(side_effect=mock_is_file_indep_mode_enabled))
     @patch('builtins.open', spec=open)
+    @patch('sonic_platform.sfp.SFP', MagicMock(return_value=MockSFPxcvrapi()))
     def test_mdf_all_ports_feature_enabled(self, mock_open):
         mock_open.side_effect = self.mock_open_new_side_effect_feature_enabled
         num_of_tested_ports = DeviceDataManager.get_sfp_count()
@@ -545,8 +546,7 @@ class TestModulesMgmt(unittest.TestCase):
         # start modules_mgmt thread and the test in poller part
         with patch('select.poll', MagicMock(return_value=MockPollerStopEvent(self.modules_mgmt_task_stopping_event
                 , self.modules_mgmt_thrd))):
-            with patch('sonic_platform.sfp.SFP', MagicMock(return_value=MockSFPxcvrapi())):
-                self.modules_mgmt_thrd.run()
+            self.modules_mgmt_thrd.run()
 
     @patch('os.path.isfile', MagicMock(side_effect=mock_is_file_indep_mode_enabled))
     @patch('builtins.open', spec=open)
