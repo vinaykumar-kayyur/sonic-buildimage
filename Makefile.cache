@@ -729,7 +729,7 @@ show-%:
 NUMDAYS ?= 7 # Delete all the cache files which are not used within last 7 days
 .PHONY: cprune
 cprune:
-	@find $(SONIC_DPKG_CACHE_DIR) -name "*.tgz" !  -mtime -$(NUMDAYS) -exec rm -f {} \;
+	@find $(SONIC_DPKG_CACHE_DIR) -name "*.tgz*" !  -mtime -$(NUMDAYS) -exec rm -f {} \;
 
 
 
