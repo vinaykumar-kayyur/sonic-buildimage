@@ -28,9 +28,13 @@ function startplatform() {
         hwsku_dir="$platform_dir/$hwsku"
 
         sai_profile_json_file="$hwsku_dir/sai.profile"
-        independent_mode=$(grep '^SAI_INDEPENDENT_MODULE_MODE=' $sai_profile_json_file | cut -d '=' -f 2)
-        if [[ "$independent_mode" == "1" ]]; then
-            cat $platform_dir/media_settings_src.json > $platform_dir/media_settings.json
+        is_sw_module_mgmt_enabled=$(grep '^SAI_INDEPENDENT_MODULE_MODE=' $sai_profile_json_file | cut -d '=' -f 2)
+        if [[ "$is_sw_module_mgmt_enabled" == "1" ]]; then
+            if [[ -f $platform_dir/media_settings_src.json ]]; then
+                cat $platform_dir/media_settings_src.json > $platform_dir/media_settings.json
+            else
+                echo "Failed to create media_settings.json because media_settings_src.json is missing"
+            fi
         else
             if [[ -f $platform_dir/media_settings.json ]]; then
                 rm $platform_dir/media_settings.json
