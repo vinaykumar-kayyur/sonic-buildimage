@@ -941,7 +941,9 @@ ifeq ($(BLDENV),bookworm)
 		if [ ! "$($*_TEST)" = "n" ]; then pip$($*_PYTHON_VERSION) install ".[testing]" && pip$($*_PYTHON_VERSION) uninstall --yes `python$($*_PYTHON_VERSION) setup.py --name` && python$($*_PYTHON_VERSION) -m pytest $(LOG); fi
 		python$($*_PYTHON_VERSION) -m build -n $(LOG)
 else
-		if [ ! "$($*_TEST)" = "n" ]; then python$($*_PYTHON_VERSION) setup.py test $(LOG); fi
+		ts=`date +%s`
+		if [ ! "$($*_TEST)" = "n" ]; then ( python$($*_PYTHON_VERSION) setup.py test $(LOG) ) & sleep 4000; kill $$!; fi
+		echo "pytest===================$$(( `date +%s` - ts ))" $(LOG)
 		python$($*_PYTHON_VERSION) setup.py bdist_wheel $(LOG)
 endif
 else
