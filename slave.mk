@@ -942,7 +942,7 @@ ifeq ($(BLDENV),bookworm)
 		python$($*_PYTHON_VERSION) -m build -n $(LOG)
 else
 		ts=`date +%s`
-		if [ ! "$($*_TEST)" = "n" ]; then ( python$($*_PYTHON_VERSION) setup.py test $(LOG) ) & sleep 4000; kill $$!; fi
+		if [ ! "$($*_TEST)" = "n" ]; then timeout -k 3600 3600 python$($*_PYTHON_VERSION) setup.py test $(LOG); fi
 		echo "pytest===================$$(( `date +%s` - ts ))" $(LOG)
 		python$($*_PYTHON_VERSION) setup.py bdist_wheel $(LOG)
 endif
