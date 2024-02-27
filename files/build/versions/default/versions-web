@@ -12,3 +12,5 @@ https://sonicstorage.blob.core.windows.net/public/fips/bullseye/0.1/arm64/golang
 https://storage.googleapis.com/golang/go1.15.15.linux-amd64.tar.gz==b75227438c6129b5013da053b3aa3f38
 https://storage.googleapis.com/golang/go1.15.15.linux-arm64.tar.gz==6d721146a9195592d92a80cf27d475f9
 https://storage.googleapis.com/golang/go1.15.15.linux-armv6l.tar.gz==23d140bbeedc978b954de1a199a22bdb
+https://deb.debian.org/debian/pool/main/d/debootstrap/debootstrap_1.0.123+deb11u1.dsc==27f74ae171f50bfc1116d3e23dbbab3f
+https://deb.debian.org/debian/pool/main/d/debootstrap/debootstrap_1.0.123+deb11u1.tar.gz==37b56a6cf74721c6496d05d032cd22af
