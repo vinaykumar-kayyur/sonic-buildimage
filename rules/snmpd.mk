@@ -1,8 +1,8 @@
 # snmpd package
 
 ifeq ($(BLDENV),bookworm)
-SNMPD_VERSION = 5.9.3+dfsg
-SNMPD_VERSION_FULL = $(SNMPD_VERSION)-2
+SNMPD_VERSION = 5.9+dfsg
+SNMPD_VERSION_FULL = $(SNMPD_VERSION)-4+deb11u1
 else ifeq ($(BLDENV),bullseye)
 SNMPD_VERSION = 5.9+dfsg
 SNMPD_VERSION_FULL = $(SNMPD_VERSION)-4+deb11u1
