@@ -16,9 +16,9 @@ DERIVED_TARGETS = lib$(PYTHON_PNAME)-stdlib_$(PYTHON_VER)-$(PYTHON_DEB_VER)_amd6
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	## Obtaining the python3
-	wget 'https://sonicstorage.blob.core.windows.net/packages/$(PYTHON_PNAME)_$(PYTHON_VER).orig.tar.xz' -O $(PYTHON_PNAME)_$(PYTHON_VER).orig.tar.xz
-	wget 'https://sonicstorage.blob.core.windows.net/packages/$(PYTHON_PNAME)_$(PYTHON_VER)-$(PYTHON_DEB_VER).debian.tar.xz' -O $(PYTHON_PNAME)_$(PYTHON_VER)-$(PYTHON_DEB_VER).debian.tar.xz
-	wget 'https://sonicstorage.blob.core.windows.net/packages/$(PYTHON_PNAME)_$(PYTHON_VER)-$(PYTHON_DEB_VER).dsc' -O $(PYTHON_PNAME)_$(PYTHON_VER)-$(PYTHON_DEB_VER).dsc
+	wget 'https://sonicstorage.blob.core.windows.net/public/$(PYTHON_PNAME)_$(PYTHON_VER).orig.tar.xz' -O $(PYTHON_PNAME)_$(PYTHON_VER).orig.tar.xz
+	wget 'https://sonicstorage.blob.core.windows.net/public/$(PYTHON_PNAME)_$(PYTHON_VER)-$(PYTHON_DEB_VER).debian.tar.xz' -O $(PYTHON_PNAME)_$(PYTHON_VER)-$(PYTHON_DEB_VER).debian.tar.xz
+	wget 'https://sonicstorage.blob.core.windows.net/public/$(PYTHON_PNAME)_$(PYTHON_VER)-$(PYTHON_DEB_VER).dsc' -O $(PYTHON_PNAME)_$(PYTHON_VER)-$(PYTHON_DEB_VER).dsc
 
 	## Build
 	dpkg-source -x $(PYTHON_PNAME)_$(PYTHON_VER)-$(PYTHON_DEB_VER).dsc
