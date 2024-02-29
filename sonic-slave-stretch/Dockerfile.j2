@@ -345,8 +345,8 @@ RUN pip install \
         ctypesgen==0.r125 \
         crc16
 
-# For sonic config engine testing
-RUN pip install pyangbind==0.6.0
+# For sonic config engine testing, pyang2.6.0 breaks build
+RUN pip install pyangbind==0.6.0 pyang==2.5.3
 # Note: force upgrade debian packaged jinja2, if installed
 RUN pip install --force-reinstall --upgrade "jinja2>=2.10"
 
