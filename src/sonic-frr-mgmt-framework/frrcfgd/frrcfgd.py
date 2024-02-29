@@ -1486,7 +1486,7 @@ class ExtConfigDBConnector(ConfigDBConnector):
         """Start listen Redis keyspace events and will trigger corresponding handlers when content of a table changes.
         """
         self.pubsub = self.get_redis_client(self.db_name).pubsub()
-        self.sub_thread = threading.Thread(target=self.listen_thread, args=(0.01,))
+        self.sub_thread = threading.Thread(target=self.listen_thread, args=(10,))
         self.sub_thread.start()
 
     def stop_listen(self):
