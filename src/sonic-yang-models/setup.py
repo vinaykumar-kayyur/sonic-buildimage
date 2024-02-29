@@ -63,12 +63,18 @@ setup(
     ],
     tests_require = [
         'pytest',
-        'ijson==2.6.1'
+        'ijson==3.2.3'
     ],
     setup_requires = [
         'pytest-runner',
         'wheel'
     ],
+    extras_require = {
+        "testing": [
+            'pytest',
+            'ijson==3.2.3'
+        ],
+    },
     include_package_data=True,
     keywords='sonic-yang-models',
     name='sonic-yang-models',
@@ -79,6 +85,7 @@ setup(
     data_files=[
         ('yang-models', ['./yang-models/sonic-acl.yang',
                          './yang-models/sonic-auto_techsupport.yang',
+                         './yang-models/sonic-bgp-bbr.yang',
                          './yang-models/sonic-bgp-common.yang',
                          './yang-models/sonic-bgp-device-global.yang',
                          './yang-models/sonic-bgp-global.yang',
@@ -178,6 +185,7 @@ setup(
                          './yang-models/sonic-dscp-fc-map.yang',
                          './yang-models/sonic-exp-fc-map.yang',
                          './yang-models/sonic-dscp-tc-map.yang',
+                         './yang-models/sonic-dhcp-server-ipv4.yang',
                          './yang-models/sonic-dot1p-tc-map.yang',
                          './yang-models/sonic-storm-control.yang',
                          './yang-models/sonic-tc-priority-group-map.yang',
@@ -190,7 +198,8 @@ setup(
                          './yang-models/sonic-static-route.yang',
                          './yang-models/sonic-system-port.yang',
                          './yang-models/sonic-macsec.yang',
-                         './yang-models/sonic-bgp-sentinel.yang']),
+                         './yang-models/sonic-bgp-sentinel.yang',
+                         './yang-models/sonic-smart-switch.yang',]),
         ('cvlyang-models', ['./cvlyang-models/sonic-acl.yang',
                          './cvlyang-models/sonic-bgp-common.yang',
                          './cvlyang-models/sonic-bgp-global.yang',

@@ -40,6 +40,9 @@
 #  * ENABLE_NATIVE_WRITE: Enable native write/config operations via the gNMI interface.
 #  *                 Default: unset
 #  *                 Values: y
+#  * ENABLE_DIALOUT: Enable dialout client in telemetry.
+#  *                 Default: unset
+#  *                 Values: y
 #  * SONIC_DPKG_CACHE_METHOD: Specifying method of obtaining the Debian packages from cache: none or cache
 #  * SONIC_DPKG_CACHE_SOURCE: Debian package cache location when cache enabled for debian packages
 #  * BUILD_LOG_TIMESTAMP: Set timestamp in the build log (simple/none)
@@ -69,6 +72,7 @@ USER := $(shell id -un)
 PWD := $(shell pwd)
 USER_LC := $(shell echo $(USER) | tr A-Z a-z)
 DOCKER_MACHINE := $(shell docker run --rm debian:buster uname -m)
+HOST_DOCKERD_GID := $(shell getent group docker | cut -d : -f3)
 
 comma := ,
 
@@ -121,7 +125,9 @@ else
 TARGET_BOOTLOADER = uboot
 endif
 
-ifeq ($(BLDENV), bullseye)
+ifeq ($(BLDENV), bookworm)
+SLAVE_DIR = sonic-slave-bookworm
+else ifeq ($(BLDENV), bullseye)
 SLAVE_DIR = sonic-slave-bullseye
 else ifeq ($(BLDENV), buster)
 SLAVE_DIR = sonic-slave-buster
@@ -145,6 +151,10 @@ endif
 
 ifeq ($(ENABLE_DOCKER_BASE_PULL),)
 	override ENABLE_DOCKER_BASE_PULL = n
+endif
+
+ifeq ($(LEGACY_SONIC_MGMT_DOCKER),)
+	override LEGACY_SONIC_MGMT_DOCKER = y
 endif
 
 ifneq ($(GZ_COMPRESS_PROGRAM), pigz)
@@ -180,6 +190,12 @@ INCLUDE_FIPS := n
 ENABLE_FIPS := n
 endif
 
+# FIPS not yet available on Bookworm
+ifeq ($(BLDENV),bookworm)
+$(warning FIPS support not yet available on Bookworm)
+INCLUDE_FIPS := n
+endif
+
 ifeq ($(INCLUDE_FIPS), n)
 ifeq ($(ENABLE_FIPS), y)
     $(error Cannot set fips config ENABLE_FIPS=y when INCLUDE_FIPS=n)
@@ -203,6 +219,7 @@ $(shell \
 	SONIC_VERSION_CACHE_SOURCE=$(SONIC_VERSION_CACHE_SOURCE) \
 	DBGOPT='$(DBGOPT)' \
 	MIRROR_SNAPSHOT=$(MIRROR_SNAPSHOT) \
+	PIP_HTTP_TIMEOUT=$(PIP_HTTP_TIMEOUT) \
 	scripts/generate_buildinfo_config.sh)
 
 # Generate the slave Dockerfile, and prepare build info for it
@@ -221,9 +238,11 @@ $(shell CONFIGURED_ARCH=$(CONFIGURED_ARCH) \
 	j2 $(SLAVE_DIR)/Dockerfile.user.j2 > $(SLAVE_DIR)/Dockerfile.user)
 
 ifeq ($(CROSS_BUILD_ENVIRON), y)
-$(shell MIRROR_SNAPSHOT=$(MIRROR_SNAPSHOT) scripts/build_mirror_config.sh $(SLAVE_DIR) amd64 $(BLDENV))
+$(shell SONIC_VERSION_CONTROL_COMPONENTS=$(SONIC_VERSION_CONTROL_COMPONENTS) \
+	MIRROR_SNAPSHOT=$(MIRROR_SNAPSHOT) scripts/build_mirror_config.sh $(SLAVE_DIR) amd64 $(BLDENV))
 endif
-$(shell MIRROR_SNAPSHOT=$(MIRROR_SNAPSHOT) scripts/build_mirror_config.sh $(SLAVE_DIR) $(CONFIGURED_ARCH) $(BLDENV))
+$(shell SONIC_VERSION_CONTROL_COMPONENTS=$(SONIC_VERSION_CONTROL_COMPONENTS) \
+	MIRROR_SNAPSHOT=$(MIRROR_SNAPSHOT) scripts/build_mirror_config.sh $(SLAVE_DIR) $(CONFIGURED_ARCH) $(BLDENV))
 
 PREPARE_DOCKER=BUILD_SLAVE=y \
 	DEFAULT_CONTAINER_REGISTRY=$(DEFAULT_CONTAINER_REGISTRY) \
@@ -374,7 +393,7 @@ endif
 
 ifeq ($(SONIC_CONFIG_USE_NATIVE_DOCKERD_FOR_BUILD), y)
 ifneq ($(MULTIARCH_QEMU_ENVIRON), y)
-    DOCKER_RUN += -v /var/run/docker.sock:/var/run/docker.sock
+    DOCKER_RUN += -v /var/run/docker.sock:/var/run/docker.sock --group-add $(HOST_DOCKERD_GID)
 endif
 endif
 
@@ -536,12 +555,16 @@ SONIC_BUILD_INSTRUCTION :=  $(MAKE) \
                            DOCKER_LOCKFILE_SAVE=$(DOCKER_LOCKFILE_SAVE) \
                            SONIC_CONFIG_USE_NATIVE_DOCKERD_FOR_BUILD=$(SONIC_CONFIG_USE_NATIVE_DOCKERD_FOR_BUILD) \
                            SONIC_INCLUDE_SYSTEM_TELEMETRY=$(INCLUDE_SYSTEM_TELEMETRY) \
+                           SONIC_INCLUDE_SYSTEM_GNMI=$(INCLUDE_SYSTEM_GNMI) \
+                           SONIC_INCLUDE_SYSTEM_EVENTD=$(INCLUDE_SYSTEM_EVENTD) \
                            INCLUDE_DHCP_RELAY=$(INCLUDE_DHCP_RELAY) \
+                           INCLUDE_DHCP_SERVER=$(INCLUDE_DHCP_SERVER) \
                            INCLUDE_MACSEC=$(INCLUDE_MACSEC) \
                            SONIC_INCLUDE_RESTAPI=$(INCLUDE_RESTAPI) \
                            SONIC_INCLUDE_MUX=$(INCLUDE_MUX) \
                            ENABLE_TRANSLIB_WRITE=$(ENABLE_TRANSLIB_WRITE) \
                            ENABLE_NATIVE_WRITE=$(ENABLE_NATIVE_WRITE) \
+			   ENABLE_DIALOUT=$(ENABLE_DIALOUT) \
                            EXTRA_DOCKER_TARGETS=$(EXTRA_DOCKER_TARGETS) \
                            BUILD_LOG_TIMESTAMP=$(BUILD_LOG_TIMESTAMP) \
                            SONIC_ENABLE_IMAGE_SIGNATURE=$(ENABLE_IMAGE_SIGNATURE) \
@@ -567,7 +590,10 @@ SONIC_BUILD_INSTRUCTION :=  $(MAKE) \
                            GZ_COMPRESS_PROGRAM=$(GZ_COMPRESS_PROGRAM) \
                            MIRROR_SNAPSHOT=$(MIRROR_SNAPSHOT) \
                            SONIC_VERSION_CONTROL_COMPONENTS=$(SONIC_VERSION_CONTROL_COMPONENTS) \
+                           ONIE_IMAGE_PART_SIZE=$(ONIE_IMAGE_PART_SIZE) \
                            SONIC_OS_VERSION=$(SONIC_OS_VERSION) \
+                           PIP_HTTP_TIMEOUT=$(PIP_HTTP_TIMEOUT) \
+                           LEGACY_SONIC_MGMT_DOCKER=$(LEGACY_SONIC_MGMT_DOCKER) \
                            $(SONIC_OVERRIDE_BUILD_VARS)
 
 .PHONY: sonic-slave-build sonic-slave-bash init reset
@@ -590,6 +616,7 @@ export MIRROR_URLS
 export MIRROR_SECURITY_URLS
 export MIRROR_SNAPSHOT
 export SONIC_VERSION_CONTROL_COMPONENTS
+export PIP_HTTP_TIMEOUT
 
 %:: | sonic-build-hooks
 ifneq ($(filter y, $(MULTIARCH_QEMU_ENVIRON) $(CROSS_BUILD_ENVIRON)),)

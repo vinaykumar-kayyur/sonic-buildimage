@@ -78,6 +78,13 @@ module sonic-events-swss {
                 type uint64;
             }
 
+            leaf additional_info {
+                type string {
+                    pattern '[-a-zA-Z0-9_]+:[-a-zA-Z0-9_]+(\|{1}[-a-zA-Z0-9_]+:[-a-zA-Z0-9_]+)*';
+                }
+                description "Additional information to investigate PFC storm";
+            }
+
             uses evtcmn:sonic-events-cmn;
         }
 
@@ -95,11 +102,11 @@ module sonic-events-swss {
             }
 
             leaf used_cnt {
-                type uint8;
+                type uint32;
             }
 
             leaf free_cnt {
-                type uint64;
+                type uint32;
             }
 
             uses evtcmn:sonic-events-cmn;
