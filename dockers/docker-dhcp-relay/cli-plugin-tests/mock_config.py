@@ -27,7 +27,7 @@ COMMON_TEST_DATA = [
                             "fc02:2000::1",
                             "fc02:2000::2"
                         ],
-                        "dhcpv6_option":: {
+                        "dhcpv6_option": {
                             "rfc6939_support": "true"
                         }
                     }
