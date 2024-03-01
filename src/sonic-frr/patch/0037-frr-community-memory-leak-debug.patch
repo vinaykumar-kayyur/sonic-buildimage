@@ -1,0 +1,89 @@
+diff --git a/bgpd/bgp_community.c b/bgpd/bgp_community.c
+index 9f6f337c8..ac4ef8cf8 100644
+--- a/bgpd/bgp_community.c
++++ b/bgpd/bgp_community.c
+@@ -36,7 +36,9 @@ static struct hash *comhash;
+ /* Allocate a new communities value.  */
+ static struct community *community_new(void)
+ {
+-	return XCALLOC(MTYPE_COMMUNITY, sizeof(struct community));
++	 struct community *com = XCALLOC(MTYPE_COMMUNITY, sizeof(struct community));
++    zlog_warn("=== %s: allocating community %p", __func__, com);
++    return com;
+ }
+ 
+ /* Free communities value.  */
+@@ -53,6 +55,7 @@ void community_free(struct community **com)
+ 		(*com)->json = NULL;
+ 	}
+ 
++    zlog_warn("=== %s: freeing community %p", __func__, (*com));
+ 	XFREE(MTYPE_COMMUNITY, (*com));
+ }
+ 
+@@ -176,6 +179,7 @@ struct community *community_uniq_sort(struct community *com)
+ 
+ 	qsort(new->val, new->size, sizeof(uint32_t), community_compare);
+ 
++    zlog_warn("=== %s allocate %p to replace %p", __func__, new, com);
+ 	return new;
+ }
+ 
+@@ -492,6 +496,7 @@ struct community *community_intern(struct community *com)
+ 	if (!find->str)
+ 		set_community_string(find, false, true);
+ 
++    zlog_warn("=== %s incoming %p returning %p", __func__, com, find);
+ 	return find;
+ }
+ 
+@@ -506,11 +511,13 @@ void community_unintern(struct community **com)
+ 	if ((*com)->refcnt)
+ 		(*com)->refcnt--;
+ 
++    zlog_warn("=== %s incoming %p refcount %u", __func__, *com, (*com)->refcnt);
+ 	/* Pull off from hash.  */
+ 	if ((*com)->refcnt == 0) {
+ 		/* Community value com must exist in hash. */
+ 		ret = (struct community *)hash_release(comhash, *com);
+ 		assert(ret != NULL);
++        zlog_warn("=== %s hash_release %p %p", __func__, *com, ret);
+ 
+ 		community_free(com);
+ 	}
+@@ -547,6 +554,7 @@ struct community *community_dup(struct community *com)
+ 		memcpy(new->val, com->val, com->size * COMMUNITY_SIZE);
+ 	} else
+ 		new->val = NULL;
++    zlog_warn("=== %s duplicate %p to replace %p", __func__, new, com);
+ 	return new;
+ }
+ 
+@@ -1045,6 +1053,7 @@ void bgp_remove_community_from_aggregate(struct bgp_aggregate *aggregate,
+ 		if (aggr_community->refcnt == 0) {
+ 			ret_comm = hash_release(aggregate->community_hash,
+ 						aggr_community);
++            zlog_warn("=== %s hash_release %p %p", __func__, aggr_community, ret_comm);
+ 			community_free(&ret_comm);
+ 
+ 			bgp_compute_aggregate_community_val(aggregate);
+@@ -1073,6 +1082,7 @@ void bgp_remove_comm_from_aggregate_hash(struct bgp_aggregate *aggregate,
+ 		if (aggr_community->refcnt == 0) {
+ 			ret_comm = hash_release(aggregate->community_hash,
+ 						aggr_community);
++            zlog_warn("=== %s hash_release %p %p", __func__, aggr_community, ret_comm);
+ 			community_free(&ret_comm);
+ 		}
+ 	}
+diff --git a/bgpd/bgp_routemap.c b/bgpd/bgp_routemap.c
+index 771e48b42..6fa418c53 100644
+--- a/bgpd/bgp_routemap.c
++++ b/bgpd/bgp_routemap.c
+@@ -2352,6 +2352,7 @@ route_set_community(void *rule, const struct prefix *prefix, void *object)
+ 	if (old && old->refcnt == 0)
+ 		community_free(&old);
+ 
++    zlog_warn("=== %s old %p new %p", __func__, old, new);
+ 	/* will be interned by caller if required */
+ 	bgp_attr_set_community(attr, new);
+ 
