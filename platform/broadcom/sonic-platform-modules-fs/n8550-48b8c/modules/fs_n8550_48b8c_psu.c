@@ -237,7 +237,7 @@ static struct n8550_48b8c_psu_data *n8550_48b8c_psu_update_device(struct device 
         }
 
         /* Read model name */
-        memset(data->model_name, 0, sizeof(data->model_name));
+        memset_s(data->model_name, sizeof(data->model_name), 0, sizeof(data->model_name));
         power_good = (data->status >> (3-data->index) & 0x1);
 
         if (power_good) {
