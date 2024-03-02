@@ -28,9 +28,9 @@ def stop_platform_svc():
         print("Disable n8550-platform-monitor.service failed %d"%status)
         return False
     
-    status, output = getstatusoutput_noshell(["/usr/local/bin/accton_n8550_util.py", "clean"])
+    status, output = getstatusoutput_noshell(["/usr/local/bin/fs_n8550_util.py", "clean"])
     if status:
-        print("accton_n8550_util.py clean command failed %d"%status)
+        print("fs_n8550_util.py clean command failed %d"%status)
         return False
 
     # HACK , stop the pddf-platform-init service if it is active
@@ -42,9 +42,9 @@ def stop_platform_svc():
     return True
     
 def start_platform_svc():
-    status, output = getstatusoutput_noshell(["/usr/local/bin/accton_n8550_util.py", "install"])
+    status, output = getstatusoutput_noshell(["/usr/local/bin/fs_n8550_util.py", "install"])
     if status:
-        print("accton_n8550_util.py install command failed %d"%status)
+        print("fs_n8550_util.py install command failed %d"%status)
         return False
 
     status, output = getstatusoutput_noshell(["systemctl", "enable", "n8550-platform-monitor.service"])

@@ -31,24 +31,24 @@ struct cpld_client_node {
 };
 
 enum cpld_type {
-    n8550_48b8c_cpld1,
-    n8550_48b8c_cpld2,
-    n8550_48b8c_cpld3
+    n8550_32c_cpld1,
+    n8550_32c_cpld2,
+    n8550_32c_cpld3
 };
 
-struct n8550_48b8c_cpld_data {
+struct n8550_32c_cpld_data {
     enum cpld_type   type;
     struct device   *hwmon_dev;
     struct mutex     update_lock;
 };
 
-static const struct i2c_device_id n8550_48b8c_cpld_id[] = {
-    { "n8550_48b8c_cpld1", n8550_48b8c_cpld1 },
-    { "n8550_48b8c_cpld2", n8550_48b8c_cpld2 },
-    { "n8550_48b8c_cpld3", n8550_48b8c_cpld3 },
+static const struct i2c_device_id n8550_32c_cpld_id[] = {
+    { "n8550_32c_cpld1", n8550_32c_cpld1 },
+    { "n8550_32c_cpld2", n8550_32c_cpld2 },
+    { "n8550_32c_cpld3", n8550_32c_cpld3 },
     { }
 };
-MODULE_DEVICE_TABLE(i2c, n8550_48b8c_cpld_id);
+MODULE_DEVICE_TABLE(i2c, n8550_32c_cpld_id);
 
 #define TRANSCEIVER_PRESENT_ATTR_ID(index)   	MODULE_PRESENT_##index
 #define TRANSCEIVER_TXDISABLE_ATTR_ID(index)   	MODULE_TXDISABLE_##index
@@ -56,7 +56,7 @@ MODULE_DEVICE_TABLE(i2c, n8550_48b8c_cpld_id);
 #define TRANSCEIVER_RESET_ATTR_ID(index)   		MODULE_RESET_##index
 //#define TRANSCEIVER_TXFAULT_ATTR_ID(index)   	MODULE_TXFAULT_##index
 
-enum n8550_48b8c_cpld1_sysfs_attributes {
+enum n8550_32c_cpld1_sysfs_attributes {
 	CPLD_VERSION,
 	ACCESS,
 	MODULE_PRESENT_ALL,
@@ -150,8 +150,8 @@ static ssize_t access(struct device *dev, struct device_attribute *da,
 			const char *buf, size_t count);
 static ssize_t show_version(struct device *dev, struct device_attribute *da,
              char *buf);
-static int n8550_48b8c_cpld_read_internal(struct i2c_client *client, u8 reg);
-static int n8550_48b8c_cpld_write_internal(struct i2c_client *client, u8 reg, u8 value);
+static int n8550_32c_cpld_read_internal(struct i2c_client *client, u8 reg);
+static int n8550_32c_cpld_write_internal(struct i2c_client *client, u8 reg, u8 value);
 
 /* transceiver attributes */
 #define DECLARE_TRANSCEIVER_PRESENT_SENSOR_DEVICE_ATTR(index) \
@@ -248,7 +248,7 @@ DECLARE_TRANSCEIVER_RESET_SENSOR_DEVICE_ATTR(30);
 DECLARE_TRANSCEIVER_RESET_SENSOR_DEVICE_ATTR(31);
 DECLARE_TRANSCEIVER_RESET_SENSOR_DEVICE_ATTR(32);
 
-static struct attribute *n8550_48b8c_cpld1_attributes[] = {
+static struct attribute *n8550_32c_cpld1_attributes[] = {
     &sensor_dev_attr_version.dev_attr.attr,
     &sensor_dev_attr_access.dev_attr.attr,
 	&sensor_dev_attr_module_present_all.dev_attr.attr,
@@ -324,28 +324,28 @@ static struct attribute *n8550_48b8c_cpld1_attributes[] = {
     NULL
 };
 
-static const struct attribute_group n8550_48b8c_cpld1_group = {
-	.attrs = n8550_48b8c_cpld1_attributes,
+static const struct attribute_group n8550_32c_cpld1_group = {
+	.attrs = n8550_32c_cpld1_attributes,
 };
 
-static struct attribute *n8550_48b8c_cpld2_attributes[] = {
+static struct attribute *n8550_32c_cpld2_attributes[] = {
     &sensor_dev_attr_version.dev_attr.attr,
     &sensor_dev_attr_access.dev_attr.attr,
 	NULL
 };
 
-static const struct attribute_group n8550_48b8c_cpld2_group = {
-	.attrs = n8550_48b8c_cpld2_attributes,
+static const struct attribute_group n8550_32c_cpld2_group = {
+	.attrs = n8550_32c_cpld2_attributes,
 };
 
-static struct attribute *n8550_48b8c_cpld3_attributes[] = {
+static struct attribute *n8550_32c_cpld3_attributes[] = {
     &sensor_dev_attr_version.dev_attr.attr,
     &sensor_dev_attr_access.dev_attr.attr,	
 	NULL
 };
 
-static const struct attribute_group n8550_48b8c_cpld3_group = {
-	.attrs = n8550_48b8c_cpld3_attributes,
+static const struct attribute_group n8550_32c_cpld3_group = {
+	.attrs = n8550_32c_cpld3_attributes,
 };
 
 static ssize_t show_present_all(struct device *dev, struct device_attribute *da,
@@ -355,12 +355,12 @@ static ssize_t show_present_all(struct device *dev, struct device_attribute *da,
 	u8 values[5]  = {0};
 	u8 regs[] = {0x30, 0x31, 0x32, 0x33, 0x50};
 	struct i2c_client *client = to_i2c_client(dev);
-	struct n8550_48b8c_cpld_data *data = i2c_get_clientdata(client);
+	struct n8550_32c_cpld_data *data = i2c_get_clientdata(client);
 
 	mutex_lock(&data->update_lock);
 
     for (i = 0; i < ARRAY_SIZE(regs); i++) {
-        status = n8550_48b8c_cpld_read_internal(client, regs[i]);
+        status = n8550_32c_cpld_read_internal(client, regs[i]);
         
         if (status < 0) {
             goto exit;
@@ -387,11 +387,11 @@ static ssize_t show_rxlos_all(struct device *dev, struct device_attribute *da,
 	u8 value=0;
 	u8 reg = 0x50;
 	struct i2c_client *client = to_i2c_client(dev);
-	struct n8550_48b8c_cpld_data *data = i2c_get_clientdata(client);
+	struct n8550_32c_cpld_data *data = i2c_get_clientdata(client);
 
 	mutex_lock(&data->update_lock);
 
-    status = n8550_48b8c_cpld_read_internal(client, reg);
+    status = n8550_32c_cpld_read_internal(client, reg);
         
     if (status < 0)
         goto exit;
@@ -414,7 +414,7 @@ static ssize_t show_status(struct device *dev, struct device_attribute *da,
 {
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
     struct i2c_client *client = to_i2c_client(dev);
-    struct n8550_48b8c_cpld_data *data = i2c_get_clientdata(client);
+    struct n8550_32c_cpld_data *data = i2c_get_clientdata(client);
 	int status = 0;
 	u8 reg = 0, mask = 0, revert = 0;
     
@@ -489,7 +489,7 @@ static ssize_t show_status(struct device *dev, struct device_attribute *da,
     
 
     mutex_lock(&data->update_lock);
-	status = n8550_48b8c_cpld_read_internal(client, reg);
+	status = n8550_32c_cpld_read_internal(client, reg);
 	if (unlikely(status < 0)) {
 		goto exit;
 	}
@@ -507,7 +507,7 @@ static ssize_t set_tx_disable(struct device *dev, struct device_attribute *da,
 {
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
 	struct i2c_client *client = to_i2c_client(dev);
-	struct n8550_48b8c_cpld_data *data = i2c_get_clientdata(client);
+	struct n8550_32c_cpld_data *data = i2c_get_clientdata(client);
 	long disable;
 	int status;
     u8 reg = 0, mask = 0;
@@ -532,7 +532,7 @@ static ssize_t set_tx_disable(struct device *dev, struct device_attribute *da,
 
     /* Read current status */
     mutex_lock(&data->update_lock);
-	status = n8550_48b8c_cpld_read_internal(client, reg);
+	status = n8550_32c_cpld_read_internal(client, reg);
 	if (unlikely(status < 0)) {
 		goto exit;
 	}
@@ -545,7 +545,7 @@ static ssize_t set_tx_disable(struct device *dev, struct device_attribute *da,
 		status &= ~mask;
 	}
 
-    status = n8550_48b8c_cpld_write_internal(client, reg, status);
+    status = n8550_32c_cpld_write_internal(client, reg, status);
 	if (unlikely(status < 0)) {
 		goto exit;
 	}
@@ -563,7 +563,7 @@ static ssize_t set_reset(struct device *dev, struct device_attribute *da,
 {
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
 	struct i2c_client *client = to_i2c_client(dev);
-	struct n8550_48b8c_cpld_data *data = i2c_get_clientdata(client);
+	struct n8550_32c_cpld_data *data = i2c_get_clientdata(client);
 	long reset;
 	int status;
     u8 reg = 0, mask = 0;
@@ -597,7 +597,7 @@ static ssize_t set_reset(struct device *dev, struct device_attribute *da,
 
     /* Read current status */
     mutex_lock(&data->update_lock);
-	status = n8550_48b8c_cpld_read_internal(client, reg);
+	status = n8550_32c_cpld_read_internal(client, reg);
 	if (unlikely(status < 0)) {
 		goto exit;
 	}
@@ -610,7 +610,7 @@ static ssize_t set_reset(struct device *dev, struct device_attribute *da,
 		status &= ~mask;
 	}
 
-    status = n8550_48b8c_cpld_write_internal(client, reg, status);
+    status = n8550_32c_cpld_write_internal(client, reg, status);
 	if (unlikely(status < 0)) {
 		goto exit;
 	}
@@ -629,7 +629,7 @@ static ssize_t access(struct device *dev, struct device_attribute *da,
 	int status;
 	u32 addr, val;
     struct i2c_client *client = to_i2c_client(dev);
-    struct n8550_48b8c_cpld_data *data = i2c_get_clientdata(client);
+    struct n8550_32c_cpld_data *data = i2c_get_clientdata(client);
     
 	if (sscanf(buf, "0x%x 0x%x", &addr, &val) != 2) {
 		return -EINVAL;
@@ -640,7 +640,7 @@ static ssize_t access(struct device *dev, struct device_attribute *da,
 	}
 
 	mutex_lock(&data->update_lock);
-	status = n8550_48b8c_cpld_write_internal(client, addr, val);
+	status = n8550_32c_cpld_write_internal(client, addr, val);
 	if (unlikely(status < 0)) {
 		goto exit;
 	}
@@ -652,7 +652,7 @@ exit:
 	return status;
 }
 
-static void n8550_48b8c_cpld_add_client(struct i2c_client *client)
+static void n8550_32c_cpld_add_client(struct i2c_client *client)
 {
     struct cpld_client_node *node = kzalloc(sizeof(struct cpld_client_node), GFP_KERNEL);
 
@@ -668,7 +668,7 @@ static void n8550_48b8c_cpld_add_client(struct i2c_client *client)
 	mutex_unlock(&list_lock);
 }
 
-static void n8550_48b8c_cpld_remove_client(struct i2c_client *client)
+static void n8550_32c_cpld_remove_client(struct i2c_client *client)
 {
     struct list_head    *list_node = NULL;
     struct cpld_client_node *cpld_node = NULL;
@@ -711,18 +711,18 @@ static ssize_t show_version(struct device *dev, struct device_attribute *attr, c
 /*
  * I2C init/probing/exit functions
  */
-static int n8550_48b8c_cpld_probe(struct i2c_client *client,
+static int n8550_32c_cpld_probe(struct i2c_client *client,
 			 const struct i2c_device_id *id)
 {
 	struct i2c_adapter *adap = to_i2c_adapter(client->dev.parent);
-	struct n8550_48b8c_cpld_data *data;
+	struct n8550_32c_cpld_data *data;
 	int ret = -ENODEV;
 	const struct attribute_group *group = NULL;
 
 	if (!i2c_check_functionality(adap, I2C_FUNC_SMBUS_BYTE))
 		goto exit;
 
-	data = kzalloc(sizeof(struct n8550_48b8c_cpld_data), GFP_KERNEL);
+	data = kzalloc(sizeof(struct n8550_32c_cpld_data), GFP_KERNEL);
 	if (!data) {
 		ret = -ENOMEM;
 		goto exit;
@@ -734,14 +734,14 @@ static int n8550_48b8c_cpld_probe(struct i2c_client *client,
 
     /* Register sysfs hooks */
     switch (data->type) {
-    case n8550_48b8c_cpld1:
-        group = &n8550_48b8c_cpld1_group;
+    case n8550_32c_cpld1:
+        group = &n8550_32c_cpld1_group;
         break;
-    case n8550_48b8c_cpld2:
-        group = &n8550_48b8c_cpld2_group;
+    case n8550_32c_cpld2:
+        group = &n8550_32c_cpld2_group;
          break;
-	case n8550_48b8c_cpld3:
-         group = &n8550_48b8c_cpld3_group;
+	case n8550_32c_cpld3:
+         group = &n8550_32c_cpld3_group;
         break;
     default:
         break;
@@ -754,7 +754,7 @@ static int n8550_48b8c_cpld_probe(struct i2c_client *client,
         }
     }
 
-    n8550_48b8c_cpld_add_client(client);
+    n8550_32c_cpld_add_client(client);
     return 0;
 
 exit_free:
@@ -763,23 +763,23 @@ exit:
 	return ret;
 }
 
-static void n8550_48b8c_cpld_remove(struct i2c_client *client)
+static void n8550_32c_cpld_remove(struct i2c_client *client)
 {
-    struct n8550_48b8c_cpld_data *data = i2c_get_clientdata(client);
+    struct n8550_32c_cpld_data *data = i2c_get_clientdata(client);
     const struct attribute_group *group = NULL;
 
-    n8550_48b8c_cpld_remove_client(client);
+    n8550_32c_cpld_remove_client(client);
 
     /* Remove sysfs hooks */
     switch (data->type) {
-    case n8550_48b8c_cpld1:
-        group = &n8550_48b8c_cpld1_group;
+    case n8550_32c_cpld1:
+        group = &n8550_32c_cpld1_group;
         break;
-    case n8550_48b8c_cpld2:
-        group = &n8550_48b8c_cpld2_group;
+    case n8550_32c_cpld2:
+        group = &n8550_32c_cpld2_group;
         break;
-	case n8550_48b8c_cpld3:
-        group = &n8550_48b8c_cpld3_group;
+	case n8550_32c_cpld3:
+        group = &n8550_32c_cpld3_group;
         break;
     default:
         break;
@@ -793,7 +793,7 @@ static void n8550_48b8c_cpld_remove(struct i2c_client *client)
 
 }
 
-static int n8550_48b8c_cpld_read_internal(struct i2c_client *client, u8 reg)
+static int n8550_32c_cpld_read_internal(struct i2c_client *client, u8 reg)
 {
 	int status = 0, retry = I2C_RW_RETRY_COUNT;
 
@@ -811,7 +811,7 @@ static int n8550_48b8c_cpld_read_internal(struct i2c_client *client, u8 reg)
     return status;
 }
 
-static int n8550_48b8c_cpld_write_internal(struct i2c_client *client, u8 reg, u8 value)
+static int n8550_32c_cpld_write_internal(struct i2c_client *client, u8 reg, u8 value)
 {
 	int status = 0, retry = I2C_RW_RETRY_COUNT;
     
@@ -829,7 +829,7 @@ static int n8550_48b8c_cpld_write_internal(struct i2c_client *client, u8 reg, u8
     return status;
 }
 
-int n8550_48b8c_cpld_read(unsigned short cpld_addr, u8 reg)
+int n8550_32c_cpld_read(unsigned short cpld_addr, u8 reg)
 {
     struct list_head   *list_node = NULL;
     struct cpld_client_node *cpld_node = NULL;
@@ -842,7 +842,7 @@ int n8550_48b8c_cpld_read(unsigned short cpld_addr, u8 reg)
         cpld_node = list_entry(list_node, struct cpld_client_node, list);
 
         if (cpld_node->client->addr == cpld_addr) {
-            ret = n8550_48b8c_cpld_read_internal(cpld_node->client, reg);
+            ret = n8550_32c_cpld_read_internal(cpld_node->client, reg);
     		break;
         }
     }
@@ -851,9 +851,9 @@ int n8550_48b8c_cpld_read(unsigned short cpld_addr, u8 reg)
 
     return ret;
 }
-EXPORT_SYMBOL(n8550_48b8c_cpld_read);
+EXPORT_SYMBOL(n8550_32c_cpld_read);
 
-int n8550_48b8c_cpld_write(unsigned short cpld_addr, u8 reg, u8 value)
+int n8550_32c_cpld_write(unsigned short cpld_addr, u8 reg, u8 value)
 {
     struct list_head   *list_node = NULL;
     struct cpld_client_node *cpld_node = NULL;
@@ -866,7 +866,7 @@ int n8550_48b8c_cpld_write(unsigned short cpld_addr, u8 reg, u8 value)
         cpld_node = list_entry(list_node, struct cpld_client_node, list);
 
         if (cpld_node->client->addr == cpld_addr) {
-            ret = n8550_48b8c_cpld_write_internal(cpld_node->client, reg, value);
+            ret = n8550_32c_cpld_write_internal(cpld_node->client, reg, value);
             break;
         }
     }
@@ -875,33 +875,33 @@ int n8550_48b8c_cpld_write(unsigned short cpld_addr, u8 reg, u8 value)
 
     return ret;
 }
-EXPORT_SYMBOL(n8550_48b8c_cpld_write);
+EXPORT_SYMBOL(n8550_32c_cpld_write);
 
-static struct i2c_driver n8550_48b8c_cpld_driver = {
+static struct i2c_driver n8550_32c_cpld_driver = {
 	.driver		= {
-		.name	= "n8550_48b8c_cpld",
+		.name	= "n8550_32c_cpld",
 		.owner	= THIS_MODULE,
 	},
-	.probe		= n8550_48b8c_cpld_probe,
-	.remove		= n8550_48b8c_cpld_remove,
-	.id_table	= n8550_48b8c_cpld_id,
+	.probe		= n8550_32c_cpld_probe,
+	.remove		= n8550_32c_cpld_remove,
+	.id_table	= n8550_32c_cpld_id,
 };
 
-static int __init n8550_48b8c_cpld_init(void)
+static int __init n8550_32c_cpld_init(void)
 {
     mutex_init(&list_lock);
-    return i2c_add_driver(&n8550_48b8c_cpld_driver);
+    return i2c_add_driver(&n8550_32c_cpld_driver);
 }
 
-static void __exit n8550_48b8c_cpld_exit(void)
+static void __exit n8550_32c_cpld_exit(void)
 {
-    i2c_del_driver(&n8550_48b8c_cpld_driver);
+    i2c_del_driver(&n8550_32c_cpld_driver);
 }
 
-MODULE_AUTHOR("Jostar Yang <jostar_yang@accton.com.tw>");
-MODULE_DESCRIPTION("Accton I2C CPLD driver");
+
+MODULE_DESCRIPTION("FS I2C CPLD driver");
 MODULE_LICENSE("GPL");
 
-module_init(n8550_48b8c_cpld_init);
-module_exit(n8550_48b8c_cpld_exit);
+module_init(n8550_32c_cpld_init);
+module_exit(n8550_32c_cpld_exit);
 

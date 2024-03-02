@@ -29,7 +29,7 @@
 #include <linux/fs.h>
 #include <asm/uaccess.h>
 
-#define DRVNAME "n8550_48b8c_fan"
+#define DRVNAME "n8550_32c_fan"
 
 #define NUM_THERMAL_SENSORS     (5)     /* Get sum of this number of sensors.*/
 #define THERMAL_SENSORS_DRIVER  "lm75"
@@ -38,7 +38,7 @@
 #define		IN
 #define		OUT
 
-static struct n8550_48b8c_fan_data *n8550_48b8c_fan_update_device(struct device *dev);
+static struct n8550_32c_fan_data *n8550_32c_fan_update_device(struct device *dev);
 static ssize_t fan_show_value(struct device *dev, struct device_attribute *da, char *buf);
 static ssize_t set_duty_cycle(struct device *dev, struct device_attribute *da,
                               const char *buf, size_t count);
@@ -65,7 +65,7 @@ static const u8 fan_reg[] = {
 };
 
 /* Each client has this additional data */
-struct n8550_48b8c_fan_data {
+struct n8550_32c_fan_data {
     struct device   *hwmon_dev;
     struct mutex     update_lock;
     char             valid;           /* != 0 if registers are valid */
@@ -183,7 +183,7 @@ DECLARE_FAN_DIRECTION_SENSOR_DEV_ATTR(6);
 /* 1 fan duty cycle attribute in this platform */
 DECLARE_FAN_DUTY_CYCLE_SENSOR_DEV_ATTR();
 
-static struct attribute *n8550_48b8c_fan_attributes[] = {
+static struct attribute *n8550_32c_fan_attributes[] = {
     /* fan related attributes */
     DECLARE_FAN_FAULT_ATTR(1,11),
     DECLARE_FAN_FAULT_ATTR(2,12),
@@ -217,12 +217,12 @@ static struct attribute *n8550_48b8c_fan_attributes[] = {
 #define FAN_MAX_DUTY_CYCLE              100
 #define FAN_REG_VAL_TO_SPEED_RPM_STEP   100
 
-static int n8550_48b8c_fan_read_value(struct i2c_client *client, u8 reg)
+static int n8550_32c_fan_read_value(struct i2c_client *client, u8 reg)
 {
     return i2c_smbus_read_byte_data(client, reg);
 }
 
-static int n8550_48b8c_fan_write_value(struct i2c_client *client, u8 reg, u8 value)
+static int n8550_32c_fan_write_value(struct i2c_client *client, u8 reg, u8 value)
 {
     return i2c_smbus_write_byte_data(client, reg, value);
 }
@@ -262,7 +262,7 @@ static u8 reg_val_to_is_present(u8 reg_val, enum fan_id id)
     return reg_val ? 0 : 1;
 }
 
-static u8 is_fan_fault(struct n8550_48b8c_fan_data *data, enum fan_id id)
+static u8 is_fan_fault(struct n8550_32c_fan_data *data, enum fan_id id)
 {
     u8 ret = 1;
     int front_fan_index = FAN1_FRONT_SPEED_RPM + id;
@@ -291,8 +291,8 @@ static ssize_t set_duty_cycle(struct device *dev, struct device_attribute *da,
     if (value < 0 || value > FAN_MAX_DUTY_CYCLE)
         return -EINVAL;
 
-    n8550_48b8c_fan_write_value(client, 0x33, 0); /* Disable fan speed watch dog */
-    n8550_48b8c_fan_write_value(client, fan_reg[FAN_DUTY_CYCLE_PERCENTAGE], duty_cycle_to_reg_val(value));
+    n8550_32c_fan_write_value(client, 0x33, 0); /* Disable fan speed watch dog */
+    n8550_32c_fan_write_value(client, fan_reg[FAN_DUTY_CYCLE_PERCENTAGE], duty_cycle_to_reg_val(value));
     return count;
 }
 
@@ -301,7 +301,7 @@ static ssize_t fan_show_value(struct device *dev, struct device_attribute *da,
                               char *buf)
 {
     struct sensor_device_attribute *attr = to_sensor_dev_attr(da);
-    struct n8550_48b8c_fan_data *data = n8550_48b8c_fan_update_device(dev);
+    struct n8550_32c_fan_data *data = n8550_32c_fan_update_device(dev);
     ssize_t ret = 0;
 
     if (data->valid) {
@@ -362,14 +362,14 @@ static ssize_t fan_show_value(struct device *dev, struct device_attribute *da,
     return ret;
 }
 
-static const struct attribute_group n8550_48b8c_fan_group = {
-    .attrs = n8550_48b8c_fan_attributes,
+static const struct attribute_group n8550_32c_fan_group = {
+    .attrs = n8550_32c_fan_attributes,
 };
 
-static struct n8550_48b8c_fan_data *n8550_48b8c_fan_update_device(struct device *dev)
+static struct n8550_32c_fan_data *n8550_32c_fan_update_device(struct device *dev)
 {
     struct i2c_client *client = to_i2c_client(dev);
-    struct n8550_48b8c_fan_data *data = i2c_get_clientdata(client);
+    struct n8550_32c_fan_data *data = i2c_get_clientdata(client);
 
     mutex_lock(&data->update_lock);
 
@@ -377,13 +377,13 @@ static struct n8550_48b8c_fan_data *n8550_48b8c_fan_update_device(struct device 
             !data->valid) {
         int i;
 
-        dev_dbg(&client->dev, "Starting n8550_48b8c_fan update\n");
+        dev_dbg(&client->dev, "Starting n8550_32c_fan update\n");
         data->valid = 0;
 
         /* Update fan data
          */
         for (i = 0; i < ARRAY_SIZE(data->reg_val); i++) {
-            int status = n8550_48b8c_fan_read_value(client, fan_reg[i]);
+            int status = n8550_32c_fan_read_value(client, fan_reg[i]);
             if (status < 0) {
                 data->valid = 0;
                 mutex_unlock(&data->update_lock);
@@ -404,10 +404,10 @@ static struct n8550_48b8c_fan_data *n8550_48b8c_fan_update_device(struct device 
     return data;
 }
 
-static int n8550_48b8c_fan_probe(struct i2c_client *client,
+static int n8550_32c_fan_probe(struct i2c_client *client,
                                 const struct i2c_device_id *dev_id)
 {
-    struct n8550_48b8c_fan_data *data;
+    struct n8550_32c_fan_data *data;
     int status;
 
     if (!i2c_check_functionality(client->adapter, I2C_FUNC_SMBUS_BYTE_DATA)) {
@@ -415,7 +415,7 @@ static int n8550_48b8c_fan_probe(struct i2c_client *client,
         goto exit;
     }
 
-    data = kzalloc(sizeof(struct n8550_48b8c_fan_data), GFP_KERNEL);
+    data = kzalloc(sizeof(struct n8550_32c_fan_data), GFP_KERNEL);
     if (!data) {
         status = -ENOMEM;
         goto exit;
@@ -428,7 +428,7 @@ static int n8550_48b8c_fan_probe(struct i2c_client *client,
     dev_info(&client->dev, "chip found\n");
 
     /* Register sysfs hooks */
-    status = sysfs_create_group(&client->dev.kobj, &n8550_48b8c_fan_group);
+    status = sysfs_create_group(&client->dev.kobj, &n8550_32c_fan_group);
     if (status) {
         goto exit_free;
     }
@@ -445,7 +445,7 @@ static int n8550_48b8c_fan_probe(struct i2c_client *client,
     return 0;
 
 exit_remove:
-    sysfs_remove_group(&client->dev.kobj, &n8550_48b8c_fan_group);
+    sysfs_remove_group(&client->dev.kobj, &n8550_32c_fan_group);
 exit_free:
     kfree(data);
 exit:
@@ -453,36 +453,36 @@ exit:
     return status;
 }
 
-static void n8550_48b8c_fan_remove(struct i2c_client *client)
+static void n8550_32c_fan_remove(struct i2c_client *client)
 {
-    struct n8550_48b8c_fan_data *data = i2c_get_clientdata(client);
+    struct n8550_32c_fan_data *data = i2c_get_clientdata(client);
     hwmon_device_unregister(data->hwmon_dev);
-    sysfs_remove_group(&client->dev.kobj, &n8550_48b8c_fan_group);
+    sysfs_remove_group(&client->dev.kobj, &n8550_32c_fan_group);
 
 }
 
 /* Addresses to scan */
 static const unsigned short normal_i2c[] = { 0x66, I2C_CLIENT_END };
 
-static const struct i2c_device_id n8550_48b8c_fan_id[] = {
-    { "n8550_48b8c_fan", 0 },
+static const struct i2c_device_id n8550_32c_fan_id[] = {
+    { "n8550_32c_fan", 0 },
     {}
 };
-MODULE_DEVICE_TABLE(i2c, n8550_48b8c_fan_id);
+MODULE_DEVICE_TABLE(i2c, n8550_32c_fan_id);
 
-static struct i2c_driver n8550_48b8c_fan_driver = {
+static struct i2c_driver n8550_32c_fan_driver = {
     .class        = I2C_CLASS_HWMON,
     .driver = {
         .name     = DRVNAME,
     },
-    .probe        = n8550_48b8c_fan_probe,
-    .remove       = n8550_48b8c_fan_remove,
-    .id_table     = n8550_48b8c_fan_id,
+    .probe        = n8550_32c_fan_probe,
+    .remove       = n8550_32c_fan_remove,
+    .id_table     = n8550_32c_fan_id,
     .address_list = normal_i2c,
 };
 
-module_i2c_driver(n8550_48b8c_fan_driver);
+module_i2c_driver(n8550_32c_fan_driver);
 
-MODULE_DESCRIPTION("n8550_48b8c_fan driver");
+MODULE_DESCRIPTION("n8550_32c_fan driver");
 MODULE_LICENSE("GPL");
 
