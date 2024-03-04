@@ -810,7 +810,7 @@ out:
     if (zctx != NULL) {
         zmq_ctx_term(zctx);
     }
-    SWSS_LOG_ERROR("Eventd service exiting\n");
+    SWSS_LOG_INFO("Eventd service exiting\n");
 }
 
 void set_unit_testing(bool b)
