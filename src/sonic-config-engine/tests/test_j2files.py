@@ -198,9 +198,6 @@ class TestJ2Files(TestCase):
                                      'docker-dhcp-relay.supervisord.conf.j2')
         argument = ['-m', self.t0_minigraph_secondary_subnets, '-p', self.t0_port_config, '-t', template_path]
         self.run_script(argument, output_file=self.output_file)
-        f = open(self.output_file, 'r')
-        print(f.read())
-        f.close()
         self.assertTrue(utils.cmp(os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR,
                                                'docker-dhcp-relay-secondary-subnets.supervisord.conf'), self.output_file))
 
