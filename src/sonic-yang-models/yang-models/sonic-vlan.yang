@@ -200,7 +200,7 @@ module sonic-vlan {
 					{
 						error-message "Vlan1 is default Vlan";
 					}
- 					must '(../name = "Vlan" + current())' {
+ 					must "(concat('Vlan', current()) = ../name)" {
         				error-message "The vlanid must correspond to the VLAN name";
     				}
 				}
