@@ -1,6 +1,4 @@
 # The following is as recommended by https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/
 # Whenever an OS update from Debian stretch is done, make sure to find the matching k8s sources list
 #
-# The apt.kubernetes.io is deprecated, need to use this mirror to mitigate this issue first
-# TODO: upgrade k8s version
-deb https://mirror.azure.cn/kubernetes/packages/apt/mirror/apt.kubernetes.io/ kubernetes-xenial main
+deb https://apt.kubernetes.io/ kubernetes-xenial main
