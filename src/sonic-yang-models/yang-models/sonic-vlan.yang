@@ -191,6 +191,10 @@ module sonic-vlan {
 					{
 						error-message "Vlan1 is default Vlan";
 					}
+					/*must "(concat('Vlan', current()) = ../name) or ('Vlan' + current() = ../name)" 
+					{
+						error-message "The vlanid must correspond to the VLAN name";
+					}*/
 				} 						
 				leaf vlanid {
 					type uint16 {
@@ -200,9 +204,6 @@ module sonic-vlan {
 					{
 						error-message "Vlan1 is default Vlan";
 					}
- 					must "(concat('Vlan', current()) = ../name)" {
-        				error-message "The vlanid must correspond to the VLAN name";
-    				}
 				}
 
 				leaf alias {
@@ -273,12 +274,12 @@ module sonic-vlan {
 					must "not(/lag:sonic-portchannel/lag:PORTCHANNEL_MEMBER/lag:PORTCHANNEL_MEMBER_LIST[lag:port=current()]/lag:name)" {
     					error-message "Port is a member of a port channel.";
 					}
-					must "not(/vlan:sonic-vlan/vlan:VLAN_MEMBER/vlan:VLAN_MEMBER_LIST[vlan:port=current() and vlan:tagging_mode='untagged' and vlan:name!=current()/../name])" {
-                		error-message "Port is an untagged member in another VLAN.";
-            		}
 					must "not(/intf:sonic-interface/intf:INTERFACE/intf:INTERFACE_LIST[intf:name=current()])" {
                 		error-message "Port is a router interface.";
             		}
+					must "count(../../vlan:VLAN_MEMBER_LIST[vlan:port=current() and vlan:tagging_mode='untagged']) <= 1" {
+						error-message "Port can be untagged in at most one VLAN.";
+					}
 				}
 
 				leaf tagging_mode {
