@@ -281,16 +281,16 @@ install_kubernetes () {
         ${storage_prefix}/kubernetes-cni_${KUBERNETES_CNI_VERSION}_${CONFIGURED_ARCH}.deb
     sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT curl -o /tmp/kubelet.deb -fsSL \
         ${storage_prefix}/kubelet_${ver}_${CONFIGURED_ARCH}.deb
-    sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT curl -o /tmp/kubeadm.deb -fsSL \
-        ${storage_prefix}/kubeadm_${ver}_${CONFIGURED_ARCH}.deb
     sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT curl -o /tmp/kubectl.deb -fsSL \
         ${storage_prefix}/kubectl_${ver}_${CONFIGURED_ARCH}.deb
+    sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT curl -o /tmp/kubeadm.deb -fsSL \
+        ${storage_prefix}/kubeadm_${ver}_${CONFIGURED_ARCH}.deb
 
     sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install -f /tmp/cri-tools.deb
     sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install -f /tmp/kubernetes-cni.deb
     sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install -f /tmp/kubelet.deb
-    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install -f /tmp/kubeadm.deb
     sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install -f /tmp/kubectl.deb
+    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install -f /tmp/kubeadm.deb
     sudo LANG=C chroot $FILESYSTEM_ROOT rm -f /tmp/{cri-tools,kubernetes-cni,kubelet,kubeadm,kubectl}.deb
 }
 
