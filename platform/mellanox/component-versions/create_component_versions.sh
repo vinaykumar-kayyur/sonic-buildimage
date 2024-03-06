@@ -1,0 +1,6 @@
+echo "SDK $(MLNX_SDK_VERSION)" > $(DEST)/$(MAIN_TARGET)
+echo $(MLNX_SPC_FW_VERSION) | sed -r 's/([0-9]*)\.([0-9]*)\.([0-9]*)/FW \2\.\3/g' >> $(DEST)/$(MAIN_TARGET)
+echo "SAI $(MLNX_SAI_VERSION)" >> $(DEST)/$(MAIN_TARGET)
+echo "HW-MGMT $(MLNX_HW_MANAGEMENT_VERSION)" >> $(DEST)/$(MAIN_TARGET)
+echo "MFT $(MFT_VERSION)" >> $(DEST)/$(MAIN_TARGET)
+echo "Kernel $(KVERSION_SHORT)" >> $(DEST)/$(MAIN_TARGET)

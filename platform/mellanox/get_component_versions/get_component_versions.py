@@ -49,7 +49,7 @@ UNAVAILABLE_COMPILED_VERSIONS = {
 
 
 def parse_compiled_components_file():
-    compiled_versions = {}
+    compiled_versions = UNAVAILABLE_COMPILED_VERSIONS
 
     if not os.path.exists(COMPONENT_VERSIONS_FILE):
         return UNAVAILABLE_COMPILED_VERSIONS
@@ -58,11 +58,6 @@ def parse_compiled_components_file():
         for line in component_versions.readlines():
             comp, version = line.split()
             compiled_versions[comp] = version
-
-    if len(compiled_versions.keys()) < len(UNAVAILABLE_COMPILED_VERSIONS.keys()):
-        for component in UNAVAILABLE_COMPILED_VERSIONS.keys():
-            if not compiled_versions.get(component):
-                compiled_versions[component] = "N/A"
 
     return compiled_versions
 

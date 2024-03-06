@@ -34,7 +34,6 @@ include $(PLATFORM_PATH)/mlnx-ssd-fw-update.mk
 include $(PLATFORM_PATH)/iproute2.mk
 include $(PLATFORM_PATH)/install-pending-fw.mk
 include $(PLATFORM_PATH)/integration-scripts.mk
-include $(PLATFORM_PATH)/get-component-versions.mk
 include $(PLATFORM_PATH)/component-versions.mk
 
 SONIC_ALL += $(SONIC_ONE_IMAGE) \
