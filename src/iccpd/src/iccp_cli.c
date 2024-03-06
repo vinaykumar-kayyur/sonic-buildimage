@@ -118,9 +118,9 @@ int set_peer_link(int mid, const char* ifname)
     }
 
     memset(csm->peer_itf_name, 0, IFNAMSIZ);
-    if (len > MAX_L_PORT_NAME)
+    if (len > IFNAMSIZ)
     {
-        ICCPD_LOG_ERR(__FUNCTION__, "Peer-link %s, Strlen %d greater than MAX:%d ", ifname, len, MAX_L_PORT_NAME);
+        ICCPD_LOG_ERR(__FUNCTION__, "len=%d greater than IFNAMESIZ=%d", len, IFNAMSIZ);
         return MCLAG_ERROR;
     }
     memcpy(csm->peer_itf_name, ifname, len);
