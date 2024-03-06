@@ -161,6 +161,13 @@ module sonic-port{
 					}
 				}
 
+				leaf dom_polling {
+
+					type string {
+						pattern "enabled|disabled";
+					}
+				}
+
 				leaf pfc_asym {
 					type string {
 						pattern "on|off";
