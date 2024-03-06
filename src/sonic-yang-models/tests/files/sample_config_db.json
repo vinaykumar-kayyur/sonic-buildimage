@@ -1183,10 +1183,7 @@
             "Vlan111|Ethernet0": {
                 "tagging_mode": "untagged"
             },
-            "Vlan111|Ethernet10": {
-                "tagging_mode": "untagged"
-            },
-            "Vlan111|Ethernet20": {
+            "Vlan111|PortChannel0004": {
                 "tagging_mode": "untagged"
             },
             "Vlan111|Ethernet3": {

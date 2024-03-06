@@ -928,7 +928,7 @@
                     },
                     {
                         "port": "Ethernet1",
-                        "tagging_mode": "tagged",
+                        "tagging_mode": "untagged",
                         "name": "Vlan11"
                     }
                 ]

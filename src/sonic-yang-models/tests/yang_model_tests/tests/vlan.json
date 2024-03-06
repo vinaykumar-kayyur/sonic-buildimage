@@ -96,8 +96,7 @@
         "eStr": "Vlan1 is default Vlan"
     },
     "VLAN_CREATE_VLAN_WITH_MISSMATCHING_NAME": {
-        "desc": "Create Vlan so that name doesn't match id",
-        "eStr": "The vlanid must correspond to the VLAN name"
+        "desc": "Create Vlan so that name doesn't match id"
     },
     "IP_PREFIX_WITHOUT_CREATNG_VLAN": {
         "desc": "Create IP on not created Vlan",
@@ -113,7 +112,7 @@
     },
     "VLAN_ADD_PORT_THAT_IS_UNTAGGED": {
         "desc": "Add port that is already untagged",
-        "eStr": "Port is an untagged member in another VLAN"
+        "eStr": "Port can be untagged in at most one VLAN"
     },
     "VLAN_ADD_PORT_THAT_IS_ROUTER_INTERFACE": {
         "desc": "Add to Vlan port that is router interface",
