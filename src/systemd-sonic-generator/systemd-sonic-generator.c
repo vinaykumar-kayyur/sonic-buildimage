@@ -860,10 +860,7 @@ static bool is_smart_switch_npu() {
     if (platform_info == NULL) {
         return false;
     }
-    if (!json_object_object_get_ex(platform_info, "DPUS", &dpus)) {
-        return false;
-    }
-    return true;
+    return json_object_object_get_ex(platform_info, "DPUS", &dpus);
 }
 
 
@@ -878,11 +875,7 @@ static bool is_smart_switch_dpu() {
     if (platform_info == NULL) {
         return false;
     }
-    if (!json_object_object_get_ex(platform_info, "DPU", &dpu)) {
-        return false;
-    }
-    
-    return true;
+    return json_object_object_get_ex(platform_info, "DPU", &dpu);
 }
 
 
@@ -904,7 +897,10 @@ static int get_num_of_dpu() {
     if (!json_object_object_get_ex(platform_info, "DPUS", &dpus)) {
         return 0;
     }
-    size_t num_dpu = json_object_array_length(dpus);
+    size_t num_dpu = 0;
+    json_object_object_foreach(dpus, key, val) {
+        num_dpu++;
+    }
     return num_dpu;
 }
 
@@ -1076,6 +1072,8 @@ static int install_network_service_for_smart_switch() {
         static const char* npu_network_units[] = {
             "bridge-midplane.netdev",
             "bridge-midplane.network",
+            "dummy-midplane.netdev",
+            "dummy-midplane.network",
             "midplane-network-npu.network",
             NULL
         };

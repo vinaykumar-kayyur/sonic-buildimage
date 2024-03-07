@@ -391,9 +391,9 @@ class SsgMainTest : public SsgFunctionTest {
             }
             else if (cfg.is_smart_switch_npu) {
                 ASSERT_EQ(cfg.is_smart_switch_dpu, false);
-                nlohmann::json::array_t dpus;
+                nlohmann::json dpus;
                 for (int i = 0; i < cfg.num_dpus; i++) {
-                    dpus.push_back(nlohmann::json::object());
+                    dpus["dpu" + std::to_string(i)] = nlohmann::json::object();
                 }
                 platform_config["DPUS"] = dpus;
             }
@@ -496,6 +496,8 @@ const std::vector<std::string>
 SsgMainTest::npu_network_service_list = {
     "bridge-midplane.netdev",
     "bridge-midplane.network",
+    "dummy-midplane.netdev",
+    "dummy-midplane.network",
     "midplane-network-npu.network",
 };
 
