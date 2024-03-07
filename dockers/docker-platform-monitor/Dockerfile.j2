@@ -26,9 +26,10 @@ RUN apt-get update &&   \
         libpci3         \
         iputils-ping    \
         pciutils        \
+        ethtool &&	\
 # smartmontools version should match the installed smartmontools in sonic_debian_extension build template
-        smartmontools \
-        ethtool
+    apt-get install -y -t bookworm-backports \
+        smartmontools
 
 # On Arista devices, the sonic_platform wheel is not installed in the container.
 # Instead, the installation directory is mounted from the host OS. However, this method
