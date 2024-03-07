@@ -1,4 +1,4 @@
-From edd505fbc46f8872be948c17aa9ecc9ae82d6834 Mon Sep 17 00:00:00 2001
+From 139e450bccf3c2591c7b158662b36e5b9ff33172 Mon Sep 17 00:00:00 2001
 From: Donald Sharp <sharpd@nvidia.com>
 Date: Sat, 2 Mar 2024 09:42:30 -0500
 Subject: [PATCH 1/5] bgpd: Include unsuppress-map as a valid outgoing policy
@@ -12,10 +12,10 @@ Signed-off-by: Donald Sharp <sharpd@nvidia.com>
  1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/bgpd/bgp_route.c b/bgpd/bgp_route.c
-index a7a5c9849a..2a1ca2b2e8 100644
+index f4dff0d802..3a03644f93 100644
 --- a/bgpd/bgp_route.c
 +++ b/bgpd/bgp_route.c
-@@ -5812,10 +5812,10 @@ bool bgp_outbound_policy_exists(struct peer *peer, struct bgp_filter *filter)
+@@ -5834,10 +5834,10 @@ bool bgp_outbound_policy_exists(struct peer *peer, struct bgp_filter *filter)
  	if (peer->sort == BGP_PEER_IBGP)
  		return true;
  
@@ -34,7 +34,7 @@ index a7a5c9849a..2a1ca2b2e8 100644
 2.14.1
 
 
-From 61945b361b2b1fb6fcd4c1b9a7dc3eee29b88203 Mon Sep 17 00:00:00 2001
+From 2e09994360cda6251fd95845feb878f83e4f9345 Mon Sep 17 00:00:00 2001
 From: Donatas Abraitis <donatas@opensourcerouting.org>
 Date: Fri, 3 Mar 2023 17:33:51 +0200
 Subject: [PATCH 2/5] bgpd: Intern attributes before putting into rib-out
@@ -89,7 +89,7 @@ Signed-off-by: Donatas Abraitis <donatas@opensourcerouting.org>
  1 file changed, 8 insertions(+), 4 deletions(-)
 
 diff --git a/bgpd/bgp_route.c b/bgpd/bgp_route.c
-index 2a1ca2b2e8..3ca421e652 100644
+index 3a03644f93..1a7c0cc78e 100644
 --- a/bgpd/bgp_route.c
 +++ b/bgpd/bgp_route.c
 @@ -2917,10 +2917,14 @@ void subgroup_process_announce_selected(struct update_subgroup *subgrp,
@@ -115,7 +115,7 @@ index 2a1ca2b2e8..3ca421e652 100644
 2.14.1
 
 
-From 8848325433331e1e595ff7cc24dbe309cb100af9 Mon Sep 17 00:00:00 2001
+From 0b4e9c386c7d1caa83d9790d90652a794f69e91e Mon Sep 17 00:00:00 2001
 From: Donatas Abraitis <donatas@opensourcerouting.org>
 Date: Mon, 27 Feb 2023 23:40:32 +0200
 Subject: [PATCH 3/5] bgpd: Intern attributes before putting into rib-out
@@ -191,7 +191,7 @@ index af8ef751da..de2b3206b7 100644
 2.14.1
 
 
-From 3aa26250a4d77579a760836b21c679a9e9ac83af Mon Sep 17 00:00:00 2001
+From 4b6279f6779ff6f6041bd08b242f86a1098d6e6d Mon Sep 17 00:00:00 2001
 From: Donald Sharp <sharpd@nvidia.com>
 Date: Sat, 2 Mar 2024 09:50:38 -0500
 Subject: [PATCH 4/5] bgpd: Ensure community data is freed in some cases.
@@ -269,7 +269,7 @@ index 4ad00ed121..89ea85ff46 100644
  				/* If default originate is enabled for
  				 * the peer, do not send explicit
 diff --git a/bgpd/bgp_route.c b/bgpd/bgp_route.c
-index 3ca421e652..5edad5a8c9 100644
+index 1a7c0cc78e..53eec67e41 100644
 --- a/bgpd/bgp_route.c
 +++ b/bgpd/bgp_route.c
 @@ -2921,16 +2921,23 @@ void subgroup_process_announce_selected(struct update_subgroup *subgrp,
@@ -284,7 +284,7 @@ index 3ca421e652..5edad5a8c9 100644
 +								      subgrp,
 +								      adv_attr,
 +								      selected))
-+						bgp_attr_flush(&attr);
++						bgp_attr_unintern(&adv_attr);
 +				} else {
  					bgp_adj_out_unset_subgroup(
  						dest, subgrp, 1, addpath_tx_id);
@@ -316,7 +316,7 @@ index e27c1e7b67..b7b6aa07e9 100644
  				     struct attr *attr,
  				     struct bgp_path_info *path);
 diff --git a/bgpd/bgp_updgrp_adv.c b/bgpd/bgp_updgrp_adv.c
-index de2b3206b7..d566fc15ad 100644
+index de2b3206b7..1ca79f818a 100644
 --- a/bgpd/bgp_updgrp_adv.c
 +++ b/bgpd/bgp_updgrp_adv.c
 @@ -454,7 +454,7 @@ bgp_advertise_clean_subgroup(struct update_subgroup *subgrp,
@@ -373,7 +373,7 @@ index de2b3206b7..d566fc15ad 100644
  							dest, subgrp, adv_attr,
 -							ri);
 +							ri))
-+							bgp_attr_flush(adv_attr);
++							bgp_attr_unintern(&adv_attr);
  					} else
  						bgp_adj_out_unset_subgroup(
  							dest, subgrp, 1,
@@ -397,8 +397,8 @@ index de2b3206b7..d566fc15ad 100644
 +						if (!bgp_adj_out_set_subgroup(
 +							    dest, subgrp,
 +							    default_attr, pi))
-+							bgp_attr_flush(
-+								default_attr);
++							bgp_attr_unintern(
++								&default_attr);
 +					} else
 +						bgp_attr_flush(&attr);
 +				}
@@ -409,7 +409,7 @@ index de2b3206b7..d566fc15ad 100644
 2.14.1
 
 
-From 41660e7cefefc497e9cf62102d87533023c2442b Mon Sep 17 00:00:00 2001
+From 99a172180972145556887595a1ca75e82f71c244 Mon Sep 17 00:00:00 2001
 From: Donald Sharp <sharpd@nvidia.com>
 Date: Mon, 4 Mar 2024 09:51:42 -0500
 Subject: [PATCH 5/5] bgpd: Cleanup indenting for subgroup_default_originate
@@ -419,14 +419,14 @@ very deeply.  Clean this up some.
 
 Signed-off-by: Donald Sharp <sharpd@nvidia.com>
 ---
- bgpd/bgp_updgrp_adv.c | 32 ++++++++++++++++----------------
- 1 file changed, 16 insertions(+), 16 deletions(-)
+ bgpd/bgp_updgrp_adv.c | 33 +++++++++++++++++----------------
+ 1 file changed, 17 insertions(+), 16 deletions(-)
 
 diff --git a/bgpd/bgp_updgrp_adv.c b/bgpd/bgp_updgrp_adv.c
-index d566fc15ad..e2298bf7fa 100644
+index 1ca79f818a..364454e06c 100644
 --- a/bgpd/bgp_updgrp_adv.c
 +++ b/bgpd/bgp_updgrp_adv.c
-@@ -953,22 +953,22 @@ void subgroup_default_originate(struct update_subgroup *subgrp, int withdraw)
+@@ -953,22 +953,23 @@ void subgroup_default_originate(struct update_subgroup *subgrp, int withdraw)
  		if (dest) {
  			for (pi = bgp_dest_get_bgp_path_info(dest); pi;
  			     pi = pi->next) {
@@ -441,8 +441,8 @@ index d566fc15ad..e2298bf7fa 100644
 -						if (!bgp_adj_out_set_subgroup(
 -							    dest, subgrp,
 -							    default_attr, pi))
--							bgp_attr_flush(
--								default_attr);
+-							bgp_attr_unintern(
+-								&default_attr);
 -					} else
 -						bgp_attr_flush(&attr);
 -				}
@@ -459,7 +459,8 @@ index d566fc15ad..e2298bf7fa 100644
 +					if (!bgp_adj_out_set_subgroup(
 +						    dest, subgrp, default_attr,
 +						    pi))
-+						bgp_attr_flush(default_attr);
++						bgp_attr_unintern(
++							&default_attr);
 +				} else
 +					bgp_attr_flush(&attr);
  			}
