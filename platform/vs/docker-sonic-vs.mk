@@ -34,7 +34,7 @@ else
 $(DOCKER_SONIC_VS)_DEPENDS += $(GOBGP)
 endif
 
-ifeq ($(INCLUDE_FIPS), y)
+ifeq ($(ENABLE_FIPS_FEATURE), y)
 $(DOCKER_SONIC_VS)_DEPENDS += $(FIPS_KRB5_ALL)
 endif
 
