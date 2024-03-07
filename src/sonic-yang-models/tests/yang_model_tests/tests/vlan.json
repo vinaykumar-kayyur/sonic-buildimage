@@ -96,7 +96,8 @@
         "eStr": "Vlan1 is default Vlan"
     },
     "VLAN_CREATE_VLAN_WITH_MISSMATCHING_NAME": {
-        "desc": "Create Vlan so that name doesn't match id"
+        "desc": "Create Vlan so that name doesn't match id",
+        "eStr": "The vlanid must correspond to the VLAN name"        
     },
     "IP_PREFIX_WITHOUT_CREATNG_VLAN": {
         "desc": "Create IP on not created Vlan",

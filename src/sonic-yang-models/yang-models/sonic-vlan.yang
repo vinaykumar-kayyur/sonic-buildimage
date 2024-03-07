@@ -191,10 +191,6 @@ module sonic-vlan {
 					{
 						error-message "Vlan1 is default Vlan";
 					}
-					/*must "(concat('Vlan', current()) = ../name) or ('Vlan' + current() = ../name)" 
-					{
-						error-message "The vlanid must correspond to the VLAN name";
-					}*/
 				} 						
 				leaf vlanid {
 					type uint16 {
@@ -204,6 +200,9 @@ module sonic-vlan {
 					{
 						error-message "Vlan1 is default Vlan";
 					}
+					must "substring-after(../name, 'Vlan') = current()"{
+           				error-message "The vlanid must correspond to the VLAN name";
+   					}
 				}
 
 				leaf alias {
