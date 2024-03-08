@@ -162,10 +162,7 @@ module sonic-port{
 				}
 
 				leaf dom_polling {
-
-					type string {
-						pattern "enabled|disabled";
-					}
+					type stypes:admin_mode;
 				}
 
 				leaf pfc_asym {
