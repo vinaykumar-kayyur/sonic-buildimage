@@ -14,16 +14,25 @@ def threshold(request):
 
 
 resources = [
-    'ipv4_route',
-    'ipv6_route',
-    'ipv4_nexthop',
-    'ipv6_nexthop',
-    'ipv4_neighbor',
-    'ipv6_neighbor',
-    'nexthop_group_member',
-    'nexthop_group',
+    'acl_counter',
+    'acl_group',
+    'acl_entry',
+    'acl_table',
     'fdb_entry',
+    'ipv4_neighbor',
+    'ipv4_nexthop',
+    'ipv4_route',
+    'ipv6_neighbor',
+    'ipv6_nexthop',
+    'ipv6_route',
+    'nexthop_group',
+    'nexthop_group_member',
+    'dnat_entry',
+    'snat_entry',
+    'ipmc_entry',
+    'mpls_inseg',
     'mpls_nexthop',
+    'srv6_my_sid_entry',
     'srv6_nexthop'
 ]
 

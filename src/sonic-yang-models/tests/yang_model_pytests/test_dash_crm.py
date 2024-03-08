@@ -2,20 +2,19 @@ import pytest
 from copy import deepcopy
 
 
-base_data = {
-    "sonic-device_metadata:sonic-device_metadata": {
-        "sonic-device_metadata:DEVICE_METADATA": {
-            "localhost": {
-                "switch_type": "dpu"
+@pytest.fixture(scope='function')
+def data(request):
+    base_data = {
+        "sonic-device_metadata:sonic-device_metadata": {
+            "sonic-device_metadata:DEVICE_METADATA": {
+                "localhost": {
+                    "switch_type": "dpu"
+                }
             }
         }
     }
-}
 
-
-@pytest.fixture
-def data(request):
-    return deepcopy(base_data)
+    return base_data
 
 
 dash_thresholds = [

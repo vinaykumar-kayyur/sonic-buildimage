@@ -1,3 +1,4 @@
+import os
 import pytest
 import yang as ly
 from json import dumps
@@ -6,10 +7,11 @@ from glob import glob
 
 class YangModel:
 
-    model_dir = './yang-models'
-
     def __init__(self) -> None:
-        self.ctx = None
+        cur_dir = os.path.dirname(os.path.abspath(__file__))
+        project_root = os.path.abspath(os.path.join(cur_dir, '..', '..'))
+        self.model_dir = os.path.join(project_root, 'yang-models')
+
         self._load_model()
 
     def _load_model(self) -> None:
