@@ -16,7 +16,7 @@
 # limitations under the License.
 #
 
-from fwutil.lib import ComponentStatusProvider
+from fwutil.lib import PlatformDataProvider
 from tabulate import tabulate
 import os
 import subprocess
@@ -63,34 +63,15 @@ def parse_compiled_components_file():
 
 
 def get_platform_component_versions():
-    csp = ComponentStatusProvider()
-    version_table = csp.get_status()
+    pdp = PlatformDataProvider()
+    versions_map = pdp.chassis_component_map[next(iter(pdp.chassis_component_map.keys()))]
 
-    if not version_table or version_table == "":
+    if not versions_map or len(versions_map) == 0:
         return UNAVAILABLE_PLATFORM_VERSIONS
 
-    lines = version_table.split("\n")
-    lines = lines[2:]
-
-    parsed_lines = []
-    for line in lines:
-        """
-        The fields are separated by whitespaces, so split by whitespace.
-        The number of whitespaces between fields varies, so after spliting we filter the columns to get rid of the empty values.
-        """
-        columns = line.split(" ")
-        parsed_lines.append([column for column in columns if column])
-
     platform_versions = {}
-
-    # In the first line (ONIE version), the 'chassis' and 'module' fields have values,
-    # so the version we actually need (ONIE) is the third value and not he first value like in the rest.
-    platform_versions[parsed_lines[0][2]] = parsed_lines[0][3]
-    parsed_lines = parsed_lines[1:]
-
-    # Adding the rest of the versions
-    for line in parsed_lines:
-        platform_versions[line[0]] = line[1]
+    for component_name, component in versions_map.items():
+        platform_versions[component_name] = component.get_firmware_version()
 
     return platform_versions
 
