@@ -250,16 +250,24 @@ define LOAD_FROM_CACHE
 	$(eval CACHE_FILE_SELECT:=$(or $(wildcard $(SONIC_DPKG_LOCAL_CACHE_DIR)/$($(1)_MOD_CACHE_FILE)), \
 								$(wildcard $(SONIC_DPKG_CACHE_DIR)/$($(1)_MOD_CACHE_FILE))) )
 
+	# Get saved md5sum of the selected cache file and compare it with real csum of this file.
+	# We shouldn't use files with incorrect csum.
+	# We can skip this step if read cache is disabled.
+	$(eval CACHE_FILE_CSUM := $(wildcard $(addsuffix .md5,$(CACHE_FILE_SELECT))))
+	$(if $(and $(CACHE_FILE_CSUM), $(filter $(RCACHE_OPTIONS),$(SONIC_DPKG_CACHE_METHOD))),
+		$(eval CACHE_FILE_SAVED_CSUM := $(file < $(CACHE_FILE_CSUM)))
+		$(eval CACHE_FILE_REAL_CSUM := $(shell md5sum $(CACHE_FILE_SELECT) | cut -d' ' -f1)))
+
 	# Check if any of the derived package is not built
 	$(eval LOAD_DRV_DEB := $(foreach pkg,$(addprefix $($(1)_DST_PATH)/,$(1) $($(1)_DERIVED_DEBS) $($(1)_EXTRA_DEBS)),$(if $(wildcard $(pkg)),,$(pkg))))
 
 	# Load the cache if cache is enabled and cache file is present in the cache
 	# Update the cache_loaded variable
-	$(if $(and $(CACHE_FILE_SELECT),$(filter $(RCACHE_OPTIONS),$(SONIC_DPKG_CACHE_METHOD))),
+	$(if $(and $(CACHE_FILE_SAVED_CSUM),$(filter $(CACHE_FILE_SAVED_CSUM),$(CACHE_FILE_REAL_CSUM))),
 		$(if $(LOAD_DRV_DEB), $($(1)_CACHE_USER) tar -C $($(1)_BASE_PATH) -mxzvf $(CACHE_FILE_SELECT) 1>> $($(1)_DST_PATH)/$(1).log ,echo );
 		echo "File $(CACHE_FILE_SELECT) is loaded from cache into $($(1)_BASE_PATH)" >> $($(1)_DST_PATH)/$(1).log
 		$(eval $(1)_CACHE_LOADED := Yes)
-		$(if $(call CHECK_WCACHE_ENABLED,$(1)), $(shell touch $(CACHE_FILE_SELECT)))
+		$(if $(call CHECK_WCACHE_ENABLED,$(1)), $(shell touch -c $(CACHE_FILE_SELECT) $(CACHE_FILE_CSUM)))
 		echo "[ CACHE::LOADED ] $($(1)_CACHE_DIR)/$($(1)_MOD_CACHE_FILE)" >> $($(1)_DST_PATH)/$(1).log
 		echo "File $($(1)_CACHE_DIR)/$($(1)_MOD_CACHE_FILE)  is not present in cache or cache mode set as $(SONIC_DPKG_CACHE_METHOD) !" >> $($(1)_DST_PATH)/$(1).log
 		echo "[ CACHE::SKIPPED ] $($(1)_CACHE_DIR)/$($(1)_MOD_CACHE_FILE)" >> $($(1)_DST_PATH)/$(1).log
@@ -295,9 +303,16 @@ define SAVE_INTO_CACHE
 		echo "Target $(1) dependencies are modifed - global save cache skipped" >> $($(1)_DST_PATH)/$(1).log
 		$(eval $(1)_CACHE_DIR := $(SONIC_DPKG_LOCAL_CACHE_DIR))
 	 )
-	$($(1)_CACHE_USER) tar -C $($(1)_BASE_PATH) -mczvf $($(1)_CACHE_DIR)/$(MOD_CACHE_FILE) $(2) $(addprefix $($(1)_DST_PATH)/,$($(1)_DERIVED_DEBS) $($(1)_EXTRA_DEBS) )  \
+	cp $($(1)_DST_PATH)/$(1).log $($(1)_DST_PATH)/$(1).cached.log
+	md5sum $(2) $(addprefix $($(1)_DST_PATH)/,$($(1)_DERIVED_DEBS) $($(1)_EXTRA_DEBS)) >> $($(1)_DST_PATH)/$(1).cached.log
+	$($(1)_CACHE_USER) tar -C $($(1)_BASE_PATH) -mczvf $($(1)_CACHE_DIR)/$(MOD_CACHE_FILE) $(2) $(addprefix $($(1)_DST_PATH)/,$($(1)_DERIVED_DEBS) $($(1)_EXTRA_DEBS) $(1).cached.log )  \
 		1>>$($(1)_DST_PATH)/$(1).log
+	rm -f $($(1)_DST_PATH)/$(1).cached.log
+	tar -C $($(1)_BASE_PATH) -mczvf $($(1)_CACHE_DIR)/$(MOD_CACHE_FILE) $(2) $(addprefix $($(1)_DST_PATH)/,$($(1)_DERIVED_DEBS) $($(1)_EXTRA_DEBS) $(1).cached.log) \
+
+	md5sum $($(1)_CACHE_DIR)/$(MOD_CACHE_FILE) | cut -d' ' -f1 > $($(1)_CACHE_DIR)/$(MOD_CACHE_FILE).md5
 	sudo chmod 777 $($(1)_CACHE_DIR)/$(MOD_CACHE_FILE)
+	sudo chmod 777 $($(1)_CACHE_DIR)/$(MOD_CACHE_FILE).md5
 
 	echo "File $($(1)_CACHE_DIR)/$(MOD_CACHE_FILE) saved in cache " >> $($(1)_DST_PATH)/$(1).log
 	echo "[ CACHE::SAVED ] $($(1)_CACHE_DIR)/$(MOD_CACHE_FILE)" >> $($(1)_DST_PATH)/$(1).log
@@ -714,7 +729,7 @@ show-%:
 NUMDAYS ?= 7 # Delete all the cache files which are not used within last 7 days
 .PHONY: cprune
 cprune:
-	@find $(SONIC_DPKG_CACHE_DIR) -name "*.tgz" !  -mtime -$(NUMDAYS) -exec rm -f {} \;
+	@find $(SONIC_DPKG_CACHE_DIR) -name "*.tgz*" !  -mtime -$(NUMDAYS) -exec rm -f {} \;
 
 
 
