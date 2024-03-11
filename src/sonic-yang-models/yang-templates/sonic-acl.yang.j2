@@ -202,13 +202,13 @@ module sonic-acl {
 						when "not(IP_TYPE) or boolean(IP_TYPE[.='ANY' or .='IP' or .='IPV4' or .='IPv4ANY' or .='ARP'])";
 						leaf ICMP_TYPE {
 							type uint8 {
-								range 0..44;
+								range 0..255;
 							}
 						}
 
 						leaf ICMP_CODE {
 							type uint8 {
-								range 0..16;
+								range 0..255;
 							}
 						}
 					}
