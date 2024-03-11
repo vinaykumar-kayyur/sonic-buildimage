@@ -1,4 +1,5 @@
 #include <thread>
+#include <memory>
 #include "eventd.h"
 #include "dbconnector.h"
 #include "zmq.h"
@@ -648,7 +649,7 @@ run_eventd_service()
     event_service service;
     stats_collector stats_instance;
     eventd_proxy *proxy = NULL;
-    capture_service *capture = NULL;
+    unique_ptr<capture_service> capture;
     bool skip_caching = false;
 
     event_serialized_lst_t capture_fifo_events;
@@ -679,12 +680,11 @@ run_eventd_service()
      * events until telemetry starts.
      * Telemetry will send a stop & collect cache upon startup
      */
-    capture = new capture_service(zctx, cache_max, &stats_instance);
+    capture = make_unique<capture_service>(zctx, cache_max, &stats_instance);
     if (capture->set_control(INIT_CAPTURE) != 0) {
         SWSS_LOG_WARN("Failed to initialize capture service, so we skip caching");
         skip_caching = true;
-        delete capture;
-        capture = NULL; // Capture service will not be available
+        capture.reset(); // Capture service will not be available
     } else {
         RET_ON_ERR(capture->set_control(START_CAPTURE) == 0, "Failed to start capture");
     }
@@ -703,12 +703,12 @@ run_eventd_service()
             case EVENT_CACHE_INIT:
                 /* connect only*/
                 if (capture != NULL) {
-                    delete capture;
+                    capture.reset();
                 }
                 event_serialized_lst_t().swap(capture_fifo_events);
                 last_events_t().swap(capture_last_events);
 
-                capture = new capture_service(zctx, cache_max, &stats_instance);
+                capture = make_unique<capture_service>(zctx, cache_max, &stats_instance);
                 if (capture != NULL) {
                     resp = capture->set_control(INIT_CAPTURE);
                 }
@@ -740,8 +740,7 @@ run_eventd_service()
                     resp = capture->read_cache(capture_fifo_events, capture_last_events,
                             overflow);
                 }
-                delete capture;
-                capture = NULL;
+                capture.reset();
 
                 /* Unpause heartbeat upon stop caching */
                 stats_instance.heartbeat_ctrl();
@@ -815,9 +814,6 @@ out:
 
     if (proxy != NULL) {
         delete proxy;
-    }
-    if (capture != NULL) {
-        delete capture;
     }
     if (zctx != NULL) {
         zmq_ctx_term(zctx);
