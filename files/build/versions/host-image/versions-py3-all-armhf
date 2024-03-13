@@ -1,5 +1,5 @@
 colorful==0.5.6
-cryptography==3.3.1
+cryptography==3.3.2
 enlighten==1.12.4
 filelock==3.13.1
 lazy-object-proxy==1.10.0
