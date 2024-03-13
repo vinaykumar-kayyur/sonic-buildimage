@@ -81,7 +81,7 @@ RUN PATH=/python_virtualenv/env3/bin/:$PATH python3 -m pip uninstall -y enum34
 RUN PATH=/python_virtualenv/env3/bin/:$PATH pip3 install --force-reinstall --no-cache-dir coverage
 {%- endif %}
 
-RUN apt-get update && apt-get install -y \
+RUN /usr/bin/apt-get update && /usr/bin/apt-get install -y \
         apt-utils \
         default-jre-headless \
         openssh-server \
