@@ -25,10 +25,9 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	# Build package
 ifeq ($(CROSS_BUILD_ENVIRON), y)
 	patch -p1 < ../patch/cross-compile-changes.patch
-	DEB_BUILD_OPTIONS=" ${DEB_BUILD_OPTIONS} nocheck " dpkg-buildpackage -rfakeroot -b -us -uc -a$(CONFIGURED_ARCH) -Pcross,nocheck -j$(SONIC_CONFIG_MAKE_JOBS) --admindir $(SONIC_DPKG_ADMINDIR)
+	dpkg-buildpackage -rfakeroot -b -us -uc -a$(CONFIGURED_ARCH) -Pcross,nocheck -j$(SONIC_CONFIG_MAKE_JOBS) --admindir $(SONIC_DPKG_ADMINDIR)
 else
-	sudo http_proxy=$(http_proxy) apt-get -y build-dep openssh
-	DEB_BUILD_OPTIONS=" ${DEB_BUILD_OPTIONS} nocheck " dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS) --admindir $(SONIC_DPKG_ADMINDIR)
+	dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS) --admindir $(SONIC_DPKG_ADMINDIR)
 endif
 	popd
 
