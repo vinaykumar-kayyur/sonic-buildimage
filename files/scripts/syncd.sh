@@ -37,7 +37,7 @@ function startplatform() {
             fi
         else
             if [[ -f $platform_dir/media_settings.json ]]; then
-                rm $platform_dir/media_settings.json
+                rm -f $platform_dir/media_settings.json
             fi
         fi
 
