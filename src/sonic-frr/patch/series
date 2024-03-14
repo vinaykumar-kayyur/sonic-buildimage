@@ -22,3 +22,4 @@
 0022-cross-compile-changes.patch
 0023-zebra-The-dplane_fpm_nl-return-path-leaks-memory.patch
 0024-lib-use-snmp-s-large-fd-sets-for-agentx.patch
+0025-bgp-community-memory-leak-fix.patch
