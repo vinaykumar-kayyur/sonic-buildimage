@@ -1,7 +1,7 @@
-From 57ef410c4b175e6eeb14613745fba1ec6cde0780 Mon Sep 17 00:00:00 2001
+From 2b8e4e4b93a78e5884e2e5b97050b4ea3843e2e0 Mon Sep 17 00:00:00 2001
 From: Donald Sharp <sharpd@nvidia.com>
 Date: Thu, 7 Mar 2024 22:18:18 -0500
-Subject: [PATCH] bgpd: Combined patch to clean up filter leaks
+Subject: [PATCH 1/2] bgpd: Combined patch to clean up filter leaks
 
 Customer has this valgrind trace:
 
@@ -52,6 +52,12 @@ to ensure memory is not leaked.
 
 Fixes: #15459
 Signed-off-by: Donald Sharp <sharpd@nvidia.com>
+---
+ bgpd/bgp_conditional_adv.c |  5 +++--
+ bgpd/bgp_route.c           | 19 +++++++++++------
+ bgpd/bgp_updgrp.h          |  2 +-
+ bgpd/bgp_updgrp_adv.c      | 53 ++++++++++++++++++++++++++--------------------
+ 4 files changed, 47 insertions(+), 32 deletions(-)
 
 diff --git a/bgpd/bgp_conditional_adv.c b/bgpd/bgp_conditional_adv.c
 index 4ad00ed121..89ea85ff46 100644
@@ -236,6 +242,62 @@ index af8ef751da..301a8b267e 100644
  			}
  			bgp_dest_unlock_node(dest);
  		}
+-- 
+2.14.1
+
+
+From 761907075520aa3fae70a8d18fa717a24d3cbd65 Mon Sep 17 00:00:00 2001
+From: Donald Sharp <sharpd@nvidia.com>
+Date: Wed, 13 Mar 2024 10:26:58 -0400
+Subject: [PATCH 2/2] bgpd: Ensure that the correct aspath is free'd
+
+Currently in subgroup_default_originate the attr.aspath
+is set in bgp_attr_default_set, which hashs the aspath
+and creates a refcount for it.  If this is a withdraw
+the subgroup_announce_check and bgp_adj_out_set_subgroup
+is called which will intern the attribute.  This will
+cause the the attr.aspath to be set to a new value
+finally at the bottom of the function it intentionally
+uninterns the aspath which is not the one that was
+created for this function.  This reduces the other
+aspath's refcount by 1 and if a clear bgp * is issued
+fast enough the aspath for that will be removed
+and the system will crash.
+
+Signed-off-by: Donald Sharp <sharpd@nvidia.com>
+---
+ bgpd/bgp_updgrp_adv.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/bgpd/bgp_updgrp_adv.c b/bgpd/bgp_updgrp_adv.c
+index 301a8b267e..75e377f9a1 100644
+--- a/bgpd/bgp_updgrp_adv.c
++++ b/bgpd/bgp_updgrp_adv.c
+@@ -817,6 +817,7 @@ void subgroup_default_originate(struct update_subgroup *subgrp, int withdraw)
+ 	struct bgp *bgp;
+ 	struct attr attr;
+ 	struct attr *new_attr = &attr;
++	struct aspath *aspath;
+ 	struct prefix p;
+ 	struct peer *from;
+ 	struct bgp_dest *dest;
+@@ -854,6 +855,7 @@ void subgroup_default_originate(struct update_subgroup *subgrp, int withdraw)
+ 	/* make coverity happy */
+ 	assert(attr.aspath);
+ 
++	aspath = attr.aspath;
+ 	attr.med = 0;
+ 	attr.flag |= ATTR_FLAG_BIT(BGP_ATTR_MULTI_EXIT_DISC);
+ 
+@@ -1009,7 +1011,7 @@ void subgroup_default_originate(struct update_subgroup *subgrp, int withdraw)
+ 		}
+ 	}
+ 
+-	aspath_unintern(&attr.aspath);
++	aspath_unintern(&aspath);
+ }
+ 
+ /*
 -- 
 2.14.1
 
