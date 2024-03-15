@@ -11,6 +11,8 @@ case $1 in
     ;;
 esac
 
+. /scripts/functions
+
 docker_inram=false
 docker_inram_algo=tmpfs
 docker_inram_size={{ DOCKER_RAMFS_SIZE }}
@@ -239,13 +241,17 @@ else
     fi
 fi
 
+# check the fstype of pmem if not ext4 fformat and mount 
 if $mount_pmem; then
-    if [ -f ${rootmnt}/pmem ]; then
-        sudo mkfs.ext4 /dev/pmem0
-        sudo mkdir ${rootmnt}/pmem
-        sudo mount /dev/pmem0 ${rootmnt}/pmem
+    # how to check if /dev/pmem0 is already formated
+    PMEM_FS_TYPE=$(get_fstype /dev/pmem0 || echo "UNKNOWN")
+    if [ X"$PMEM_FS_TYPE"  != X"ext4" ]; then
+        mkfs.ext4 /dev/pmem0
     fi
+    mkdir -p ${rootmnt}/pmem
+    mount /dev/pmem0 ${rootmnt}/pmem
 fi
+
 
 ## fscklog file: /tmp will be lost when overlayfs is mounted
 if [ -f /tmp/fsck.log.gz ]; then
