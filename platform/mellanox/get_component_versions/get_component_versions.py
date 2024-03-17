@@ -16,22 +16,24 @@
 # limitations under the License.
 #
 
-from fwutil.lib import PlatformDataProvider
-from tabulate import tabulate
 import os
 import subprocess
 import re
 
+from fwutil.lib import PlatformDataProvider
+from tabulate import tabulate
+
 COMPONENT_VERSIONS_FILE = "/etc/mlnx/component-versions"
 HEADERS = ["COMPONENT", "COMPILATION", "ACTUAL"]
 COMMANDS_FOR_ACTUAL = {
-    "MFT": ["dpkg -l | grep -e 'mft '", "mft *([0-9.]*)"],
+    "MFT": ["dpkg -l | grep -e 'mft '", "mft *([0-9.-]*)"],
     "HW-MGMT": ["dpkg -l | grep hw", ".*1\\.mlnx\\.([0-9.]*)"],
     "SDK": ["docker exec -it syncd bash -c 'dpkg -l | grep sdk'", ".*1\\.mlnx\\.([0-9.]*)"],
     "SAI": ["docker exec -it syncd bash -c 'dpkg -l | grep mlnx-sai'", ".*1\\.mlnx\\.([A-Za-z0-9.]*)"],
     "FW": ["mlxfwmanager --query | grep -e 'FW *[0-9.]*'", "FW * [0-9]{2}\\.([0-9.]*)"],
     "Kernel": ["uname -r", "([0-9][0-9.-]*)-.*"]
 }
+
 UNAVAILABLE_PLATFORM_VERSIONS = {
     "SSD": "N/A",
     "BIOS": "N/A",
@@ -64,7 +66,17 @@ def parse_compiled_components_file():
 
 def get_platform_component_versions():
     pdp = PlatformDataProvider()
-    versions_map = pdp.chassis_component_map[next(iter(pdp.chassis_component_map.keys()))]
+    ccm = pdp.chassis_component_map
+
+    if not ccm:
+        return UNAVAILABLE_PLATFORM_VERSIONS
+
+    # The first layer of the map only has one item
+    for key, value in ccm.items():
+        if not ccm[key]:
+            return UNAVAILABLE_PLATFORM_VERSIONS
+
+        versions_map = ccm[key]
 
     if not versions_map or len(versions_map) == 0:
         return UNAVAILABLE_PLATFORM_VERSIONS
@@ -77,7 +89,7 @@ def get_platform_component_versions():
 
 
 def get_current_version(comp):
-    version = subprocess.run(COMMANDS_FOR_ACTUAL[comp][0], shell=True, executable="/usr/bin/bash", stdout=subprocess.PIPE)
+    version = subprocess.run(COMMANDS_FOR_ACTUAL[comp][0], shell=True, stdout=subprocess.PIPE)
     parsed_version = re.search(COMMANDS_FOR_ACTUAL[comp][1], str(version.stdout))
     return parsed_version.group(1) if parsed_version else "N/A"
 

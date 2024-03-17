@@ -15,9 +15,9 @@
 # limitations under the License.
 #
 
-echo "SDK $(MLNX_SDK_VERSION)" > $(DEST)/$(MAIN_TARGET)
-echo $(MLNX_SPC_FW_VERSION) | sed -r 's/([0-9]*)\.([0-9]*)\.([0-9]*)/FW \2\.\3/g' >> $(DEST)/$(MAIN_TARGET)
-echo "SAI $(MLNX_SAI_VERSION)" >> $(DEST)/$(MAIN_TARGET)
-echo "HW-MGMT $(MLNX_HW_MANAGEMENT_VERSION)" >> $(DEST)/$(MAIN_TARGET)
-echo "MFT $(MFT_VERSION)" >> $(DEST)/$(MAIN_TARGET)
-echo "Kernel $(KVERSION_SHORT)" >> $(DEST)/$(MAIN_TARGET)
+echo "SDK $1" > temp_versions_file
+echo $2 | sed -r 's/([0-9]*)\.([0-9]*)\.([0-9]*)/FW \2\.\3/g' >> temp_versions_file
+echo "SAI $3" >> temp_versions_file
+echo "HW-MGMT $4" >> temp_versions_file
+echo "MFT $5-$6" >> temp_versions_file
+echo "Kernel $7" >> temp_versions_file
