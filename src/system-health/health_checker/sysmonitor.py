@@ -203,7 +203,6 @@ class Sysmonitor(ProcessTaskBase):
             device_config = {}
             device_config['DEVICE_METADATA'] = self.config_db.get_table('DEVICE_METADATA')
             device_config.update(device_info.get_device_runtime_metadata())
-            print(device_config)
             for srv, fields in feature_table.items():
                 if 'state' not in fields:
                     success = False
