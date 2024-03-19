@@ -1986,7 +1986,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         pc['tpid'] = '0x8100'
         pc['admin_status'] = 'up'
     
-    # mode check for vlan membership in portchannel and default mode is routed and mode is trunk when port channel has vlan membership
+    # mode check for vlan membership in portchannel and default mode is routed and mode is trunk when portchannel has vlan membership with it
     for pc_name, pc in pcs.items():
         if 'mode' not in pc:
             if pc_name in [key[1] for key in vlan_members.keys()]:
