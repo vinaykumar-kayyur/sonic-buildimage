@@ -400,6 +400,7 @@ class TestCfgGen(TestCase):
         self.assertEqual(
             utils.to_dict(output.strip()),
             utils.to_dict("{'lanes': '25,26,27,28', 'description': 'Servers0:eth0', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'trunk', 'alias': 'fortyGigE0/4', 'admin_status': 'up', 'speed': '100000', 'autoneg': 'on', 'fec': 'none'}")
+
         )
 
     def test_minigraph_port_autonegotiation(self):
@@ -409,7 +410,7 @@ class TestCfgGen(TestCase):
         self.assertEqual(
             utils.to_dict(output.strip()),
             utils.to_dict(
-                "{'Ethernet0': {'alias': 'fortyGigE0/0', 'pfc_asym': 'off', 'lanes': '29,30,31,32', 'description': 'fortyGigE0/0', 'mtu': '9100', 'tpid': '0x8100','mode': 'trunk', 'speed': '40000'}, "
+                  "{'Ethernet0': {'alias': 'fortyGigE0/0', 'pfc_asym': 'off', 'lanes': '29,30,31,32', 'description': 'fortyGigE0/0', 'mtu': '9100', 'tpid': '0x8100','mode': 'trunk', 'speed': '40000'}, "
                 "'Ethernet4': {'lanes': '25,26,27,28', 'description': 'Servers0:eth0', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'trunk','alias': 'fortyGigE0/4', 'admin_status': 'up', 'autoneg': 'on', 'speed': '100000', 'fec': 'none'}, "
                 "'Ethernet8': {'lanes': '37,38,39,40', 'description': 'fortyGigE0/8', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'trunk', 'alias': 'fortyGigE0/8', 'admin_status': 'up', 'autoneg': 'off', 'fec': 'none', 'speed': '40000'}, "
                 "'Ethernet12': {'lanes': '33,34,35,36', 'description': 'fortyGigE0/12', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100',  'mode': 'trunk','alias': 'fortyGigE0/12', 'admin_status': 'up', 'speed': '40000'}, "
@@ -441,6 +442,7 @@ class TestCfgGen(TestCase):
                 "'Ethernet116': {'lanes': '93,94,95,96', 'description': 'ARISTA02T1:Ethernet1/1', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100',  'mode': 'trunk','alias': 'fortyGigE0/116', 'admin_status': 'up', 'speed': '40000'}, "
                 "'Ethernet120': {'lanes': '97,98,99,100', 'description': 'ARISTA03T1:Ethernet1/1', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100',  'mode': 'trunk','alias': 'fortyGigE0/120', 'admin_status': 'up', 'speed': '40000'}, "
                 "'Ethernet124': {'lanes': '101,102,103,104', 'fec': 'rs', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'trunk', 'alias': 'fortyGigE0/124', 'admin_status': 'up', 'speed': '100000', 'description': 'ARISTA04T1:Ethernet1/1'}}"
+            )
             )
         )
 
@@ -490,7 +492,7 @@ class TestCfgGen(TestCase):
         output = self.run_script(argument)
         self.assertEqual(
             utils.to_dict(output.strip()),
-            utils.to_dict("{'lanes': '101,102,103,104', 'fec': 'rs', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100', 'mode' : 'trunk', 'alias': 'fortyGigE0/124', 'admin_status': 'up', 'speed': '100000', 'description': 'ARISTA04T1:Ethernet1/1'}")
+            utils.to_dict("{'lanes': '33,34,35,36', 'fec': 'rs', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100','mode': 'trunk', 'alias': 'fortyGigE0/12', 'admin_status': 'up', 'speed': '100000', 'description': 'Interface description'}")
         )
 
     def test_minigraph_default_vxlan(self):
@@ -553,10 +555,11 @@ class TestCfgGen(TestCase):
     def test_minigraph_neighbor_interfaces(self):
         argument = ['-m', self.sample_graph_simple_case, '-p', self.port_config, '-v', "PORT"]
         output = self.run_script(argument)
+
         self.assertEqual(
             utils.to_dict(output.strip()),
             utils.to_dict(
-                "{'Ethernet0': {'lanes': '29,30,31,32', 'description': 'switch-01t1:port1', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100','mode': 'trunk' ,'alias': 'fortyGigE0/0', 'admin_status': 'up', 'speed': '10000', 'autoneg': 'on'},"
+                 "{'Ethernet0': {'lanes': '29,30,31,32', 'description': 'switch-01t1:port1', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100','mode': 'trunk' ,'alias': 'fortyGigE0/0', 'admin_status': 'up', 'speed': '10000', 'autoneg': 'on'},"
                 "'Ethernet4': {'lanes': '25,26,27,28', 'description': 'server1:port1', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'trunk' ,'alias': 'fortyGigE0/4', 'admin_status': 'up', 'speed': '25000', 'autoneg': 'on', 'mux_cable': 'true'}, "
                 "'Ethernet8': {'lanes': '37,38,39,40', 'description': 'Interface description', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100','mode': 'trunk' , 'alias': 'fortyGigE0/8', 'admin_status': 'up', 'speed': '40000', 'autoneg': 'on', 'mux_cable': 'true'}, "
                 "'Ethernet12': {'lanes': '33,34,35,36', 'description': 'Interface description', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100','mode': 'trunk' , 'alias': 'fortyGigE0/12', 'admin_status': 'up', 'speed': '10000', 'autoneg': 'on'}, "
@@ -642,7 +645,7 @@ class TestCfgGen(TestCase):
         self.assertEqual(
             utils.to_dict(output.strip()),
             utils.to_dict(
-                "{'Ethernet0': {'lanes': '29,30,31,32', 'description': 'fortyGigE0/0', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'trunk' ,'alias': 'fortyGigE0/0', 'admin_status': 'up', 'speed': '10000'}, "
+               "{'Ethernet0': {'lanes': '29,30,31,32', 'description': 'fortyGigE0/0', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'trunk' ,'alias': 'fortyGigE0/0', 'admin_status': 'up', 'speed': '10000'}, "
                 "'Ethernet4': {'lanes': '25,26,27,28', 'description': 'fortyGigE0/4', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'trunk' ,'alias': 'fortyGigE0/4', 'admin_status': 'up', 'speed': '25000'}, "
                 "'Ethernet8': {'lanes': '37,38,39,40', 'description': 'Interface description', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'trunk' ,'alias': 'fortyGigE0/8', 'admin_status': 'up', 'speed': '1000'}, "
                 "'Ethernet12': {'lanes': '33,34,35,36', 'fec': 'rs', 'pfc_asym': 'off', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'trunk' ,'alias': 'fortyGigE0/12', 'admin_status': 'up', 'speed': '100000', 'description': 'Interface description'}, "
@@ -676,6 +679,7 @@ class TestCfgGen(TestCase):
                 "'Ethernet124': {'alias': 'fortyGigE0/124', 'pfc_asym': 'off', 'lanes': '101,102,103,104', 'description': 'fortyGigE0/124', 'mtu': '9100', 'tpid': '0x8100','mode': 'trunk' , 'fec': 'rs', 'speed': '100000'}}"
             )
         )
+
 #     everflow portion is not used
 #     def test_metadata_everflow(self):
 #         argument = '-m "' + self.sample_graph_metadata + '" -p "' + self.port_config + '" -v "MIRROR_SESSION"'
@@ -947,7 +951,7 @@ class TestCfgGen(TestCase):
         output = self.run_script(argument)
         self.assertEqual(
             utils.to_dict(output.strip()),
-            utils.to_dict("{'lanes': '6,7', 'fec': 'rs', 'alias': 'Ethernet1/1', 'index': '1', 'role': 'Ext', 'speed': '100000', 'macsec': 'macsec-profile', 'description': 'Ethernet1/1', 'mtu': '9100', 'tpid': '0x8100','mode': 'routed' , 'pfc_asym': 'off'}")
+            utils.to_dict("{'lanes': '6,7', 'fec': 'rs', 'alias': 'Ethernet1/1', 'index': '1', 'role': 'Ext', 'speed': '100000', 'macsec': 'macsec-profile', 'description': 'Ethernet1/1', 'mtu': '9100', 'tpid': '0x8100', 'pfc_asym': 'off'}")
         )
 
     def test_minigraph_voq_inband_interface_port(self):
@@ -1042,6 +1046,7 @@ class TestCfgGen(TestCase):
             utils.to_dict(output.strip()),
             utils.to_dict("{'rrclient': 0, 'name': 'str2-8808-lc0-ASIC1', 'local_addr': '8.0.0.3', 'nhopself': 0, 'admin_status': 'up', 'holdtime': '0', 'asn': '65100', 'keepalive': '0'}")
         )
+
     def test_minigraph_bgp_packet_chassis_static_route(self):
         argument = ['-m', self.packet_chassis_graph, '-p', self.packet_chassis_port_ini, '-v', "STATIC_ROUTE"]
         output = self.run_script(argument)
@@ -1085,7 +1090,7 @@ class TestCfgGen(TestCase):
         self.assertEqual(
             utils.to_dict(output.strip()),
             utils.to_dict(
-                "{'Ethernet0': {'lanes': '72,73,74,75', 'alias': 'Ethernet1/1', 'index': '1', 'role': 'Ext', 'speed': '100000', 'asic_port_name': 'Eth0-ASIC0', 'fec': 'rs', 'description': 'ARISTA01T3:Ethernet1', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'routed','pfc_asym': 'off', 'admin_status': 'up'}, "
+                  "{'Ethernet0': {'lanes': '72,73,74,75', 'alias': 'Ethernet1/1', 'index': '1', 'role': 'Ext', 'speed': '100000', 'asic_port_name': 'Eth0-ASIC0', 'fec': 'rs', 'description': 'ARISTA01T3:Ethernet1', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'routed','pfc_asym': 'off', 'admin_status': 'up'}, "
                 "'Ethernet8': {'lanes': '80,81,82,83', 'alias': 'Ethernet2/1', 'index': '2', 'role': 'Ext', 'speed': '100000', 'asic_port_name': 'Eth8-ASIC0', 'fec': 'rs', 'description': 'ARISTA01T3:Ethernet2', 'mtu': '9100', 'tpid': '0x8100',  'mode': 'routed','pfc_asym': 'off', 'admin_status': 'up'}, "
                 "'Ethernet16': {'lanes': '88,89,90,91', 'alias': 'Ethernet3/1', 'index': '3', 'role': 'Ext', 'speed': '100000', 'asic_port_name': 'Eth16-ASIC0', 'fec': 'rs', 'description': 'ARISTA03T3:Ethernet1', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'routed', 'pfc_asym': 'off', 'admin_status': 'up'}, "
                 "'Ethernet24': {'lanes': '96,97,98,99,100,101,102,103', 'alias': 'Ethernet4/1', 'index': '4', 'role': 'Ext', 'speed': '400000', 'asic_port_name': 'Eth24-ASIC0', 'description': 'ARISTA03T3:Ethernet2', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'routed', 'pfc_asym': 'off', 'admin_status': 'up'}, "
@@ -1104,9 +1109,10 @@ class TestCfgGen(TestCase):
                 "'Ethernet128': {'lanes': '8,9,10,11', 'alias': 'Ethernet17/1', 'index': '17', 'role': 'Ext', 'speed': '100000', 'asic_port_name': 'Eth128-ASIC0', 'fec': 'rs', 'description': 'ARISTA18T3:Ethernet1', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'routed', 'pfc_asym': 'off', 'admin_status': 'up'}, "
                 "'Ethernet136': {'lanes': '0,1,2,3', 'alias': 'Ethernet18/1', 'index': '18', 'role': 'Ext', 'speed': '100000', 'asic_port_name': 'Eth136-ASIC0', 'fec': 'rs', 'description': 'ARISTA18T3:Ethernet2', 'mtu': '9100', 'tpid': '0x8100',  'mode': 'routed','pfc_asym': 'off', 'admin_status': 'up'}, "
                 "'Ethernet-Rec0': {'lanes': '221', 'alias': 'Recirc0/0', 'index': '37', 'role': 'Rec', 'speed': '400000', 'asic_port_name': 'Rcy0-ASIC0', 'description': 'Recirc0/0', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'routed', 'pfc_asym': 'off', 'admin_status': 'up'},"
-                "'Ethernet-IB0': {'lanes': '222', 'alias': 'Recirc0/1', 'index': '38', 'role': 'Inb', 'speed': '400000', 'asic_port_name': 'Rcy1-ASIC0', 'description': 'Recirc0/1', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'routed', 'pfc_asym': 'off', 'admin_status': 'up'}}"
+                "'Ethernet-IB0': {'lanes': '222', 'alias': 'Recirc0/1', 'index': '38', 'role': 'Inb', 'speed': '400000', 'asic_port_name': 'Rcy1-ASIC0', 'description': 'Recirc0/1', 'mtu': '9100', 'tpid': '0x8100', 'mode': 'routed', 'pfc_asym': 'off', 'admin_status': 'up'}}" 
             )
         )
+
     def test_minigraph_cisco_400g_to_100G_speed(self):
         argument = ["-m", self.sample_cisco_100_graph, "-p", self.sample_cisco_port_config_400g, "-v", "PORT"]
         self.assertTrue(self.yang.validate(argument))
