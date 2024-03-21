@@ -231,8 +231,11 @@ static bool is_multi_instance_service_for_dpu(const char *service_name) {
     }
 
     const static char* multi_instance_services_for_dpu[] = {"database"};
-    char *saveptr;
     char *tmp_service_name = strdup(service_name);
+    if (tmp_service_name == NULL) {
+        fprintf(stderr, "Error: Failed to allocate memory for tmp_service_name\n");
+        exit(EXIT_FAILURE);
+    }
 
     for (size_t i = 0; i < sizeof(multi_instance_services_for_dpu) /
                                sizeof(multi_instance_services_for_dpu[0]);
@@ -610,7 +613,7 @@ static int create_symlink(char* unit, char* target, char* install_dir, int insta
     }
 
     if (is_devnull(dest_path)) {
-        if (remove(dest_path) == -1) {
+        if (remove(dest_path) != 0) {
             fprintf(stderr, "Unable to remove existing symlink %s\n", dest_path);
             return -1;
         }
@@ -730,6 +733,8 @@ const char* get_platform() {
     }
     if (tmp_platform == NULL) {
         set_invalid_pointer((void **)&platform);
+        fclose(fp);
+        free(line);
         return NULL;
     }
     strncpy(platform_buffer, tmp_platform, sizeof(platform_buffer) - 1);
@@ -832,6 +837,7 @@ const struct json_object* get_platform_info() {
     }
     if (fread(platform_json, fsize, 1, fp) != 1) {
         fprintf(stdout, "Failed to read %s\n", platform_file_path);
+        free(platform_json);
         fclose(fp);
         exit(EXIT_FAILURE);
     }
@@ -956,7 +962,7 @@ static int install_network_unit(const char* unit_name) {
     }
 
     if (is_devnull(install_path)) {
-        if (remove(install_path) == -1) {
+        if (remove(install_path) != 0) {
             fprintf(stderr, "Unable to remove existing symlink %s\n", install_path);
             return -1;
         }
@@ -1011,12 +1017,14 @@ static int render_network_service_for_smart_switch() {
     char *unit_content = malloc(len);
     if (unit_content == NULL) {
         fprintf(stderr, "Failed to allocate memory for %s\n", unit_path);
+        fclose(fp);
+        exit(EXIT_FAILURE);
     }
     if (fread(unit_content, file_size, 1, fp) != 1) {
         fprintf(stderr, "Failed to read %s\n", unit_path);
         free(unit_content);
         fclose(fp);
-        return -1;
+        exit(EXIT_FAILURE);
     }
     fclose(fp);
 
@@ -1051,13 +1059,13 @@ static int render_network_service_for_smart_switch() {
     if (fp == NULL) {
         fprintf(stderr, "Failed to open %s\n", unit_path);
         free(unit_content);
-        return -1;
+        exit(EXIT_FAILURE);
     }
     if (fwrite(unit_content, strlen(unit_content), 1, fp) != 1) {
         fprintf(stderr, "Failed to write %s\n", unit_path);
         free(unit_content);
         fclose(fp);
-        return -1;
+        exit(EXIT_FAILURE);
     }
     fclose(fp);
     free(unit_content);

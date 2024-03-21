@@ -185,16 +185,10 @@ class SsgFunctionTest : public SystemdSonicGeneratorFixture {
 
 
 struct SsgMainConfig {
-    int num_asics;
-    bool is_smart_switch_npu;
-    bool is_smart_switch_dpu;
-    int num_dpus;
-    SsgMainConfig() {
-        num_asics = 0;
-        is_smart_switch_npu = false;
-        is_smart_switch_dpu = false;
-        num_dpus = 0;
-    }
+    int num_asics = 0;
+    bool is_smart_switch_npu = false;
+    bool is_smart_switch_dpu = false;
+    int num_dpus = 0;
 };
 
 
