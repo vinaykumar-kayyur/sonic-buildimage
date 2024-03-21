@@ -6,7 +6,6 @@ MAIN_TARGET = libsai_$(DASH_SAI_VERSION)_$(CONFIGURED_ARCH).deb
 DERIVED_TARGETS = libsai-dev_$(DASH_SAI_VERSION)_$(CONFIGURED_ARCH).deb
 
 CURRENT_DIR=$(shell pwd)
-FSROOT=$(CURRENT_DIR)/../../fsroot-vs/etc/dash
 PIPELINE_DIR=$(CURRENT_DIR)/DASH/dash-pipeline
 P4_MAIN=bmv2/dash_pipeline.p4
 P4_OUTDIR=bmv2/dash_pipeline.bmv2
@@ -14,9 +13,9 @@ P4_OUTDIR=bmv2/dash_pipeline.bmv2
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 # Remove any stale files
-#	rm -rf DASH
+	rm -rf DASH
 
-#	git clone https://github.com/sonic-net/DASH.git DASH
+	git clone https://github.com/sonic-net/DASH.git DASH
 
 	pushd DASH/dash-pipeline
 	git checkout $(DASH_SAI_COMMIT)
@@ -25,12 +24,9 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	mkdir -p $(P4_OUTDIR)
 	mkdir -p SAI/lib
 	sudo ln -sf $(PIPELINE_DIR)/bmv2 /bmv2
-	mkdir -p $(FSROOT)/etc/dash
 
 # Compile the P4 program
 	p4c-bm2-ss -DTARGET_BMV2_V1MODEL $(P4_MAIN) -o $(P4_OUTDIR)/dash_pipeline.json --p4runtime-files $(P4_OUTDIR)/dash_pipeline_p4rt.json,$(P4_OUTDIR)/dash_pipeline_p4rt.txt --toJSON $(P4_OUTDIR)/dash_pipeline_ir.json
-# Install P4 configuration to /etc/dash
-	sudo cp -r $(P4_OUTDIR) $(FSROOT)/etc/dash
 
 # Generate SAI files
 	pushd SAI

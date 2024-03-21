@@ -5,8 +5,7 @@ $(SYNCD_VS)_DEPENDS +=  $(P4LANG_PI) $(P4LANG_BMV2) $(P4LANG_P4C) $(DASH_SAI)
 $(SYNCD_VS)_RDEPENDS += $(LIBSAIREDIS) $(LIBSAIMETADATA) $(LIBSAIVS) $(P4LANG_PI) $(P4LANG_BMV2) $(P4LANG_P4C) $(DASH_SAI)
 $(eval $(call add_derived_package,$(LIBSAIREDIS),$(SYNCD_VS)))
 
-SYNCD_VS_DBGSYM = syncd-vs-dbgsym_1.0.0_$(CONFIGURED_ARCH).deb
-$(SYNCD_VS_DBGSYM)_DEPENDS += $(SYNCD_VS)
-$(SYNCD_VS_DBGSYM)_RDEPENDS += $(SYNCD_VS)
-$(eval $(call add_derived_package,$(LIBSAIREDIS),$(SYNCD_VS_DBGSYM)))
-# 
+SYNCD_VS_DBG = syncd-vs-dbgsym_1.0.0_$(CONFIGURED_ARCH).deb
+$(SYNCD_VS_DBG)_DEPENDS += $(SYNCD_VS)
+$(SYNCD_VS_DBG)_RDEPENDS += $(SYNCD_VS)
+$(eval $(call add_derived_package,$(LIBSAIREDIS),$(SYNCD_VS_DBG)))
