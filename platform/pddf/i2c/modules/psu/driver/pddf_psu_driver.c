@@ -279,7 +279,7 @@ exit:
     return status;
 }
 
-static int psu_remove(struct i2c_client *client)
+static void psu_remove(struct i2c_client *client)
 {
 	int i=0, ret = 0;
     struct psu_data *data = i2c_get_clientdata(client);
@@ -319,8 +319,6 @@ static int psu_remove(struct i2c_client *client)
         if (ret!=0)
             printk(KERN_ERR "FAN post_remove function failed\n");
     }
-
-    return ret;
 }
 
 enum psu_intf
@@ -383,7 +381,7 @@ int psu_init(void)
 }
 EXPORT_SYMBOL(psu_init);
 
-void __exit psu_exit(void)
+void psu_exit(void)
 {
 	pddf_dbg(PSU, "GENERIC_PSU_DRIVER.. exit\n");
 	if (pddf_psu_ops.pre_exit) (pddf_psu_ops.pre_exit)();

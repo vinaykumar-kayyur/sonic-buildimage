@@ -4,7 +4,7 @@ IMAGENAME=$1
 
 . /usr/local/share/buildinfo/scripts/buildinfo_base.sh
 
-set -x 
+set -x
 
 
 if [ ! -z "$(get_version_cache_option)" ]; then
@@ -18,7 +18,7 @@ fi
 apt-get -s clean -y
 apt-get -s autoclean -y
 apt-get -s autoremove -y
-#apt-get -s autoremove -y --purge 
+#apt-get -s autoremove -y --purge
 rm -f /var/cache/apt/archives/*.deb /var/cache/apt/*.bin
 
 if [[ ! ${IMAGENAME} =~ -slave- ]]; then
@@ -38,3 +38,4 @@ set_reproducible_mirrors -d
 
 # Remove the version deb preference
 rm -f $VERSION_DEB_PREFERENCE
+rm -f /etc/apt/preferences.d/01-versions-deb
