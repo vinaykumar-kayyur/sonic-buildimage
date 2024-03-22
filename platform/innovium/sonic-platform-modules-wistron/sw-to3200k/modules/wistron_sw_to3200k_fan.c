@@ -283,7 +283,7 @@ static int sw_to3200k_fan_probe
         goto exit_free;
     }
 
-	data->hwmon_dev = hwmon_device_register_with_info(&client->dev, "wistron_fan", NULL, NULL, NULL);
+	data->hwmon_dev = hwmon_device_register_with_groups(&client->dev, "wistron_fan", NULL, NULL);
     if (IS_ERR(data->hwmon_dev))
     {
         status = PTR_ERR(data->hwmon_dev);

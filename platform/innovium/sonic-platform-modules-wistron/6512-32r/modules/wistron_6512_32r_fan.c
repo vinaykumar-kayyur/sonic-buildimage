@@ -200,7 +200,7 @@ static int wistron_fan_probe(struct i2c_client *client, const struct i2c_device_
 	if (status)
 		goto exit_free;
 
-	data->hwmon_dev = hwmon_device_register_with_info(&client->dev, "wistron_fan", NULL, NULL, NULL);
+	data->hwmon_dev = hwmon_device_register_with_groups(&client->dev, "wistron_fan", NULL, NULL);
 	if (IS_ERR(data->hwmon_dev)) {
 		status = PTR_ERR(data->hwmon_dev);
 		goto exit_remove;
