@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2019-2021 NVIDIA CORPORATION & AFFILIATES.
+# Copyright (c) 2019-2023 NVIDIA CORPORATION & AFFILIATES.
 # Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -31,7 +31,10 @@ try:
     from . import utils
     from .device_data import DeviceDataManager
     import re
+    import queue
+    import threading
     import time
+    from sonic_platform import modules_mgmt
 except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 
@@ -59,8 +62,9 @@ HWMGMT_SYSTEM_ROOT = '/var/run/hw-management/system/'
 
 #reboot cause related definitions
 REBOOT_CAUSE_ROOT = HWMGMT_SYSTEM_ROOT
-
-REBOOT_CAUSE_FILE_LENGTH = 1
+REBOOT_CAUSE_MAX_WAIT_TIME = 45
+REBOOT_CAUSE_CHECK_INTERVAL = 5
+REBOOT_CAUSE_READY_FILE = '/run/hw-management/config/reset_attr_ready'
 
 REBOOT_TYPE_KEXEC_FILE = "/proc/cmdline"
 REBOOT_TYPE_KEXEC_PATTERN_WARM = ".*SONIC_BOOT_TYPE=(warm|fastfast).*"
@@ -74,6 +78,11 @@ class Chassis(ChassisBase):
 
     # System status LED
     _led = None
+
+    # System UID LED
+    _led_uid = None
+
+    chassis_instance = None
 
     def __init__(self):
         super(Chassis, self).__init__()
@@ -115,10 +124,17 @@ class Chassis(ChassisBase):
         self.reboot_cause_initialized = False
 
         self.sfp_module = None
+        self.sfp_lock = threading.Lock()
 
         # Build the RJ45 port list from platform.json and hwsku.json
         self._RJ45_port_inited = False
         self._RJ45_port_list = None
+
+        Chassis.chassis_instance = self
+
+        self.modules_mgmt_thread = threading.Thread()
+        self.modules_changes_queue = queue.Queue()
+        self.modules_mgmt_task_stopping_event = threading.Event()
 
         logger.log_info("Chassis loaded successfully")
 
@@ -262,38 +278,49 @@ class Chassis(ChassisBase):
 
     def initialize_single_sfp(self, index):
         sfp_count = self.get_num_sfps()
+        # Use double checked locking mechanism for:
+        #     1. protect shared resource self._sfp_list
+        #     2. performance (avoid locking every time)
         if index < sfp_count:
-            if not self._sfp_list:
-                self._sfp_list = [None] * sfp_count
+            if not self._sfp_list or not self._sfp_list[index]:
+                with self.sfp_lock:
+                    if not self._sfp_list:
+                        self._sfp_list = [None] * sfp_count
 
-            if not self._sfp_list[index]:
-                sfp_module = self._import_sfp_module()
-                if self.RJ45_port_list and index in self.RJ45_port_list:
-                    self._sfp_list[index] = sfp_module.RJ45Port(index)
-                else:
-                    self._sfp_list[index] = sfp_module.SFP(index)
-                self.sfp_initialized_count += 1
+                    if not self._sfp_list[index]:
+                        sfp_module = self._import_sfp_module()
+                        if self.RJ45_port_list and index in self.RJ45_port_list:
+                            self._sfp_list[index] = sfp_module.RJ45Port(index)
+                        else:
+                            self._sfp_list[index] = sfp_module.SFP(index)
+                        self.sfp_initialized_count += 1
 
     def initialize_sfp(self):
-        if not self._sfp_list:
-            sfp_module = self._import_sfp_module()
-            sfp_count = self.get_num_sfps()
-            for index in range(sfp_count):
-                if self.RJ45_port_list and index in self.RJ45_port_list:
-                    sfp_object = sfp_module.RJ45Port(index)
-                else:
-                    sfp_object = sfp_module.SFP(index)
-                self._sfp_list.append(sfp_object)
-            self.sfp_initialized_count = sfp_count
-        elif self.sfp_initialized_count != len(self._sfp_list):
-            sfp_module = self._import_sfp_module()
-            for index in range(len(self._sfp_list)):
-                if self._sfp_list[index] is None:
-                    if self.RJ45_port_list and index in self.RJ45_port_list:
-                        self._sfp_list[index] = sfp_module.RJ45Port(index)
-                    else:
-                        self._sfp_list[index] = sfp_module.SFP(index)
-            self.sfp_initialized_count = len(self._sfp_list)
+        sfp_count = self.get_num_sfps()
+        # Use double checked locking mechanism for:
+        #     1. protect shared resource self._sfp_list
+        #     2. performance (avoid locking every time)
+        if sfp_count != self.sfp_initialized_count:
+            with self.sfp_lock:
+                if sfp_count != self.sfp_initialized_count:
+                    if not self._sfp_list:
+                        sfp_module = self._import_sfp_module()
+                        for index in range(sfp_count):
+                            if self.RJ45_port_list and index in self.RJ45_port_list:
+                                sfp_object = sfp_module.RJ45Port(index)
+                            else:
+                                sfp_object = sfp_module.SFP(index)
+                            self._sfp_list.append(sfp_object)
+                        self.sfp_initialized_count = sfp_count
+                    elif self.sfp_initialized_count != len(self._sfp_list):
+                        sfp_module = self._import_sfp_module()
+                        for index in range(len(self._sfp_list)):
+                            if self._sfp_list[index] is None:
+                                if self.RJ45_port_list and index in self.RJ45_port_list:
+                                    self._sfp_list[index] = sfp_module.RJ45Port(index)
+                                else:
+                                    self._sfp_list[index] = sfp_module.SFP(index)
+                        self.sfp_initialized_count = len(self._sfp_list)
 
     def get_num_sfps(self):
         """
@@ -367,7 +394,7 @@ class Chassis(ChassisBase):
 
         Returns:
             (bool, dict):
-                - True if call successful, False if not;
+                - True if call successful, False if not; - Deprecated, will always return True
                 - A nested dictionary where key is a device type,
                   value is a dictionary with key:value pairs in the format of
                   {'device_id':'device_event'},
@@ -379,38 +406,42 @@ class Chassis(ChassisBase):
                       indicates that fan 0 has been removed, fan 2
                       has been inserted and sfp 11 has been removed.
         """
+        if not self.modules_mgmt_thread.is_alive():
+            # open new SFP change events thread
+            self.modules_mgmt_thread = modules_mgmt.ModulesMgmtTask(q=self.modules_changes_queue
+                                                    , main_thread_stop_event = self.modules_mgmt_task_stopping_event)
+            # Set the thread as daemon so when pmon/xcvrd are shutting down, modules_mgmt will shut down immedietly.
+            self.modules_mgmt_thread.daemon = True
+            self.modules_mgmt_thread.start()
         self.initialize_sfp()
-        # Initialize SFP event first
-        if not self.sfp_event:
-            from .sfp_event import sfp_event
-            self.sfp_event = sfp_event(self.RJ45_port_list)
-            self.sfp_event.initialize()
-
         wait_for_ever = (timeout == 0)
-        # select timeout should be no more than 1000ms to ensure fast shutdown flow
-        select_timeout = 1000.0 if timeout >= 1000 else float(timeout)
+        # poll timeout should be no more than 1000ms to ensure fast shutdown flow
+        timeout = 1000.0 if timeout >= 1000 else float(timeout)
         port_dict = {}
         error_dict = {}
         begin = time.time()
+        i = 0
         while True:
-            status = self.sfp_event.check_sfp_status(port_dict, error_dict, select_timeout)
-            if bool(port_dict):
-                break
+            try:
+                logger.log_info(f'get_change_event() trying to get changes from queue on iteration {i}')
+                port_dict = self.modules_changes_queue.get(timeout=timeout / 1000)
+                logger.log_info(f'get_change_event() iteration {i} port_dict: {port_dict}')
+            except queue.Empty:
+                logger.log_info(f"failed to get item from modules changes queue on itertaion {i}")
 
-            if not wait_for_ever:
-                elapse = time.time() - begin
-                if elapse * 1000 > timeout:
-                    break
-
-        if status:
             if port_dict:
                 self.reinit_sfps(port_dict)
-            result_dict = {'sfp': port_dict}
-            if error_dict:
+                result_dict = {'sfp': port_dict}
                 result_dict['sfp_error'] = error_dict
-            return True, result_dict
-        else:
-            return True, {'sfp': {}}
+                return True, result_dict
+            else:
+                if not wait_for_ever:
+                    elapse = time.time() - begin
+                    logger.log_info(f"get_change_event: wait_for_ever {wait_for_ever} elapse {elapse} iteartion {i}")
+                    if elapse * 1000 >= timeout:
+                        logger.log_info(f"elapse {elapse} > timeout {timeout} iteartion {i} returning empty dict")
+                        return True, {'sfp': {}}
+            i += 1
 
     def reinit_sfps(self, port_dict):
         """
@@ -422,7 +453,7 @@ class Chassis(ChassisBase):
         for index, status in port_dict.items():
             if status == sfp.SFP_STATUS_INSERTED:
                 try:
-                    self._sfp_list[index - 1].reinit()
+                    self._sfp_list[int(index) - 1].reinit()
                 except Exception as e:
                     logger.log_error("Fail to re-initialize SFP {} - {}".format(index, repr(e)))
 
@@ -622,8 +653,10 @@ class Chassis(ChassisBase):
 
     def initizalize_system_led(self):
         if not Chassis._led:
-            from .led import SystemLed
+            from .led import SystemLed, \
+                SystemUidLed
             Chassis._led = SystemLed()
+            Chassis._led_uid = SystemUidLed()
 
     def set_status_led(self, color):
         """
@@ -649,6 +682,31 @@ class Chassis(ChassisBase):
         """
         self.initizalize_system_led()
         return None if not Chassis._led else Chassis._led.get_status()
+
+    def set_uid_led(self, color):
+        """
+        Sets the state of the system UID LED
+
+        Args:
+            color: A string representing the color with which to set the
+                   system UID LED
+
+        Returns:
+            bool: True if system LED state is set successfully, False if not
+        """
+        self.initizalize_system_led()
+        return False if not Chassis._led_uid else Chassis._led_uid.set_status(color)
+
+    def get_uid_led(self):
+        """
+        Gets the state of the system UID LED
+
+        Returns:
+            A string, one of the valid LED color strings which could be vendor
+            specified.
+        """
+        self.initizalize_system_led()
+        return None if not Chassis._led_uid else Chassis._led_uid.get_status()
 
     def get_watchdog(self):
         """
@@ -735,7 +793,6 @@ class Chassis(ChassisBase):
             'reset_hotswap_or_halt'     :   self.REBOOT_CAUSE_HARDWARE_OTHER,
             'reset_voltmon_upgrade_fail':   self.REBOOT_CAUSE_HARDWARE_OTHER,
             'reset_reload_bios'         :   self.REBOOT_CAUSE_HARDWARE_BIOS,
-            'reset_from_comex'          :   self.REBOOT_CAUSE_HARDWARE_CPU,
             'reset_fw_reset'            :   self.REBOOT_CAUSE_HARDWARE_RESET_FROM_ASIC,
             'reset_from_asic'           :   self.REBOOT_CAUSE_HARDWARE_RESET_FROM_ASIC,
             'reset_long_pb'             :   self.REBOOT_CAUSE_HARDWARE_BUTTON,
@@ -757,6 +814,16 @@ class Chassis(ChassisBase):
                 return 'fast-reboot'
         return None
 
+    def _wait_reboot_cause_ready(self):
+        max_wait_time = REBOOT_CAUSE_MAX_WAIT_TIME
+        while max_wait_time > 0:
+            if utils.read_int_from_file(REBOOT_CAUSE_READY_FILE, log_func=None) == 1:
+                return True
+            time.sleep(REBOOT_CAUSE_CHECK_INTERVAL)
+            max_wait_time -= REBOOT_CAUSE_CHECK_INTERVAL
+
+        return False
+
     def get_reboot_cause(self):
         """
         Retrieves the cause of the previous reboot
@@ -776,6 +843,10 @@ class Chassis(ChassisBase):
             reboot_cause = self._parse_warmfast_reboot_from_proc_cmdline()
             if reboot_cause:
                 return self.REBOOT_CAUSE_NON_HARDWARE, ''
+
+        if not self._wait_reboot_cause_ready():
+            logger.log_error("Hardware reboot cause is not ready")
+            return self.REBOOT_CAUSE_NON_HARDWARE, ''
 
         if not self.reboot_cause_initialized:
             self.initialize_reboot_cause()

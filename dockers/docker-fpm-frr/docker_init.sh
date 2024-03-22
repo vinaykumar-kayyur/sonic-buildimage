@@ -46,7 +46,12 @@ write_default_zebra_config()
     FILE_NAME=${1}
 
     grep -q '^no fpm use-next-hop-groups' $FILE_NAME || {
-        sed -i '1i no fpm use-next-hop-groups\nfpm address 127.0.0.1' $FILE_NAME
+        echo "no fpm use-next-hop-groups" >> $FILE_NAME
+        echo "fpm address 127.0.0.1" >> $FILE_NAME
+    }
+
+    grep -q '^no zebra nexthop kernel enable' $FILE_NAME || {
+        echo "no zebra nexthop kernel enable" >> $FILE_NAME
     }
 }
 
@@ -105,5 +110,9 @@ chmod 0755 /usr/sbin/bgp-unisolate
 
 mkdir -p /var/sonic
 echo "# Config files managed by sonic-config-engine" > /var/sonic/config_status
+
+TZ=$(cat /etc/timezone)
+rm -rf /etc/localtime
+ln -sf /usr/share/zoneinfo/$TZ /etc/localtime
 
 exec /usr/local/bin/supervisord

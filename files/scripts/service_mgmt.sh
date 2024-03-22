@@ -3,7 +3,6 @@
 function debug()
 {
     /usr/bin/logger $1
-    /bin/echo `date` "- $1" >> ${DEBUGLOG}
 }
 
 function check_warm_boot()
@@ -19,7 +18,8 @@ function check_warm_boot()
 
 function check_fast_boot ()
 {
-    if [[ $($SONIC_DB_CLI STATE_DB GET "FAST_REBOOT|system") == "1" ]]; then
+    SYSTEM_FAST_REBOOT=`sonic-db-cli STATE_DB hget "FAST_RESTART_ENABLE_TABLE|system" enable`
+    if [[ x"${SYSTEM_FAST_REBOOT}" == x"true" ]]; then
         FAST_BOOT="true"
     else
         FAST_BOOT="false"
@@ -86,7 +86,6 @@ DEV=$2
 
 SCRIPT_NAME=$(basename -- "$0")
 SERVICE="${SCRIPT_NAME%.*}"
-DEBUGLOG="/tmp/$SERVICE-debug$DEV.log"
 NAMESPACE_PREFIX="asic"
 if [ "$DEV" ]; then
     NET_NS="$NAMESPACE_PREFIX$DEV" #name of the network namespace

@@ -4,81 +4,95 @@
 Table of Contents
 =================
 
-   * [Introduction](#introduction)  
-   * [Configuration](#configuration)  
-   * [<strong>Config Load and Save</strong>](#config-load-and-save)  
-         * [Incremental Configuration](#incremental-configuration)  
-   * [<strong>Redis and Json Schema</strong>](#redis-and-json-schema)  
-         * [ACL and Mirroring](#acl-and-mirroring)  
-         * [BGP Device Global](#bgp-device-global)  
-         * [BGP Sessions](#bgp-sessions)  
-         * [BUFFER_PG](#buffer_pg)  
-         * [Buffer pool](#buffer-pool)  
-         * [Buffer profile](#buffer-profile)  
-         * [Buffer queue](#buffer-queue)  
-         * [Buffer port ingress profile list](#buffer-port-ingress-profile-list)  
-         * [Buffer port egress profile list](#buffer-port-egress-profile-list)  
-         * [Cable length](#cable-length)  
-         * [Chassis module](#chassis-module)         
-         * [COPP_TABLE](#copp_table)  
-         * [Console](#console)  
-         * [CRM](#crm)  
-         * [Data Plane L3 Interfaces](#data-plane-l3-interfaces)  
-         * [DEFAULT_LOSSLESS_BUFFER_PARAMETER](#DEFAULT_LOSSLESS_BUFFER_PARAMETER)  
-         * [Device Metadata](#device-metadata)  
+   * [Introduction](#introduction)
+   * [Configuration](#configuration)
+   * [<strong>Config Load and Save</strong>](#config-load-and-save)
+
+         * [Incremental Configuration](#incremental-configuration)
+   * [<strong>Redis and Json Schema</strong>](#redis-and-json-schema)
+
+         * [ACL and Mirroring](#acl-and-mirroring)
+         * [BGP BBR](#bgp-bbr)
+         * [BGP Device Global](#bgp-device-global)
+         * [BGP Sessions](#bgp-sessions)
+         * [BUFFER_PG](#buffer_pg)
+         * [Buffer pool](#buffer-pool)
+         * [Buffer profile](#buffer-profile)
+         * [Buffer queue](#buffer-queue)
+         * [Buffer port ingress profile list](#buffer-port-ingress-profile-list)
+         * [Buffer port egress profile list](#buffer-port-egress-profile-list)
+         * [Cable length](#cable-length)
+         * [Chassis module](#chassis-module)
+         * [COPP_TABLE](#copp_table)
+         * [Console](#console)
+         * [CRM](#crm)
+         * [CRM DASH](#crm-dash)
+         * [Data Plane L3 Interfaces](#data-plane-l3-interfaces)
+         * [DEFAULT_LOSSLESS_BUFFER_PARAMETER](#DEFAULT_LOSSLESS_BUFFER_PARAMETER)
+         * [Device Metadata](#device-metadata)
          * [Device neighbor metada](#device-neighbor-metada)
          * [DHCP_RELAY](#dhcp_relay)
-         * [DSCP_TO_TC_MAP](#dscp_to_tc_map)  
-         * [FG_NHG](#fg_nhg)  
-         * [FG_NHG_MEMBER](#fg_nhg_member)  
-         * [FG_NHG_PREFIX](#fg_nhg_prefix)  
-         * [FLEX_COUNTER_TABLE](#flex_counter_table)  
-         * [Hash](#hash)  
-         * [KDUMP](#kdump)  
-         * [Kubernetes Master](#kubernetes-master)  
-         * [L2 Neighbors](#l2-neighbors)  
-         * [Loopback Interface](#loopback-interface)  
-         * [LOSSLESS_TRAFFIC_PATTERN](#LOSSLESS_TRAFFIC_PATTERN)  
-         * [Management Interface](#management-interface)  
-         * [Management port](#management-port)  
-         * [Management VRF](#management-vrf)  
-         * [MAP_PFC_PRIORITY_TO_QUEUE](#map_pfc_priority_to_queue)  
-         * [MUX_CABLE](#muxcable)  
-         * [NTP Global Configuration](#ntp-global-configuration)  
-         * [NTP and SYSLOG servers](#ntp-and-syslog-servers)  
-         * [Peer Switch](#peer-switch)  
-         * [Policer](#policer)   
-         * [Port](#port)   
-         * [Port Channel](#port-channel)  
-         * [Portchannel member](#portchannel-member)  
-         * [Scheduler](#scheduler)  
-         * [Port QoS Map](#port-qos-map)  
-         * [Queue](#queue)  
-         * [Syslog Rate Limit](#syslog-rate-limit)  
-         * [Sflow](#sflow)  
-         * [Restapi](#restapi)  
-         * [System Port](#system-port)  
-         * [Tacplus Server](#tacplus-server)    
-         * [TC to Priority group map](#tc-to-priority-group-map)  
-         * [TC to Queue map](#tc-to-queue-map)    
-         * [Telemetry](#telemetry)  
+         * [DHCP Server IPV4](#dhcp_server_ipv4)
+         * [DSCP_TO_TC_MAP](#dscp_to_tc_map)
+         * [FG_NHG](#fg_nhg)
+         * [FG_NHG_MEMBER](#fg_nhg_member)
+         * [FG_NHG_PREFIX](#fg_nhg_prefix)
+         * [FABRIC_MONITOR](#fabric-monitor)
+         * [FABRIC_PORT](#fabric-port)
+         * [FLEX_COUNTER_TABLE](#flex_counter_table)
+         * [Hash](#hash)
+         * [IPv6 Link-local] (#ipv6-link-local)
+         * [KDUMP](#kdump)
+         * [Kubernetes Master](#kubernetes-master)
+         * [L2 Neighbors](#l2-neighbors)
+         * [Loopback Interface](#loopback-interface)
+         * [LOSSLESS_TRAFFIC_PATTERN](#LOSSLESS_TRAFFIC_PATTERN)
+         * [Management Interface](#management-interface)
+         * [Management port](#management-port)
+         * [Management VRF](#management-vrf)
+         * [MAP_PFC_PRIORITY_TO_QUEUE](#map_pfc_priority_to_queue)
+         * [MUX_CABLE](#mux_cable)
+         * [MUX_LINKMGR](#mux_linkmgr)
+         * [NEIGH](#neigh)
+         * [NTP Global Configuration](#ntp-global-configuration)
+         * [NTP Servers](#ntp-servers)
+         * [Peer Switch](#peer-switch)
+         * [Policer](#policer)
+         * [Port](#port)
+         * [Port Channel](#port-channel)
+         * [Portchannel member](#portchannel-member)
+         * [Scheduler](#scheduler)
+         * [Port QoS Map](#port-qos-map)
+         * [Queue](#queue)
+         * [Syslog Global Configuration](#syslog-global-configuration)
+         * [Syslog Servers](#syslog-servers)
+         * [Sflow](#sflow)
+         * [Restapi](#restapi)
+         * [System Port](#system-port)
+         * [Tacplus Server](#tacplus-server)
+         * [TC to Priority group map](#tc-to-priority-group-map)
+         * [TC to Queue map](#tc-to-queue-map)
+         * [Telemetry](#telemetry)
+         * [Telemetry client](#telemetry-client)
          * [Tunnel](#tunnel)
-         * [Versions](#versions)  
-         * [VLAN](#vlan)   
-         * [VLAN_MEMBER](#vlan_member)  
-         * [VOQ Inband Interface](#voq-inband-interface)  
-         * [VXLAN](#vxlan)  
-         * [Virtual router](#virtual-router)  
-         * [LOGGER](#logger)           
-         * [WRED_PROFILE](#wred_profile)  
-         * [PASSWORD_HARDENING](#password_hardening)  
-         * [SYSTEM_DEFAULTS table](#systemdefaults-table)  
-         * [RADIUS](#radius)  
-         * [Static DNS](#static-dns)  
-   * [For Developers](#for-developers)  
+         * [Versions](#versions)
+         * [VLAN](#vlan)
+         * [VLAN_MEMBER](#vlan_member)
+         * [VNET](#vnet)
+         * [VOQ Inband Interface](#voq-inband-interface)
+         * [VXLAN](#vxlan)
+         * [Virtual router](#virtual-router)
+         * [LOGGER](#logger)
+         * [WRED_PROFILE](#wred_profile)
+         * [PASSWORD_HARDENING](#password_hardening)
+         * [SSH_SERVER](#ssh_server)  
+         * [SYSTEM_DEFAULTS table](#systemdefaults-table)
+         * [RADIUS](#radius)
+         * [Static DNS](#static-dns)
+   * [For Developers](#for-developers)
       * [Generating Application Config by Jinja2 Template](#generating-application-config-by-jinja2-template)
       * [Incremental Configuration by Subscribing to ConfigDB](#incremental-configuration-by-subscribing-to-configdb)
- 
+
 
 
 # Introduction
@@ -333,7 +347,7 @@ and migration plan
             ],
             "BIND_POINTS": [
                 "PORT",
-                "LAG"
+                "PORTCHANNEL"
             ]
         }
     },
@@ -354,6 +368,18 @@ and migration plan
             "SRC_IP": "1.1.1.1/32",
         }
     }
+}
+```
+### BGP BBR
+
+The **BGP_BBR** table contains device-level BBR state.
+```
+{
+        "BGP_BBR": {
+            "all": {
+                "status": "enabled"/"disabled"
+            }
+        }
 }
 ```
 ### BGP Device Global
@@ -415,7 +441,14 @@ group name and IP ranges in **BGP_PEER_RANGE** table.
         "ip_range": [
             "10.2.0.0/16"
         ]
-    }
+    },
+    "BGPSentinel": {
+        "name": "BGPSentinel",
+        "ip_range": [
+            "10.1.0.0/24"
+        ],
+        "src_address": "10.1.0.32"
+     }
   }
 }
 ```
@@ -784,6 +817,62 @@ It currently allows user to administratively bring down a line-card or fabric-ca
 
 ```
 
+### CRM DASH
+
+```json
+{
+"CRM": {
+    "Config": {
+        "dash_vnet_threshold_type": "percentage",
+        "dash_vnet_low_threshold": "70",
+        "dash_vnet_high_threshold": "85",
+        "dash_eni_threshold_type": "percentage",
+        "dash_eni_low_threshold": "70",
+        "dash_eni_high_threshold": "85",
+        "dash_eni_ether_address_map_threshold_type": "percentage",
+        "dash_eni_ether_address_map_low_threshold": "70",
+        "dash_eni_ether_address_map_high_threshold": "85",
+        "dash_ipv4_inbound_routing_threshold_type": "percentage",
+        "dash_ipv4_inbound_routing_low_threshold": "70",
+        "dash_ipv4_inbound_routing_high_threshold": "85",
+        "dash_ipv6_inbound_routing_threshold_type": "percentage",
+        "dash_ipv6_inbound_routing_low_threshold": "70",
+        "dash_ipv6_inbound_routing_high_threshold": "85",
+        "dash_ipv4_outbound_routing_threshold_type": "percentage",
+        "dash_ipv4_outbound_routing_low_threshold": "70",
+        "dash_ipv4_outbound_routing_high_threshold": "85",
+        "dash_ipv6_outbound_routing_threshold_type": "percentage",
+        "dash_ipv6_outbound_routing_low_threshold": "70",
+        "dash_ipv6_outbound_routing_high_threshold": "85",
+        "dash_ipv4_pa_validation_threshold_type": "percentage",
+        "dash_ipv4_pa_validation_low_threshold": "70",
+        "dash_ipv4_pa_validation_high_threshold": "85",
+        "dash_ipv6_pa_validation_threshold_type": "percentage",
+        "dash_ipv6_pa_validation_low_threshold": "70",
+        "dash_ipv6_pa_validation_high_threshold": "85",
+        "dash_ipv4_outbound_ca_to_pa_threshold_type": "percentage",
+        "dash_ipv4_outbound_ca_to_pa_low_threshold": "70",
+        "dash_ipv4_outbound_ca_to_pa_high_threshold": "85",
+        "dash_ipv6_outbound_ca_to_pa_threshold_type": "percentage",
+        "dash_ipv6_outbound_ca_to_pa_low_threshold": "70",
+        "dash_ipv6_outbound_ca_to_pa_high_threshold": "85",
+        "dash_ipv4_acl_group_threshold_type": "percentage",
+        "dash_ipv4_acl_group_low_threshold": "70",
+        "dash_ipv4_acl_group_high_threshold": "85",
+        "dash_ipv6_acl_group_threshold_type": "percentage",
+        "dash_ipv6_acl_group_low_threshold": "70",
+        "dash_ipv6_acl_group_high_threshold": "85",
+        "dash_ipv4_acl_rule_threshold_type": "percentage",
+        "dash_ipv4_acl_rule_low_threshold": "70",
+        "dash_ipv4_acl_rule_high_threshold": "85",
+        "dash_ipv6_acl_rule_threshold_type": "percentage",
+        "dash_ipv6_acl_rule_low_threshold": "70",
+        "dash_ipv6_acl_rule_high_threshold": "85"
+    }
+  }
+}
+```
+
 ### Data Plane L3 Interfaces
 
 IP configuration for data plane are defined in **INTERFACE**, **VLAN_SUB_INTERFACE**,
@@ -865,7 +954,9 @@ instance is supported in SONiC.
         "type": "ToRRouter",
         "bgp_adv_lo_prefix_as_128" : "true",
         "buffer_model": "traditional",
-        "yang_config_validation": "disable"
+        "yang_config_validation": "disable",
+        "rack_mgmt_map": "dummy_value",
+        "timezome": "Europe/Kiev"
     }
   }
 }
@@ -879,12 +970,14 @@ instance is supported in SONiC.
 {
 "DEVICE_NEIGHBOR_METADATA": {
     "ARISTA01T1": {
+        "cluster": "AAA00PrdStr00",
         "lo_addr": "None",
         "mgmt_addr": "10.11.150.45",
         "hwsku": "Arista-VM",
         "type": "LeafRouter"
     },
     "ARISTA02T1": {
+        "cluster": "AAA00PrdStr00",
         "lo_addr": "None",
         "mgmt_addr": "10.11.150.46",
         "hwsku": "Arista-VM",
@@ -910,6 +1003,50 @@ instance is supported in SONiC.
     "interface_id": "true"
 }
 
+```
+
+### DHCP_SERVER_IPV4
+IPV4 DHPC Server related configuration are defined in **DHCP_SERVER_IPV4**, **DHCP_SERVER_IPV4_CUSTOMIZED_OPTIONS**, **DHCP_SERVER_IPV4_RANGE**, **DHCP_SERVER_IPV4_PORT** tables.
+```
+{
+    "DHCP_SERVER_IPV4": {
+        "Vlan100": {
+            "gateway": "100.1.1.1",
+            "lease_time": 3600,
+            "mode": "PORT",
+            "netmask": "255.255.255.0",
+            "customized_options": [
+                "option60"
+            ],
+            "state": "enabled"
+        }
+    },
+    "DHCP_SERVER_IPV4_CUSTOMIZED_OPTIONS": {
+        "option60": {
+            "id": 60,
+            "type": "string",
+            "value": "dummy_value"
+        }
+    },
+    "DHCP_SERVER_IPV4_RANGE": {
+        "range1": {
+            "ip_start": "100.1.1.3",
+            "ip_end": "100.1.1.5"
+        }
+    },
+    "DHCP_SERVER_IPV4_PORT": {
+        "Vlan100|PortChannel0003": {
+            "ips": [
+                "100.1.1.10"
+            ]
+        },
+        "Vlan100|PortChannel2": {
+            "ranges": [
+                "range1"
+            ]
+        }
+    }
+}
 ```
 
 ### DSCP_TO_TC_MAP
@@ -984,6 +1121,39 @@ The FG_NHG_PREFIX table provides the FG_NHG_PREFIX for which FG behavior is desi
 }
 ```
 
+### FABRIC_MONITOR
+```
+{
+"FABRIC_MONITOR": {
+    "FABRIC_MONITOR_DATA": {
+        "monErrThreshCrcCells": "1",
+        "monErrThreshRxCells": "61035156",
+        "monPollThreshIsolation": "1",
+        "monPollThreshRecovery": "8"
+    }
+  }
+}
+
+```
+
+### FABRIC_PORT
+```
+{
+"FABRIC_PORT": {
+    "Fabric0": {
+        "alias": "Fabric0",
+        "isolateStatus": "False",
+        "lanes": "0"
+    },
+    "Fabric1": {
+        "alias": "Fabric1",
+        "isolateStatus": "False",
+        "lanes": "1"
+    }
+  }
+}
+
+```
 
 ### MPLS_TC_TO_TC_MAP
 ```
@@ -1024,6 +1194,14 @@ The FG_NHG_PREFIX table provides the FG_NHG_PREFIX for which FG behavior is desi
 		"TUNNEL": {
 			"FLEX_COUNTER_STATUS": "enable",
 			"POLL_INTERVAL": "10000"
+		},
+		"WRED_ECN_QUEUE": {
+			"FLEX_COUNTER_STATUS": "enable",
+			"POLL_INTERVAL": "10000"
+		},
+		"WRED_ECN_PORT": {
+			"FLEX_COUNTER_STATUS": "enable",
+			"POLL_INTERVAL": "1000"
 		}
 	}
 }
@@ -1032,7 +1210,7 @@ The FG_NHG_PREFIX table provides the FG_NHG_PREFIX for which FG behavior is desi
 
 ### Hash
 
-Generic hash allows user to configure which hash fields are suppose to be used by a hashing algorithm.  
+Generic hash allows user to configure various aspects of hashing algorithm.  
 The configuration is applied globally for each ECMP and LAG on a switch.
 
 ***ECMP/LAG HASH***
@@ -1076,10 +1254,36 @@ The configuration is applied globally for each ECMP and LAG on a switch.
                 "INNER_SRC_IP",
                 "INNER_L4_DST_PORT",
                 "INNER_L4_SRC_PORT"
-            ]
+            ],
+            "ecmp_hash_algorithm": "CRC",
+            "lag_hash_algorithm": "CRC"
         }
     }
 }
+```
+
+### IPv6 Link-local
+```
+{
+    "INTERFACE": {
+        "Ethernet8": {
+            "ipv6_use_link_local_only": "disable"
+        }
+    },
+
+    "PORTCHANNEL_INTERFACE": {
+        "PortChannel01": {
+            "ipv6_use_link_local_only": "enable"
+        }
+    },
+
+    "VLAN_INTERFACE": {
+        "Vlan1000": {
+            "ipv6_use_link_local_only": "enable"
+        }
+    }
+}
+
 ```
 
 ### KDUMP
@@ -1293,11 +1497,91 @@ The **MUX_CABLE** table is used for dualtor interface configuration. The `cable_
 }
 ```
 
+### MUX_LINKMGR
+The **MUX_LINKMGR** table is used for dualtor device configuration.
+```
+{
+    "MUX_LINKMGR": {
+        "LINK_PROBER": {
+            "interval_v4": "100",
+            "interval_v6": "1000",
+            "positive_signal_count": "1",
+            "negative_signal_count": "3",
+            "suspend_timer": "500",
+            "use_well_known_mac": "enabled",
+            "src_mac": "ToRMac",
+            "interval_pck_loss_count_update": "3"
+        },
+        "MUXLOGGER": {
+            "log_verbosity": "debug"
+        },
+        "SERVICE_MGMT": {
+            "kill_radv": "True"
+        }
+    }
+}
+```
+
+### NEIGH
+
+The **NEIGH** table is used to keep track of resolved and static neighbors.
+
+Resolve case:
+```
+{
+    "NEIGH": {
+        "Vlan100|100.1.1.3": {
+            "family": "IPv4"
+        }
+    }
+}
+```
+Static Nbr:
+```
+{
+    "NEIGH": {
+        "Vlan100|100.1.1.5": {
+            "neigh": "00:02:02:03:04:05",
+            "family": "IPv4"
+        }
+    }
+}
+```
+
 ### NTP Global Configuration
 
 These configuration options are used to modify the way that
 ntp binds to the ports on the switch and which port it uses to
 make ntp update requests from.
+
+***NTP Admin state***
+
+If this option is set to `enabled` then ntp client will try to sync system time with configured NTP servers.
+Otherwise, NTP client feature will be disabled.
+```
+{
+    "NTP": {
+        "global": {
+            "admin_state": "enabled"
+        }
+    }
+}
+```
+
+***NTP Server role***
+
+This option is used to control NTP server state on the switch.
+If this option is set to `enabled` switch will act as NTP server.
+By default `server_role` is `disabled`.
+```
+{
+    "NTP": {
+        "global": {
+            "server_role": "enabled"
+        }
+    }
+}
+```
 
 ***NTP VRF***
 
@@ -1336,7 +1620,37 @@ for that address.
 }
 ```
 
-### NTP and SYSLOG servers
+***NTP Authentication***
+
+If this option is set to `enabled` then ntp will try to verify NTP servers it connects to.
+This option **has no effect** if key is not set for NTP server.
+By default it is `disabled`
+```
+{
+    "NTP": {
+        "global": {
+            "authentication": "enabled"
+        }
+    }
+}
+```
+
+***NTP DHCP leases***
+
+If this option is set to `enabled` then ntp client will try to use NTP servers provided by DHCP server.
+If this option is set to `disabled` you will be able to use the user-configured NTP servers.
+By default it is `enabled`
+```
+{
+    "NTP": {
+        "global": {
+            "dhcp": "enabled"
+        }
+    }
+}
+```
+
+### NTP servers
 
 These information are configured in individual tables. Domain name or IP
 address of the server is used as object key. Currently there are no
@@ -1346,47 +1660,77 @@ attributes in those objects.
 ```
 {
     "NTP_SERVER": {
-        "2.debian.pool.ntp.org": {},
-        "1.debian.pool.ntp.org": {},
-        "3.debian.pool.ntp.org": {},
-        "0.debian.pool.ntp.org": {}
+        "2.debian.pool.ntp.org": {
+            "association_type": "pool",
+            "iburst": "on",
+            "admin_state": "enabled",
+            "version": 4
+        },
+        "1.debian.pool.ntp.org": {
+            "association_type": "pool",
+            "iburst": "off",
+            "admin_state": "enabled",
+            "version": 3
+        },
+        "3.debian.pool.ntp.org": {
+            "association_type": "pool",
+            "iburst": "on",
+            "admin_state": "disabled",
+            "version": 4
+        },
+        "0.debian.pool.ntp.org": {
+            "association_type": "pool",
+            "iburst": "off",
+            "admin_state": "disabled",
+            "version": 3
+        }
     },
 
     "NTP_SERVER": {
-        "23.92.29.245": {},
-        "204.2.134.164": {}
-    }
-}
-```
-
-***Syslog server***
-```
-{
-    "SYSLOG_SERVER": {
-        "10.0.0.5": {},
-        "10.0.0.6": {},
-        "10.11.150.5": {}
-    },
-
-    "SYSLOG_SERVER" : {
-        "2.2.2.2": {
-            "source": "1.1.1.1",
-            "port": "514",
-            "vrf": "default"
+        "23.92.29.245": {
+            "association_type": "server",
+            "iburst": "on",
+            "admin_state": "enabled",
+            "version": 4,
+            "key": 3,
+            "trusted": "yes"
         },
-        "4.4.4.4": {
-            "source": "3.3.3.3",
-            "port": "514",
-            "vrf": "mgmt"
-        },
-        "2222::2222": {
-            "source": "1111::1111",
-            "port": "514",
-            "vrf": "Vrf-Data"
+        "204.2.134.164": {
+            "association_type": "server",
+            "iburst": "on",
+            "admin_state": "enabled",
+            "version": 3
         }
     }
 }
 ```
+* `association_type` - is used to control the type of the server. It can be `server` or `pool`.
+* `iburst` - agressive server polling `{on, off}`.
+* `version` - NTP protool version to use `[3..4]`.
+* `key` - authentication key id `[1..65535]` to use to auth the server.
+* `admin_state` - enable or disable specific server.
+* `trusted` - trust this server when auth is enabled.
+
+***NTP keys***
+```
+{
+    "NTP_KEY": {
+        "1": {
+            "type": "md5",
+            "value": "bXlwYXNzd29yZA==",
+            "trusted": "yes"
+        },
+        "42": {
+            "type": "sha1",
+            "value": "dGhlYW5zd2Vy",
+            "trusted": "no"
+        }
+    }
+}
+```
+* `type` - key type to use `{md5, sha1, sha256, sha384, sha512}`.
+* `value` - base64 encoded key value.
+* `trusted` - trust this NTP key `{yes, no}`.
 
 ### Peer Switch
 
@@ -1463,7 +1807,8 @@ optional attributes.
             "speed": "40000",
             "link_training": "off",
             "laser_freq": "191300",
-            "tx_power": "-27.3"
+            "tx_power": "-27.3",
+            "dom_polling": "enabled"
         },
         "Ethernet1": {
             "index": "1",
@@ -1475,7 +1820,8 @@ optional attributes.
             "speed": "40000",
             "link_training": "on",
             "laser_freq": "191300",
-            "tx_power": "-27.3"
+            "tx_power": "-27.3",
+            "dom_polling": "enabled"
         },
         "Ethernet63": {
             "index": "63",
@@ -1485,7 +1831,8 @@ optional attributes.
             "alias": "fortyGigE1/4/16",
             "speed": "40000",
             "laser_freq": "191300",
-            "tx_power": "-27.3"
+            "tx_power": "-27.3",
+            "dom_polling": "disabled"
         }
     }
 }
@@ -1501,7 +1848,8 @@ optional attributes.
             "mtu": "9100",
             "alias": "etp1a",
             "speed": "100000",
-            "channel": 1
+            "subport": 1,
+            "dom_polling": "enabled"
         },
         "Ethernet4": {
             "admin_status": "up",
@@ -1511,7 +1859,8 @@ optional attributes.
             "mtu": "9100",
             "alias": "etp1b",
             "speed": "100000",
-            "channel": 2
+            "subport": 2,
+            "dom_polling": "enabled"
         },
     }
 }
@@ -1649,7 +1998,8 @@ SFLOW
 
 | Field            | Description                                                                             | Mandatory   | Default   | Reference                                 |
 |------------------|-----------------------------------------------------------------------------------------|-------------|-----------|-------------------------------------------|
-| admin_state      | Global sflow admin state                                                                |             | down      |                                           |
+| admin_state      | Global sflow admin state                                                                |             | down      |
+| sample_direction | Global sflow sample direction                                                           |             | rx        |                                        |
 | polling_interval | The interval within which sFlow data is collected and sent to the configured collectors |             | 20        |                                           |
 | agent_id         | Interface name                                                                          |             |           | PORT:name,PORTCHANNEL:name,MGMT_PORT:name, VLAN:name |
 
@@ -1661,7 +2011,7 @@ key - port
 | port        | Sets sflow session table attributes for either all interfaces or a specific Ethernet interface.                         |             |           | PORT:name   |
 | admin_state | Per port sflow admin state                                                                                              |             | up        |             |
 | sample_rate | Sets the packet sampling rate.  The rate is expressed as an integer N, where the intended sampling rate is 1/N packets. |             |           |             |
-
+| sample_direction| Per port sflow sample direction                                                                                               |             |   rx
 SFLOW_COLLECTOR
 
 key - name
@@ -1672,7 +2022,33 @@ key - name
 | collector_port | Destination L4 port of the Sflow collector                                              |             | 6343      |             |
 | collector_vrf  | Specify the Collector VRF. In this revision, it is either default VRF or Management VRF.|             |           |             |
 
-### Syslog Rate Limit
+### Syslog Global Configuration
+
+These configuration options are used to configure rsyslog utility and the way
+the system generates logs.
+
+***Configuration sample***
+```
+{
+    "SYSLOG_CONFIG": {
+        "GLOBAL": {
+            "rate_limit_interval": "5",
+            "rate_limit_burst": "100",
+            "format": "welf",
+            "welf_firewall_name": "bla",
+            "severity": "info"
+        }
+    }
+}
+```
+
+* `rate_limit_interval` - determines the amount of time that is being measured for rate limiting: `unsigned integer`
+* `rate_limit_burst` - defines the amount of messages, that have to occur in the time limit: `unsigned integer`
+* `format` - syslog log format: `{standard, welf}`
+* `welf_firewall_name` - WELF format firewall name: `string`
+* `severity` - global log severity: `{emerg, alert, crit, error, warning, notice, info, debug}`
+
+***Syslog Rate Limit***
 
 Host side configuration:
 
@@ -1703,6 +2079,50 @@ Container side configuration:
   }
 }
 ```
+
+### Syslog servers
+
+These information are configured in individual tables. Domain name or IP
+address of the server is used as object key. Each server can be configurable.
+
+***Configuration sample***
+```
+{
+    "SYSLOG_SERVER": {
+        "10.0.0.5": {},
+        "10.0.0.6": {},
+        "10.11.150.5": {}
+    },
+
+    "SYSLOG_SERVER" : {
+        "4.4.4.4": {
+            "source": "3.3.3.3",
+            "port": "514",
+            "vrf": "mgmt"
+        },
+        "2222::2222": {
+            "source": "1111::1111",
+            "port": "514",
+            "vrf": "Vrf-Data"
+        },
+        "somehostname": {
+            "filter": "include",
+            "filter_regex": "ololo",
+            "port": "514",
+            "protocol": "tcp",
+            "severity": "notice",
+            "vrf": "default"
+        }
+    }
+}
+```
+
+* `filter` - determines if syslog will include or exclude messages specified by regex: `{include, exclude}`
+* `filter_regex` - filter messages by this regex: `string`
+* `port` - network port to use to connect to remote server: `integer: 1..65535`
+* `protocol` - network protocol to use to connect to remote server: `{tcp, udp}`
+* `severity` - per-server log severity, overrifes global one: `{emerg, alert, crit, error, warning, notice, info, debug}`
+
 
 ### System Port
 Every port on the system requires a global representation, known as a System Port,
@@ -1822,6 +2242,31 @@ and is listed in this table.
 }
 ```
 
+### Telemetry client
+
+```
+{
+    "TELEMETRY_CLIENT": {
+        "Global": {
+            "encoding": "JSON_IETF",
+            "retry_interval": "30",
+            "src_ip": "30.57.185.38",
+            "unidirectional": "true"
+        },
+        "DestinationGroup|HS": {
+            "dst_addr": "30.57.186.214:8081,30.57.185.39:8081"
+        },
+        "Subscription|HS_RDMA": {
+            "dst_group": "HS",
+            "path_target": "COUNTERS_DB",
+            "paths": "COUNTERS/Ethernet*,COUNTERS_PORT_NAME_MAP",
+            "report_interval": "5000",
+            "report_type": "periodic"
+        }
+    }
+}
+```
+
 ### Tunnel
 
 This table configures the MUX tunnel for Dual-ToR setup
@@ -1936,6 +2381,33 @@ channel name as object key, and tagging mode as attributes.
 	},
 	"Vlan2000|PortChannel47": {
 		"tagging_mode": "tagged"
+	}
+  }
+}
+```
+
+### VNET
+
+VNET table has Vnet name as the object key, and vxlan_tunnel name, scope, vni, peer list, advertised prefix, src mac, and overlay dest mac as attributes.
+The vxlan_tunnel name (mandatory) is the tunnel name from the VXLAN table. scope (optional) must "default", vni (mandatory) is the vxlan tunnel vni, peer_list (optional) is for Vnet
+peering, advertise_prefix (optional) is used to allow advertisement of this vnet's routes, overlay_dmac (optional) is the mac address which is used for VNET ping
+monitoring sessions for the vnet routes and is optional.
+
+```
+{
+"VNET": {
+	"Vnet1-1": {
+	    "vxlan_tunnel": "vtep1",
+		"scope": "default",
+		"vni": "10011",
+		"peer_list": "",
+		"advertise_prefix": "true",
+		"overlay_dmac": "22:33:44:55:66:77"
+	},
+    "Vnetv4_v4-0": {
+	    "vxlan_tunnel": "vtep2",
+		"scope": "default",
+		"vni": "10011",
 	}
   }
 }
@@ -2118,6 +2590,25 @@ There are 4 classes
 }
 ```
 
+### SSH_SERVER
+
+In this table, we allow configuring ssh server global settings. This will feature includes 3 configurations:
+
+-   authentication_retries - number of login attepmts 1-100
+-   login_timeout - Timeout in seconds for login session for user to connect 1-600
+-   ports - Ssh port numbers - string of port numbers seperated by ','
+```
+{
+    "SSH_SERVER": {
+        "POLICIES":{
+            "authentication_retries": "6",
+            "login_timeout": "120",
+            "ports": "22"
+        }
+    }
+}
+```
+
 ### BREAKOUT_CFG
 
 This table is introduced as part of Dynamic Port Breakout(DPB) feature.
@@ -2210,7 +2701,7 @@ The RADIUS and RADIUS_SERVER tables define RADIUS configuration parameters. RADI
               "timeout": "5"
         }
     }
-    
+
     "RADIUS_SERVER": {
         "192.168.1.2": {
                "priority": "4",
@@ -2230,6 +2721,52 @@ The DNS_NAMESERVER table introduces static DNS nameservers configuration.
 		"1.1.1.1": {},
 		"fe80:1000:2000:3000::1": {}
 	},
+}
+```
+
+### FIPS
+
+The FIPS table introduces FIPS  configuration.
+
+```json
+{
+    "FIPS": {
+        "global" : {
+            "enable": "true",
+            "enforce": "false"
+        }
+    }
+}
+```
+### MID_PLANE_BRIDGE"
+
+The MID_PLANE_BRIDGE" table introduces the configuration for the midplane bridge interface for Smart Switch.
+
+```json
+{
+    "MID_PLANE_BRIDGE": {
+        "GLOBAL" : {
+            "bridge": "bridge_midplane",
+            "ip_prefix": "169.254.200.254/24"
+        }
+    }
+}
+```
+
+### DPUS
+
+The DPUS table introduces the information on the DPUs (Data Processing Unit) available on the platform.
+
+```json
+{
+    "DPUS": {
+        "dpu0": {
+            "midplane_interface": "dpu0"
+        },
+        "dpu1": {
+            "midplane_interface": "dpu1"
+        }
+    }
 }
 ```
 

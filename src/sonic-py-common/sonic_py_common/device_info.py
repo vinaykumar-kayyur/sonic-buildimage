@@ -20,6 +20,12 @@ SONIC_VERSION_YAML_PATH = "/etc/sonic/sonic_version.yml"
 PORT_CONFIG_FILE = "port_config.ini"
 PLATFORM_JSON_FILE = "platform.json"
 
+# Fabric port configuration file names
+FABRIC_MONITOR_CONFIG_FILE = "fabric_monitor_config.json"
+
+# Fabric port configuration file names
+FABRIC_PORT_CONFIG_FILE = "fabric_port_config.ini"
+
 # HwSKU configuration file name
 HWSKU_JSON_FILE = 'hwsku.json'
 
@@ -38,6 +44,9 @@ CHASSIS_INFO_CARD_NUM_FIELD = 'module_num'
 CHASSIS_INFO_SERIAL_FIELD = 'serial'
 CHASSIS_INFO_MODEL_FIELD = 'model'
 CHASSIS_INFO_REV_FIELD = 'revision'
+
+# DPU constants
+DPU_NAME_PREFIX = "dpu"
 
 # Cacheable Objects
 sonic_ver_info = {}
@@ -245,6 +254,113 @@ def get_path_to_hwsku_dir():
     return hwsku_path
 
 
+def get_path_to_fabric_monitor_config_file(hwsku=None, asic=None):
+    """
+    Retrieves the path to the device's fabric monitor configuration file
+
+    Args:
+        hwsku: a string, it is allowed to be passed in args because when loading the
+              initial configuration on the device, the HwSKU is not yet present in ConfigDB.
+        asic: a string , asic argument should be passed on multi-ASIC devices only,
+              it should be omitted on single-ASIC platforms.
+
+    Returns:
+        A string containing the path the the device's fabric monitor configuration file
+    """
+
+    """
+    This platform check is performed to make sure we return a None
+    in case of unit-tests within sonic-cfggen where platform is not expected to be
+    present because tests are not run on actual Hardware/Container.
+    TODO: refactor sonic-cfggen such that we can remove this check
+    """
+
+    platform = get_platform()
+    if not platform:
+        return None
+
+    if hwsku:
+        try:
+           platform_path = get_path_to_platform_dir()
+        except OSError:
+           return None
+        hwsku_path = os.path.join(platform_path, hwsku)
+    else:
+        (platform_path, hwsku_path) = get_paths_to_platform_and_hwsku_dirs()
+
+    fabric_monitor_config_candidates = []
+
+    # Check for 'hwsku.json' file presence first
+    hwsku_json_file = os.path.join(hwsku_path, HWSKU_JSON_FILE)
+
+    # Check for 'fabric_monitor_config.json' file presence
+    fabric_monitor_config_candidates.append(os.path.join(hwsku_path, FABRIC_MONITOR_CONFIG_FILE))
+
+    for candidate in fabric_monitor_config_candidates:
+        if os.path.isfile(candidate):
+            return candidate
+
+    return None
+
+
+def get_path_to_fabric_port_config_file(hwsku=None, asic=None):
+    """
+    Retrieves the path to the device's fabric port configuration file
+
+    Args:
+        hwsku: a string, it is allowed to be passed in args because when loading the
+              initial configuration on the device, the HwSKU is not yet present in ConfigDB.
+        asic: a string , asic argument should be passed on multi-ASIC devices only,
+              it should be omitted on single-ASIC platforms.
+
+    Returns:
+        A string containing the path the the device's fabric port configuration file
+    """
+
+    """
+    This platform check is performed to make sure we return a None
+    in case of unit-tests within sonic-cfggen where platform is not expected to be
+    present because tests are not run on actual Hardware/Container.
+    TODO: refactor sonic-cfggen such that we can remove this check
+    """
+
+    platform = get_platform()
+    if not platform:
+        return None
+
+    if hwsku:
+        try:
+           platform_path = get_path_to_platform_dir()
+        except OSError:
+           return None
+        hwsku_path = os.path.join(platform_path, hwsku)
+    else:
+        (platform_path, hwsku_path) = get_paths_to_platform_and_hwsku_dirs()
+
+    fabric_port_config_candidates = []
+
+    # Check for 'hwsku.json' file presence first
+    hwsku_json_file = os.path.join(hwsku_path, HWSKU_JSON_FILE)
+
+    # if 'hwsku.json' file is available, Check for 'platform.json' file presence,
+    # if 'platform.json' is available, APPEND it. Otherwise, SKIP it.
+
+    # Check for 'fabric_port_config.ini' file presence in a few locations
+    if asic:
+        # Check if there is a file that is specific for the asic.
+        fabric_port_config_candidates.append(os.path.join(hwsku_path, asic, FABRIC_PORT_CONFIG_FILE))
+        # Check if there is a file for the hardware type.
+        fabric_port_config_candidates.append(os.path.join(hwsku_path, FABRIC_PORT_CONFIG_FILE))
+    else:
+        fabric_port_config_candidates.append(os.path.join(hwsku_path, FABRIC_PORT_CONFIG_FILE))
+
+    for candidate in fabric_port_config_candidates:
+        if os.path.isfile(candidate):
+            return candidate
+
+    return None
+
+
 def get_paths_to_platform_and_hwsku_dirs():
     """
     Retreives the paths to the device's platform and hardware SKU data
@@ -345,7 +461,7 @@ def get_sonic_version_info():
         if yaml.__version__ >= "5.1":
             sonic_ver_info = yaml.full_load(stream)
         else:
-            sonic_ver_info = yaml.load(stream)
+            sonic_ver_info = yaml.safe_load(stream)
 
     return sonic_ver_info
 
@@ -366,7 +482,7 @@ def get_platform_info(config_db=None):
     if hw_info_dict:
         return hw_info_dict
 
-    from .multi_asic import get_num_asics
+    from .multi_asic import get_asic_presence_list
 
     version_info = get_sonic_version_info()
 
@@ -374,7 +490,10 @@ def get_platform_info(config_db=None):
     hw_info_dict['hwsku'] = get_hwsku()
     if version_info:
         hw_info_dict['asic_type'] = version_info.get('asic_type')
-    hw_info_dict['asic_count'] = get_num_asics()
+    try:
+        hw_info_dict['asic_count'] = len(get_asic_presence_list())
+    except:
+        hw_info_dict['asic_count'] = 'N/A'
 
     try:
         # TODO: enforce caller to provide config_db explicitly and remove its default value
@@ -493,7 +612,7 @@ def is_macsec_supported():
 def get_device_runtime_metadata():
     chassis_metadata = {}
     if is_chassis():
-        chassis_metadata = {'CHASSIS_METADATA': {'module_type' : 'supervisor' if is_supervisor() else 'linecard', 
+        chassis_metadata = {'CHASSIS_METADATA': {'module_type' : 'supervisor' if is_supervisor() else 'linecard',
                                                 'chassis_type': 'voq' if is_voq_chassis() else 'packet'}}
 
     port_metadata = {'ETHERNET_PORTS_PRESENT': True if get_path_to_port_config_file(hwsku=None, asic="0" if is_multi_npu() else None) else False}
@@ -602,14 +721,17 @@ def get_system_mac(namespace=None):
         hw_mac_entry_outputs.append((mac, err))
         if machine_vars is not None and machine_key in machine_vars:
             hwsku = machine_vars[machine_key]
-            profile_cmd0 = ['cat', HOST_DEVICE_PATH + '/' + platform + '/' + hwsku + '/profile.ini']
-            profile_cmd1 = ['grep', 'switchMacAddress']
-            profile_cmd2 = ['cut', '-f2', '-d', '=']
-            (mac, err) = run_command_pipe(profile_cmd0, profile_cmd1, profile_cmd2)
+            profile_file = HOST_DEVICE_PATH + '/' + platform + '/' + hwsku + '/profile.ini'
+            if os.path.exists(profile_file):
+                profile_cmd0 = ['cat', profile_file]
+                profile_cmd1 = ['grep', 'switchMacAddress']
+                profile_cmd2 = ['cut', '-f2', '-d', '=']
+                (mac, err) = run_command_pipe(profile_cmd0, profile_cmd1, profile_cmd2)
+                hw_mac_entry_outputs.append((mac, err))
         else:
             profile_cmd = ["false"]
             (mac, err) = run_command(profile_cmd)
-        hw_mac_entry_outputs.append((mac, err))
+            hw_mac_entry_outputs.append((mac, err))
         (mac, err) = run_command_pipe(iplink_cmd0, iplink_cmd1, iplink_cmd2)
         hw_mac_entry_outputs.append((mac, err))
     elif (version_info['asic_type'] == 'cisco-8000'):
@@ -699,14 +821,63 @@ def is_warm_restart_enabled(container_name):
 
 # Check if System fast reboot is enabled.
 def is_fast_reboot_enabled():
-    fb_system_state = 0
-    cmd = ['sonic-db-cli', 'STATE_DB', 'get', "FAST_REBOOT|system"]
-    proc = subprocess.Popen(cmd, universal_newlines=True, stdout=subprocess.PIPE)
-    (stdout, stderr) = proc.communicate()
+    state_db = SonicV2Connector(host='127.0.0.1')
+    state_db.connect(state_db.STATE_DB, False)
 
-    if proc.returncode != 0:
-        log.log_error("Error running command '{}'".format(cmd))
-    elif stdout:
-        fb_system_state = stdout.rstrip('\n')
+    TABLE_NAME_SEPARATOR = '|'
+    prefix = 'FAST_RESTART_ENABLE_TABLE' + TABLE_NAME_SEPARATOR
 
-    return fb_system_state
+    # Get the system warm reboot enable state
+    _hash = '{}{}'.format(prefix, 'system')
+    fb_system_state = state_db.get(state_db.STATE_DB, _hash, "enable")
+    fb_enable_state = True if fb_system_state == "true" else False
+
+    state_db.close(state_db.STATE_DB)
+    return fb_enable_state
+
+
+def is_frontend_port_present_in_host():
+    if is_supervisor():
+        return False
+    if is_multi_npu():
+        namespace_id = os.getenv("NAMESPACE_ID")
+        if not namespace_id:
+            return False
+    return True
+
+
+def get_num_dpus():
+    """
+    Retrieves the number of DPUs from platform.json file.
+
+    Args:
+
+    Returns:
+        A integer to indicate the number of DPUs.
+    """
+
+    platform = get_platform()
+    if not platform:
+        return 0
+
+    # Get Platform path.
+    platform_path = get_path_to_platform_dir()
+
+    if os.path.isfile(os.path.join(platform_path, PLATFORM_JSON_FILE)):
+        json_file = os.path.join(platform_path, PLATFORM_JSON_FILE)
+        
+        try:
+            with open(json_file, 'r') as file:
+                platform_data = json.load(file)
+        except (json.JSONDecodeError, IOError, TypeError, ValueError):
+            # Handle any file reading and JSON parsing errors
+            return 0
+        
+        # Convert to lower case avoid case sensitive.
+        data = {k.lower(): v for k, v in platform_data.items()}
+        DPUs = data.get('dpus', None)
+        if DPUs is not None and len(DPUs) > 0:
+            return len(DPUs)
+
+    return 0
+

@@ -51,6 +51,12 @@ module sonic-port{
 						length 1..128;
 					}
 				}
+                
+				leaf mode {
+					description "SwitchPort Modes possible values are routed|access|trunk. Default value  for mode is routed"; 
+					type stypes:switchport_mode; 
+					default "routed";
+				}
 
 				leaf description {
 					type string {
@@ -83,7 +89,7 @@ module sonic-port{
 
 				leaf-list adv_speeds {
 					description "Port advertised speeds, valid value could be a list of interger or all";
-					
+
 					type union {
 						type uint32 {
 							range 1..800000;
@@ -114,15 +120,15 @@ module sonic-port{
 				}
 
 				must "(count(adv_interface_types[text()='all']) = 0) or (count(adv_interface_types) = 1)";
-					
+
 				leaf mtu {
 					type uint16 {
 						range 68..9216;
 					}
 				}
 
-				leaf channel {
-					description "Logical channel(s) for physical port breakout";
+				leaf subport {
+					description "Logical subport(s) for physical port breakout";
 					type uint8 {
 						range 0..8;
 					}
@@ -151,8 +157,12 @@ module sonic-port{
 
 				leaf fec {
 					type string {
-						pattern "rs|fc|none";
+						pattern "rs|fc|none|auto";
 					}
+				}
+
+				leaf dom_polling {
+					type stypes:admin_mode;
 				}
 
 				leaf pfc_asym {

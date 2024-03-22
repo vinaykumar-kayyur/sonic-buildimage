@@ -4,6 +4,9 @@ constants:
     "2" : 65433
   bgp:
     traffic_shift_community: 12345:12345
+    internal_community: 11111:11111
+    internal_community_match_tag: 1002
+    sentinel_community: 12345:12346
     families:
       - ipv4
       - ipv6
@@ -58,3 +61,7 @@ constants:
         enabled: true
         db_table: "BGP_VOQ_CHASSIS_NEIGHBOR"
         template_dir: "voq_chassis"
+      sentinels: # peer_type
+        enabled: true
+        db_table: "BGP_SENTINELS"
+        template_dir: "sentinels"
