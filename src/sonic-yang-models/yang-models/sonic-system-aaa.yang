@@ -7,6 +7,10 @@ module sonic-system-aaa {
         prefix stypes;
     }
 
+    import sonic-system-tacacs{
+        prefix tacacs;
+    }
+
     revision 2021-10-12 {
         description "Add AAA authorization/accounting support.";
     }
@@ -39,6 +43,10 @@ module sonic-system-aaa {
                     default "local";
                 }
 
+                must 'not(./type = "authorization" and contains(./login, "tacacs+") and not(/tacacs:sonic-system-tacacs/tacacs:TACPLUS/tacacs:global/tacacs:passkey))' {
+                    error-message "Authorization with 'tacacs+' is not allowed when passkey not exists.";
+                }
+
                 leaf failthrough {
                     type stypes:boolean_type;
                     description "When set to true, authentication is attempted on next configured server/local in the list upon failure.";
@@ -50,7 +58,7 @@ module sonic-system-aaa {
                     description "Allow AAA fallback";
                     default False;
                 }
-                
+
                 leaf debug {
                     type stypes:boolean_type;
                     description "Enable/disable AAA debugging";

@@ -8,7 +8,7 @@ resources:
   - repository: buildimage
     type: github
     name: sonic-net/sonic-buildimage
-    ref: master
+    ref: bookworm
     endpoint: sonic-net
 
 schedules:
@@ -44,6 +44,7 @@ parameters:
 - name: 'dists'
   type: object
   default:
+  - bookworm
   - bullseye
   - buster
   - stretch
@@ -56,7 +57,7 @@ parameters:
   default: sonicdev
 
 stages:
-- stage: Build
+- stage: Build_in_amd64
   jobs:
   - ${{ each dist in parameters.dists }}:
     - ${{ if endswith(variables['Build.DefinitionName'], dist) }}:
@@ -66,7 +67,9 @@ stages:
             pool: sonicbld
             arch: ${{ arch }}
             dist: ${{ dist }}
-- stage: Build_march
+            ${{ if ne(arch, 'amd64') }}:
+              march: _march_${{ arch }}
+- stage: Build_native_arm
   dependsOn: []
   jobs:
   - ${{ each dist in parameters.dists }}:
@@ -78,4 +81,4 @@ stages:
               pool: sonicbld-${{ arch }}
               arch: ${{ arch }}
               dist: ${{ dist }}
-              march: march_
+              march: _${{ arch }}
