@@ -9,5 +9,7 @@ include $(PLATFORM_PATH)/libsaithrift-dev.dep
 include $(PLATFORM_PATH)/one-image.dep
 include $(PLATFORM_PATH)/onie.dep
 include $(PLATFORM_PATH)/kvm-image.dep
-include $(PLATFORM_PATH)/docker-dash-engine.dep
 
+ifeq ($(ENABLE_DASH_SAI), y)
+include $(PLATFORM_PATH)/docker-dash-engine.dep
+endif

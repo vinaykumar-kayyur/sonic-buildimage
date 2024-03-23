@@ -10,6 +10,9 @@ include $(PLATFORM_PATH)/one-image.mk
 include $(PLATFORM_PATH)/onie.mk
 include $(PLATFORM_PATH)/kvm-image.mk
 include $(PLATFORM_PATH)/raw-image.mk
+
+ifeq ($(ENABLE_DASH_SAI), y)
 include $(PLATFORM_PATH)/docker-dash-engine.mk
+endif
 
 SONIC_ALL += $(SONIC_ONE_IMAGE) $(SONIC_KVM_IMAGE) $(DOCKER_SONIC_VS) $(SONIC_RAW_IMAGE)

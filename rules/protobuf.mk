@@ -25,7 +25,7 @@ ifeq ($(BLDENV),bullseye)
     $(eval $(call add_derived_package,$(PROTOBUF),$(PROTOC32)))
 
     PROTOC_DEV = libprotoc-dev_$(PROTOBUF_VERSION_FULL)_$(CONFIGURED_ARCH).deb
-    $(PROTOC_DEV)_RDEPENDS = $(PROTOBUF) $(PROTOBUF_LITE)
+    $(PROTOC_DEV)_DEPENDS = $(PROTOBUF) $(PROTOBUF_LITE) $(PROTOC32)
     $(eval $(call add_derived_package,$(PROTOBUF),$(PROTOC_DEV)))
 
     PROTOBUF_COMPILER = protobuf-compiler_$(PROTOBUF_VERSION_FULL)_$(CONFIGURED_ARCH).deb

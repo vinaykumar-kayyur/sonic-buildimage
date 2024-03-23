@@ -1,8 +1,21 @@
 $(LIBSAIREDIS)_DEB_BUILD_PROFILES += syncd vs
 
 SYNCD_VS = syncd-vs_1.0.0_$(CONFIGURED_ARCH).deb
-$(SYNCD_VS)_DEPENDS +=  $(P4LANG_PI) $(P4LANG_BMV2) $(P4LANG_P4C) $(DASH_SAI)
-$(SYNCD_VS)_RDEPENDS += $(LIBSAIREDIS) $(LIBSAIMETADATA) $(LIBSAIVS) $(P4LANG_PI) $(P4LANG_BMV2) $(P4LANG_P4C) $(DASH_SAI)
+$(SYNCD_VS)_RDEPENDS += $(LIBSAIREDIS) $(LIBSAIMETADATA)
+
+ifeq ($(ENABLE_DASH_SAI), y)
+ifeq ($(BLDENV),bullseye)
+  $(LIBSAIREDIS)_DEB_BUILD_PROFILES += dashsai
+  $(LIBSAIREDIS)_DEPENDS += $(DASH_SAI)
+  $(SYNCD_VS)_RDEPENDS += $(DASH_SAI)
+else
+  $(warning DASH_SAI cannot support this build environment $(BLDENV))
+endif
+endif
+
+$(SYNCD_VS)_RDEPENDS += $(LIBSAIVS)
+
+
 $(eval $(call add_derived_package,$(LIBSAIREDIS),$(SYNCD_VS)))
 
 SYNCD_VS_DBG = syncd-vs-dbgsym_1.0.0_$(CONFIGURED_ARCH).deb

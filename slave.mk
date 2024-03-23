@@ -244,6 +244,11 @@ ifeq ($(SONIC_ENABLE_BOOTCHART),y)
 ENABLE_BOOTCHART = y
 endif
 
+ifeq ($(CONFIGURED_PLATFORM),vs)
+ifneq ($(SONIC_ENABLE_DASH_SAI),)
+override ENABLE_DASH_SAI := $(SONIC_ENABLE_DASH_SAI)
+endif
+endif
 
 ifeq ($(ENABLE_ASAN),y)
 ifneq ($(CONFIGURED_ARCH),amd64)
@@ -454,6 +459,7 @@ $(info "ENABLE_ASAN"                     : "$(ENABLE_ASAN)")
 $(info "DEFAULT_CONTAINER_REGISTRY"      : "$(SONIC_DEFAULT_CONTAINER_REGISTRY)")
 ifeq ($(CONFIGURED_PLATFORM),vs)
 $(info "BUILD_MULTIASIC_KVM"             : "$(BUILD_MULTIASIC_KVM)")
+$(info "ENABLE_DASH_SAI"                 : "$(ENABLE_DASH_SAI)")
 endif
 $(info "CROSS_BUILD_ENVIRON"             : "$(CROSS_BUILD_ENVIRON)")
 $(info "GZ_COMPRESS_PROGRAM"             : "$(GZ_COMPRESS_PROGRAM)")
