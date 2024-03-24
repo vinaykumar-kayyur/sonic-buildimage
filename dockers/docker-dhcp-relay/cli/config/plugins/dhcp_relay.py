@@ -190,7 +190,7 @@ def dhcp_relay():
     """Configure DHCP_Relay information"""
     pass
 
-@dhcp_relay.group(cls=click.Group, name="mitigation-rate")
+@dhcp_relay.group(cls=clicommon.AbbreviationGroup, name="mitigation-rate")
 def dhcp_relay_mitigation_rate():
     """Configure DHCP relay mitigation rate"""
     pass
