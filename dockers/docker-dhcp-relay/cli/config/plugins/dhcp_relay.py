@@ -185,10 +185,6 @@ def del_dhcp_relay_ipv4_helper(db, vid, dhcp_relay_helpers):
         return
     del_dhcp_relay(vid, dhcp_relay_helpers, db, IPV4)
 
-@click.group(cls=click.Group, name="dhcp_relay")
-def dhcp_relay():
-    """Configure DHCP_Relay information"""
-    pass
 
 @dhcp_relay.group(cls=clicommon.AbbreviationGroup, name="mitigation-rate")
 def dhcp_relay_mitigation_rate():
@@ -209,6 +205,7 @@ def add_dhcp_relay_mitigation_rate(rate, dev):
     # Apply the tc commands
     subprocess.run(tc_qdisc_command, shell=True)
     subprocess.run(tc_filter_command, shell=True)
+
 
 
 # subcommand of vlan
