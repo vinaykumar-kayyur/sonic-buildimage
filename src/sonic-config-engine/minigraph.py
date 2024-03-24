@@ -1763,7 +1763,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         results['SNMP_AGENT_ADDRESS_CONFIG'] = {}
         port = '161'
         for intf in list(mgmt_intf.keys()) + list(lo_intfs.keys()):
-            ip_addr = ipaddress.ip_address(intf[1].split('/')[0])
+            ip_addr = ipaddress.ip_address(UNICODE_TYPE(intf[1].split('/')[0]))
             if ip_addr.version == 6 and ip_addr.is_link_local:
                 agent_addr = str(ip_addr) + '%' + intf[0]
             else:
