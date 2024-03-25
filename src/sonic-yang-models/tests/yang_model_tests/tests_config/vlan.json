@@ -744,17 +744,6 @@
             }
         }
     },
-    "VLAN_CREATE_DEFAULT_VLAN": {
-        "sonic-vlan:sonic-vlan": {
-            "sonic-vlan:VLAN": {
-                "VLAN_LIST": [
-                    {
-                        "name": "Vlan1"
-                    }
-                ]
-            }
-        }
-    },
     "VLAN_CREATE_VLAN_WITH_MISSMATCHING_NAME": {
         "sonic-vlan:sonic-vlan": {
             "sonic-vlan:VLAN": {
