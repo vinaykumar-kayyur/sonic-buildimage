@@ -93,7 +93,7 @@
         };
         fdt_smc_sse-g3748 {
             description = "Flattened Device Tree blob for Supermicro SSE-G3748";
-            data = /incbin/("/usr/lib/linux-image-5.10.0-23-2-arm64/marvell/smc_sse-g3748.dtb");
+            data = /incbin/("/usr/lib/linux-image-6.1.0-11-2-arm64/marvell/smc_sse-g3748.dtb");
             type = "flat_dt";
             arch = "arm64";
             compression = "none";
