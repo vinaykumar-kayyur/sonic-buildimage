@@ -25,12 +25,12 @@ class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
         self.eeprom_path = f
         super(Eeprom, self).__init__(self.eeprom_path, 0, '', True)
         self.eeprom_tlv_dict = dict()
+        self.eeprom_data = "N/A"
         
         if os.geteuid() == 0:
             try:
                 self.eeprom_data = self.read_eeprom()
             except Exception:
-                self.eeprom_data = "N/A"
                 raise RuntimeError("Eeprom is not Programmed")
 
             eeprom = self.eeprom_data
@@ -57,8 +57,6 @@ class Eeprom(eeprom_tlvinfo.TlvInfoDecoder):
                     break
 
                 tlv_index += (eeprom[tlv_index+1]) + 2
-        else:
-            self.eeprom_data = "N/A"
 
     def serial_number_str(self):
         """
