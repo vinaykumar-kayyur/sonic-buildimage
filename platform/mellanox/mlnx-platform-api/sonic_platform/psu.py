@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2019-2023 NVIDIA CORPORATION & AFFILIATES.
+# Copyright (c) 2019-2024 NVIDIA CORPORATION & AFFILIATES.
 # Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -242,8 +242,8 @@ class Psu(FixedPsu):
 
         self.psu_power_max_capacity = os.path.join(PSU_PATH, "config/psu{}_power_capacity".format(self.index))
 
-        self.psu_temp = os.path.join(PSU_PATH, 'thermal/psu{}_temp'.format(self.index))
-        self.psu_temp_threshold = os.path.join(PSU_PATH, 'thermal/psu{}_temp_max'.format(self.index))
+        self.psu_temp = os.path.join(PSU_PATH, 'thermal/psu{}_temp1'.format(self.index))
+        self.psu_temp_threshold = os.path.join(PSU_PATH, 'thermal/psu{}_temp1_max'.format(self.index))
 
         self.psu_power_slope = os.path.join(PSU_PATH, self.PSU_POWER_SLOPE.format(self.index))
 
@@ -440,7 +440,8 @@ class Psu(FixedPsu):
             The thresholds of voltage are not supported on all platforms.
             So we have to check capability first.
         """
-        if self.psu_voltage_capability and self.psu_voltage_max and self.get_powergood_status():
+        if self.psu_voltage_capability and os.path.exists(self.psu_voltage_capability) and \
+           self.psu_voltage_max and os.path.exists(self.psu_voltage_max) and self.get_powergood_status():
             capability = utils.read_str_from_file(self.psu_voltage_capability)
             if 'max' in capability:
                 max_voltage = utils.read_int_from_file(self.psu_voltage_max, log_func=logger.log_info)
@@ -463,7 +464,8 @@ class Psu(FixedPsu):
             The thresholds of voltage are not supported on all platforms.
             So we have to check capability first.
         """
-        if self.psu_voltage_capability and self.psu_voltage_min and self.get_powergood_status():
+        if self.psu_voltage_capability and os.path.exists(self.psu_voltage_capability) and \
+           self.psu_voltage_min and os.path.exists(self.psu_voltage_min) and self.get_powergood_status():
             capability = utils.read_str_from_file(self.psu_voltage_capability)
             if 'min' in capability:
                 min_voltage = utils.read_int_from_file(self.psu_voltage_min, log_func=logger.log_info)

@@ -13,6 +13,7 @@ WEB_VERSION_FILE=$VERSION_PATH/versions-web
 BUILD_WEB_VERSION_FILE=$BUILD_VERSION_PATH/versions-web
 REPR_MIRROR_URL_PATTERN='http:\/\/packages.trafficmanager.net\/'
 DPKG_INSTALLTION_LOCK_FILE=/tmp/.dpkg_installation.lock
+GET_RETRY_COUNT=5
 
 . $BUILDINFO_PATH/config/buildinfo.config
 
@@ -242,10 +243,17 @@ download_packages()
         return $result
     fi
 
-    $REAL_COMMAND "${parameters[@]}"
-    result=$?
+    # Retry if something super-weird has happened
+    for ((i = 1; i <= GET_RETRY_COUNT; i++)); do
+        $REAL_COMMAND "${parameters[@]}"
+        result=$?
+        if [ $result -eq 0 ]; then
+            break
+        fi
+        log_err "Try $i: $REAL_COMMAND failed to get: ${parameters[@]}. Retry.."
+    done
 
-    #Return if there is any error
+    # Return if there is any error
     if [ ${result} -ne 0 ]; then
         exit ${result}
     fi
@@ -280,7 +288,7 @@ download_packages()
 
 run_pip_command()
 {
-    declare -a parameters=("$@")
+    declare -a parameters=("--default-timeout" "$PIP_HTTP_TIMEOUT" "$@")
     PIP_CACHE_PATH=${PKG_CACHE_PATH}/pip
     PKG_CACHE_OPTION="--cache-dir=${PIP_CACHE_PATH}"
 

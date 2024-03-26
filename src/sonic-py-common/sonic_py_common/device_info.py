@@ -45,6 +45,9 @@ CHASSIS_INFO_SERIAL_FIELD = 'serial'
 CHASSIS_INFO_MODEL_FIELD = 'model'
 CHASSIS_INFO_REV_FIELD = 'revision'
 
+# DPU constants
+DPU_NAME_PREFIX = "dpu"
+
 # Cacheable Objects
 sonic_ver_info = {}
 hw_info_dict = {}
@@ -479,7 +482,7 @@ def get_platform_info(config_db=None):
     if hw_info_dict:
         return hw_info_dict
 
-    from .multi_asic import get_num_asics
+    from .multi_asic import get_asic_presence_list
 
     version_info = get_sonic_version_info()
 
@@ -487,7 +490,10 @@ def get_platform_info(config_db=None):
     hw_info_dict['hwsku'] = get_hwsku()
     if version_info:
         hw_info_dict['asic_type'] = version_info.get('asic_type')
-    hw_info_dict['asic_count'] = get_num_asics()
+    try:
+        hw_info_dict['asic_count'] = len(get_asic_presence_list())
+    except:
+        hw_info_dict['asic_count'] = 'N/A'
 
     try:
         # TODO: enforce caller to provide config_db explicitly and remove its default value
@@ -838,3 +844,40 @@ def is_frontend_port_present_in_host():
         if not namespace_id:
             return False
     return True
+
+
+def get_num_dpus():
+    """
+    Retrieves the number of DPUs from platform.json file.
+
+    Args:
+
+    Returns:
+        A integer to indicate the number of DPUs.
+    """
+
+    platform = get_platform()
+    if not platform:
+        return 0
+
+    # Get Platform path.
+    platform_path = get_path_to_platform_dir()
+
+    if os.path.isfile(os.path.join(platform_path, PLATFORM_JSON_FILE)):
+        json_file = os.path.join(platform_path, PLATFORM_JSON_FILE)
+        
+        try:
+            with open(json_file, 'r') as file:
+                platform_data = json.load(file)
+        except (json.JSONDecodeError, IOError, TypeError, ValueError):
+            # Handle any file reading and JSON parsing errors
+            return 0
+        
+        # Convert to lower case avoid case sensitive.
+        data = {k.lower(): v for k, v in platform_data.items()}
+        DPUs = data.get('dpus', None)
+        if DPUs is not None and len(DPUs) > 0:
+            return len(DPUs)
+
+    return 0
+

@@ -35,7 +35,7 @@ MAX_7215_COMPONENT=2
 MAX_7215_FAN_DRAWERS = 2
 MAX_7215_FANS_PER_DRAWER = 1
 MAX_7215_PSU = 2
-MAX_7215_THERMAL = 3
+MAX_7215_THERMAL = 5
 CPLD_DIR = "/sys/bus/i2c/devices/0-0041/"
 
 SYSLOG_IDENTIFIER = "chassis"
@@ -64,11 +64,10 @@ class Chassis(ChassisBase):
             sfp_node = Sfp(index, 'COPPER', 'N/A', 'N/A')
             self._sfp_list.append(sfp_node)
 
-        """
         # Verify optoe2 driver SFP eeprom devices were enumerated and exist
         # then create the sfp nodes
         eeprom_path = "/sys/class/i2c-adapter/i2c-{0}/{0}-0050/eeprom"
-        mux_dev = sorted(glob.glob("/sys/class/i2c-adapter/i2c-0/i2c-[0-9]"))
+        mux_dev = sorted(glob.glob("/sys/class/i2c-adapter/i2c-1/i2c-[0-9]"))
         y = 0
         for index in range(self.SFP_PORT_START, self.SFP_PORT_END+1):
             mux_dev_num = mux_dev[y]
@@ -80,7 +79,6 @@ class Chassis(ChassisBase):
             sfp_node = Sfp(index, 'SFP', port_eeprom_path, port_i2c_map)
             self._sfp_list.append(sfp_node)
         self.sfp_event_initialized = False
-        """
 
         # Instantiate system eeprom object
         self._eeprom = Eeprom()
@@ -94,7 +92,7 @@ class Chassis(ChassisBase):
             drawer = drawer_ctor(drawer_index)
             self._fan_drawer_list.append(drawer)
             for index in range(fan_num_per_drawer):
-                fan = Fan(fan_index, drawer)
+                fan = Fan(fan_index, drawer, self.get_model())
                 fan_index += 1
                 drawer._fan_list.append(fan)
                 self._fan_list.append(fan)
@@ -196,11 +194,11 @@ class Chassis(ChassisBase):
 
     def get_serial(self):
         """
-        Retrieves the serial number of the chassis (Service tag)
+        Retrieves the serial number of the chassis
         Returns:
             string: Serial number of chassis
         """
-        return self._eeprom.serial_str()
+        return self._eeprom.serial_number_str()
 
     def get_status(self):
         """
@@ -221,15 +219,13 @@ class Chassis(ChassisBase):
         """
         return self._eeprom.base_mac_addr()
 
-    def get_serial_number(self):
+    def get_service_tag(self):
         """
-        Retrieves the hardware serial number for the chassis
-
+        Retrieves the Service Tag of the chassis
         Returns:
-            A string containing the hardware serial number for this
-            chassis.
+            string: Service Tag of chassis
         """
-        return self._eeprom.serial_number_str()
+        return self._eeprom.service_tag_str()
 
     def get_revision(self):
         """
@@ -263,10 +259,21 @@ class Chassis(ChassisBase):
             is "REBOOT_CAUSE_HARDWARE_OTHER", the second string can be used
             to pass a description of the reboot cause.
         """
-        # The ixs7215 CPLD does not have a hardware reboot cause register so
-        # the hardware portion of reboot cause can't be implemented
-
-        return (ChassisBase.REBOOT_CAUSE_NON_HARDWARE, None)
+        value = self._read_sysfs_file(CPLD_DIR+"last_reset_cause")
+        thermal = self._read_sysfs_file(CPLD_DIR+"temp_event_status")
+        if (value == 'cold_reset'):
+            reboot_cause=(ChassisBase.REBOOT_CAUSE_POWER_LOSS, "Cold Reset")
+        elif (value == 'warm_reset'):
+            reboot_cause=(ChassisBase.REBOOT_CAUSE_HARDWARE_OTHER, "Warm Reset")
+        elif (value == 'wdog_reset'):
+            reboot_cause=(ChassisBase.REBOOT_CAUSE_WATCHDOG, None)
+        elif (value == 'thermal_reset'):
+            reboot_cause=(ChassisBase.REBOOT_CAUSE_THERMAL_OVERLOAD_OTHER, thermal)
+        else:
+            reboot_cause=(ChassisBase.REBOOT_CAUSE_NON_HARDWARE, None)
+        #unmask temperature event    
+        self._write_sysfs_file(CPLD_DIR+"temp_event_mask", 0)
+        return reboot_cause
 
     def get_watchdog(self):
         """
@@ -275,6 +282,13 @@ class Chassis(ChassisBase):
         Returns:
             An object derived from WatchdogBase representing the hardware
             watchdog device
+
+        Note:
+            We overload this method to ensure that watchdog is only initialized
+            when it is referenced. Currently, only one daemon can open the
+            watchdog. To initialize watchdog in the constructor causes multiple
+            daemon try opening watchdog when loading and constructing a chassis
+            object and fail. By doing so we can eliminate that risk.
         """
         try:
             if self._watchdog is None:
@@ -404,31 +418,6 @@ class Chassis(ChassisBase):
             return None
 
         return color
-
-    def get_watchdog(self):
-        """
-        Retrieves hardware watchdog device on this chassis
-
-        Returns:
-            An object derived from WatchdogBase representing the hardware
-            watchdog device
-
-        Note:
-            We overload this method to ensure that watchdog is only initialized
-            when it is referenced. Currently, only one daemon can open the
-            watchdog. To initialize watchdog in the constructor causes multiple
-            daemon try opening watchdog when loading and constructing a chassis
-            object and fail. By doing so we can eliminate that risk.
-        """
-        try:
-            if self._watchdog is None:
-                from sonic_platform.watchdog import WatchdogImplBase
-                watchdog_device_path = "/dev/watchdog0"
-                self._watchdog = WatchdogImplBase(watchdog_device_path)
-        except Exception as e:
-            sonic_logger.log_warning(" Fail to load watchdog {}".format(repr(e)))
-
-        return self._watchdog
 
     def get_position_in_parent(self):
         """
