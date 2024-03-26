@@ -549,12 +549,12 @@ class SonicYangExtMixin:
     """
     def _xlateContainerInList(self, model, yang, configC, table):
         ccontainer = model
-        ccName = ccontainer['@name']
+        ccName = ccontainer.get('@name')
         if ccName not in configC:
             # Inner container doesn't exist in config
             return
 
-        if len(configC[ccName]) == 0:
+        if bool(configC[ccName]):
             # Empty container - return
             return
 
@@ -605,7 +605,7 @@ class SonicYangExtMixin:
                 keyDict = self._extractKey(pkey, listKeys)
                 # fill rest of the values in keyDict
                 for vKey in config[pkey]:
-                    if ccontainer and vKey == ccontainer['@name']:
+                    if ccontainer and vKey == ccontainer.get('@name'):
                         self.sysLog(syslog.LOG_DEBUG, "xlateList Handle container {} in list {}".\
                             format(vKey, table))
                         yangContainer = dict()
@@ -663,7 +663,7 @@ class SonicYangExtMixin:
     """
     def _xlateContainerInContainer(self, model, yang, configC, table):
         ccontainer = model
-        ccName = ccontainer['@name']
+        ccName = ccontainer.get('@name')
         yang[ccName] = dict()
         if ccName not in configC:
             # Inner container doesn't exist in config
