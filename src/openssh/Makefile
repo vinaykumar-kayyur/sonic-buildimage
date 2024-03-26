@@ -3,7 +3,11 @@ SHELL = /bin/bash
 .SHELLFLAGS += -e
 
 MAIN_TARGET = openssh-server_$(OPENSSH_VERSION)_$(CONFIGURED_ARCH).deb
-DERIVED_TARGETS = openssh-server-dbgsym_$(OPENSSH_VERSION)_$(CONFIGURED_ARCH).deb
+DERIVED_TARGETS = openssh-server-dbgsym_$(OPENSSH_VERSION)_$(CONFIGURED_ARCH).deb \
+				  openssh-client_$(OPENSSH_VERSION)_$(CONFIGURED_ARCH).deb \
+				  openssh-client-dbgsym_$(OPENSSH_VERSION)_$(CONFIGURED_ARCH).deb \
+				  openssh-sftp-server_$(OPENSSH_VERSION)_$(CONFIGURED_ARCH).deb \
+				  openssh-sftp-server-dbgsym_$(OPENSSH_VERSION)_$(CONFIGURED_ARCH).deb
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	# Obtain openssh: https://salsa.debian.org/ssh-team/openssh/-/tree/debian/1%258.4p1-5
@@ -19,7 +23,12 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	stg import -s ../patch/series
 
 	# Build package
+ifeq ($(CROSS_BUILD_ENVIRON), y)
+	patch -p1 < ../patch/cross-compile-changes.patch
+	dpkg-buildpackage -rfakeroot -b -us -uc -a$(CONFIGURED_ARCH) -Pcross,nocheck -j$(SONIC_CONFIG_MAKE_JOBS) --admindir $(SONIC_DPKG_ADMINDIR)
+else
 	dpkg-buildpackage -rfakeroot -b -us -uc -j$(SONIC_CONFIG_MAKE_JOBS) --admindir $(SONIC_DPKG_ADMINDIR)
+endif
 	popd
 
 	mv $(DERIVED_TARGETS) $* $(DEST)/

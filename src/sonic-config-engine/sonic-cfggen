@@ -25,16 +25,18 @@ import netaddr
 import os
 import sys
 import yaml
+import ipaddress
+import base64
 
 from collections import OrderedDict
 from config_samples import generate_sample_config, get_available_config
 from functools import partial
 from minigraph import minigraph_encoder, parse_xml, parse_device_desc_xml, parse_asic_sub_role, parse_asic_switch_type
 from portconfig import get_port_config, get_breakout_mode
-from redis_bcc import RedisBytecodeCache
-from sonic_py_common.multi_asic import get_asic_id_from_name, get_asic_device_id
+from smartswitch_config import get_smartswitch_config
+from sonic_py_common.multi_asic import get_asic_id_from_name, get_asic_device_id, is_multi_asic
 from sonic_py_common import device_info
-from swsscommon.swsscommon import SonicV2Connector, ConfigDBConnector, SonicDBConfig, ConfigDBPipeConnector
+from swsscommon.swsscommon import ConfigDBConnector, SonicDBConfig, ConfigDBPipeConnector
 
 
 PY3x = sys.version_info >= (3, 0)
@@ -138,6 +140,57 @@ def ip_network(value):
         return "Invalid ip address %s" % value
     return r_v.network
 
+def b64encode(value):
+    """Base64 encoder
+    Return:
+        encoded string or the same value in case of error
+    """
+    try:
+        ret = base64.b64encode(value.encode()).decode()
+    except:
+        return value
+    return ret
+
+
+def b64decode(value):
+    """Base64 decoder
+    Return:
+        decoded string or the same value in case of error
+    """
+    try:
+        ret = base64.b64decode(value.encode()).decode()
+    except:
+        return value
+    return ret
+
+def get_primary_addr(value):
+    if not value:
+        return ""
+    table = pfx_filter(value)
+    primary_gateways = OrderedDict()
+    intf_with_secondary = set()
+    for key, val in table.items():
+        name, prefix = key
+        if "secondary" in val:
+            intf_with_secondary.add(name)
+    for key, val in table.items():
+        name, prefix = key
+        if name in intf_with_secondary and "secondary" not in val:
+            if PY3x:
+                network_def = ipaddress.ip_network(prefix, strict=False)
+            else:
+                network_def = ipaddress.ip_network(unicode(prefix), strict=False)
+            primary_gateways[(name, network_def[1])] = {}
+            intf_with_secondary.remove(name)
+    return primary_gateways
+
+def load_namespace_config(asic_name):
+    if not SonicDBConfig.isInit():
+        if is_multi_asic():
+            SonicDBConfig.load_sonic_global_db_config(namespace=asic_name)
+        else:
+            SonicDBConfig.load_sonic_db_config()
+
 class FormatConverter:
     """Convert config DB based schema to legacy minigraph based schema for backward capability.
 We will move to DB schema and remove this class when the config templates are modified.
@@ -234,16 +287,20 @@ def _get_jinja2_env(paths):
     Retreive Jinj2 env used to render configuration templates
     """
     loader = jinja2.FileSystemLoader(paths)
-    redis_bcc = RedisBytecodeCache(SonicV2Connector(host='127.0.0.1'))
-    env = jinja2.Environment(loader=loader, trim_blocks=True, bytecode_cache=redis_bcc)
+    env = jinja2.Environment(loader=loader, trim_blocks=True)
     env.filters['sort_by_port_index'] = sort_by_port_index
     env.filters['ipv4'] = is_ipv4
     env.filters['ipv6'] = is_ipv6
     env.filters['unique_name'] = unique_name
     env.filters['pfx_filter'] = pfx_filter
     env.filters['ip_network'] = ip_network
+    env.filters['get_primary_addr'] = get_primary_addr
     for attr in ['ip', 'network', 'prefixlen', 'netmask', 'broadcast']:
         env.filters[attr] = partial(prefix_attr, attr)
+
+    # Base64 encoder/decoder
+    env.filters['b64encode'] = b64encode
+    env.filters['b64decode'] = b64decode
 
     return env
 
@@ -303,6 +360,7 @@ def main():
         deep_update(data, hardware_data)
         if args.port_config is None:
             args.port_config = device_info.get_path_to_port_config_file(hwsku)
+        load_namespace_config(asic_name)
         (ports, _, _) = get_port_config(hwsku, platform, args.port_config, asic_id)
         if ports is None:
             print('Failed to get port config', file=sys.stderr)
@@ -312,6 +370,11 @@ def main():
         brkout_table = get_breakout_mode(hwsku, platform, args.port_config)
         if  brkout_table is not None:
             deep_update(data, {'BREAKOUT_CFG': brkout_table})
+
+        # Read Smart Switch config
+        smartswitch_config = get_smartswitch_config(hwsku, platform)
+        if smartswitch_config:
+            deep_update(data, smartswitch_config)
 
     _process_json(args, data)
 
@@ -328,6 +391,7 @@ def main():
 
     if args.minigraph is not None:
         minigraph = args.minigraph
+        load_namespace_config(asic_name)
         if platform:
             if args.port_config is not None:
                 deep_update(data, parse_xml(minigraph, platform, args.port_config, asic_name=asic_name, hwsku_config_file=args.hwsku_config))
@@ -344,7 +408,7 @@ def main():
             if yaml.__version__ >= "5.1":
                 additional_data = yaml.full_load(stream)
             else:
-                additional_data = yaml.load(stream)
+                additional_data = yaml.safe_load(stream)
             deep_update(data, FormatConverter.to_deserialized(additional_data))
 
     if args.additional_data is not None:

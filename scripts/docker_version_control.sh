@@ -1,7 +1,8 @@
+#!/bin/bash
+
 # This script is for reproducible build.
 # Reproducible build for docker enabled: Before build docker image, this script will change image:tag to image:sha256 in DOCKERFILE.
 # And record image sha256 to a target file.
-#!/bin/bash
 
 IMAGENAME=$1
 DOCKERFILE=$2
@@ -23,7 +24,7 @@ tag=`echo $image_tag | cut -f2 -d:`
 
 if [[ ",$SONIC_VERSION_CONTROL_COMPONENTS," == *,all,* ]] || [[ ",$SONIC_VERSION_CONTROL_COMPONENTS," == *,docker,* ]]; then
     # if docker image not in white list, exit
-    if [[ "$image_tag" != */debian:* ]] && [[ "$image_tag" != multiarch/debian-debootstrap:* ]];then
+    if [[ "$image_tag" != */debian:* ]] && [[ "$image_tag" != debian:* ]] && [[ "$image_tag" != multiarch/debian-debootstrap:* ]];then
         exit 0
     fi
     if [ -f $version_file ];then
@@ -40,7 +41,7 @@ if [[ ",$SONIC_VERSION_CONTROL_COMPONENTS," == *,all,* ]] || [[ ",$SONIC_VERSION
     sed -i "s/$oldimage/$newimage/" $DOCKERFILE
 else
     hash_value=`docker pull $image_tag 2> ${new_version_file}.log | grep Digest | awk '{print$2}'`
-    if [ -z hash_value ];then
+    if [ -z "$hash_value" ];then
         hash_value=unknown
     fi
 fi
