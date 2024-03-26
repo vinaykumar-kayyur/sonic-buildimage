@@ -2640,6 +2640,7 @@
                  "mab": "enable",
                  "mab_auth_type": "eap-md5"
              }
+	},
         "MID_PLANE_BRIDGE": {
             "GLOBAL" : {
                 "bridge": "bridge_midplane",
