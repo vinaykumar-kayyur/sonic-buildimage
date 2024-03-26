@@ -5,8 +5,8 @@ After=n8550-32c-platform-handle_mac.service
 DefaultDependencies=no
 
 [Service]
-ExecStartPre=/usr/local/bin/fs_n8550_32c_util.py install
-ExecStart=/usr/local/bin/fs_n8550_32c_monitor.py
+ExecStartPre=sudo /usr/bin/python3 /usr/local/bin/fs_n8550_32c_util.py install
+ExecStart=sudo /usr/bin/python3 /usr/local/bin/fs_n8550_32c_monitor.py
 KillSignal=SIGKILL
 SuccessExitStatus=SIGKILL
 #StandardOutput=tty

@@ -5,7 +5,7 @@ After=pddf-platform-init.service
 DefaultDependencies=no
 
 [Service]
-ExecStart=/usr/local/bin/fs_n8550_32c_pddf_monitor.py
+ExecStart=sudo /usr/bin/python3 /usr/local/bin/fs_n8550_32c_pddf_monitor.py
 KillSignal=SIGKILL
 SuccessExitStatus=SIGKILL
 
