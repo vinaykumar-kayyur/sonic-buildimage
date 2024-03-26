@@ -2482,6 +2482,35 @@
                 "bank": "1",
                 "link": "PortChannel2"
             }
+        },
+	"PAC_PORT_CONFIG": {
+             "Ethernet1": {
+                 "method_list": [
+                    "dot1x",
+                    "mab"
+                 ],
+                 "priority_list": [
+                    "dot1x",
+                    "mab"
+                 ],
+                 "port_pae_role": "authenticator",
+                 "port_control_mode": "auto",
+                 "host_control_mode": "multi_auth",
+                 "reauth_period": 60,
+                 "reauth_enable": "true",
+                 "max_users_per_port": 16
+             }
+        },
+        "HOSTAPD_GLOBAL_CONFIG": {
+             "global": {
+                 "dot1x_system_auth_control": "enable"
+             }
+        },
+        "MAB_PORT_CONFIG": {
+             "Ethernet1": {
+                 "mab": "enable",
+                 "mab_auth_type": "eap-md5"
+             }
         }
     },
     "SAMPLE_CONFIG_DB_UNKNOWN": {
@@ -2493,35 +2522,6 @@
         "TACPLUS": {
             "global": {
             }
-        }
-    },
-    "PAC_PORT_CONFIG": {
-        "Ethernet1": {
-            "method_list": [
-                "dot1x",
-                "mab"
-            ],
-            "priority_list": [
-                "dot1x",
-                "mab"
-            ],
-            "port_pae_role": "authenticator",
-            "port_control_mode": "auto",
-            "host_control_mode": "multi_auth",
-            "reauth_period": 60,
-            "reauth_enable": "true",
-            "max_users_per_port": 16
-        }
-    },
-    "HOSTAPD_GLOBAL_CONFIG": {
-        "global": {
-            "dot1x_system_auth_control": "enable"
-         }
-    },
-    "MAB_PORT_CONFIG": {
-        "Ethernet1": {
-            "mab": "enable",
-            "mab_auth_type": "eap-md5"
         }
     }
 }
