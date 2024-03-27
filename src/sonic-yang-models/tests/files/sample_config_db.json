@@ -2612,8 +2612,8 @@
                 "link": "PortChannel2"
             }
         },
-	      "PAC_PORT_CONFIG": {
-             "Ethernet1": {
+	"PAC_PORT_CONFIG": {
+             "Ethernet0": {
                  "method_list": [
                     "dot1x",
                     "mab"
@@ -2630,17 +2630,17 @@
                  "max_users_per_port": 16
              }
         },
-        "HOSTAPD_GLOBAL_CONFIG": {
-             "global": {
-                 "dot1x_system_auth_control": "enable"
-             }
-        },
         "MAB_PORT_CONFIG": {
-             "Ethernet1": {
+             "Ethernet0": {
                  "mab": "enable",
                  "mab_auth_type": "eap-md5"
              }
 	},
+	"HOSTAPD_GLOBAL_CONFIG": {
+             "global": {
+                 "dot1x_system_auth_control": "enable"
+             }
+        },
         "MID_PLANE_BRIDGE": {
             "GLOBAL" : {
                 "bridge": "bridge_midplane",
