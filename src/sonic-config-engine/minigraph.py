@@ -1880,14 +1880,6 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     for port in ports.values():
         port['mtu'] = '9100'
         port['tpid'] = '0x8100'
-    # mode check for vlan membership in PORT table default mode is routed and for vlan membership it is trunk
-    for port_name, port in ports.items():
-        if 'mode' not in port:
-            if port_name in [key[1] for key in vlan_members.keys()]:
-                port['mode'] = 'trunk'
-            else:
-                port['mode'] = 'routed'
-
     # asymmetric PFC is disabled by default
     for port in ports.values():
         port['pfc_asym'] = 'off'
@@ -1958,14 +1950,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         pc['mtu'] = '9100'
         pc['tpid'] = '0x8100'
         pc['admin_status'] = 'up'
-    # mode check for vlan membership in portchannel and default mode is routed and mode is trunk when port channel has vlan membership
-    for pc_name, pc in pcs.items():
-        if 'mode' not in pc:
-            if pc_name in [key[1] for key in vlan_members.keys()]:
-                 pc['mode'] = 'trunk'
-            else:
-                 pc['mode'] = 'routed'
-
+        
     results['PORTCHANNEL'] = pcs
     results['PORTCHANNEL_MEMBER'] = pc_members
 
