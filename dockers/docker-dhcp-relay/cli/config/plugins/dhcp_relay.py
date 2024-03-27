@@ -189,22 +189,25 @@ def del_dhcp_relay_ipv4_helper(db, vid, dhcp_relay_helpers):
 @dhcp_relay.group(cls=clicommon.AbbreviationGroup, name="mitigation-rate")
 def dhcp_relay_discover_rate():
     pass
-
 @dhcp_relay_discover_rate.command("add")
 @click.argument("rate", metavar="<number of packets per second>", required=True, type=int)
-def add_dhcp_relay_discover_rate(rate):
+@click.argument("dev", metavar="<interface name>", required=True, type=str)
+def add_dhcp_relay_discover_rate(rate,dev):
     # Generate the iptables rule with the specified rate
-    iptables_command = f"sudo iptables -I INPUT -p udp --dport 67 --sport 68 -m hashlimit --hashlimit-above {rate}/sec --hashlimit-burst {rate} --hashlimit-mode srcip,dstip --hashlimit-name dhcp-limit -j DROP"
-    
+    rate = rate * 406
+    tc_qdisc_command =  f"sudo tc qdisc add dev {dev}  handle ffff: ingress"
+    tc_filter_command = f"sudo tc filter Aadd dev {dev} protocol ip parent ffff: prio 1 u32 match ip protocol 17 0xff match ip dport 67 0xffff police rate {rate}bps burst {rate}b conform-exceed drop"    
     # Apply the iptables rule
-    subprocess.run(iptables_command, shell=True)
+    subprocess.run(tc_qdisc_command, shell=True)
+    subprocess.run(tc_filter_command, shell=True)
 
-@dhcp_relay_discover_rate.command("del")
+
+'''@dhcp_relay_discover_rate.command("del")
 def del_dhcp_relay_discover_rate():
     # Remove the iptables rule 
     iptables_command = f"sudo iptables -D INPUT 1"    
     # Remove the iptables rule
-    subprocess.run(iptables_command, shell=True)
+    subprocess.run(iptables_command, shell=True)'''
 
 
 # subcommand of vlan
@@ -315,30 +318,7 @@ def del_vlan_dhcp_relay_destination(db, vid, dhcp_relay_destination_ips):
         restart_dhcp_relay_service()
     except SystemExit as e:
         ctx.fail("Restart service dhcp_relay failed with error {}".format(e))
-
-@click.group(cls=clicommon.AbbreviationGroup, name='dhcp_relay')
-
-def dhcp_relay_mitigation_rate():
-    """Configure DHCP relay mitigation rate"""
-    pass
-@dhcp_relay_mitigation_rate.command("add")
-@click.argument("rate", metavar="<number of packets per second>", required=True, type=int)
-@click.argument("dev", metavar="<interface name>", required=True, type=str)
-def add_dhcp_relay_mitigation_rate(rate, dev):
-    """Add DHCP relay mitigation rate"""
-    rate = rate * 406  # Multiply the rate by 406 (adjust as needed)
-    
-    # Generate the tc commands with the specified rate and interface
-    tc_qdisc_command = f"sudo tc qdisc add dev {dev} handle ffff: ingress"
-    tc_filter_command = f"sudo tc filter Aadd dev {dev} protocol ip parent ffff: prio 1 u32 match ip protocol 17 0xff match ip dport 67 0xffff police rate {rate}bps burst {rate}b conform-exceed drop"
-    
-    # Apply the tc commands
-    subprocess.run(tc_qdisc_command, shell=True)
-    subprocess.run(tc_filter_command, shell=True)
-
-
-#############retriggered        
-
+  
 
 def register(cli):
     cli.add_command(dhcp_relay)
