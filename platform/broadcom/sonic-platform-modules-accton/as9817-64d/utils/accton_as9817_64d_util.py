@@ -338,10 +338,10 @@ def device_install():
         try:
             # Create empty file
             open(mkfile[i], 'a').close()
-            os.chmod(mkfile[i], 0o666)
+            os.chmod(mkfile[i], 0o644)
         except OSError:
             print('Failed : creating the file %s.' % (mkfile[i]))
-            os.chmod(mkfile[i], 0o666)
+            os.chmod(mkfile[i], 0o644)
             if FORCE == 0:
                 return -1
 
