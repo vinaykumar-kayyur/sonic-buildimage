@@ -187,16 +187,19 @@ def del_dhcp_relay_ipv4_helper(db, vid, dhcp_relay_helpers):
 
 
 @dhcp_relay.group(cls=clicommon.AbbreviationGroup, name="mitigation-rate")
-def dhcp_relay_discover_rate():
+def mitigation_rate():
     pass
 
 
-@dhcp_relay_discover_rate.command("add")
+@mitigation_rate.command("add")
 @click.argument("rate", metavar="<number of packets per second>", required=True, type=int)
 @click.argument("port", metavar="<interface name>", required=True, type=str)
 @clicommon.pass_db
-def add_dhcp_relay_discover_rate(db, rate, port):
+def add_dhcp_relay_mitigation_rate(db, rate, port):
+    """ Add a DHCP rate limit on a port """
+
     ctx = click.get_current_context()
+    byte_rate = rate * 406
 
     # Check if rate is valid
     if rate < 1:
@@ -243,19 +246,21 @@ def add_dhcp_relay_discover_rate(db, rate, port):
             ctx.fail("Failed to add traffic control qdisc on {}".format(port))
 
     # Generate DHCP rate limit traffic control command
-    byte_rate = rate * 406
     add_tc_filter_command = f"sudo tc filter add dev {port} protocol ip parent ffff: prio 1 u32 match ip protocol 17 0xff match ip dport 67 0xffff police rate {byte_rate}bps burst {byte_rate}b conform-exceed drop"    
     # Apply DHCP rate limit on port
     add_tc_filter_error = subprocess.run(add_tc_filter_command, shell=True, capture_output=True).returncode
     if add_tc_filter_error != 0:
         ctx.fail("Failed to add DHCP rate limit on {}".format(port))
 
-@dhcp_relay_discover_rate.command("del")
+@mitigation_rate.command("del")
 @click.argument("rate", metavar="<number of packets per second>", required=True, type=int)
 @click.argument("port", metavar="<interface name>", required=True, type=str)
 @clicommon.pass_db
-def del_dhcp_relay_discover_rate(db, rate, port):
+def add_dhcp_relay_mitigation_rate(db, rate, port):
+    """ Delete a DHCP rate limit on a port """
+
     ctx = click.get_current_context()
+    byte_rate = rate * 406
     
     # Check if rate is valid
     if rate < 1:
@@ -284,8 +289,6 @@ def del_dhcp_relay_discover_rate(db, rate, port):
         "police 0x1 rate {}bit".format(rate * 3248)
     ]
 
-    byte_rate = rate * 406
-
     # Generate traffic control filter delete command
     del_tc_filter_command = f"sudo tc filter del dev {port} protocol ip parent ffff: prio 1 u32 match ip protocol 17 0xff match ip dport 67 0xffff police rate {byte_rate}bps burst {byte_rate}b conform-exceed drop"
 
@@ -296,11 +299,6 @@ def del_dhcp_relay_discover_rate(db, rate, port):
             ctx.fail("Failed to delete DHCP rate limit on {}".format(port))
     else:
         ctx.fail("DHCP rate limit does not exist on {}".format(port))
-
-
-    
-
-    
 
 
 # subcommand of vlan
@@ -417,7 +415,7 @@ def register(cli):
     cli.add_command(dhcp_relay)
     cli.commands['vlan'].add_command(vlan_dhcp_relay)
 
-    
+
 
 
 if __name__ == '__main__':
