@@ -91,18 +91,18 @@ class Sfp(SfpOptoeBase):
         # Init eeprom path
         eeprom_path_prefix = '/sys/bus/i2c/devices/0-00'
         self.port_to_eeprom_low_mapping = {}
-        self.port_to_eeprom0_mapping = {}
-        self.port_to_eeprom1_mapping = {}
-        self.port_to_eeprom2_mapping = {}
-        self.port_to_eeprom3_mapping = {}
-        self.port_to_eeprom11_mapping = {}
+        self.port_to_eeprom_0_mapping = {}
+        self.port_to_eeprom_1_mapping = {}
+        self.port_to_eeprom_2_mapping = {}
+        self.port_to_eeprom_3_mapping = {}
+        self.port_to_eeprom_11_mapping = {}
         for x in range(self.PORT_START, self.PORT_END + 1):
-            self.port_to_eeprom_low_mapping[x] = eeprom_path_prefix + self.port_to_i2c_mapping[x] + '/eeprom_low'
-            self.port_to_eeprom0_mapping[x] = eeprom_path_prefix + self.port_to_i2c_mapping[x] + '/eeprom_pg0'
-            self.port_to_eeprom1_mapping[x] = eeprom_path_prefix + self.port_to_i2c_mapping[x] + '/eeprom_pg1'
-            self.port_to_eeprom2_mapping[x] = eeprom_path_prefix + self.port_to_i2c_mapping[x] + '/eeprom_pg2'
-            self.port_to_eeprom3_mapping[x] = eeprom_path_prefix + self.port_to_i2c_mapping[x] + '/eeprom_pg3'
-            self.port_to_eeprom11_mapping[x] = eeprom_path_prefix + self.port_to_i2c_mapping[x] + '/eeprom_pg11'
+            self.port_to_eeprom_low_mapping[x] = eeprom_path_prefix + str(self.port_to_i2c_mapping[x]) + '/eeprom_low'
+            self.port_to_eeprom_0_mapping[x] = eeprom_path_prefix + str(self.port_to_i2c_mapping[x]) + '/eeprom_pg0'
+            self.port_to_eeprom_1_mapping[x] = eeprom_path_prefix + str(self.port_to_i2c_mapping[x]) + '/eeprom_pg1'
+            self.port_to_eeprom_2_mapping[x] = eeprom_path_prefix + str(self.port_to_i2c_mapping[x]) + '/eeprom_pg2'
+            self.port_to_eeprom_3_mapping[x] = eeprom_path_prefix + str(self.port_to_i2c_mapping[x]) + '/eeprom_pg3'
+            self.port_to_eeprom_11_mapping[x] = eeprom_path_prefix + str(self.port_to_i2c_mapping[x]) + '/eeprom_pg11'
 
         self.reinit()
 
