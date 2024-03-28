@@ -417,6 +417,8 @@ def register(cli):
     cli.add_command(dhcp_relay)
     cli.commands['vlan'].add_command(vlan_dhcp_relay)
 
+    
+
 
 if __name__ == '__main__':
     dhcp_relay()
