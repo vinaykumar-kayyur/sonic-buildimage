@@ -235,7 +235,7 @@ class Sfp(SfpOptoeBase):
         for i in range(0, num_bytes):
             eeprom_raw.append("0x00")
 
-        sysfs_sfp_i2c_client_eeprom_path = self.port_to_eeprom_mapping[self.port_num]
+        sysfs_sfp_i2c_client_eeprom_path = self.get_eeprom_path()
         try:
             sysfsfile_eeprom = open(
                 sysfs_sfp_i2c_client_eeprom_path, mode="rb", buffering=0)
@@ -354,6 +354,9 @@ class Sfp(SfpOptoeBase):
             self.dom_volt_supported = False
             self.dom_rx_power_supported = False
             self.dom_tx_power_supported = False
+
+    def get_eeprom_path(self):
+        return self.port_to_eeprom_mapping[self.port_num]
 
     def get_transceiver_info(self):
         """
@@ -1176,7 +1179,7 @@ class Sfp(SfpOptoeBase):
         if self.dom_tx_disable_supported:
             # SFP status/control register at address A2h, byte 110
             offset = 256
-            sysfs_sfp_i2c_client_eeprom_path = self.port_to_eeprom_mapping[self.port_num]
+            sysfs_sfp_i2c_client_eeprom_path = self.get_eeprom_path()
             status_control_raw = self._read_eeprom_specific_bytes(
                 (offset + SFP_STATUS_CONTROL_OFFSET), SFP_STATUS_CONTROL_WIDTH)
             if status_control_raw is not None:
