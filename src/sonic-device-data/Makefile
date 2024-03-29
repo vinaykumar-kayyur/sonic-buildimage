@@ -29,12 +29,24 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 		cp ./pai.vs_profile device/x86_64-kvm_x86_64-r0/$$(basename $$d)/pai.profile; \
 		cp ./fabriclanemap_vs.ini device/x86_64-kvm_x86_64-r0/$$(basename $$d)/fabriclanemap.ini; \
 		if [ -f device/x86_64-kvm_x86_64-r0/$$(basename $$d)/port_config.ini ]; then \
-			grep -v ^# device/x86_64-kvm_x86_64-r0/$$(basename $$d)/port_config.ini | awk '{i=i+1;print "eth"i":"$$2}' > device/x86_64-kvm_x86_64-r0/$$(basename $$d)/lanemap.ini; \
 			last_line=$$(tail -n 1 device/x86_64-kvm_x86_64-r0/$$(basename $$d)/port_config.ini); \
 			num_columns=$$(echo $$last_line | awk '{print NF}'); \
-			if [ $$num_columns -ge 9 ]; then \
-				grep -v ^# device/x86_64-kvm_x86_64-r0/$$(basename $$d)/port_config.ini | awk '{i=i+1;print "eth"i":"$$8","$$9}' > device/x86_64-kvm_x86_64-r0/$$(basename $$d)/coreportindexmap.ini; \
+			i=0; \
+			if [ -f $$(dirname $$d)/chassisdb.conf ]; then \
+				i=$$(($$i+1)); \
 			fi; \
+			while IFS= read -r line; do \
+				if ! grep -q "^#" <<< "$$line"; then \
+					i=$$(($$i+1)); \
+					lanes=$$(echo "$$line" | awk '{print $$2}'); \
+					echo "eth$$i:$$lanes" >> device/x86_64-kvm_x86_64-r0/$$(basename $$d)/lanemap.ini; \
+					if [ $$num_columns -ge 9 ]; then \
+						core=$$(echo "$$line" | awk '{print $$8}'); \
+						core_port=$$(echo "$$line" | awk '{print $$9}'); \
+						echo "eth$$i:$$core,$$core_port" >> device/x86_64-kvm_x86_64-r0/$$(basename $$d)/coreportindexmap.ini; \
+					fi; \
+				fi; \
+			done < device/x86_64-kvm_x86_64-r0/$$(basename $$d)/port_config.ini; \
 		fi; \
 		if [ -f device/x86_64-kvm_x86_64-r0/$$(basename $$d)/context_config.json ]; then \
 			rm device/x86_64-kvm_x86_64-r0/$$(basename $$d)/context_config.json; \
