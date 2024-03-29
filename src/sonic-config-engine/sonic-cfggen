@@ -430,15 +430,20 @@ def main():
     # or switch_type chassis_packet
     if args.platform_info:
         asic_role = None
-        switch_type = None
         if asic_name is not None:
             if args.minigraph is not None:
                 asic_role = parse_asic_sub_role(args.minigraph, asic_name)
-                switch_type = parse_asic_switch_type(args.minigraph, asic_name)
 
-            if ((switch_type is not None and switch_type.lower() == "chassis-packet") or
-                (asic_role is not None and asic_role.lower() == "backend")):
-                mac = device_info.get_system_mac(namespace=asic_name)
+            chassis_type = device_info.ChassisType.UNKNOWN
+            if device_info.is_voq_chassis():
+                chassis_type = device_info.ChassisType.VOQ
+            elif device_info.is_packet_chassis():
+                chassis_type = device_info.ChassisType.PACKET
+
+            if((chassis_type == device_info.ChassisType.PACKET) or
+               (chassis_type == device_info.ChassisType.VOQ and platform == device_info.VS_PLATFORM) or
+               (asic_role is not None and asic_role.lower() == "backend")):
+                mac = device_info.get_chassis_mac(namespace=asic_name, chassis_type=chassis_type)
             else:
                 mac = device_info.get_system_mac()
         else:

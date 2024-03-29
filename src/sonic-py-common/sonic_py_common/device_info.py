@@ -3,11 +3,16 @@ import json
 import os
 import re
 import subprocess
-
 import yaml
 from natsort import natsorted
+from enum import Enum
 from sonic_py_common.general import getstatusoutput_noshell_pipe
 from swsscommon.swsscommon import ConfigDBConnector, SonicV2Connector
+
+class ChassisType(Enum):
+    UNKNOWN = 0
+    VOQ = 1
+    PACKET = 2
 
 USR_SHARE_SONIC_PATH = "/usr/share/sonic"
 HOST_DEVICE_PATH = USR_SHARE_SONIC_PATH + "/device"
@@ -37,6 +42,7 @@ ASIC_CONF_FILENAME = "asic.conf"
 PLATFORM_ENV_CONF_FILENAME = "platform_env.conf"
 FRONTEND_ASIC_SUB_ROLE = "FrontEnd"
 BACKEND_ASIC_SUB_ROLE = "BackEnd"
+VS_PLATFORM = "x86_64-kvm_x86_64-r0"
 
 # Chassis STATE_DB keys
 CHASSIS_INFO_TABLE = 'CHASSIS_INFO|chassis {}'
@@ -687,16 +693,33 @@ def run_command_pipe(cmd0, cmd1, cmd2):
         err = out
     return (out, err)
 
+def _modify_mac_for_asic(mac, namespace=None):
+    if namespace is None:
+        return mac
+    if namespace in ["asic0", "asic1", "asic2"]:
+        asic_id = namespace[-1]
+        mac = mac[:-1] + asic_id
+    return mac
 
-def get_system_mac(namespace=None):
+def get_system_mac(namespace=None, chassis_type=ChassisType.UNKNOWN):
     hw_mac_entry_outputs = []
     syseeprom_cmd = ["sudo", "decode-syseeprom", "-m"]
     iplink_cmd0 = ["ip", 'link', 'show', 'eth0']
     iplink_cmd1 = ['grep', 'ether']
     iplink_cmd2 = ['awk', '{print $2}']
     version_info = get_sonic_version_info()
+    platform = get_platform()
 
-    if (version_info['asic_type'] == 'mellanox'):
+    if platform == VS_PLATFORM and chassis_type == ChassisType.VOQ:
+        try:
+            import sonic_platform
+            platform_chassis = sonic_platform.platform.Platform().get_chassis()
+            mac=platform_chassis.get_base_mac()
+            return _modify_mac_for_asic(mac, namespace)
+        except ModuleNotFoundError as e:
+            #fallthrough
+            namespace = None
+    elif (version_info['asic_type'] == 'mellanox'):
         # With Mellanox ONIE release(2019.05-5.2.0012) and above
         # "onie_base_mac" was added to /host/machine.conf:
         # onie_base_mac=e4:1d:2d:44:5e:80
@@ -714,7 +737,6 @@ def get_system_mac(namespace=None):
         hw_mac_entry_outputs.append((mac, err))
     elif (version_info['asic_type'] == 'marvell'):
         # Try valid mac in eeprom, else fetch it from eth0
-        platform = get_platform()
         machine_key = "onie_machine"
         machine_vars = get_machine_info()
         (mac, err) = run_command(syseeprom_cmd)
@@ -736,7 +758,6 @@ def get_system_mac(namespace=None):
         hw_mac_entry_outputs.append((mac, err))
     elif (version_info['asic_type'] == 'cisco-8000'):
         # Try to get valid MAC from profile.ini first, else fetch it from syseeprom or eth0
-        platform = get_platform()
         if namespace is not None:
             profile_cmd0 = ['cat', HOST_DEVICE_PATH + '/' + platform + '/profile.ini']
             profile_cmd1 = ['grep', str(namespace)+'switchMacAddress']
@@ -865,14 +886,14 @@ def get_num_dpus():
 
     if os.path.isfile(os.path.join(platform_path, PLATFORM_JSON_FILE)):
         json_file = os.path.join(platform_path, PLATFORM_JSON_FILE)
-        
+
         try:
             with open(json_file, 'r') as file:
                 platform_data = json.load(file)
         except (json.JSONDecodeError, IOError, TypeError, ValueError):
             # Handle any file reading and JSON parsing errors
             return 0
-        
+
         # Convert to lower case avoid case sensitive.
         data = {k.lower(): v for k, v in platform_data.items()}
         DPUs = data.get('dpus', None)
@@ -880,4 +901,3 @@ def get_num_dpus():
             return len(DPUs)
 
     return 0
-
