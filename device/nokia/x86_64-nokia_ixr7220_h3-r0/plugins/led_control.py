@@ -106,38 +106,5 @@ class LedControl(LedControlBase):
                 else:
                     oldfan = 0xf
 
-            """ # Front Panel PSU1 Panel LED setting
-            if (self.chassis.get_psu(0).get_status() == True):
-                if (os.path.isfile(SWPLD1_DIR+"led_psu1")):
-                    if oldpsu != 0x1:
-                        self._write_sysfs_file(SWPLD1_DIR+"led_psu1", "1")
-                        oldpsu = 0x1
-                else:
-                    oldpsu = 0xf
-            else:
-                if (os.path.isfile(SWPLD1_DIR+"led_psu1")):
-                    if oldpsu != 0x0:
-                        status = self._write_sysfs_file(SWPLD1_DIR+"led_psu1", "2")
-                        oldpsu = 0x0
-                else:
-                    oldpsu = 0xf
-            
-            # Front Panel PSU2 Panel LED setting
-            if (self.chassis.get_psu(1).get_status() == True):
-                if (os.path.isfile(SWPLD1_DIR+"led_psu2")):
-                    if oldpsu != 0x1:
-                        self._write_sysfs_file(SWPLD1_DIR+"led_psu2", "1")
-                        oldpsu = 0x1
-                else:
-                    oldpsu = 0xf
-            else:
-                if (os.path.isfile(SWPLD1_DIR+"led_psu2")):
-                    if oldpsu != 0x0:
-                        status = self._write_sysfs_file(SWPLD1_DIR+"led_psu2", "2")
-                        oldpsu = 0x0
-                else:
-                    oldpsu = 0xf """
-
-
             time.sleep(6)
 
