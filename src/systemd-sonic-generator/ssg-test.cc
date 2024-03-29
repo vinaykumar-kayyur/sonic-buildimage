@@ -449,7 +449,7 @@ TEST_F(SsgFunctionTest, insert_instance_number) {
     for (int i = 0; i <= 100; ++i) {
         std::string out = "test@" + std::to_string(i) + ".service";
         std::string ret = insert_instance_number(input, i);
-        ASSERT_NE(ret, nullptr);
+        EXPECT_FALSE(ret.empty());
         EXPECT_EQ(ret, out.c_str());
     }
 }

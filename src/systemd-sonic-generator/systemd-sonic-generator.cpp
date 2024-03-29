@@ -18,44 +18,42 @@
 #include <unordered_set>
 #include <algorithm>
 #include <unistd.h>
+#include <systemd-sonic-generator.h>
 
 // #define MAX_NUM_TARGETS 48
 // #define MAX_NUM_INSTALL_LINES 48
 // #define MAX_NUM_UNITS 128
 // #define MAX_BUF_SIZE 512
 
-const std::string UNIT_FILE_PREFIX = "/usr/lib/systemd/system/";
-const std::string CONFIG_FILE = "/etc/sonic/generated_services.conf";
-const std::string MACHINE_CONF_FILE = "/host/machine.conf";
-const std::vector<std::string> ASIC_CONF_FORMAT = {"/usr/share/sonic/device/", "/asic.conf"};
+
 
 std::string g_unit_file_prefix;
 std::string g_config_file;
 std::string g_machine_config_file;
 std::vector<std::string> g_asic_conf_format;
 
-std::string get_unit_file_prefix() {
+const std::string get_unit_file_prefix() {
     if (g_unit_file_prefix.empty()) {
         return UNIT_FILE_PREFIX;
     }
     return g_unit_file_prefix;
 }
 
-std::string get_config_file() {
+const std::string get_config_file() {
     if (g_config_file.empty()) {
         return CONFIG_FILE;
     }
     return g_config_file;
 }
 
-std::string get_machine_config_file() {
+const std::string get_machine_config_file() {
     if (g_machine_config_file.empty()) {
         return MACHINE_CONF_FILE;
     }
     return g_machine_config_file;
 }
 
-std::vector<std::string> get_asic_conf_format() {
+const std::vector<std::string> get_asic_conf_format() {
     if (g_asic_conf_format.empty()) {
         return ASIC_CONF_FORMAT;
     }
@@ -130,7 +128,7 @@ static bool is_multi_instance_service(const std::string& service_file){
     return false;
 }
 
-static std::vector<std::string> get_install_targets_from_line(const std::string& target_string, const std::string& install_type) {
+std::vector<std::string> get_install_targets_from_line(const std::string& target_string, const std::string& install_type) {
     /***
     Helper fuction for get_install_targets
 

@@ -2,7 +2,7 @@ CC=gcc
 CFLAGS += -std=gnu99 -D_GNU_SOURCE
 
 CXX=g++
-CXXFLAGS += -std=c++14 -D_GNU_SOURCE
+CXXFLAGS += -std=c++11 -D_GNU_SOURCE -I ./
 LDFLAGS += -lstdc++ -lpthread -lboost_filesystem -lboost_system -lgtest
 
 BINARY = systemd-sonic-generator
@@ -10,7 +10,7 @@ BINARY = systemd-sonic-generator
 $(BINARY): systemd-sonic-generator.cpp
 	rm -f ./systemd-sonic-generator
 
-	$(CXX) $(CXXFLAGS) -o $@ $^
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
 
 install: $(BINARY)
 	mkdir -p $(DESTDIR)
