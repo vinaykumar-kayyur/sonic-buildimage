@@ -109,12 +109,16 @@ class Thermal(ThermalBase):
 
         self.name = self.get_name()
         self.postion = self._thermal_info["postion"]
-        self.minimum_thermal = self.get_temperature()
-        self.maximum_thermal = self.get_temperature()
+        self.minimum_thermal = None
+        self.maximum_thermal = None
 
     def _get_hwmon_path(self):
         hwmon_path = os.path.join(
             I2C_ADAPTER_PATH, self._thermal_info["i2c_path"])
+        if self._thermal_info["i2c_path"] == "i2c-11/11-001a/hwmon":
+            hwmon_dir = "hwmon2"
+        else:
+            hwmon_dir = "hwmon1"
         hwmon_dir = os.listdir(hwmon_path)[0]
         return os.path.join(hwmon_path, hwmon_dir)
 
@@ -239,7 +243,7 @@ class Thermal(ThermalBase):
             up to nearest thousandth of one degree Celsius, e.g. 30.125
         """
         tmp = self.get_temperature()
-        if tmp < self.minimum_thermal:
+        if self.minimum_thermal is None or tmp < self.minimum_thermal:
             self.minimum_thermal = tmp
         return self.minimum_thermal
 
@@ -251,7 +255,7 @@ class Thermal(ThermalBase):
             up to nearest thousandth of one degree Celsius, e.g. 30.125
         """
         tmp = self.get_temperature()
-        if tmp > self.maximum_thermal:
+        if self.maximum_thermal is None or tmp > self.maximum_thermal:
             self.maximum_thermal = tmp
         return self.maximum_thermal
 
