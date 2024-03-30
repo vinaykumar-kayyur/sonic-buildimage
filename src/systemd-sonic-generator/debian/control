@@ -3,7 +3,7 @@ Section: devel
 Priority: optional
 Build-Depends: debhelper (>= 11.0.0)
 Standards-Version: 3.9.3
-Maintainer: Lawrence Lee <t-lale@microsoft.com>
+Maintainer: Lawrence Lee <lawlee@microsoft.com>
 
 Package: systemd-sonic-generator
 Architecture: any
