@@ -309,7 +309,7 @@ std::string insert_instance_number(const std::string& unit_file, int instance) {
         return "";
     }
 
-    return unit_file.substr(0, at_pos + 1) + std::to_string(instance) + unit_file.substr(at_pos + 2);
+    return unit_file.substr(0, at_pos + 1) + std::to_string(instance) + unit_file.substr(at_pos + 1);
 }
 
 

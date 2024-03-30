@@ -6,10 +6,8 @@
  * Copyright (c) 2021 by Cisco Systems, Inc.
  *------------------------------------------------------------------
  */
-#include <mutex>
 #include <fstream>
 #include <string>
-#include <sys/stat.h>
 #include <gtest/gtest.h>
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
@@ -64,7 +62,6 @@ const std::vector<std::string> generated_services = {
     "test.timer",               /* A timer service */
 };
 
-// static std::mutex g_ssg_test_mutex;
 
 class SystemdSonicGeneratorFixture : public testing::Test {
     protected:
@@ -112,7 +109,7 @@ class SsgFunctionTest : public SystemdSonicGeneratorFixture {
         }
 
         /* copy files from src_dir to dest_dir */
-        void copyfiles(const char* src_dir, const char* dest_dir) const {
+        void copyfiles(const std::string& src_dir, const std::string& dest_dir) const {
             // Iterate through the source directory
             for (fs::directory_iterator file(src_dir);
                     file != fs::directory_iterator(); ++file) {
@@ -123,36 +120,34 @@ class SsgFunctionTest : public SystemdSonicGeneratorFixture {
                     }
                 }
                 catch(fs::filesystem_error const & e) {
-                    std:: cerr << e.what() << '\n';
+                    std::cerr << e.what() << '\n';
                 }
             }
         }
 
         /* Save global variables before running tests */
         void SetUp() override{
-            FILE* fp;
             SystemdSonicGeneratorFixture::SetUp();
 
             /* Setup Input and Output directories and files */
-            fs::path path{TEST_UNIT_FILE_PREFIX.c_str()};
+            fs::path path{TEST_UNIT_FILE_PREFIX};
             fs::create_directories(path);
-            path = fs::path(TEST_OUTPUT_DIR.c_str());
+            path = fs::path(TEST_OUTPUT_DIR);
             fs::create_directories(path);
-            path = fs::path(TEST_PLATFORM_DIR.c_str());
+            path = fs::path(TEST_PLATFORM_DIR);
             fs::create_directories(path);
-            fp = fopen(TEST_MACHINE_CONF.c_str(), "w");
-            ASSERT_NE(fp, nullptr);
-            fputs("onie_platform=test_platform", fp);
-            fclose(fp);
+            std::ofstream conf_file(TEST_MACHINE_CONF);
+            EXPECT_TRUE(conf_file.is_open());
+            conf_file << "onie_platform=test_platform" << std::endl;
             generate_generated_services_conf();
-            copyfiles(TEST_UNIT_FILES.c_str(), TEST_UNIT_FILE_PREFIX.c_str());
+            copyfiles(TEST_UNIT_FILES, TEST_UNIT_FILE_PREFIX);
         }
 
         /* Restore global vars */
         void TearDown() override {
             /* Delete ssg_test directory */
-            EXPECT_TRUE(fs::exists(TEST_ROOT_DIR.c_str()));
-            fs::path path{TEST_ROOT_DIR.c_str()};
+            EXPECT_TRUE(fs::exists(TEST_ROOT_DIR));
+            fs::path path{TEST_ROOT_DIR};
             fs::remove_all(path);
 
             SystemdSonicGeneratorFixture::TearDown();
@@ -288,11 +283,10 @@ class SsgMainTest : public SsgFunctionTest {
      * input: num_asics    number of asics
      */
     void ssg_main_test(int num_asics) {
-        FILE* fp;
         std::vector<char*> argv_;
         std::vector<std::string> arguments = {
                     "ssg_main",
-                    TEST_OUTPUT_DIR.c_str()
+                    TEST_OUTPUT_DIR
                 };
         std::string num_asic_str = "NUM_ASIC=" + std::to_string(num_asics);
 
@@ -303,10 +297,9 @@ class SsgMainTest : public SsgFunctionTest {
         g_asic_conf_format = TEST_ASIC_CONF_FORMAT;
 
         /* Set NUM_ASIC value in asic.conf */
-        fp = fopen(TEST_ASIC_CONF.c_str(), "w");
-        ASSERT_NE(fp, nullptr);
-        fputs(num_asic_str.c_str(), fp);
-        fclose(fp);
+        std::ofstream conf_file(TEST_ASIC_CONF);
+        EXPECT_TRUE(conf_file.is_open());
+        conf_file << num_asic_str << std::endl;
 
         /* Create argv list for ssg_main. */
         for (const auto& arg : arguments) {
@@ -402,18 +395,18 @@ SsgMainTest::common_dependency_list = {
 TEST_F(SystemdSonicGeneratorFixture, get_global_vars) {
     EXPECT_TRUE(g_unit_file_prefix.empty());
     EXPECT_EQ(get_unit_file_prefix(), UNIT_FILE_PREFIX);
-    g_unit_file_prefix = TEST_UNIT_FILE_PREFIX.c_str();
-    EXPECT_EQ(get_unit_file_prefix(), TEST_UNIT_FILE_PREFIX.c_str());
+    g_unit_file_prefix = TEST_UNIT_FILE_PREFIX;
+    EXPECT_EQ(get_unit_file_prefix(), TEST_UNIT_FILE_PREFIX);
 
     EXPECT_TRUE(g_config_file.empty());
     EXPECT_EQ(get_config_file(), CONFIG_FILE);
-    g_config_file = TEST_CONFIG_FILE.c_str();
-    EXPECT_EQ(get_config_file(), TEST_CONFIG_FILE.c_str());
+    g_config_file = TEST_CONFIG_FILE;
+    EXPECT_EQ(get_config_file(), TEST_CONFIG_FILE);
 
     EXPECT_TRUE(g_machine_config_file.empty());
     EXPECT_EQ(get_machine_config_file(), MACHINE_CONF_FILE);
-    g_machine_config_file = TEST_MACHINE_CONF.c_str();
-    EXPECT_EQ(get_machine_config_file(), TEST_MACHINE_CONF.c_str());
+    g_machine_config_file = TEST_MACHINE_CONF;
+    EXPECT_EQ(get_machine_config_file(), TEST_MACHINE_CONF);
 
     EXPECT_TRUE(g_asic_conf_format.empty());
     EXPECT_EQ(get_asic_conf_format(), ASIC_CONF_FORMAT);
@@ -445,45 +438,34 @@ TEST_F(SsgFunctionTest, missing_file) {
 
 /* TEST insert_instance_number() */
 TEST_F(SsgFunctionTest, insert_instance_number) {
-    char input[] = "test@.service";
+    std::string input = "test@.service";
     for (int i = 0; i <= 100; ++i) {
         std::string out = "test@" + std::to_string(i) + ".service";
         std::string ret = insert_instance_number(input, i);
         EXPECT_FALSE(ret.empty());
-        EXPECT_EQ(ret, out.c_str());
+        EXPECT_EQ(ret, out);
     }
 }
 
 /* TEST get_num_of_asic() */
 TEST_F(SsgFunctionTest, get_num_of_asic) {
-    FILE* fp;
+    std::vector<int> num_asic_list = {1, 10, 40};
 
-    g_machine_config_file = TEST_MACHINE_CONF.c_str();
+    g_machine_config_file = TEST_MACHINE_CONF;
     g_asic_conf_format = TEST_ASIC_CONF_FORMAT;
-
-    fp = fopen(TEST_ASIC_CONF.c_str(), "w");
-    ASSERT_NE(fp, nullptr);
-    fputs("NUM_ASIC=1", fp);
-    fclose(fp);
-    EXPECT_EQ(get_num_of_asic(), 1);
-
-    fp = fopen(TEST_ASIC_CONF.c_str(), "w");
-    ASSERT_NE(fp, nullptr);
-    fputs("NUM_ASIC=10", fp);
-    fclose(fp);
-    EXPECT_EQ(get_num_of_asic(), 10);
-
-    fp = fopen(TEST_ASIC_CONF.c_str(), "w");
-    ASSERT_NE(fp, nullptr);
-    fputs("NUM_ASIC=40", fp);
-    fclose(fp);
-    EXPECT_EQ(get_num_of_asic(), 40);
+    for (int num_asic : num_asic_list) {
+        std::ofstream conf_file(TEST_ASIC_CONF);
+        EXPECT_TRUE(conf_file.is_open());
+        conf_file << "NUM_ASIC=" << num_asic << std::endl;
+        conf_file.close();
+        EXPECT_EQ(get_num_of_asic(), num_asic);
+    }
 }
 
 /* TEST get_unit_files()*/
 TEST_F(SsgFunctionTest, get_unit_files) {
-    g_unit_file_prefix = TEST_UNIT_FILE_PREFIX.c_str();
-    g_config_file = TEST_CONFIG_FILE.c_str();
+    g_unit_file_prefix = TEST_UNIT_FILE_PREFIX;
+    g_config_file = TEST_CONFIG_FILE;
     std::vector<std::string> unit_files= get_unit_files();
     EXPECT_EQ(unit_files.size(), NUM_UNIT_FILES);
     for (std::string service : generated_services) {
@@ -500,7 +482,6 @@ TEST_F(SsgFunctionTest, get_unit_files) {
 
 /* TEST ssg_main() argv error */
 TEST_F(SsgMainTest, ssg_main_argv) {
-        FILE* fp;
         std::vector<char*> argv_;
         std::vector<std::string> arguments = {
                     "ssg_main",
