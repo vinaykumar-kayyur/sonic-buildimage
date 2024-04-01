@@ -81,7 +81,7 @@ static std::vector<std::string> get_target_lines(const std::string& unit_file_na
     Returns lines in the [Install] section of a unit file
     ***/
     bool found_install = false;
-    std::vector<std::string> target_lines;   
+    std::vector<std::string> target_lines;
     std::string line;
     std::ifstream unit_file(unit_file_name);
     if (!unit_file.is_open()) {
@@ -137,7 +137,7 @@ std::vector<std::string> get_install_targets_from_line(const std::string& target
     ***/
     std::string target;
     std::string prefix;
-    std::string suffix; 
+    std::string suffix;
     std::vector<std::string> targets;
 
     if (target_string.empty() || install_type.empty()) {
@@ -183,7 +183,7 @@ static void replace_multi_inst_dep(const std::string& orig_unit_file) {
      * sections, replace if dependent on multi instance
      * service.
      */
-    std::vector<std::string> target_lines;   
+    std::vector<std::string> target_lines;
     std::string line;
     std::string property;
     std::string property_name;
@@ -407,7 +407,7 @@ static int install_unit_file(const std::string& unit_file, const std::string& ta
             r = create_symlink(unit_file, target_instance, install_dir, i);
             if (r < 0) {
                 std::cerr << "Error installing " << unit_file << " for target " << target_instance << std::endl;
-                ret_val = -1; 
+                ret_val = -1;
             }
 
 
@@ -431,7 +431,7 @@ static int get_num_asic_from_asic_file(const std::string& asic_file) {
     if (!asic_fstream.is_open()) {
         std::cerr << "Failed to open " << asic_file << std::endl;
         exit(EXIT_FAILURE);
-    } 
+    }
     while (std::getline(asic_fstream, line)) {
         if (line.find("NUM_ASIC") != std::string::npos) {
             str_num_asic = strip_trailing_newline(line.substr(line.find("=") + 1));
