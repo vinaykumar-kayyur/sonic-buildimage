@@ -10,7 +10,7 @@ try:
 except ImportError as e:
     raise ImportError (str(e) + "- required module not found")
 
-TEMPERATURE_REGEX= {"FS032GMSI-AC" : ['194 Temperature_Celsius\s*(.+?)\n', -1]}
+TEMPERATURE_REGEX= {"FS032GMSI-AC" : ['194 Temperature_Celsius\s*(.+?)\n', 7]}
 HEALTH_REGEX = {"FS032GMSI-AC" : ['169 Unknown_Attribute\s*(.+?)\n', -1]}
 
 SYSLOG_IDENTIFIER = "ssd_util.py"
