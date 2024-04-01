@@ -356,7 +356,7 @@ sysfsutils==2.1.1-4
 sysstat==12.6.1-1
 systemd==252.19-1~deb12u1
 systemd-bootchart==234-2+b1
-systemd-sonic-generator==1.0.0
+systemd-sonic-generator==2.0.0
 systemd-sysv==252.19-1~deb12u1
 tcpdump==4.99.3-1
 tcptraceroute==1.5beta7+debian-4.1+b1
