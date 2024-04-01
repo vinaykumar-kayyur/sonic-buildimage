@@ -98,7 +98,7 @@ bind_ports_to_ns() {
                     ip link set dev $intf down
                     ip link set dev $intf name $cur
                     ip link set dev $cur up
-               fi
+                fi
             fi
             prev=$intf
             done < "$lanemap_ini"
