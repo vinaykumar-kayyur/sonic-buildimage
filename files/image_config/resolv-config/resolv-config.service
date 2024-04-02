@@ -11,5 +11,3 @@ Type=oneshot
 RemainAfterExit=yes
 ExecStart=/usr/bin/resolv-config.sh start
 
-[Install]
-WantedBy=sonic.target
