@@ -2614,14 +2614,6 @@
         },
 	"PAC_PORT_CONFIG": {
              "Ethernet0": {
-                 "method_list": [
-                    "dot1x",
-                    "mab"
-                 ],
-                 "priority_list": [
-                    "dot1x",
-                    "mab"
-                 ],
                  "port_pae_role": "authenticator",
                  "port_control_mode": "auto",
                  "host_control_mode": "multi_auth",
