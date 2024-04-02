@@ -176,7 +176,7 @@ class Sysmonitor(ProcessTaskBase):
             return None
 
         template = jinja2.Template(configuration)
-        target_value = template.render(device_config) #nosemgrep: python.flask.security.xss.audit.direct-use-of-jinja2.direct-use-of-jinja2
+        target_value = template.render(device_config) # nosemgrep: python.flask.security.xss.audit.direct-use-of-jinja2.direct-use-of-jinja2
         if target_value not in expected_values:
             raise ValueError('Invalid value rendered for configuration {}: {}'.format(configuration, target_value))
         return target_value
