@@ -236,6 +236,7 @@ class Test_yang_models:
             jInput = json.loads(self.readJsonInput(test))
             # check all Vlan from 2 to 4094
             for i in range(2,4095):
+
                 vlan = 'Vlan'+str(i)
                 jInput["sonic-vlan:sonic-vlan"]["sonic-vlan:VLAN"]["VLAN_LIST"]\
                       [0]["name"] = vlan
