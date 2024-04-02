@@ -46,7 +46,7 @@ module sonic-vlan {
 
 	revision 2024-03-07 {
 		description "Add Constraints that are implemented in CLI";
-
+	}
 	revision 2021-04-28 {
 		description "Modify Vlan name constraint to allow only legal Vlan names";
 	}
