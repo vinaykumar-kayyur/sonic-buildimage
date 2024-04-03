@@ -2624,10 +2624,10 @@
                  ],
                  "port_pae_role": "authenticator",
                  "port_control_mode": "auto",
-                 "host_control_mode": "multi_auth",
-                 "reauth_period": 60,
+                 "host_control_mode": "multi-auth",
+                 "reauth_period": "60",
                  "reauth_enable": "true",
-                 "max_users_per_port": 16
+                 "max_users_per_port": "16"
              }
         },
         "MAB_PORT_CONFIG": {
