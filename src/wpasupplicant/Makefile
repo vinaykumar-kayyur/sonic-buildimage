@@ -6,8 +6,14 @@ MAIN_TARGET = wpasupplicant_$(WPASUPPLICANT_VERSION)_$(CONFIGURED_ARCH).deb
 DERIVED_TARGETS = wpasupplicant-dbgsym_$(WPASUPPLICANT_VERSION)_$(CONFIGURED_ARCH).deb
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
+	rm -rf ./sonic-wpa-supplicant
 	# Clone wpa repo
+	git clone https://github.com/sonic-net/sonic-wpa-supplicant.git 
 	pushd ./sonic-wpa-supplicant
+	
+	stg init
+	stg import -s ../patch/series
+
 ifeq ($(CROSS_BUILD_ENVIRON), y)
 	dpkg-buildpackage -rfakeroot -b -us -uc -a$(CONFIGURED_ARCH) -Pcross,nocheck -j$(SONIC_CONFIG_MAKE_JOBS) --admindir $(SONIC_DPKG_ADMINDIR)
 else
