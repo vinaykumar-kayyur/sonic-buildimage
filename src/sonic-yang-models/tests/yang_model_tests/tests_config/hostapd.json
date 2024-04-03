@@ -5,7 +5,7 @@
                 "sonic-hostapd:HOSTAPD_GLOBAL_CONFIG_LIST": [
                     {
                         "global": "GLOBAL",
-                        "dot1x_system_auth_control": "true"
+                        "dot1x_system_auth_control": "enable"
                     }
                 ]
             }  

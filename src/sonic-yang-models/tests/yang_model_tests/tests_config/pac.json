@@ -17,7 +17,7 @@
         },
         "sonic-pac:sonic-pac": {
             "sonic-pac:PAC_PORT_CONFIG": {
-                "PAC_PORT_CONFIG_TABLE_LIST": [
+                "PAC_PORT_CONFIG_LIST": [
                     {
                         "port": "Ethernet0",
                         "port_control_mode": "auto",
@@ -51,7 +51,7 @@
         },
         "sonic-pac:sonic-pac": {
             "sonic-pac:PAC_PORT_CONFIG": {
-                "PAC_PORT_CONFIG_TABLE_LIST": [
+                "PAC_PORT_CONFIG_LIST": [
                     {
                         "port": "Ethernet0",
                         "port_control_mode": "auto",
@@ -83,7 +83,7 @@
         },
         "sonic-pac:sonic-pac": {
             "sonic-pac:PAC_PORT_CONFIG": {
-                "PAC_PORT_CONFIG_TABLE_LIST": [
+                "PAC_PORT_CONFIG_LIST": [
                     {
                         "port": "Ethernet0",
                         "port_control_mode": "auto",
@@ -114,10 +114,10 @@
         },
         "sonic-pac:sonic-pac": {
             "sonic-pac:MAB_PORT_CONFIG": {
-                "MAB_PORT_CONFIG_TABLE_LIST": [
+                "MAB_PORT_CONFIG_LIST": [
                     {
                         "port": "Ethernet0",
-                        "mab": "true",
+                        "mab": "enable",
                         "mab_auth_type": "eap-md5"
                     }
                 ]

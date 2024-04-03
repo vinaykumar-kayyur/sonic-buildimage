@@ -2613,7 +2613,7 @@
             }
         },
 	"PAC_PORT_CONFIG": {
-             "Ethernet0": {
+             "Ethernet1": {
 		 "method_list": [
                     "dot1x",
                     "mab"
@@ -2637,7 +2637,7 @@
              }
 	},
 	"HOSTAPD_GLOBAL_CONFIG": {
-             "global": {
+             "GLOBAL": {
                  "dot1x_system_auth_control": "enable"
              }
         },

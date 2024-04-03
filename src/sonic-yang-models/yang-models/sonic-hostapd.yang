@@ -29,7 +29,10 @@ module sonic-hostapd {
                 }
 
                 leaf dot1x_system_auth_control {
-                    type boolean;
+                    type enumeration {
+                        enum enable;
+                        enum disable;
+                    }
                     description
                         "Indicates whether dot1x/hostapd is enabled/disabled on the switch.";
                 }

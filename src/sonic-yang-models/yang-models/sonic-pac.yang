@@ -124,7 +124,7 @@ module sonic-pac {
             description
                 "Container for port config table.";
 
-            list PAC_PORT_CONFIG_TABLE_LIST {
+            list PAC_PORT_CONFIG_LIST {
                 key "port";
 
                 leaf port {
@@ -206,7 +206,7 @@ module sonic-pac {
 
         container MAB_PORT_CONFIG {
 
-            list MAB_PORT_CONFIG_TABLE_LIST {
+            list MAB_PORT_CONFIG_LIST {
                 key "port";
 
                 leaf port {
@@ -218,7 +218,10 @@ module sonic-pac {
                 }
 
                 leaf mab {
-                    type boolean;
+                    type enumeration {
+                        enum enable;
+                        enum disable;
+                    }
                     description
                         "Enable mab on the interface.";
                 }
