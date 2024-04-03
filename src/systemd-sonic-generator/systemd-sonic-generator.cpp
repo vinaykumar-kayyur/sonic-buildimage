@@ -1,200 +1,182 @@
-#include <assert.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <errno.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <sys/types.h>
+// #include <assert.h>
+// #include <stdio.h>
+// #include <unistd.h>
+// #include <errno.h>
+// #include <string.h>
+// #include <stdlib.h>
+// #include <stdbool.h>
+// #include <sys/types.h>
+// #include <linux/limits.h>
+
+
 #include <sys/stat.h>
-#include <linux/limits.h>
+#include <string>
+#include <fstream>
+#include <sstream>
+#include <vector>
+#include <iostream>
+#include <unordered_set>
+#include <algorithm>
+#include <unistd.h>
 
-#define MAX_NUM_TARGETS 48
-#define MAX_NUM_INSTALL_LINES 48
-#define MAX_NUM_UNITS 128
-#define MAX_BUF_SIZE 512
+// #define MAX_NUM_TARGETS 48
+// #define MAX_NUM_INSTALL_LINES 48
+// #define MAX_NUM_UNITS 128
+// #define MAX_BUF_SIZE 512
 
-const char* UNIT_FILE_PREFIX = "/usr/lib/systemd/system/";
-const char* CONFIG_FILE = "/etc/sonic/generated_services.conf";
-const char* MACHINE_CONF_FILE = "/host/machine.conf";
-const char* ASIC_CONF_FORMAT = "/usr/share/sonic/device/%s/asic.conf";
+const std::string UNIT_FILE_PREFIX = "/usr/lib/systemd/system/";
+const std::string CONFIG_FILE = "/etc/sonic/generated_services.conf";
+const std::string MACHINE_CONF_FILE = "/host/machine.conf";
+const std::vector<std::string> ASIC_CONF_FORMAT = {"/usr/share/sonic/device/", "/asic.conf"};
 
-const char* g_unit_file_prefix = NULL;
-const char* get_unit_file_prefix() {
-    return (g_unit_file_prefix) ? g_unit_file_prefix : UNIT_FILE_PREFIX;
+std::string g_unit_file_prefix;
+std::string g_config_file;
+std::string g_machine_config_file;
+std::vector<std::string> g_asic_conf_format;
+
+std::string get_unit_file_prefix() {
+    if (g_unit_file_prefix.empty()) {
+        return UNIT_FILE_PREFIX;
+    }
+    return g_unit_file_prefix;
 }
 
-const char* g_config_file = NULL;
-const char* get_config_file() {
-    return (g_config_file) ? g_config_file : CONFIG_FILE;
+std::string get_config_file() {
+    if (g_config_file.empty()) {
+        return CONFIG_FILE;
+    }
+    return g_config_file;
 }
 
-const char* g_machine_config_file = NULL;
-const char* get_machine_config_file() {
-    return (g_machine_config_file) ? g_machine_config_file : MACHINE_CONF_FILE;
+std::string get_machine_config_file() {
+    if (g_machine_config_file.empty()) {
+        return MACHINE_CONF_FILE;
+    }
+    return g_machine_config_file;
 }
 
-const char* g_asic_conf_format = NULL;
-const char* get_asic_conf_format() {
-    return (g_asic_conf_format) ? g_asic_conf_format : ASIC_CONF_FORMAT;
+std::vector<std::string> get_asic_conf_format() {
+    if (g_asic_conf_format.empty()) {
+        return ASIC_CONF_FORMAT;
+    }
+    return g_asic_conf_format;
 }
 
 static int num_asics;
-static char** multi_instance_services;
-static int num_multi_inst;
+static std::unordered_set<std::string> multi_instance_services;
 
-void strip_trailing_newline(char* str) {
+std::string strip_trailing_newline(std::string str) {
     /***
     Strips trailing newline from a string if it exists
     ***/
-
-    size_t l = strlen(str);
-    if (l > 0 && str[l-1] == '\n')
-        str[l-1] = '\0';
+   if (!str.empty() && str.back() == '\n') {
+       str.pop_back();
+   }
+   return str;
 }
 
 
-static int get_target_lines(char* unit_file, char* target_lines[]) {
+static std::vector<std::string> get_target_lines(const std::string& unit_file_name) {
     /***
     Gets installation information for a given unit file
 
     Returns lines in the [Install] section of a unit file
     ***/
-    FILE *fp;
-    char *line = NULL;
-    size_t len = 0;
-    ssize_t nread;
-    bool found_install;
-    int num_target_lines;
-
-
-    fp = fopen(unit_file, "r");
-
-    if (fp == NULL) {
-        fprintf(stderr, "Failed to open file %s\n", unit_file);
-        return -1;
+    bool found_install = false;
+    std::vector<std::string> target_lines;   
+    std::string line;
+    std::ifstream unit_file(unit_file_name);
+    if (!unit_file.is_open()) {
+        std::cerr << "Failed to open file " << unit_file_name << std::endl;
+        return target_lines;
     }
 
-    found_install = false;
-    num_target_lines = 0;
-
-    while ((nread = getline(&line, &len, fp)) != -1 ) {
-        // Assumes that [Install] is the last section of the unit file
-        if (strstr(line, "[Install]") != NULL) {
-             found_install = true;
+    while (std::getline(unit_file, line)) {
+        // Assume that the [Install] section is the last section in the unit file
+        if (line.find("[Install]") != std::string::npos) {
+            found_install = true;
         }
         else if (found_install) {
-            if (num_target_lines >= MAX_NUM_INSTALL_LINES) {
-                fprintf(stderr, "Number of lines in [Install] section of %s exceeds MAX_NUM_INSTALL_LINES\n", unit_file);
-                fputs("Extra [Install] lines will be ignored\n", stderr);
-                break;
-            }
-            target_lines[num_target_lines] = strdup(line);
-            num_target_lines++;
+            target_lines.push_back(line);
         }
     }
 
-    free(line);
-
-    fclose(fp);
-
-    return num_target_lines;
+    return target_lines;
 }
 
-static bool is_multi_instance_service(char *service_name){
-    int i;
-    for(i=0; i < num_multi_inst; i++){
-        /*
-         * The service name may contain @.service or .service. Remove these
-         * postfixes and extract service name. Compare service name for absolute
-         * match in multi_instance_services[].
-         * This is to prevent services like database-chassis and systemd-timesyncd marked
-         * as multi instance services as they contain strings 'database' and 'syncd' respectively
-         * which are multi instance services in multi_instance_services[].
-         */
-        char *saveptr;
-        char *token = strtok_r(service_name, "@", &saveptr);
-        if (token) {
-            if (strstr(token, ".service") != NULL) {
-                /* If we are here, service_name did not have '@' delimiter but contains '.service' */
-                token = strtok_r(service_name, ".", &saveptr);
-            }
-        }
-        if (strncmp(service_name, multi_instance_services[i], strlen(service_name)) == 0) {
-            return true;
-        }
+static bool is_multi_instance_service(const std::string& service_file){
+    /*
+        * The service file may match the form `<service-name>.service`
+        * or `<service-name>@.service`. Remove these postfixes and
+        * extract service name. Compare service name for absolute
+        * match in multi_instance_services[].
+        * This is to prevent services like database-chassis and
+        * systemd-timesyncd from being marked as multi-instance
+        * services as they contain strings 'database' and 'syncd'
+        * respectively which are multi instance services in
+        * multi_instance_services[].
+        */
+    std::string delimiter;
+    if (service_file.find("@") == std::string::npos) {
+        delimiter = "@";
+    } else {
+        delimiter = ".";
+    }
+    std::string service_name = service_file.substr(0, service_file.find(delimiter));
+
+    if (multi_instance_services.count(service_name) > 0) {
+        return true;
     }
     return false;
-
 }
 
-static int get_install_targets_from_line(char* target_string, char* install_type, char* targets[], int existing_targets) {
+static std::vector<std::string> get_install_targets_from_line(const std::string& target_string, const std::string& install_type) {
     /***
     Helper fuction for get_install_targets
 
     Given a space delimited string of target directories and a suffix,
-    puts each target directory plus the suffix into the targets array
+    puts each target directory plus the suffix into the targets vector
     ***/
-    char* token;
-    char* target;
-    char* saveptr;
-    char final_target[PATH_MAX];
-    int num_targets = 0;
+    std::string target;
+    std::string prefix;
+    std::string suffix; 
+    std::vector<std::string> targets;
 
-    assert(target_string);
-    assert(install_type);
-
-    while ((token = strtok_r(target_string, " ", &target_string))) {
-        if (num_targets + existing_targets >= MAX_NUM_TARGETS) {
-            fputs("Number of targets found exceeds MAX_NUM_TARGETS\n", stderr);
-            fputs("Additional targets will be ignored \n", stderr);
-            return num_targets;
-        }
-
-        target = strdup(token);
-        strip_trailing_newline(target);
-
-        if (strstr(target, "%") != NULL) {
-            char* prefix = strtok_r(target, ".", &saveptr);
-            char* suffix = strtok_r(NULL, ".", &saveptr);
-            int prefix_len = strlen(prefix);
-
-            strncpy(final_target, prefix, prefix_len - 2);
-            final_target[prefix_len - 2] = '\0';
-            strcat(final_target, ".");
-            strcat(final_target, suffix);
-        }
-        else {
-            strcpy(final_target, target);
-        }
-        strcat(final_target, install_type);
-
-        free(target);
-
-        targets[num_targets + existing_targets] = strdup(final_target);
-        num_targets++;
+    if (target_string.empty() || install_type.empty()) {
+        std::cerr << "Invalid target string or install type" << std::endl;
+        return targets;
     }
-    return num_targets;
+
+    std::stringstream ss(target_string);
+    while (ss >> target) {
+        // handle install targets using the '%i' systemd specifier
+        if (target.find("%") != std::string::npos) {
+            target = target.substr(0, target.find("%")) + target.substr(target.find("."));
+        }
+        targets.push_back(strip_trailing_newline(target) + install_type);
+    }
+    return targets;
 }
 
-static void replace_multi_inst_dep(char *src) {
-    FILE *fp_src;
-    FILE *fp_tmp;
-    char buf[MAX_BUF_SIZE];
-    char* line = NULL;
-    int i;
-    ssize_t len;
-    char *token;
-    char *word;
-    char *line_copy;
-    char *service_name;
-    char *type;
-    char *save_ptr1 = NULL;
-    char *save_ptr2 = NULL;
-    ssize_t nread;
-    bool section_done = false;
-    char tmp_file_path[PATH_MAX];
+static std::string get_multi_inst_line(const std::string& property_name, const std::string& property_val) {
+    std::stringstream new_line;
+    if (property_val.find(".") == std::string::npos || property_val.find("@") != std::string::npos) {
+        new_line << property_name << "=" << property_val << std::endl;
+    } else {
+        std::string service_name = property_val.substr(0, property_val.find("."));
+        std::string type = property_val.substr(property_val.find(".") + 1);
+        if (is_multi_instance_service(service_name)) {
+            for (int i = 0; i < num_asics; i++) {
+                new_line << property_name << "=" << service_name << "@" << i << "." << type << std::endl;
+            }
+        } else {
+            new_line << property_name << "=" << service_name << "." << type << std::endl;
+        }
+    }
+    return new_line.str();
+}
 
+static void replace_multi_inst_dep(const std::string& orig_unit_file) {
     /* Assumes that the service files has 3 sections,
      * in the order: Unit, Service and Install.
      * Assumes that the timer file has 3 sections,
@@ -203,285 +185,198 @@ static void replace_multi_inst_dep(char *src) {
      * sections, replace if dependent on multi instance
      * service.
      */
-    fp_src = fopen(src, "r");
-    snprintf(tmp_file_path, PATH_MAX, "%s.tmp", src);
-    fp_tmp = fopen(tmp_file_path, "w");
+    std::vector<std::string> target_lines;   
+    std::string line;
+    std::string property;
+    std::string property_name;
+    std::string property_values;
+    std::string tmp_file_name = orig_unit_file + ".tmp";
+    std::ifstream unit_file(orig_unit_file);
+    std::ofstream tmp_file(tmp_file_name);
+    std::stringstream new_line;
+    if (!unit_file.is_open()) {
+        std::cerr << "Failed to open file " << orig_unit_file << std::endl;
+        return;
+    }
+    if (!tmp_file.is_open()) {
+        std::cerr << "Failed to open file " << tmp_file_name << std::endl;
+        return;
+    }
 
-    while ((nread = getline(&line, &len, fp_src)) != -1 ) {
-        if ((strstr(line, "[Service]") != NULL) ||
-            (strstr(line, "[Timer]") != NULL)) {
-            section_done = true;
-            fputs(line,fp_tmp);
-        } else if (strstr(line, "[Install]") != NULL) {
-            section_done = false;
-            fputs(line,fp_tmp);
-        } else if ((strstr(line, "[Unit]") != NULL) ||
-           (strstr(line, "Description") != NULL) ||
-           (section_done == true)) {
-            fputs(line,fp_tmp);
+    std::vector<std::string> keep_lines = {"[Service]", "[Timer]", "[Install]", "[Unit]", "Description"};
+    while (std::getline(unit_file, line)) {
+        bool copy_orig_line = std::any_of(keep_lines.begin(), keep_lines.end(), [&line](const std::string& s) { return line.find(s) != std::string::npos; });
+        if (copy_orig_line) {
+            tmp_file << line << std::endl;
         } else {
-            line_copy = strdup(line);
-            token = strtok_r(line_copy, "=", &save_ptr1);
-            while ((word = strtok_r(NULL, " ", &save_ptr1))) {
-                if((strchr(word, '.') == NULL) ||
-                   (strchr(word, '@') != NULL)) {
-                    snprintf(buf, MAX_BUF_SIZE,"%s=%s\n",token, word);
-                    fputs(buf,fp_tmp);
-                } else {
-                    service_name = strdup(word);
-                    service_name = strtok_r(service_name, ".", &save_ptr2);
-                    type = strtok_r(NULL, "\n", &save_ptr2);
-                    if (is_multi_instance_service(word)) {
-                        for(i = 0; i < num_asics; i++) {
-                            snprintf(buf, MAX_BUF_SIZE, "%s=%s@%d.%s\n",
-                                    token, service_name, i, type);
-                            fputs(buf,fp_tmp);
-                        }
-                    } else {
-                        snprintf(buf, MAX_BUF_SIZE,"%s=%s.%s\n",token, service_name, type);
-                        fputs(buf, fp_tmp);
-                    }
-                    free(service_name);
-                }
+            property_name = line.substr(0, line.find("="));
+            property_values= line.substr(line.find("=") + 1);
+            std::stringstream ss(property_values);
+            while (ss >> property) {
+                tmp_file << get_multi_inst_line(property_name, property) << std::endl;
             }
-            free(line_copy);
         }
     }
-    fclose(fp_src);
-    fclose(fp_tmp);
-    free(line);
     /* remove the .service file, rename the .service.tmp file
      * as .service.
      */
-    remove(src);
-    rename(tmp_file_path, src);
+    remove(orig_unit_file.c_str());
+    rename(tmp_file_name.c_str(), orig_unit_file.c_str());
 }
 
-int get_install_targets(char* unit_file, char* targets[]) {
+std::vector<std::string> get_install_targets(const std::string& unit_file) {
     /***
     Returns install targets for a unit file
 
     Parses the information in the [Install] section of a given
     unit file to determine which directories to install the unit in
     ***/
-    char file_path[PATH_MAX];
-    char *target_lines[MAX_NUM_INSTALL_LINES];
-    int num_target_lines;
-    int num_targets;
-    int found_targets;
-    char* token;
-    char* line = NULL;
-    bool first;
-    char* target_suffix = NULL;
-    char *instance_name;
-    char *dot_ptr;
+    std::string target_suffix;
+    std::string type;
+    std::vector<std::string> targets;
 
-    strcpy(file_path, get_unit_file_prefix());
-    strcat(file_path, unit_file);
-
-    instance_name = strdup(unit_file);
-    dot_ptr = strchr(instance_name, '.');
-    *dot_ptr = '\0';
+    std::string file_path = get_unit_file_prefix() + unit_file;
+    std::string instance_name = unit_file.substr(0, unit_file.find("."));
 
     if((num_asics > 1) && (!is_multi_instance_service(instance_name))) {
         replace_multi_inst_dep(file_path);
     }
-    free(instance_name);
 
-    num_target_lines = get_target_lines(file_path, target_lines);
-    if (num_target_lines < 0) {
-        fprintf(stderr, "Error parsing targets for %s\n", unit_file);
-        return -1;
+    std::vector<std::string> target_lines = get_target_lines(file_path);
+    if (target_lines.empty()) {
+        std::cerr << "Error parsing targets for " << unit_file << std::endl;
+        return targets;
     }
 
-    num_targets = 0;
+    for (std::string line : target_lines) {
+        size_t equal_pos = line.find("=");
+        type = line.substr(0, equal_pos);
 
-    for (int i = 0; i < num_target_lines; i++) {
-        line = target_lines[i];
-        first = true;
-
-        while ((token = strtok_r(line, "=", &line))) {
-            if (first) {
-                first = false;
-
-                if (strstr(token, "RequiredBy") != NULL) {
-                    target_suffix = ".requires";
-                }
-                else if (strstr(token, "WantedBy") != NULL) {
-                    target_suffix = ".wants";
-                } else {
-                    break;
-                }
-            }
-            else {
-                found_targets = get_install_targets_from_line(token, target_suffix, targets, num_targets);
-                num_targets += found_targets;
-            }
+        if (type.find("WantedBy") != std::string::npos) {
+            target_suffix = ".wants";
         }
-        free(target_lines[i]);
+        else if (type.find("RequiredBy") != std::string::npos) {
+            target_suffix = ".requires";
+        }
+        else {
+            std::cerr << "Invalid target type " << type << std::endl;
+            continue;
+        }
+
+        targets = get_install_targets_from_line(line.substr(equal_pos + 1), target_suffix);
     }
-    return num_targets;
+    return targets;
 }
 
 
-int get_unit_files(char* unit_files[]) {
+std::vector<std::string> get_unit_files() {
     /***
     Reads a list of unit files to be installed from /etc/sonic/generated_services.conf
     ***/
-    FILE *fp;
-    char *line = NULL;
-    size_t len = 0;
-    ssize_t read;
-    char *pos;
-    const char* config_file = get_config_file();
+    std::string line;
+    std::vector<std::string> unit_files;
+    std::string config_file = get_config_file();
+    std::ifstream file(config_file);
 
-    fp = fopen(config_file, "r");
-
-    if (fp == NULL) {
-        fprintf(stderr, "Failed to open %s\n", config_file);
-        exit(EXIT_FAILURE);
+    if (!file.is_open()) {
+        std::cerr << "Failed to open " << config_file << std::endl;
+        return unit_files;
     }
 
-    int num_unit_files = 0;
-    num_multi_inst = 0;
-
-    multi_instance_services = calloc(MAX_NUM_UNITS, sizeof(char *));
-
-    while ((read = getline(&line, &len, fp)) != -1) {
-        if (num_unit_files >= MAX_NUM_UNITS) {
-            fprintf(stderr, "Maximum number of units exceeded, ignoring extras\n");
-            break;
-        }
-        strip_trailing_newline(line);
-
-        /* Get the multi-instance services */
-        pos = strchr(line, '@');
-        if (pos != NULL) {
-            multi_instance_services[num_multi_inst] = calloc(strlen(line), sizeof(char));
-            strncpy(multi_instance_services[num_multi_inst], line, pos-line);
-            num_multi_inst++;
+    while (std::getline(file, line)) {
+        size_t at_pos = line.find("@");
+        if (at_pos != std::string::npos) {
+            multi_instance_services.insert(line.substr(0, at_pos));
         }
 
-        /* topology service to be started only for multiasic VS platform */
-        if ((strcmp(line, "topology.service") == 0) &&
-                        (num_asics == 1)) {
+        if (line.find("topology.service") != std::string::npos && num_asics == 1) {
             continue;
         }
-        unit_files[num_unit_files] = strdup(line);
-        num_unit_files++;
+        unit_files.push_back(strip_trailing_newline(line));
     }
-
-    free(line);
-
-    fclose(fp);
-
-    return num_unit_files;
+    return unit_files;
 }
 
 
-char* insert_instance_number(char* unit_file, int instance) {
+std::string insert_instance_number(const std::string& unit_file, int instance) {
     /***
     Adds an instance number to a systemd template name
 
     E.g. given unit_file='example@.service', instance=3,
     returns a pointer to 'example@3.service'
     ***/
-    char* instance_name;
-    int   ret;
-    int   prefix_len;
-    const char *suffix = strchr(unit_file, '@');
-    if (!suffix) {
-        fprintf(stderr, "Invalid unit file %s for instance %d\n", unit_file, instance);
-        return NULL;
+    size_t at_pos = unit_file.find("@");
+    if (at_pos == std::string::npos) {
+        std::cerr << "Invalid unit file " << unit_file << " for instance " << instance << std::endl;
+        return "";
     }
 
-    /***
-    suffix is "@.service", set suffix=".service"
-    prefix_len is length of "example@"
-    ***/
-    prefix_len = ++suffix - unit_file;
-    ret = asprintf(&instance_name, "%.*s%d%s", prefix_len, unit_file, instance, suffix);
-    if (ret == -1) {
-        fprintf(stderr, "Error creating instance %d of %s\n", instance, unit_file);
-        return NULL;
-    }
-
-    return instance_name;
+    return unit_file.substr(0, at_pos + 1) + std::to_string(instance) + unit_file.substr(at_pos + 2);
 }
 
 
-static int create_symlink(char* unit, char* target, char* install_dir, int instance) {
+static int create_symlink(const std::string& unit, const std::string& target, const std::string& install_dir, int instance) {
     struct stat st;
-    char src_path[PATH_MAX];
-    char dest_path[PATH_MAX];
-    char final_install_dir[PATH_MAX];
-    char* unit_instance;
     int r;
-
-    strcpy(src_path, get_unit_file_prefix());
-    strcat(src_path, unit);
+    std::string unit_instance;
+    std::string final_install_dir;
+    std::string dest_path;
+    std::string src_path = get_unit_file_prefix() + unit;
 
     if (instance < 0) {
-        unit_instance = strdup(unit);
+        unit_instance = unit;
     }
     else {
         unit_instance = insert_instance_number(unit, instance);
     }
 
-    strcpy(final_install_dir, install_dir);
-    strcat(final_install_dir, target);
-    strcpy(dest_path, final_install_dir);
-    strcat(dest_path, "/");
-    strcat(dest_path, unit_instance);
+    final_install_dir = install_dir + target;
+    dest_path = final_install_dir + "/" + unit_instance;
 
-    free(unit_instance);
-
-    if (stat(final_install_dir, &st) == -1) {
+    if (stat(final_install_dir.c_str(), &st) == -1) {
         // If doesn't exist, create
-        r = mkdir(final_install_dir, 0755);
+        r = mkdir(final_install_dir.c_str(), 0755);
         if (r == -1) {
-            fprintf(stderr, "Unable to create target directory %s\n", final_install_dir);
+            std::cerr << "Unable to create target directory " << final_install_dir << std::endl;
             return -1;
         }
     }
     else if (S_ISREG(st.st_mode)) {
         // If is regular file, remove and create
-        r = remove(final_install_dir);
+        r = remove(final_install_dir.c_str());
         if (r == -1) {
-            fprintf(stderr, "Unable to remove file with same name as target directory %s\n", final_install_dir);
+            std::cerr << "Unable to remove file with same name as target directory " << final_install_dir << std::endl;
             return -1;
         }
 
-        r = mkdir(final_install_dir, 0755);
+        r = mkdir(final_install_dir.c_str(), 0755);
         if (r == -1) {
-            fprintf(stderr, "Unable to create target directory %s\n", final_install_dir);
+            std::cerr << "Unable to create target directory " << final_install_dir << std::endl;
             return -1;
         }
     }
     else if (S_ISDIR(st.st_mode)) {
         // If directory, verify correct permissions
-        r = chmod(final_install_dir, 0755);
+        r = chmod(final_install_dir.c_str(), 0755);
         if (r == -1) {
-            fprintf(stderr, "Unable to change permissions of existing target directory %s\n", final_install_dir);
+            std::cerr << "Unable to change permissions of existing target directory " << final_install_dir << std::endl;
             return -1;
         }
     }
 
-    r = symlink(src_path, dest_path);
+    r = symlink(src_path.c_str(), dest_path.c_str());
 
     if (r < 0) {
         if (errno == EEXIST)
             return 0;
-        fprintf(stderr, "Error creating symlink %s from source %s\n", dest_path, src_path);
+        std::cerr << "Error creating symlink " << dest_path << " from source " << src_path << std::endl;
         return -1;
     }
-
     return 0;
-
 }
 
 
-static int install_unit_file(char* unit_file, char* target, char* install_dir) {
+static int install_unit_file(const std::string& unit_file, const std::string& target, const std::string& install_dir) {
     /***
     Creates a symlink for a unit file installation
 
@@ -492,161 +387,142 @@ static int install_unit_file(char* unit_file, char* target, char* install_dir) {
     If a multi ASIC platform is detected, enables multi-instance
     services as well
     ***/
-    char* target_instance;
-    char* prefix;
-    char* suffix;
+    std::string target_instance;
     int r;
+    int ret_val = 0;
 
-    assert(unit_file);
-    assert(target);
+    if (unit_file.empty() || target.empty() || install_dir.empty()){
+        return -1;
+    }
 
-
-    if ((num_asics > 1) && strstr(unit_file, "@") != NULL) {
+    if (num_asics > 1 && unit_file.find("@") != std::string::npos) {
 
         for (int i = 0; i < num_asics; i++) {
 
-            if (strstr(target, "@") != NULL) {
+            if (target.find("%") != std::string::npos) {
                 target_instance = insert_instance_number(target, i);
             }
             else {
-                target_instance = strdup(target);
+                target_instance = target;
             }
 
             r = create_symlink(unit_file, target_instance, install_dir, i);
-            if (r < 0)
-                fprintf(stderr, "Error installing %s for target %s\n", unit_file, target_instance);
+            if (r < 0) {
+                std::cerr << "Error installing " << unit_file << " for target " << target_instance << std::endl;
+                ret_val = -1; 
+            }
 
-            free(target_instance);
 
         }
     }
     else {
         r = create_symlink(unit_file, target, install_dir, -1);
-        if (r < 0)
-            fprintf(stderr, "Error installing %s for target %s\n", unit_file, target);
+        if (r < 0) {
+            std::cerr << "Error installing " << unit_file << " for target " << target << std::endl;
+            ret_val = -1;
+        }
     }
 
-    return 0;
+    return ret_val;
 }
 
+static int get_num_asic_from_asic_file(const std::string& asic_file) {
+    std::string str_num_asic;
+    std::string line;
+    std::ifstream asic_fstream(asic_file);
+    if (!asic_fstream.is_open()) {
+        std::cerr << "Failed to open " << asic_file << std::endl;
+        exit(EXIT_FAILURE);
+    } 
+    while (std::getline(asic_fstream, line)) {
+        if (line.find("NUM_ASIC") != std::string::npos) {
+            str_num_asic = strip_trailing_newline(line.substr(line.find("=") + 1));
+            if (!str_num_asic.empty()){
+                return std::stoi(str_num_asic);
+            }
+        }
+    }
+    return -1;
+}
 
 int get_num_of_asic() {
     /***
     Determines if the current platform is single or multi-ASIC
     ***/
-    FILE *fp;
-    char *line = NULL;
-    char* token;
-    char* platform = NULL;
-    char* saveptr;
-    size_t len = 0;
-    ssize_t nread;
-    bool ans;
-    char asic_file[512];
-    char* str_num_asic;
-    int num_asic = 1;
-    const char* machine_config_file = get_machine_config_file();
+    std::string str_num_asic;
+    std::string line;
+    std::string platform;
+    std::string asic_file;
+    std::string machine_config_file = get_machine_config_file();
+    std::ifstream file(machine_config_file);
+    std::ifstream asic_fstream;
 
-    fp = fopen(machine_config_file, "r");
-
-    if (fp == NULL) {
-        fprintf(stderr, "Failed to open %s\n", machine_config_file);
+    if (!file.is_open()) {
+        std::cerr << "Failed to open " << machine_config_file << std::endl;
         exit(EXIT_FAILURE);
     }
 
-    while ((nread = getline(&line, &len, fp)) != -1) {
-        if ((strstr(line, "onie_platform") != NULL) ||
-            (strstr(line, "aboot_platform") != NULL)) {
-            token = strtok_r(line, "=", &saveptr);
-            platform = strtok_r(NULL, "=", &saveptr);
-            strip_trailing_newline(platform);
+    while (std::getline(file, line)) {
+        if (line.find("onie_platform") != std::string::npos || line.find("aboot_platform") != std::string::npos) {
+            platform = strip_trailing_newline(line.substr(line.find("=") + 1));
             break;
         }
     }
-    fclose(fp);
-    if(platform != NULL) {
-        snprintf(asic_file, 512, get_asic_conf_format(), platform);
-        fp = fopen(asic_file, "r");
-        if (fp != NULL) {
-            while ((nread = getline(&line, &len, fp)) != -1) {
-                if (strstr(line, "NUM_ASIC") != NULL) {
-                    token = strtok_r(line, "=", &saveptr);
-                    str_num_asic = strtok_r(NULL, "=", &saveptr);
-                    strip_trailing_newline(str_num_asic);
-                    if (str_num_asic != NULL){
-                        num_asic = strtol(str_num_asic, NULL, 10);
-                    }
-                    break;
-                }
-            }
-            fclose(fp);
-            free(line);
-        }
-    }
-    return num_asic;
 
+    if(platform.empty()) {
+        std::cerr << "Failed to get platform from " << machine_config_file << std::endl;
+        exit(EXIT_FAILURE);
+    }
+    asic_file = get_asic_conf_format()[0] + platform + get_asic_conf_format()[1]; 
+    return get_num_asic_from_asic_file(asic_file);
 }
 
+
 int ssg_main(int argc, char **argv) {
-    char* unit_files[MAX_NUM_UNITS];
-    char install_dir[PATH_MAX];
-    char* targets[MAX_NUM_TARGETS];
-    char* unit_instance;
-    char* prefix;
-    char* suffix;
-    char* saveptr;
-    int num_unit_files;
-    int num_targets;
-    int r;
+    std::vector<std::string> unit_files;
+    std::vector<std::string> targets;
+    std::string unit_instance;
+    std::string prefix;
+    std::string suffix;
+    std::string install_dir;
 
     if (argc <= 1) {
-        fputs("Installation directory required as argument\n", stderr);
+        std::cerr << "Installation directory required as argument" << std::endl;
         return 1;
     }
 
     num_asics = get_num_of_asic();
-    strcpy(install_dir, argv[1]);
-    strcat(install_dir, "/");
-    num_unit_files = get_unit_files(unit_files);
+    if (num_asics < 0) {
+        std::cerr << "Failed to get number of ASICs" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+    install_dir = argv[1] + std::string("/");
+    unit_files = get_unit_files();
 
     // For each unit file, get the installation targets and install the unit
-    for (int i = 0; i < num_unit_files; i++) {
-        unit_instance = strdup(unit_files[i]);
-        if ((num_asics == 1) && strstr(unit_instance, "@") != NULL) {
-            prefix = strdup(strtok_r(unit_instance, "@", &saveptr));
-            suffix = strdup(strtok_r(NULL, "@", &saveptr));
-
-            strcpy(unit_instance, prefix);
-            strcat(unit_instance, suffix);
-
-            free(prefix);
-            free(suffix);
+    for (std::string file: unit_files) {
+        size_t at_pos = file.find("@");
+        if (num_asics == 1 && at_pos != std::string::npos) {
+            prefix = file.substr(0, at_pos);
+            suffix = file.substr(at_pos + 1);
+            unit_instance = prefix + suffix;
+        } else {
+            unit_instance = file;
         }
 
-        num_targets = get_install_targets(unit_instance, targets);
-        if (num_targets < 0) {
-            fprintf(stderr, "Error parsing %s\n", unit_instance);
-            free(unit_instance);
-            free(unit_files[i]);
+        targets = get_install_targets(unit_instance);
+        if (targets.empty()) {
+            std::cerr << "Error parsing " << unit_instance << std::endl;
             continue;
         }
 
-        for (int j = 0; j < num_targets; j++) {
-            if (install_unit_file(unit_instance, targets[j], install_dir) != 0)
-                fprintf(stderr, "Error installing %s to target directory %s\n", unit_instance, targets[j]);
+        for (std::string target: targets) {
+            if (install_unit_file(unit_instance, target, install_dir) != 0) {
+                std::cerr << "Error installing " << unit_instance << " to target directory " << target << std::endl;
+            }
 
-            free(targets[j]);
         }
-
-        free(unit_instance);
-        free(unit_files[i]);
     }
-
-    for (int i = 0; i < num_multi_inst; i++) {
-        free(multi_instance_services[i]);
-    }
-    free(multi_instance_services);
-
     return 0;
 }
 
