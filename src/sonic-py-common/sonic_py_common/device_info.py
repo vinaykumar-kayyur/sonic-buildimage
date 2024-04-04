@@ -696,7 +696,7 @@ def run_command_pipe(cmd0, cmd1, cmd2):
 def _modify_mac_for_asic(mac, namespace=None):
     if namespace is None:
         return mac
-    if namespace in ["asic0", "asic1", "asic2"]:
+    if namespace in get_namespaces():
         asic_id = namespace[-1]
         mac = mac[:-1] + asic_id
     return mac

@@ -430,15 +430,15 @@ def main():
     # or switch_type chassis_packet
     if args.platform_info:
         asic_role = None
+        chassis_type = device_info.ChassisType.UNKNOWN
+        if device_info.is_voq_chassis():
+            chassis_type = device_info.ChassisType.VOQ
+        elif device_info.is_packet_chassis():
+            chassis_type = device_info.ChassisType.PACKET
+
         if asic_name is not None:
             if args.minigraph is not None:
                 asic_role = parse_asic_sub_role(args.minigraph, asic_name)
-
-            chassis_type = device_info.ChassisType.UNKNOWN
-            if device_info.is_voq_chassis():
-                chassis_type = device_info.ChassisType.VOQ
-            elif device_info.is_packet_chassis():
-                chassis_type = device_info.ChassisType.PACKET
 
             if((chassis_type == device_info.ChassisType.PACKET) or
                (chassis_type == device_info.ChassisType.VOQ and platform == device_info.VS_PLATFORM) or
@@ -447,7 +447,7 @@ def main():
             else:
                 mac = device_info.get_system_mac()
         else:
-            mac = device_info.get_system_mac()
+            mac = device_info.get_system_mac(chassis_type=chassis_type)
 
         hardware_data = {'DEVICE_METADATA': {'localhost': {
             'platform': platform,
