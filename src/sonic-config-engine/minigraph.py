@@ -15,6 +15,7 @@ from lxml.etree import QName
 from natsort import natsorted, ns as natsortns
 
 from portconfig import get_port_config, get_fabric_port_config, get_fabric_monitor_config
+from sonic_py_common  import device_info
 from sonic_py_common.interface import backplane_prefix
 from sonic_py_common.multi_asic import is_multi_asic
 
@@ -2314,6 +2315,27 @@ def parse_device_desc_xml(filename):
             results['MGMT_INTERFACE'].update({('eth0', mgmt_prefix_v6): {'gwaddr': gwaddr_v6}})
 
     return results
+
+def parse_chassis_type(filename):
+    """
+    Parses the chassis type from the provided minigraph XML file.
+
+    Args:
+        filename (str): The path to the XML file containing switch information.
+
+    Returns:
+        device_info.ChassisType
+    """
+    if not os.path.isfile(filename):
+        return device_info.ChassisType.UNKNOWN
+    root = ET.parse(filename).getroot()
+    _, _, _, chassis_type, _ = parse_global_info(root)
+    if chassis_type == CHASSIS_CARD_VOQ:
+        return device_info.ChassisType.VOQ
+    elif chassis_type == CHASSIS_CARD_PACKET:
+        return device_info.ChassisType.PACKET
+    else:
+        return device_info.ChassisType.UNKNOWN
 
 def parse_asic_sub_role(filename, asic_name):
     if not os.path.isfile(filename):
