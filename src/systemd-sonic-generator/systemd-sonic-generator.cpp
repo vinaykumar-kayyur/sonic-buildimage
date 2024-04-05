@@ -957,7 +957,7 @@ static int render_network_service_for_smart_switch() {
     size_t file_size = ftell(fp);
     fseek(fp, 0, SEEK_SET);
     size_t len = file_size + buffer_instruction.length() + 1;
-    char *unit_content = (char*) malloc(len);
+    char *unit_content = (char*) calloc(len, sizeof(unit_content));
     if (unit_content == NULL) {
         fprintf(stderr, "Failed to allocate memory for %s\n", unit_path.c_str());
         fclose(fp);
