@@ -298,7 +298,6 @@ static int get_install_targets_from_line(char* target_string, char* install_type
         }
         else {
             strcpy(final_target, target);
-            strcpy(final_target, target);
         }
         strcat(final_target, install_type);
 
@@ -499,7 +498,6 @@ int get_unit_files(char* unit_files[]) {
         if (pos != NULL) {
             multi_instance_services[num_multi_inst] = calloc(strlen(line), sizeof(char));
             strncpy(multi_instance_services[num_multi_inst], line, pos-line);
-            strncpy(multi_instance_services[num_multi_inst], line, pos-line);
             num_multi_inst++;
         }
 
@@ -571,7 +569,6 @@ static int create_symlink(char* unit, char* target, char* install_dir, int insta
     int r;
 
     strcpy(src_path, get_unit_file_prefix());
-    strcat(src_path, unit);
     strcat(src_path, unit);
 
     if (instance < 0) {
