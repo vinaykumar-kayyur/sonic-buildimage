@@ -112,6 +112,7 @@ class DevMonitor():
         devpath = "/sys/bus/i2c/devices/%d-%04x" % (bus, loc)
         if os.path.exists(devpath):
             os.system(cmd)
+            os.system(cmd)
 
     def addDev(self, name, bus, loc):
         if name == "lm75":
