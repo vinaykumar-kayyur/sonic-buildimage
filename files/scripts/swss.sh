@@ -401,9 +401,9 @@ stop() {
         /usr/bin/${SERVICE}.sh stop $DEV
         debug "Stopped ${SERVICE}$DEV service..."
         $SONIC_DB_CLI APPL_DB DEL PORT_TABLE:PortInitDone
-        debug "Cleared PortInitDone from APPL_DB..."
+        debug "Cleared PortInitDone from APPL_DB for ${SERVICE}$DEV..."
         clean_up_tables STATE_DB "'FABRIC_PORT_TABLE*'"
-        debug "Cleared FABRIC_PORT_TABLE from STATE_DB..."
+        debug "Cleared FABRIC_PORT_TABLE from STATE_DB for ${SERVICE}$DEV..."
     else
         debug "Killing Docker swss..."
         /usr/bin/docker kill swss &> /dev/null || debug "Docker swss is not running ($?) ..."
