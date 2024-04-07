@@ -15,7 +15,6 @@ from lxml.etree import QName
 from natsort import natsorted, ns as natsortns
 
 from portconfig import get_port_config, get_fabric_port_config, get_fabric_monitor_config
-from sonic_py_common  import device_info
 from sonic_py_common.interface import backplane_prefix
 from sonic_py_common.multi_asic import is_multi_asic
 
