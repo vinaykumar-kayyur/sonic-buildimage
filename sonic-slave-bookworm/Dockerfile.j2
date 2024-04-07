@@ -420,7 +420,11 @@ RUN apt-get update && apt-get install -y \
         protobuf-compiler \
         libprotobuf-dev \
 # For sonic-dhcp6relay build
-        libjsoncpp-dev \
+        libjsoncpp-dev
+
+
+{%- if CONFIGURED_PLATFORM == "vs" %}
+RUN apt-get update && apt-get install -y \
 # For p4 libraries
         libgrpc++-dev \
         libgrpc-dev \
@@ -445,7 +449,7 @@ RUN apt-get update && apt-get install -y \
         python3-ply \
         python3-scapy \
         python3-thrift
-
+{%- endif %}
 
 
 {%- if CROSS_BUILD_ENVIRON == "y" %}
