@@ -1,18 +1,15 @@
 import glob
+import hashlib
 import json
 import os
+import random
 import re
 import subprocess
 import yaml
 from natsort import natsorted
-from enum import Enum
 from sonic_py_common.general import getstatusoutput_noshell_pipe
 from swsscommon.swsscommon import ConfigDBConnector, SonicV2Connector
 
-class ChassisType(Enum):
-    UNKNOWN = 0
-    VOQ = 1
-    PACKET = 2
 
 USR_SHARE_SONIC_PATH = "/usr/share/sonic"
 HOST_DEVICE_PATH = USR_SHARE_SONIC_PATH + "/device"
@@ -701,7 +698,25 @@ def _modify_mac_for_asic(mac, namespace=None):
         mac = mac[:-1] + asic_id
     return mac
 
-def get_system_mac(namespace=None, chassis_type=ChassisType.UNKNOWN):
+def generate_mac_for_vs(hostname, namespace):
+    mac = None
+    if hostname is None:
+        # return random mac address randomize each byet of mac address b/w 0-255
+        mac = "02:%02x:%02x:%02x:%02x:%02x" % (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+    else:
+        # Calculate the SHA-256 hash of the UTF-8 encoded hostname
+        hash_value = hashlib.sha256(hostname.encode('utf-8')).digest()
+
+        # Extract the last 6 bytes (48 bits) from the hash value
+        mac_bytes = hash_value[-6:]
+        # Set the first octet to 02 to indicate a locally administered MAC address
+        mac_bytes = bytearray([0x02, mac_bytes[1], mac_bytes[2], mac_bytes[3], mac_bytes[4], mac_bytes[5]])
+        # Format the MAC address with colons
+        mac = ':'.join('{:02x}'.format(byte) for byte in mac_bytes)
+
+    return _modify_mac_for_asic(mac, namespace)
+
+def get_system_mac(namespace=None, hostname=None):
     hw_mac_entry_outputs = []
     syseeprom_cmd = ["sudo", "decode-syseeprom", "-m"]
     iplink_cmd0 = ["ip", 'link', 'show', 'eth0']
@@ -710,15 +725,9 @@ def get_system_mac(namespace=None, chassis_type=ChassisType.UNKNOWN):
     version_info = get_sonic_version_info()
     platform = get_platform()
 
-    if platform == VS_PLATFORM and chassis_type == ChassisType.VOQ:
-        try:
-            import sonic_platform
-            platform_chassis = sonic_platform.platform.Platform().get_chassis()
-            mac=platform_chassis.get_base_mac()
-            return _modify_mac_for_asic(mac, namespace)
-        except ModuleNotFoundError as e:
-            #fallthrough
-            namespace = None
+    if platform == VS_PLATFORM:
+        return generate_mac_for_vs(hostname, namespace)
+
     elif (version_info['asic_type'] == 'mellanox'):
         # With Mellanox ONIE release(2019.05-5.2.0012) and above
         # "onie_base_mac" was added to /host/machine.conf:

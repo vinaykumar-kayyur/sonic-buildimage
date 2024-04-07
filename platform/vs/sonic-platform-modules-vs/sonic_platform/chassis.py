@@ -55,7 +55,3 @@ class Chassis(ChassisBase):
         else:
             raise ValueError("Invalid configuration: Neither supervisor nor line card")
 
-    def get_chassis_mac(self):
-        slotid = self.get_my_slot()
-        mac = "52:54:56:58:{:02x}:00".format(slotid)
-        return mac

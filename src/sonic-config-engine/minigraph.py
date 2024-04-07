@@ -2316,26 +2316,18 @@ def parse_device_desc_xml(filename):
 
     return results
 
-def parse_chassis_type(filename):
-    """
-    Parses the chassis type from the provided minigraph XML file.
-
-    Args:
-        filename (str): The path to the XML file containing switch information.
-
-    Returns:
-        device_info.ChassisType
-    """
+def parse_hostname(filename):
+    hostName = None
     if not os.path.isfile(filename):
-        return device_info.ChassisType.UNKNOWN
+        return None
     root = ET.parse(filename).getroot()
-    _, _, _, chassis_type, _ = parse_global_info(root)
-    if chassis_type == CHASSIS_CARD_VOQ:
-        return device_info.ChassisType.VOQ
-    elif chassis_type == CHASSIS_CARD_PACKET:
-        return device_info.ChassisType.PACKET
-    else:
-        return device_info.ChassisType.UNKNOWN
+    hostname_qn = QName(ns, "Hostname")
+    for child in root:
+        if child.tag == str(hostname_qn):
+            hostName = child.text
+            break
+
+    return hostName
 
 def parse_asic_sub_role(filename, asic_name):
     if not os.path.isfile(filename):
