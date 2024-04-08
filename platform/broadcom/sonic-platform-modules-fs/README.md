@@ -1,1 +1,1 @@
-platform drivers of FS products for the SONiC project
+platform drivers of www.fs.com products for the SONiC project
