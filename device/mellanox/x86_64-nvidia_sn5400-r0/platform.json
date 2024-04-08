@@ -25,9 +25,6 @@
             },
             {
                 "name": "CPLD5"
-            },
-            {
-                "name": "CPLD6"
             }
         ],
         "fans": [],
