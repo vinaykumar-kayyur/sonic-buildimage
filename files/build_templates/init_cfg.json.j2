@@ -30,8 +30,8 @@
     },
     "BGP_DEVICE_GLOBAL": {
         "STATE": {
-            "tsa_enabled": "false",
-            "idf_isolation_state": "unisolated"
+            "tsa_enabled": "false"
+{% if 'type' in DEVICE_METADATA['localhost'] and DEVICE_METADATA['localhost']['type'] == 'SpineRouter' %} ,"idf_isolation_state": "unisolated"{% endif %}
         }
     },
 {%- set features = [("bgp", "{% if not DEVICE_RUNTIME_METADATA['ETHERNET_PORTS_PRESENT'] or ('CHASSIS_METADATA' in DEVICE_RUNTIME_METADATA and DEVICE_RUNTIME_METADATA['CHASSIS_METADATA']['module_type'] in ['supervisor']) %}disabled{% else %}enabled{% endif %}", false, "enabled"),
