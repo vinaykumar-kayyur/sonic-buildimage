@@ -502,7 +502,7 @@ start() {
         redis_dir_list=`/usr/bin/python -c "import sys; import os; import json; f=open(sys.argv[1]); \
                         global_db_dir = os.path.dirname(sys.argv[1]); data=json.load(f); \
                         print(\" \".join([os.path.normpath(global_db_dir+'/'+elem['include']).partition('sonic-db')[0]\
-                        for elem in data['INCLUDES'] if 'namespace' in elem])); f.close()" $SONIC_DB_GLOBAL_JSON`
+                        for elem in data['INCLUDES'] if 'namespace' in elem or 'container_name' in elem ])); f.close()" $SONIC_DB_GLOBAL_JSON`
     fi
 
     {%- if docker_container_name == "database" %}
