@@ -551,7 +551,7 @@ static struct ym2651y_data *ym2651y_update_device(struct device *dev)
             dev_dbg(&client->dev, "reg %d, err %d\n", command, status);
 		}
 		
-		strncpy(data->fan_dir, fan_dir+1, ARRAY_SIZE(data->fan_dir)-1);
+		strcpy_s(data->fan_dir, sizeof(data->fan_dir), fan_dir+1);
         data->fan_dir[ARRAY_SIZE(data->fan_dir)-1] = '\0';
         
         /* Read mfr_id */

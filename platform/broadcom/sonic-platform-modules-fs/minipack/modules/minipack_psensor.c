@@ -674,7 +674,7 @@ bmc_transaction(char *cmd, char* resp, int max, u32 mdelay)
         ret = -ENOENT;
         goto exit;
     }
-    strncpy(resp, buf, max);
+	strcpy_s(resp, max, buf);
 exit:
     kfree(buf);
     _tty_close(&tty_fd);

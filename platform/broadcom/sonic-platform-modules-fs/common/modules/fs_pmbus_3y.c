@@ -812,7 +812,7 @@ static int pmbus_add_label(struct pmbus_data *data,
 
     snprintf(label->name, sizeof(label->name), "%s%d_label", name, seq);
     if (!index)
-        strncpy(label->label, lstring, sizeof(label->label) - 1);
+		strcpy_s(label->label, sizeof(label->label), lstring);
     else
         snprintf(label->label, sizeof(label->label), "%s%d", lstring,
                  index);

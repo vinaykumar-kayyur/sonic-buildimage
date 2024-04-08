@@ -362,7 +362,7 @@ static ssize_t array_stringify(char *buf, u8 *input, size_t size) {
     buf[0] = '\0';
     for (i = 0; i < size; i++) {
         snprintf(t, MAX_RESP_LENGTH, "%x ", input[i]);
-        strncat(buf, t, MAX_RESP_LENGTH);
+		strcat_s(t, MAX_RESP_LENGTH, buf);
     }
 
     if (strlen(buf) > 0)
