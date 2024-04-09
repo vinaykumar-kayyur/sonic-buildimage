@@ -1416,6 +1416,7 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 	export image_type="$($*_IMAGE_TYPE)"
 	export sonicadmin_user="$(USERNAME)"
 	export sonic_asic_platform="$(patsubst %-$(CONFIGURED_ARCH),%,$(CONFIGURED_PLATFORM))"
+	export ENABLE_DASH_SAI="$(ENABLE_DASH_SAI)"
 	export enable_organization_extensions="$(ENABLE_ORGANIZATION_EXTENSIONS)"
 	export enable_ztp="$(ENABLE_ZTP)"
 	export include_teamd="$(INCLUDE_TEAMD)"
