@@ -1,7 +1,7 @@
 from setuptools import setup
 
 DEVICE_NAME = 'fs'
-HW_SKU = 'x86_64-fs_n5850_48s6c-r0'  
+HW_SKU = 'x86_64-fs_n5850_48s6c'  
 
 setup(
     name='sonic-platform',
