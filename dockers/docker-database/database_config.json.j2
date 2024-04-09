@@ -111,23 +111,23 @@
         "DPU_APPL_DB" : {
             "id" : 15,
             "separator": ":",
-            "instance" : {% if include_remote_db%} "remote_redis" {% else %} "redis" {% endif %},
+            "instance" : {% if include_remote_db %} "remote_redis" {% else %} "redis" {% endif %},
             "format": "proto"
         },
         "DPU_APPL_STATE_DB" : {
             "id" : 16,
             "separator": "|",
-            "instance" : {% if include_remote_db%} "remote_redis" {% else %} "redis" {% endif %}
+            "instance" : {% if include_remote_db %} "remote_redis" {% else %} "redis" {% endif %}
         },
         "DPU_STATE_DB" : {
             "id" : 17,
             "separator": "|",
-            "instance" : {% if include_remote_db%} "remote_redis" {% else %} "redis" {% endif %}
+            "instance" : {% if include_remote_db %} "remote_redis" {% else %} "redis" {% endif %}
         },
         "DPU_COUNTERS_DB" : {
             "id" : 18,
             "separator": ":",
-            "instance" : {% if include_remote_db%} "remote_redis" {% else %} "redis" {% endif %}
+            "instance" : {% if include_remote_db %} "remote_redis" {% else %} "redis" {% endif %}
         }
 {% endif %}
     },
