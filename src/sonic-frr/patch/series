@@ -33,3 +33,5 @@ cross-compile-changes.patch
 0031-bgpd-Ignore-handling-NLRIs-if-we-received-MP_UNREACH.patch
 0032-zebra-Fix-fpm-multipath-encap-addition.patch
 0033-zebra-The-dplane_fpm_nl-return-path-leaks-memory.patch
+0034-support-vrrp6-commands-and-tracking-interface.patch
+
