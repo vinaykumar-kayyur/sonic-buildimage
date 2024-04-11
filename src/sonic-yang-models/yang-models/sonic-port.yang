@@ -173,6 +173,7 @@ module sonic-port{
 
 				leaf admin_status {
 					type stypes:admin_status;
+					default stypes:down;
 				}
 
 				leaf fec {
