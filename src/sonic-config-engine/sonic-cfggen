@@ -138,11 +138,12 @@ def ip_network(value):
     return r_v.network
 
 def load_namespace_config(asic_name):
-    if not SonicDBConfig.isInit():
-        if is_multi_asic():
-            SonicDBConfig.load_sonic_global_db_config(namespace=asic_name)
-        else:
-            SonicDBConfig.load_sonic_db_config()
+    if is_multi_asic():
+        if not SonicDBConfig.isGlobalInit():
+            SonicDBConfig.initializeGlobalConfig()
+    else:
+        if not SonicDBConfig.isInit():
+            SonicDBConfig.initialize()
 
 class FormatConverter:
     """Convert config DB based schema to legacy minigraph based schema for backward capability.
