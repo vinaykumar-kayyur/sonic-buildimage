@@ -75,7 +75,12 @@ fi
 # Enable ZMQ for SmartSwitch
 LOCALHOST_SUBTYPE=`sonic-db-cli CONFIG_DB hget "DEVICE_METADATA|localhost" "subtype"`
 if [[ x"${LOCALHOST_SUBTYPE}" == x"SmartSwitch" ]]; then
-    ORCHAGENT_ARGS+=" -q tcp://0.0.0.0:8100"
+    mgmt_ip=$( ip -4 -o addr show eth0 | awk '{print $4}' | cut -d'/' -f1 )
+    if [[ $midplane_ip != "" ]]
+        ORCHAGENT_ARGS+=" -q tcp://${mgmt_ip}:8100"
+    else
+        ORCHAGENT_ARGS+=" -q tcp://127.0.0.1:8100"
+    fi
 fi
 
 exec /usr/bin/orchagent ${ORCHAGENT_ARGS}
