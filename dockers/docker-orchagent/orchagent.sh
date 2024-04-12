@@ -73,7 +73,7 @@ else
 fi
 
 # Enable ZMQ for SmartSwitch
-LOCALHOST_SUBTYPE=`sonic-db-cli CONFIG_DB hget localhost "subtype"`
+LOCALHOST_SUBTYPE=`sonic-db-cli CONFIG_DB hget "DEVICE_METADATA|localhost" "subtype"`
 if [[ x"${LOCALHOST_SUBTYPE}" == x"SmartSwitch" ]]; then
     ORCHAGENT_ARGS+=" -q tcp://127.0.0.1:8100"
 fi
