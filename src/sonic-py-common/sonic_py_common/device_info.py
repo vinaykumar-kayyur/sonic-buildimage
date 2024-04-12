@@ -701,8 +701,8 @@ def _modify_mac_for_asic(mac, namespace=None):
 def generate_mac_for_vs(hostname, namespace):
     mac = None
     if hostname is None:
-        # return random mac address randomize each byet of mac address b/w 0-255
-        mac = "02:%02x:%02x:%02x:%02x:%02x" % (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+        # return random mac address randomize each byte of mac address b/w 0-255
+        mac = "22:%02x:%02x:%02x:%02x:%02x" % (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
     else:
         # Calculate the SHA-256 hash of the UTF-8 encoded hostname
         hash_value = hashlib.sha256(hostname.encode('utf-8')).digest()
@@ -710,7 +710,7 @@ def generate_mac_for_vs(hostname, namespace):
         # Extract the last 6 bytes (48 bits) from the hash value
         mac_bytes = hash_value[-6:]
         # Set the first octet to 02 to indicate a locally administered MAC address
-        mac_bytes = bytearray([0x02, mac_bytes[1], mac_bytes[2], mac_bytes[3], mac_bytes[4], mac_bytes[5]])
+        mac_bytes = bytearray([0x22, mac_bytes[1], mac_bytes[2], mac_bytes[3], mac_bytes[4], mac_bytes[5]])
         # Format the MAC address with colons
         mac = ':'.join('{:02x}'.format(byte) for byte in mac_bytes)
 
