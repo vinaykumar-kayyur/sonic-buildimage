@@ -87,6 +87,7 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
 # Apply environtment configuration files
 sudo cp $IMAGE_CONFIGS/environment/environment $FILESYSTEM_ROOT/etc/
 sudo cp $IMAGE_CONFIGS/environment/motd $FILESYSTEM_ROOT/etc/
+sudo cp $IMAGE_CONFIGS/environment/logout_message $FILESYSTEM_ROOT/etc/
 
 # Create all needed directories
 sudo mkdir -p $FILESYSTEM_ROOT/etc/sonic/
@@ -228,6 +229,7 @@ sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/bash_*.deb || \
 # sonic-utilities-data installs bash-completion as a dependency. However, it is disabled by default
 # in bash.bashrc, so we copy a version of the file with it enabled here.
 sudo cp -f $IMAGE_CONFIGS/bash/bash.bashrc $FILESYSTEM_ROOT/etc/
+sudo cp -f $IMAGE_CONFIGS/bash/bash.bash_logout $FILESYSTEM_ROOT/etc/
 
 # Install readline's initialization file
 sudo cp -f $IMAGE_CONFIGS/readline/inputrc $FILESYSTEM_ROOT/etc/
@@ -241,6 +243,15 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-mark manu
 
 # Install systemd-python for SONiC host services
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install systemd-python
+
+if [[ $CONFIGURED_ARCH == armhf ]]; then
+    # Install pygobject from apt repos, since it has armhf prebuilt. The version in Debian is
+    # a bit older than what is in pip.
+    #
+    # When doing the next Debian upgrade (to Trixie), consider installing this package for all
+    # architectures instead of just armhf.
+    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install python3-gi
+fi
 
 # Install SONiC host services package
 SONIC_HOST_SERVICES_PY3_WHEEL_NAME=$(basename {{sonic_host_services_py3_wheel_path}})
@@ -595,6 +606,11 @@ sudo cp $BUILD_TEMPLATES/backend_acl.j2 $FILESYSTEM_ROOT_USR_SHARE_SONIC_TEMPLAT
 sudo cp $IMAGE_CONFIGS/hostname/hostname-config.service $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM
 echo "hostname-config.service" | sudo tee -a $GENERATED_SERVICE_FILE
 sudo cp $IMAGE_CONFIGS/hostname/hostname-config.sh $FILESYSTEM_ROOT/usr/bin/
+
+# Copy banner configuration scripts
+sudo cp $IMAGE_CONFIGS/bannerconfig/banner-config.service $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM
+echo "banner-config.service" | sudo tee -a $GENERATED_SERVICE_FILE
+sudo cp $IMAGE_CONFIGS/bannerconfig/banner-config.sh $FILESYSTEM_ROOT/usr/bin/
 
 # Copy miscellaneous scripts
 sudo cp $IMAGE_CONFIGS/misc/docker-wait-any $FILESYSTEM_ROOT/usr/bin/
@@ -1016,6 +1032,9 @@ sudo rm -rf $FILESYSTEM_ROOT/$MLNX_SONIC_PLATFORM_PY3_WHEEL_NAME
 # Install service that manages Nvidia specific shared storage
 sudo cp platform/mellanox/nv-syncd-shared/nv-syncd-shared.service $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM/
 sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable nv-syncd-shared
+
+# Install minicom package
+sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install minicom
 {% endif %}
 
 {%- if SONIC_ROUTING_STACK == "frr" %}
