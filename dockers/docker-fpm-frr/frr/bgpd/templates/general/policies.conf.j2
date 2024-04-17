@@ -50,7 +50,6 @@ route-map FROM_BGP_PEER_V6 permit 11
 route-map FROM_BGP_PEER_V4 permit 100
 !
 route-map TO_BGP_PEER_V4 permit 100
-  call CHECK_IDF_ISOLATION
 !
 !
 route-map FROM_BGP_PEER_V6 permit 1
@@ -60,7 +59,6 @@ route-map FROM_BGP_PEER_V6 permit 1
 route-map FROM_BGP_PEER_V6 permit 100
 !
 route-map TO_BGP_PEER_V6 permit 100
-  call CHECK_IDF_ISOLATION
 !
 ! end of template: bgpd/templates/general/policies.conf.j2
 !
