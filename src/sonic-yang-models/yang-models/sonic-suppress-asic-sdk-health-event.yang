@@ -41,6 +41,7 @@ module sonic-suppress-asic-sdk-health-event {
 
                 leaf max_events {
                     type uint32;
+                    description "Maximum of events that can be stored in the database";
                 }
 
                 leaf-list categories {
