@@ -242,7 +242,6 @@ TODO(taoyl): Current version of config db only supports BGP admin states.
                         data[table][new_key] = data[table].pop(key)
         return data
 
-
 def deep_update(dst, src):
     """ Deep update of dst dict with contest of src dict"""
     pending_nodes = [(dst, src)]
