@@ -2502,6 +2502,12 @@
             }
 
         },
+        "SUPPRESS_ASIC_SDK_HEALTH_EVENT": {
+            "notice": {
+                "categories@": "firmware,asic_hw",
+                "max_events": "1024"
+            }
+        },
         "SYSTEM_DEFAULTS": {
             "tunnel_qos_remap": {
                 "status": "enabled"
