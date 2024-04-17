@@ -141,6 +141,7 @@
                     {
                         "admin_status": "up",
                         "alias": "eth0",
+                        "lanes": "0,1,2,3",
                         "description": "Ethernet0",
                         "mtu": 9000,
                         "name": "Ethernet0",
@@ -149,6 +150,7 @@
                     {
                         "admin_status": "up",
                         "alias": "eth1",
+                        "lanes": "0,1,2,3",
                         "description": "Ethernet1",
                         "mtu": 9000,
                         "name": "Ethernet1",
@@ -193,6 +195,7 @@
                     {
                         "admin_status": "up",
                         "alias": "eth0",
+                        "lanes": "0,1,2,3",
                         "description": "Ethernet0",
                         "mtu": 9000,
                         "name": "Ethernet0",
@@ -201,6 +204,7 @@
                     {
                         "admin_status": "up",
                         "alias": "eth1",
+                        "lanes": "0,1,2,3",
                         "description": "Ethernet1",
                         "mtu": 9000,
                         "name": "Ethernet1",
@@ -569,6 +573,7 @@
                     {
                         "admin_status": "up",
                         "alias": "eth0",
+                        "lanes": "0,1,2,3",
                         "description": "Ethernet0",
                         "mtu": 9000,
                         "name": "Ethernet0",
@@ -577,6 +582,7 @@
                     {
                         "admin_status": "up",
                         "alias": "eth1",
+                        "lanes": "0,1,2,3",
                         "description": "Ethernet1",
                         "mtu": 9000,
                         "name": "Ethernet1",
@@ -623,6 +629,7 @@
                     {
                         "admin_status": "up",
                         "alias": "eth0",
+                        "lanes": "0,1,2,3",
                         "description": "Ethernet0",
                         "mtu": 9000,
                         "name": "Ethernet0",
@@ -631,6 +638,7 @@
                     {
                         "admin_status": "up",
                         "alias": "eth1",
+                        "lanes": "0,1,2,3",
                         "description": "Ethernet1",
                         "mtu": 9000,
                         "name": "Ethernet1",

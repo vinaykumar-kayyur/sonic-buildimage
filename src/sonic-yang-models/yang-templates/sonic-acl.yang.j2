@@ -106,7 +106,7 @@ module sonic-acl {
 						}
 					}
 					case ip4_prefix {
-						when "not(IP_TYPE) or boolean(IP_TYPE[.='ANY' or .='IP' or .='IPV4' or .='IPv4ANY' or .='ARP'])";
+						when "not(IP_TYPE) or boolean(IP_TYPE[.='ANY' or .='IP' or .='IPV4' or .='IPv4ANY' or .='IPV4ANY' or .='ARP'])";
 						leaf SRC_IP {
 							type inet:ipv4-prefix;
 						}
@@ -117,7 +117,7 @@ module sonic-acl {
 					}
 
 					case ip6_prefix {
-						when "not(IP_TYPE) or boolean(IP_TYPE[.='ANY' or .='IP' or .='IPV6' or .='IPv6ANY'])";
+						when "not(IP_TYPE) or boolean(IP_TYPE[.='ANY' or .='IP' or .='IPV6' or .='IPv6ANY' or .='IPV6ANY'])";
 						leaf SRC_IPV6 {
 							type inet:ipv6-prefix;
 						}
