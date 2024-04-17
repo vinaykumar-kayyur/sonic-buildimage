@@ -45,21 +45,13 @@ class CachedDataWithOp:
 
 vrrpd_client = None
 
-def g_run_command(table, command, use_bgpd_client, daemons, ignore_fail = False):
+def g_run_command(table, command, daemons, ignore_fail = False):
     syslog.syslog(syslog.LOG_DEBUG, "execute command {} for table {}.".format(command, table))
     if not command.startswith('vtysh '):
-        use_bgpd_client = False
-    if use_bgpd_client:
+        syslog.syslog(syslog.LOG_ERR, 'Command no start with "vtysh". Command: "{}"'.format(command))
+    else:
         if not vrrpd_client.run_vtysh_command(table, command, daemons) and not ignore_fail:
             syslog.syslog(syslog.LOG_ERR, 'command execution failure. Command: "{}"'.format(command))
-            return False
-    else:
-        p = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
-        stdout = p.communicate()[0]
-        p.wait()
-        if p.returncode != 0 and not ignore_fail:
-            syslog.syslog(syslog.LOG_ERR, '[vrrp cfgd] command execution returned {}. Command: "{}", stdout: "{}"'.\
-                            format(p.returncode, command, stdout))
             return False
     return True
 
@@ -415,7 +407,7 @@ class VRRPConfigDaemon:
 
     @staticmethod
     def __run_command(table, command, daemons = None):
-        return g_run_command(table, command, True, daemons)
+        return g_run_command(table, command, daemons)
 
     def vrrp_handler(self, table, key, data):
         syslog.syslog(syslog.LOG_INFO, '[vrrp cfgd](vrrp) value for {} changed to {}'.format(key, data))
