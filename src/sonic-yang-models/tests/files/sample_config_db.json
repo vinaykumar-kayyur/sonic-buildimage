@@ -2504,7 +2504,7 @@
         },
         "SUPPRESS_ASIC_SDK_HEALTH_EVENT": {
             "notice": {
-                "categories@": "firmware,asic_hw",
+                "categories": ["firmware", "asic_hw"],
                 "max_events": "1024"
             }
         },
