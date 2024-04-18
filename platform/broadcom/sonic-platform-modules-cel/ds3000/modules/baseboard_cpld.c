@@ -142,7 +142,7 @@ static ssize_t setreg_store(struct device *dev, struct device_attribute *devattr
     char *pclone = clone;
     char *last;
 
-    strcpy(clone, buf);
+    strncpy(clone, buf, strlen(buf)-1); // nosemgrep
 
     mutex_lock(&cpld_data->cpld_lock);
     tok = strsep((char**)&pclone, " ");

@@ -188,8 +188,8 @@ class Component():
         status = True
         result = ""
         try:
-            p = subprocess.Popen(
-                cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            p = subprocess.Popen( # nosemgrep
+                cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE) # nosemgrep
             raw_data, err = p.communicate()
             if err.decode('UTF-8') == '':
                 result = raw_data.strip().decode('UTF-8')

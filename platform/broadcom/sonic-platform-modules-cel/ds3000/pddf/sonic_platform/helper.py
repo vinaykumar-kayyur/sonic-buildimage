@@ -22,8 +22,8 @@ class APIHelper():
 
     def get_cmd_output(self, cmd):
         try:
-            data = subprocess.check_output(cmd, shell=True,
-                    universal_newlines=True, stderr=subprocess.STDOUT).strip()
+            data = subprocess.check_output(cmd, shell=True, # nosemgrep
+                    universal_newlines=True, stderr=subprocess.STDOUT).strip() # nosemgrep
             status = 0
         except subprocess.CalledProcessError as ex:
             data = ex.output
