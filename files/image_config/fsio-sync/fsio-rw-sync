@@ -1,0 +1,72 @@
+#!/usr/bin/env python3
+
+import os
+import sys
+import json
+import syslog
+
+BASE_PATH = "/sys/block"
+DISKSTATS_FILE = "/proc/diskstats"
+FSSTATS_PATHS = ["/host/pmon/storagemon/", "/usr/share/storagemon/"]
+FSSTATS_FILE = "fsio-rw-stats.json"
+FSSTATS_FILE_SYNC_ERROR = 127
+SYSLOG_ID="fsio-rw-sync"
+
+devices = []
+json_file_dict = {}
+
+def log_info(msg):
+    syslog.openlog(SYSLOG_ID)
+    syslog.syslog(syslog.LOG_INFO, msg)
+    syslog.closelog()
+
+def log_error(msg):
+    syslog.openlog(SYSLOG_ID)
+    syslog.syslog(syslog.LOG_ERR, msg)
+    syslog.closelog()
+
+def get_storage_disks():
+    fdlist = os.listdir(BASE_PATH)
+    for fd in fdlist:
+        if 'boot' in fd or 'loop' in fd:
+            continue
+        else:
+            devices.append(fd)
+            json_file_dict[fd] = {}
+
+def find_fsstats_file():
+    fullpath = ""
+
+    for path in FSSTATS_PATHS:
+        if os.path.exists(os.path.join(path, FSSTATS_FILE)):
+            fullpath = os.path.join(path, FSSTATS_FILE)
+            break
+
+    return fullpath
+
+def main():
+
+    filepath = find_fsstats_file()
+    if filepath == "":
+        log_error("{} not found in {} directories. Cannot sync FSIO reads and writes.".format(FSSTATS_FILE, FSSTATS_PATHS))
+        sys.exit(FSSTATS_FILE_SYNC_ERROR)
+
+    get_storage_disks()
+
+    with open(DISKSTATS_FILE) as fd:
+        diskstats = fd.readlines()
+
+    for device in devices:
+        for line in diskstats:
+            if device == line.split()[2]:
+                json_file_dict[device]["reads"] = line.split()[3]
+                json_file_dict[device]["writes"] = line.split()[7]
+                break
+
+    with open(filepath, 'w+') as f:
+        f.write(json.dumps(json_file_dict))
+
+    sys.exit(0)
+
+if __name__ == "__main__":
+    main()

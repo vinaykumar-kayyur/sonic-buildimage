@@ -108,6 +108,11 @@ function preStartAction()
     fi
 {%- elif docker_container_name == "snmp" %}
     $SONIC_DB_CLI STATE_DB HSET 'DEVICE_METADATA|localhost' chassis_serial_number $(decode-syseeprom -s)
+{%- elif docker_container_name == "pmon" %}
+    BIN_DIR=/usr/local/bin
+    if [ -f $BIN_DIR/fsio-rw-sync ]; then
+        # Copy this script to pmon:/usr/local/bin/
+        docker cp $BIN_DIR/fsio-rw-sync pmon$DEV:$BIN_DIR/
 {%- else %}
     : # nothing
 {%- endif %}

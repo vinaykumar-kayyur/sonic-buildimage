@@ -702,6 +702,14 @@ sudo cp $IMAGE_CONFIGS/pcie-check/pcie-check.service $FILESYSTEM_ROOT_USR_LIB_SY
 echo "pcie-check.service" | sudo tee -a $GENERATED_SERVICE_FILE
 sudo cp $IMAGE_CONFIGS/pcie-check/pcie-check.sh $FILESYSTEM_ROOT/usr/bin/
 
+# Copy fsio-sync service files
+sudo cp $IMAGE_CONFIGS/fsio-sync/fsio-sync.service $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM
+echo "fsio-sync.service" | sudo tee -a $GENERATED_SERVICE_FILE
+sudo cp $IMAGE_CONFIGS/fsio-sync/fsio-sync.sh $FILESYSTEM_ROOT/usr/local/bin/
+sudo cp $IMAGE_CONFIGS/fsio-sync/fsio-rw-sync $FILESYSTEM_ROOT/usr/local/bin/
+sudo touch $FILESYSTEM_ROOT/host/pmon/storagemon/fsio-rw-stats.json
+
+
 ## Install package without starting service
 ## ref: https://wiki.debian.org/chroot
 sudo tee -a $FILESYSTEM_ROOT/usr/sbin/policy-rc.d > /dev/null <<EOF
