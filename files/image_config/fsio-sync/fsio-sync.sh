@@ -29,15 +29,17 @@ function set_fsstats_sync()
 
 function sync_fsio_stats()
 {
-    rc=$(get_sync_interval)
-    SLEEP_TIME=$DEFAULT_SLEEP_TIME
-
-    if [ ! -z "${rc}" ]; then
-        SLEEP_TIME=$rc
-    fi
-
     while true
     do
+        # Getting the sleep time every loop enables us to change it dynamically without having to restart the process.
+
+        rc=$(get_sync_interval)
+        SLEEP_TIME=$DEFAULT_SLEEP_TIME
+
+        if [ ! -z "${rc}" ]; then
+            SLEEP_TIME=$rc
+        fi
+        
         /usr/local/bin/fsio-rw-sync
         if [ $? -eq 0 ]; then
             set_fsstats_sync $(date '+%Y-%m-%d::%H:%M:%S')

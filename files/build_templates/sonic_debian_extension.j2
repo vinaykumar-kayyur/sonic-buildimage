@@ -703,12 +703,23 @@ echo "pcie-check.service" | sudo tee -a $GENERATED_SERVICE_FILE
 sudo cp $IMAGE_CONFIGS/pcie-check/pcie-check.sh $FILESYSTEM_ROOT/usr/bin/
 
 # Copy fsio-sync service files
+FSIO_JSON_FILE="$FILESYSTEM_ROOT/host/pmon/storagemon/fsio-rw-stats.json"
+STORAGE_DEVICES=`ls $FILESYSTEM_ROOT/sys/block | grep -Ev "boot|loop"`
 sudo cp $IMAGE_CONFIGS/fsio-sync/fsio-sync.service $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM
 echo "fsio-sync.service" | sudo tee -a $GENERATED_SERVICE_FILE
 sudo cp $IMAGE_CONFIGS/fsio-sync/fsio-sync.sh $FILESYSTEM_ROOT/usr/local/bin/
 sudo cp $IMAGE_CONFIGS/fsio-sync/fsio-rw-sync $FILESYSTEM_ROOT/usr/local/bin/
-sudo touch $FILESYSTEM_ROOT/host/pmon/storagemon/fsio-rw-stats.json
+sudo touch $FSIO_JSON_FILE
+JSONDATA="{"
+for dev in ${STORAGE_DEVICES[@]}; do
+        JSONDATA+="    \"${dev}\":{\"reads\": \"0\", \"writes\":\"0\"},"
+done
+JSONDATA+="}"
 
+LASTCHAR=${JSONDATA##*,}
+LASTCOMMA=$((${#JSONDATA} - ${#LASTCHAR} - 1 ))
+
+echo ${JSONDATA:0:$LASTCOMMA}${JSONDATA:$(($LASTCOMMA + 1))} > $FSIO_JSON_FILE
 
 ## Install package without starting service
 ## ref: https://wiki.debian.org/chroot
