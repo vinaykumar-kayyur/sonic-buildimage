@@ -39,15 +39,15 @@ function sync_fsio_stats()
         if [ ! -z "${rc}" ]; then
             SLEEP_TIME=$rc
         fi
-        
+
+        sleep $SLEEP_TIME
+
         /usr/local/bin/fsio-rw-sync
         if [ $? -eq 0 ]; then
             set_fsstats_sync $(date '+%Y-%m-%d::%H:%M:%S')
         else
            VERBOSE="yes" debug "FSIO R/W Sync Failed"
         fi
-
-        sleep $SLEEP_TIME
     done
 }
 
