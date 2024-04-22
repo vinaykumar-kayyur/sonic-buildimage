@@ -78,10 +78,10 @@ class CmdMapTestInfo:
         else:
             if self.ignore_tail is False:
                 mock.assert_called_with(self.table_name, self.compose_vtysh_cmd(vtysh_cmd, is_del),
-                                        True, self.daemons)
+                                        self.daemons)
             else:
                 mock.assert_called_with(self.table_name, self.compose_vtysh_cmd(vtysh_cmd, is_del),
-                                        True, self.daemons, self.ignore_tail)
+                                        self.daemons, self.ignore_tail)
 
 conf_cmd = 'configure terminal'
 conf_intf_cmd = lambda intf_name: [conf_cmd, 'interface %s' % intf_name]
