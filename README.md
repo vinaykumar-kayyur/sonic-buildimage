@@ -131,6 +131,7 @@ pip3 install --user j2cli
   system to allow running the 'docker' command without 'sudo':
   * Add current user to the docker group: `sudo gpasswd -a ${USER} docker`
   * Log out and log back in so that your group membership is re-evaluated
+  * If you are using Linux kernel 5.3 or newer, then you must use Docker 20.10.10 or newer. This is because older Docker versions did not allow the `clone3` syscall, which is now used in Bookworm.
 
 > Note: If a previous installation of Docker using snap was present on the
 > system, remove it and also remove docker from snap before reinstallating docker.
@@ -187,9 +188,6 @@ The supported ASIC vendors are:
 
 ## Usage for ARM Architecture
 
-ARM build has dependency in docker version 18.
-If docker version is 19, downgrade to 18 with:
-
 ```shell
 sudo apt-get install --allow-downgrades -y docker-ce=5:18.09.0~3-0~ubuntu-xenial
 sudo apt-get install --allow-downgrades -y docker-ce-cli=5:18.09.0~3-0~ubuntu-xenial
@@ -206,7 +204,7 @@ make target/sonic-[ASIC_VENDER]-armhf.bin
 _example:_
 
 ```shell
-make configure PLATFORM=marvell-armhf PLATFORM_ARCH=armhf
+make configure PLATFORM=marvell PLATFORM_ARCH=armhf
 make target/sonic-marvell-armhf.bin
 ```
 
@@ -217,7 +215,7 @@ using cross-compilation, run the following commands:
 # Execute make configure once to configure ASIC and ARCH for cross-compilation build
 
 NOJESSIE=1 NOSTRETCH=1 BLDENV=buster CROSS_BLDENV=1 \
-make configure PLATFORM=marvell-armhf PLATFORM_ARCH=armhf
+make configure PLATFORM=marvell PLATFORM_ARCH=armhf
 
 # Execute Arm32 build using cross-compilation environment
 
@@ -236,7 +234,7 @@ make configure PLATFORM=[ASIC_VENDOR] PLATFORM_ARCH=arm64
 
 # example:
 
-make configure PLATFORM=marvell-arm64 PLATFORM_ARCH=arm64
+make configure PLATFORM=marvell PLATFORM_ARCH=arm64
 ```
 
  **NOTE**:
@@ -352,6 +350,10 @@ on the SAI version for each SONiC release.
   * docker-sonic-mgmt.gz: docker image for
     [managing, configuring and monitoring SONiC](https://github.com/sonic-net/sonic-mgmt)
     (gzip tar archive)
+
+## SONiC Image Azure Pipelines
+
+All SONiC project build pipeline could be found at [Download Portal for SONiC Images](https://sonic-build.azurewebsites.net)
 
 ## Contribution Guide
 

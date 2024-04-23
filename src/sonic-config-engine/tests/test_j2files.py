@@ -19,6 +19,7 @@ class TestJ2Files(TestCase):
         self.ztp_ip = os.path.join(self.test_dir, "sample-ztp-ip.json")
         self.ztp_inband_ip = os.path.join(self.test_dir, "sample-ztp-inband-ip.json")
         self.t0_minigraph = os.path.join(self.test_dir, 't0-sample-graph.xml')
+        self.t0_minigraph_secondary_subnets = os.path.join(self.test_dir, 't0-sample-graph-secondary-subnets.xml')
         self.t0_mvrf_minigraph = os.path.join(self.test_dir, 't0-sample-graph-mvrf.xml')
         self.t0_minigraph_nomgmt = os.path.join(self.test_dir, 't0-sample-graph-nomgmt.xml')
         self.t0_minigraph_two_mgmt = os.path.join(self.test_dir, 't0-sample-graph-two-mgmt.xml')
@@ -26,6 +27,7 @@ class TestJ2Files(TestCase):
         self.pc_minigraph = os.path.join(self.test_dir, 'pc-test-graph.xml')
         self.t0_port_config = os.path.join(self.test_dir, 't0-sample-port-config.ini')
         self.t0_port_config_tiny = os.path.join(self.test_dir, 't0-sample-port-config-tiny.ini')
+        self.t1_ss_port_config = os.path.join(self.test_dir, 't1-ss-sample-port-config.ini')
         self.l1_l3_port_config = os.path.join(self.test_dir, 'l1-l3-sample-port-config.ini')
         self.t0_7050cx3_port_config = os.path.join(self.test_dir, 't0_7050cx3_d48c8_port_config.ini')
         self.t1_mlnx_minigraph = os.path.join(self.test_dir, 't1-sample-graph-mlnx.xml')
@@ -159,17 +161,26 @@ class TestJ2Files(TestCase):
         self.run_script(argument, output_file=self.output_file)
         self.assertTrue(utils.cmp(os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, 'wait_for_intf.sh'), self.output_file))
 
-        # Test generation of docker-dhcp-relay.supervisord.conf
         template_path = os.path.join(self.test_dir, '..', '..', '..', 'dockers', 'docker-dhcp-relay', 'docker-dhcp-relay.supervisord.conf.j2')
         argument = ['-m', self.t0_minigraph, '-p', self.t0_port_config, '-t', template_path]
         self.run_script(argument, output_file=self.output_file)
         self.assertTrue(utils.cmp(os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, 'docker-dhcp-relay.supervisord.conf'), self.output_file))
 
         # Test generation of docker-dhcp-relay.supervisord.conf when a vlan is missing ip/ipv6 helpers
-        template_path = os.path.join(self.test_dir, '..', '..', '..', 'dockers', 'docker-dhcp-relay', 'docker-dhcp-relay.supervisord.conf.j2')
+        template_path = os.path.join(self.test_dir, '..', '..', '..', 'dockers', 'docker-dhcp-relay',
+                                     'docker-dhcp-relay.supervisord.conf.j2')
         argument = ['-m', self.no_ip_helper_minigraph, '-p', self.t0_port_config, '-t', template_path]
         self.run_script(argument, output_file=self.output_file)
-        self.assertTrue(utils.cmp(os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, 'docker-dhcp-relay-no-ip-helper.supervisord.conf'), self.output_file))
+        self.assertTrue(utils.cmp(os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR,
+                                               'docker-dhcp-relay-no-ip-helper.supervisord.conf'), self.output_file))
+        
+        # Test generation of docker-dhcp-relay.supervisord.conf when a vlan has secondary subnets specified
+        template_path = os.path.join(self.test_dir, '..', '..', '..', 'dockers', 'docker-dhcp-relay',
+                                     'docker-dhcp-relay.supervisord.conf.j2')
+        argument = ['-m', self.t0_minigraph_secondary_subnets, '-p', self.t0_port_config, '-t', template_path]
+        self.run_script(argument, output_file=self.output_file)
+        self.assertTrue(utils.cmp(os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR,
+                                               'docker-dhcp-relay-secondary-subnets.supervisord.conf'), self.output_file))
 
     def test_radv(self):
         # Test generation of radvd.conf with multiple ipv6 prefixes
@@ -291,6 +302,17 @@ class TestJ2Files(TestCase):
         self.maxDiff = None
         self.assertEqual(sample_output_json, output_json)
 
+    def test_t1_smartswitch_template(self):
+        argument = ['-k', 'SSwitch-32x1000Gb', '--preset', 't1-smartswitch', '-p', self.t1_ss_port_config]
+        output = self.run_script(argument)
+        output_json = json.loads(output)
+
+        sample_output_file = os.path.join(self.test_dir, 'sample_output', 't1-smartswitch.json')
+        with open(sample_output_file) as sample_output_fd:
+            sample_output_json = json.load(sample_output_fd)
+
+        self.assertTrue(json.dumps(sample_output_json, sort_keys=True) == json.dumps(output_json, sort_keys=True))
+
     def test_qos_arista7050_render_template(self):
         self._test_qos_render_template('arista', 'x86_64-arista_7050_qx32s', 'Arista-7050-QX-32S', 'sample-arista-7050-t0-minigraph.xml', 'qos-arista7050.json')
 
@@ -361,6 +383,9 @@ class TestJ2Files(TestCase):
 
     def test_qos_arista7260_render_template(self):
         self._test_qos_render_template('arista', 'x86_64-arista_7260cx3_64', 'Arista-7260CX3-D96C16', 'sample-arista-7260-t1-minigraph-remap-disabled.xml', 'qos-arista7260.json')
+
+    def test_qos_arista7260t0_render_template(self):
+        self._test_qos_render_template('arista', 'x86_64-arista_7260cx3_64', 'Arista-7260CX3-D92C16', 'sample-arista-7260-t0-minigraph.xml', 'qos-arista7260-t0.json')
 
     def _test_qos_render_template(self, vendor, platform, sku, minigraph, expected, copy_files=False):
         file_exist, dir_exist = self.create_machine_conf(platform, vendor)
@@ -550,6 +575,9 @@ class TestJ2Files(TestCase):
     def test_buffers_mellanox2410_render_template(self):
         self._test_buffers_render_template('mellanox', 'x86_64-mlnx_msn2410-r0', 'ACS-MSN2410', 'sample-mellanox-2410-t1-minigraph.xml', 'buffers.json.j2', 'buffers-mellanox2410.json')
 
+    def test_buffers_arista7260_render_template(self):
+        self._test_buffers_render_template('arista', 'x86_64-arista_7260cx3_64', 'Arista-7260CX3-D92C16', 'sample-arista-7260-t0-minigraph.xml', 'buffers.json.j2', 'buffer-arista7260-t0.json')
+
     def test_buffers_mellanox2410_dynamic_render_template(self):
         self._test_buffers_render_template('mellanox', 'x86_64-mlnx_msn2410-r0', 'ACS-MSN2410', 'sample-mellanox-2410-t1-minigraph.xml', 'buffers_dynamic.json.j2', 'buffers-mellanox2410-dynamic.json')
 
@@ -662,10 +690,19 @@ class TestJ2Files(TestCase):
 
     def test_ntp_conf(self):
         conf_template = os.path.join(self.test_dir, "ntp.conf.j2")
-        ntp_interfaces_json = os.path.join(self.test_dir, "data", "ntp", "ntp_interfaces.json")
+        config_db_ntp_json = os.path.join(self.test_dir, "data", "ntp", "ntp_interfaces.json")
         expected = os.path.join(self.test_dir, "sample_output", utils.PYvX_DIR, "ntp.conf")
 
-        argument = ['-j', ntp_interfaces_json, '-t', conf_template]
+        argument = ['-j', config_db_ntp_json, '-t', conf_template]
+        self.run_script(argument, output_file=self.output_file)
+        assert utils.cmp(expected, self.output_file), self.run_diff(expected, self.output_file)
+
+    def test_ntp_keys(self):
+        conf_template = os.path.join(self.test_dir, "ntp.keys.j2")
+        config_db_ntp_json = os.path.join(self.test_dir, "data", "ntp", "ntp_interfaces.json")
+        expected = os.path.join(self.test_dir, "sample_output", utils.PYvX_DIR, "ntp.keys")
+
+        argument = ['-j', config_db_ntp_json, '-t', conf_template]
         self.run_script(argument, output_file=self.output_file)
         assert utils.cmp(expected, self.output_file), self.run_diff(expected, self.output_file)
 

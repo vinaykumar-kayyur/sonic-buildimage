@@ -47,6 +47,7 @@ snmp-subagent               EXITED    Oct 19 01:53 AM
 """
 device_info.get_platform = MagicMock(return_value='unittest')
 
+device_runtime_metadata = {"DEVICE_RUNTIME_METADATA": {"ETHERNET_PORTS_PRESENT":True}}
 
 def setup():
     if os.path.exists(ServiceChecker.CRITICAL_PROCESS_CACHE):
@@ -298,7 +299,8 @@ def test_hardware_checker():
             'status': 'True',
             'speed': '60',
             'speed_target': '60',
-            'speed_tolerance': '20',
+            'is_under_speed': 'False',
+            'is_over_speed': 'False',
             'direction': 'intake'
         },
         'FAN_INFO|fan2': {
@@ -306,28 +308,40 @@ def test_hardware_checker():
             'status': 'True',
             'speed': '60',
             'speed_target': '60',
-            'speed_tolerance': '20'
+            'is_under_speed': 'False',
+            'is_over_speed': 'False',
         },
         'FAN_INFO|fan3': {
             'presence': 'True',
             'status': 'False',
             'speed': '60',
             'speed_target': '60',
-            'speed_tolerance': '20'
+            'is_under_speed': 'False',
+            'is_over_speed': 'False',
         },
         'FAN_INFO|fan4': {
             'presence': 'True',
             'status': 'True',
             'speed': '20',
             'speed_target': '60',
-            'speed_tolerance': '20'
+            'is_under_speed': 'True',
+            'is_over_speed': 'False',
         },
         'FAN_INFO|fan5': {
             'presence': 'True',
             'status': 'True',
+            'speed': '90',
+            'speed_target': '60',
+            'is_under_speed': 'False',
+            'is_over_speed': 'True',
+        },
+        'FAN_INFO|fan6': {
+            'presence': 'True',
+            'status': 'True',
             'speed': '60',
             'speed_target': '60',
-            'speed_tolerance': '20',
+            'is_under_speed': 'False',
+            'is_over_speed': 'False',
             'direction': 'exhaust'
         }
     })
@@ -426,7 +440,10 @@ def test_hardware_checker():
 
     assert 'fan5' in checker._info
     assert checker._info['fan5'][HealthChecker.INFO_FIELD_OBJECT_STATUS] == HealthChecker.STATUS_NOT_OK
-    assert checker._info['fan5'][HealthChecker.INFO_FIELD_OBJECT_MSG] == 'fan5 direction exhaust is not aligned with fan1 direction intake'
+
+    assert 'fan6' in checker._info
+    assert checker._info['fan6'][HealthChecker.INFO_FIELD_OBJECT_STATUS] == HealthChecker.STATUS_NOT_OK
+    assert checker._info['fan6'][HealthChecker.INFO_FIELD_OBJECT_MSG] == 'fan6 direction exhaust is not aligned with fan1 direction intake'
 
     assert 'PSU 1' in checker._info
     assert checker._info['PSU 1'][HealthChecker.INFO_FIELD_OBJECT_STATUS] == HealthChecker.STATUS_OK
@@ -567,6 +584,7 @@ def test_utils():
 @patch('docker.DockerClient')
 @patch('health_checker.utils.run_command')
 @patch('swsscommon.swsscommon.ConfigDBConnector')
+@patch('sonic_py_common.device_info.get_device_runtime_metadata', MagicMock(return_value=device_runtime_metadata))
 def test_get_all_service_list(mock_config_db, mock_run, mock_docker_client):
     mock_db_data = MagicMock()
     mock_get_table = MagicMock()
@@ -825,6 +843,7 @@ def test_system_service():
     sysmon.task_stop()
 
 
+@patch('sonic_py_common.device_info.get_device_runtime_metadata', MagicMock(return_value=device_runtime_metadata))
 def test_get_service_from_feature_table():
     sysmon = Sysmonitor()
     sysmon.config_db = MagicMock()
@@ -835,8 +854,18 @@ def test_get_service_from_feature_table():
             'swss': {}
         },
         {
-            'bgp': {'state': 'enabled'},
+            'localhost': {
+                'type': 'ToRRouter'
+            }
+        },
+        {
+            'bgp': {'state': "{% if not (DEVICE_METADATA is defined and DEVICE_METADATA['localhost'] is defined and DEVICE_METADATA['localhost']['type'] is defined and DEVICE_METADATA['localhost']['type'] is not in ['ToRRouter', 'EPMS', 'MgmtTsToR', 'MgmtToRRouter', 'BmcMgmtToRRouter']) %}enabled{% else %}disabled{% endif %}"},
             'swss': {'state': 'disabled'}
+        },
+        {
+            'localhost': {
+                'type': 'ToRRouter'
+            }
         }
     ]
     dir_list = []
