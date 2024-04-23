@@ -59,6 +59,17 @@ stages:
       jobGroups:
       - name: vs
 
+- stage: BuildVSDpu
+  pool: sonicbld
+  dependsOn: []
+  jobs:
+  - template: .azure-pipelines/azure-pipelines-build.yml
+    parameters:
+      buildOptions: 'USERNAME=admin SONIC_BUILD_JOBS=$(nproc) ENABLE_DASH_SAI=y INCLUDE_DHCP_SERVER=y ${{ variables.VERSION_CONTROL_OPTIONS }}'
+      jobGroups:
+      - name: vs
+        extName: dpu
+
 - stage: Build
   pool: sonicbld
   dependsOn: []

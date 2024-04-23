@@ -222,6 +222,7 @@ $(shell \
 
 # Generate the slave Dockerfile, and prepare build info for it
 $(shell CONFIGURED_ARCH=$(CONFIGURED_ARCH) \
+	CONFIGURED_PLATFORM=$(CONFIGURED_PLATFORM) \
 	MULTIARCH_QEMU_ENVIRON=$(MULTIARCH_QEMU_ENVIRON) \
 	CROSS_BUILD_ENVIRON=$(CROSS_BUILD_ENVIRON) \
 	INCLUDE_FIPS=$(INCLUDE_FIPS) \
@@ -582,6 +583,7 @@ SONIC_BUILD_INSTRUCTION :=  $(MAKE) \
                            SONIC_ENABLE_BOOTCHART=$(ENABLE_BOOTCHART) \
                            INCLUDE_FIPS=$(INCLUDE_FIPS) \
                            ENABLE_FIPS=$(ENABLE_FIPS) \
+                           ENABLE_DASH_SAI=$(ENABLE_DASH_SAI) \
                            SONIC_SLAVE_DOCKER_DRIVER=$(SONIC_SLAVE_DOCKER_DRIVER) \
                            MIRROR_URLS=$(MIRROR_URLS) \
                            MIRROR_SECURITY_URLS=$(MIRROR_SECURITY_URLS) \
