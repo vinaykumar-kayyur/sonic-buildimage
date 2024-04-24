@@ -601,6 +601,12 @@ RUN pip3 install mmh3==2.5.1
 
 RUN pip3 install parameterized==0.8.1
 
+
+{%- if CONFIGURED_PLATFORM == "vs" %}
+# For DASH BMv2
+RUN pip3 install jsonpath_ng
+{%- endif %}
+
 RUN eatmydata apt-get install -y xsltproc
 
 # Install dependencies for isc-dhcp-relay build
