@@ -206,6 +206,10 @@ sudo chmod +x $FILESYSTEM_ROOT/etc/initramfs-tools/hooks/mke2fs
 sudo cp files/initramfs-tools/setfacl $FILESYSTEM_ROOT/etc/initramfs-tools/hooks/setfacl
 sudo chmod +x $FILESYSTEM_ROOT/etc/initramfs-tools/hooks/setfacl
 
+# Hook into initramfs: configure the network-interfaces on boot, and also enabling the DHCP for all interfaces
+sudo cp files/initramfs-tools/network-interface-preboot-init $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-premount/network-interface-preboot-init
+sudo chmod +x $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-premount/network-interface-preboot-init
+
 # Hook into initramfs: rename the management interfaces on arista switches
 sudo cp files/initramfs-tools/arista-net $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-premount/arista-net
 sudo chmod +x $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-premount/arista-net
