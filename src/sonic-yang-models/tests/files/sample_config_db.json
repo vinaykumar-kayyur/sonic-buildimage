@@ -368,7 +368,8 @@
                 "bgp_adv_lo_prefix_as_128": "true",
                 "yang_config_validation": "disable",
                 "rack_mgmt_map": "dummy_value",
-                "timezone": "Europe/Kiev"
+                "timezone": "Europe/Kiev",
+                "bgp_router_id": "8.8.8.8"
             }
         },
         "VLAN": {
@@ -1302,6 +1303,13 @@
                 "paths": "COUNTERS/Ethernet*,COUNTERS_PORT_NAME_MAP",
                 "report_interval": "5000",
                 "report_type": "periodic"
+            }
+        },
+        "BMP": {
+            "table": {
+                "bgp_neighbor_table": "true",
+                "bgp_rib_in_table": "false",
+                "bgp_rib_out_table": "false"
             }
         },
         "GNMI": {
