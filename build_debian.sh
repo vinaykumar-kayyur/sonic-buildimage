@@ -238,7 +238,7 @@ sudo cp files/initramfs-tools/union-fsck $FILESYSTEM_ROOT/etc/initramfs-tools/ho
 sudo chmod +x $FILESYSTEM_ROOT/etc/initramfs-tools/hooks/union-fsck
 
 # Hook into initramfs: Initialize network interfaces on boot, useful for kdump kernel image
-sudo cp files/initramfs-tools/network-interface-preboot-init $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-bottom/network-interface-boot-init
+sudo cp files/initramfs-tools/network-interface-boot-init $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-bottom/network-interface-boot-init
 sudo chmod +x $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-bottom/network-interface-boot-init
 
 

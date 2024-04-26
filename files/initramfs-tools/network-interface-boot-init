@@ -1,15 +1,33 @@
 #!/bin/sh
 
-# Iterate over all detected network interfaces and configure them to use DHCP   
+# Check if ip command is available
+if ! command -v ip >/dev/null; then
+    echo "Error: 'ip' command not found. Aborting."
+    exit 1
+fi
+
+# Check if dhclient command is available
+if ! command -v dhclient >/dev/null; then
+    echo "Error: 'dhclient' command not found. Aborting."
+    exit 1
+fi
+
+# Iterate over all detected network interfaces and configure them to use DHCP
 interfaces=$(ip -o link show | awk -F': ' '{print $2}' | grep -E '^e')
 
-# Bring up each Ethernet interface
+if [ -z "$interfaces" ]; then
+    echo "Error: No Ethernet interfaces detected. Aborting."
+    exit 1
+fi
+
+# Bring up each Ethernet interface and enable DHCP
 for interface in $interfaces; do
     ip link set dev $interface up
-    dhclient $interface
+    if ! dhclient $interface; then
+        echo "Warning: DHCP configuration failed for interface $interface."
+    fi
 done
 
-echo("All interfaces have been intialized and DHCP is enabled. Can be verified by command,  \"ip addr\"")
+# Verify network interface configuration
+echo "All interfaces have been initialized and DHCP is enabled. Network configuration:"
 ip addr
-
-
