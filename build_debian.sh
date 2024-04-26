@@ -224,11 +224,6 @@ sudo cp files/initramfs-tools/fsck-rootfs $FILESYSTEM_ROOT/etc/initramfs-tools/s
 sudo chmod +x $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-premount/fsck-rootfs
 
 
-# Hook into initramfs: Initialize network interfaces on boot, useful for kdump kernel image
-sudo cp files/initramfs-tools/network-interface-preboot-init $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-premount/network-interface-preboot-init
-sudo chmod +x $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-premount/network-interface-preboot-init
-
-
 ## Hook into initramfs: after partition mount and loop file mount
 ## 1. Prepare layered file system
 ## 2. Bind-mount docker working directory (docker overlay storage cannot work over overlay rootfs)
@@ -241,6 +236,12 @@ sudo chmod +x $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-bottom/varlog
 #sudo chmod +x $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-bottom/mgmt-intf-dhcp
 sudo cp files/initramfs-tools/union-fsck $FILESYSTEM_ROOT/etc/initramfs-tools/hooks/union-fsck
 sudo chmod +x $FILESYSTEM_ROOT/etc/initramfs-tools/hooks/union-fsck
+
+# Hook into initramfs: Initialize network interfaces on boot, useful for kdump kernel image
+sudo cp files/initramfs-tools/network-interface-preboot-init $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-bottom/network-interface-boot-init
+sudo chmod +x $FILESYSTEM_ROOT/etc/initramfs-tools/scripts/init-bottom/network-interface-boot-init
+
+
 pushd $FILESYSTEM_ROOT/usr/share/initramfs-tools/scripts/init-bottom && sudo patch -p1 < $OLDPWD/files/initramfs-tools/udev.patch; popd
 if [[ $CONFIGURED_ARCH == armhf || $CONFIGURED_ARCH == arm64 ]]; then
     sudo cp files/initramfs-tools/uboot-utils $FILESYSTEM_ROOT/etc/initramfs-tools/hooks/uboot-utils
