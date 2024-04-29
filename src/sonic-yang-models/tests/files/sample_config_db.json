@@ -368,7 +368,8 @@
                 "bgp_adv_lo_prefix_as_128": "true",
                 "yang_config_validation": "disable",
                 "rack_mgmt_map": "dummy_value",
-                "timezone": "Europe/Kiev"
+                "timezone": "Europe/Kiev",
+                "bgp_router_id": "8.8.8.8"
             }
         },
         "VLAN": {
@@ -566,9 +567,9 @@
         "PORT": {
             "Ethernet0": {
                 "alias": "Eth1/1",
-                "coreId": "1",
-                "corePortId": "1",
-                "numVoq": "8",
+                "core_id": "1",
+                "core_port_id": "1",
+                "num_voq": "8",
                 "lanes": "65",
                 "description": "",
                 "speed": "11100",
@@ -585,9 +586,9 @@
             },
             "Ethernet1": {
                 "alias": "Eth1/2",
-                "coreId": "1",
-                "corePortId": "1",
-                "numVoq": "8",
+                "core_id": "1",
+                "core_port_id": "1",
+                "num_voq": "8",
                 "lanes": "66",
                 "description": "",
                 "speed": "11100",
@@ -603,9 +604,9 @@
             },
             "Ethernet2": {
                 "alias": "Eth1/3",
-                "coreId": "1",
-                "corePortId": "1",
-                "numVoq": "8",
+                "core_id": "1",
+                "core_port_id": "1",
+                "num_voq": "8",
                 "lanes": "67",
                 "description": "",
                 "speed": "11100",
@@ -1302,6 +1303,13 @@
                 "paths": "COUNTERS/Ethernet*,COUNTERS_PORT_NAME_MAP",
                 "report_interval": "5000",
                 "report_type": "periodic"
+            }
+        },
+        "BMP": {
+            "table": {
+                "bgp_neighbor_table": "true",
+                "bgp_rib_in_table": "false",
+                "bgp_rib_out_table": "false"
             }
         },
         "GNMI": {
