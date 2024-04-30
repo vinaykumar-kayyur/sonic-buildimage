@@ -849,6 +849,7 @@ sudo mkdir -p $FILESYSTEM_ROOT/var/lib/docker
 sudo rm -f $FILESYSTEM_ROOT/etc/resolvconf/resolv.conf.d/original
 sudo cp files/image_config/resolv-config/resolv.conf.head $FILESYSTEM_ROOT/etc/resolvconf/resolv.conf.d/head
 
+
 # Required for kdump_remote_ssh_dump: Initialize network interfaces and enable DHCP.
 # Currently used on crash kernel boot only
 sudo cp files/scripts/network-interface-state-init.sh $FILESYSTEM_ROOT/usr/sbin/network-interface-state-init.sh
