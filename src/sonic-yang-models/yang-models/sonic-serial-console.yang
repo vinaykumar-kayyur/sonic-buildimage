@@ -21,10 +21,7 @@ module sonic-serial-console {
 	
 	            leaf sysrq_capabilities {
 	                description "managing SysRq capabilities";
-	                type enumeration {
-	                    enum disabled;
-	                    enum enabled;
-	                }
+	                type stypes:admin_mode;
 	                default disabled;
 	            }
 		}
