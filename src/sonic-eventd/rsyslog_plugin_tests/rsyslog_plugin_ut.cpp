@@ -253,6 +253,16 @@ TEST(rsyslog_plugin, onMessage_noParams) {
     infile.close();
 }
 
+TEST(rsyslog_plugin, run) {
+    unique_ptr<RsyslogPlugin> plugin(new RsyslogPlugin("test_mod_name", "./rsyslog_plugin_tests/test_regex_5.rc.json"));
+    EXPECT_EQ(0, plugin->onInit());
+    istringstream ss("");
+    streambuf* cinbuf = cin.rdbuf();
+    cin.rdbuf(ss.rdbuf());
+    plugin->run();
+    cin.rdbuf(cinbuf);
+}
+
 TEST(timestampFormatter, changeTimestampFormat) {
     unique_ptr<TimestampFormatter> formatter(new TimestampFormatter());
 

@@ -106,9 +106,8 @@ bool RsyslogPlugin::createRegexList() {
 void RsyslogPlugin::run() {
     lua_State* luaState = luaL_newstate();
     luaL_openlibs(luaState);
-    while(true) {
-        string line;
-        getline(cin, line);
+    string line;
+    while(getline(cin, line)) {
         if(line.empty()) {
             continue;
         }
