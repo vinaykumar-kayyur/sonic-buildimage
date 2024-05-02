@@ -644,7 +644,7 @@
                 "subport": "2",
                 "mode":"trunk",
                 "dom_polling":"enabled",
-                "dhcp_rate_limit": "5001"
+                "dhcp_rate_limit": "5021"
             },
             "Ethernet5": {
                 "alias": "Eth2/2",
