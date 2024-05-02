@@ -439,11 +439,6 @@ sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "echo 'MODULES=most' >> /etc/in
 # Copy vmcore-sysctl.conf to add more vmcore dump flags to kernel
 sudo cp files/image_config/kdump/vmcore-sysctl.conf $FILESYSTEM_ROOT/etc/sysctl.d/
 
-# Edit the kdump-tools package script which shall enable ethernet interfaces upon the crash kernel
-sudo sed -i "/PATH=\/bin:\/usr\/bin:\/sbin:\/usr\/sbin/a NET_INTERFACE_INIT=/usr/sbin/network-interface-state-init.sh" /usr/sbin/kdump-config
-sudo sed -i "/Network not reachable/a . $NET_INTERFACE_INIT" /usr/sbin/kdump-config
-
-
 #Adds a locale to a debian system in non-interactive mode
 sudo sed -i '/^#.* en_US.* /s/^#//' $FILESYSTEM_ROOT/etc/locale.gen && \
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT locale-gen "en_US.UTF-8"
@@ -854,6 +849,12 @@ sudo cp files/image_config/resolv-config/resolv.conf.head $FILESYSTEM_ROOT/etc/r
 # Currently used on crash kernel boot only
 sudo cp files/scripts/network-interface-state-init.sh $FILESYSTEM_ROOT/usr/sbin/network-interface-state-init.sh
 sudo chmod +x $FILESYSTEM_ROOT/usr/sbin/network-interface-state-init.sh
+
+
+# Edit the kdump-tools package script which shall enable ethernet interfaces upon the crash kernel
+sudo sed -i "/PATH=\/bin:\/usr\/bin:\/sbin:\/usr\/sbin/a NET_INTERFACE_INIT=/usr/sbin/network-interface-state-init.sh" /usr/sbin/kdump-config
+sudo sed -i "/Network not reachable/a . $NET_INTERFACE_INIT" /usr/sbin/kdump-config
+
 
 ## Optimize filesystem size
 if [ "$BUILD_REDUCE_IMAGE_SIZE" = "y" ]; then
