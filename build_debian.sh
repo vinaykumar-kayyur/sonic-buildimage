@@ -440,8 +440,8 @@ sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "echo 'MODULES=most' >> /etc/in
 sudo cp files/image_config/kdump/vmcore-sysctl.conf $FILESYSTEM_ROOT/etc/sysctl.d/
 
 # Edit the kdump-tools package script which shall enable ethernet interfaces upon the crash kernel
-sed -i "/PATH=\/bin:\/usr\/bin:\/sbin:\/usr\/sbin/a NET_INTERFACE_INIT=/usr/sbin/network-interface-state-init.sh" /usr/sbin/kdump-config
-sed -i "/Network not reachable/a . $NET_INTERFACE_INIT" /usr/sbin/kdump-config
+sudo sed -i "/PATH=\/bin:\/usr\/bin:\/sbin:\/usr\/sbin/a NET_INTERFACE_INIT=/usr/sbin/network-interface-state-init.sh" /usr/sbin/kdump-config
+sudo sed -i "/Network not reachable/a . $NET_INTERFACE_INIT" /usr/sbin/kdump-config
 
 
 #Adds a locale to a debian system in non-interactive mode
