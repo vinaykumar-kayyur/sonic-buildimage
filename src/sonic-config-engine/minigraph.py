@@ -1906,6 +1906,8 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     for port in ports.values():
         port['mtu'] = '9100'
         port['tpid'] = '0x8100'
+        port['dhcp_rate_limit'] = '300'
+
 
     # asymmetric PFC is disabled by default
     for port in ports.values():
@@ -1977,6 +1979,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         pc['mtu'] = '9100'
         pc['tpid'] = '0x8100'
         pc['admin_status'] = 'up'
+
 
     results['PORTCHANNEL'] = pcs
     results['PORTCHANNEL_MEMBER'] = pc_members

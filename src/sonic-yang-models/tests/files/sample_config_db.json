@@ -583,7 +583,7 @@
                 "laser_freq": "191600",
                 "tx_power": "-26.6",
                 "mode":"trunk",
-                "dhcp_rate_limit": "301"
+                "dhcp_rate_limit": "300"
             },
             "Ethernet1": {
                 "alias": "Eth1/2",
@@ -602,7 +602,7 @@
                 "laser_freq": "191300",
                 "tx_power": "-27.3",
                 "mode":"trunk",
-                "dhcp_rate_limit": "501"
+                "dhcp_rate_limit": "300"
             },
             "Ethernet2": {
                 "alias": "Eth1/3",
@@ -621,7 +621,7 @@
                 "subport" : "0",
                 "mode":"trunk",
                 "dom_polling":"enabled",
-                "dhcp_rate_limit": "801"
+                "dhcp_rate_limit": "300"
             },
             "Ethernet3": {
                 "alias": "Eth1/4",
@@ -632,7 +632,7 @@
                 "admin_status": "up",
                 "subport": "1",
                 "mode":"trunk",
-                "dhcp_rate_limit": "4001"
+                "dhcp_rate_limit": "300"
             },
             "Ethernet4": {
                 "alias": "Eth2/1",
@@ -644,7 +644,7 @@
                 "subport": "2",
                 "mode":"trunk",
                 "dom_polling":"enabled",
-                "dhcp_rate_limit": "5021"
+                "dhcp_rate_limit": "300"
             },
             "Ethernet5": {
                 "alias": "Eth2/2",
@@ -655,7 +655,7 @@
                 "admin_status": "up",
                 "subport": "3",
                 "mode":"trunk",
-                "dhcp_rate_limit": "6001"
+                "dhcp_rate_limit": "300"
             },
             "Ethernet6": {
                 "alias": "Eth2/3",
@@ -666,7 +666,7 @@
                 "admin_status": "up",
                 "subport": "4",
                 "mode":"trunk",
-                "dhcp_rate_limit": "6071"
+                "dhcp_rate_limit": "300"
             },
             "Ethernet7": {
                 "alias": "Eth2/4",
@@ -677,7 +677,7 @@
                 "admin_status": "up",
                 "subport": "5",
                 "mode":"routed",
-                "dhcp_rate_limit": "400"
+                "dhcp_rate_limit": "300"
             },
             "Ethernet8": {
                 "alias": "Eth3/1",
