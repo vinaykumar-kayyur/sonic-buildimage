@@ -329,6 +329,13 @@ for kernel_release in $(ls $FILESYSTEM_ROOT/lib/modules/); do
 done
 fi
 
+
+# Edit the kdump-tools package script to call a custom one, which shall enable ethernet interfaces in the crash kernel environment
+sudo sed -i "/PATH=\/bin:\/usr\/bin:\/sbin:\/usr\/sbin/a NET_INTERFACE_INIT=/usr/sbin/network-interface-state-init.sh" /usr/sbin/kdump-config
+sudo sed -i "/Network not reachable/a . $NET_INTERFACE_INIT" /usr/sbin/kdump-config
+
+
+
 # Install python-swss-common package and all its dependent packages
 {% if python_swss_debs.strip() -%}
 {% for deb in python_swss_debs.strip().split(' ') -%}

@@ -851,11 +851,6 @@ sudo cp files/scripts/network-interface-state-init.sh $FILESYSTEM_ROOT/usr/sbin/
 sudo chmod +x $FILESYSTEM_ROOT/usr/sbin/network-interface-state-init.sh
 
 
-# Edit the kdump-tools package script which shall enable ethernet interfaces upon the crash kernel
-sudo sed -i "/PATH=\/bin:\/usr\/bin:\/sbin:\/usr\/sbin/a NET_INTERFACE_INIT=/usr/sbin/network-interface-state-init.sh" /usr/sbin/kdump-config
-sudo sed -i "/Network not reachable/a . $NET_INTERFACE_INIT" /usr/sbin/kdump-config
-
-
 ## Optimize filesystem size
 if [ "$BUILD_REDUCE_IMAGE_SIZE" = "y" ]; then
    sudo scripts/build-optimize-fs-size.py "$FILESYSTEM_ROOT" \
