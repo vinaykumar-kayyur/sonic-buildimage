@@ -5,6 +5,7 @@ include $(PLATFORM_PATH)/docker-syncd-vs.mk
 include $(PLATFORM_PATH)/docker-gbsyncd-vs.mk
 include $(PLATFORM_PATH)/docker-ptf.mk
 include $(PLATFORM_PATH)/docker-ptf-sai.mk
+include $(PLATFORM_PATH)/docker-ptf-py3.mk
 include $(PLATFORM_PATH)/libsaithrift-dev.mk
 include $(PLATFORM_PATH)/platform-modules-vs.mk
 include $(PLATFORM_PATH)/one-image.mk
