@@ -351,6 +351,7 @@
         "DEVICE_METADATA": {
             "localhost": {
                 "type": "ToRRouter",
+                "asic_id": "06:00.0",
                 "mac": "00:11:22:33:dd:5a",
                 "hostname": "asw.dc",
                 "bgp_asn": "64850",
@@ -367,7 +368,8 @@
                 "bgp_adv_lo_prefix_as_128": "true",
                 "yang_config_validation": "disable",
                 "rack_mgmt_map": "dummy_value",
-                "timezone": "Europe/Kiev"
+                "timezone": "Europe/Kiev",
+                "bgp_router_id": "8.8.8.8"
             }
         },
         "VLAN": {
@@ -565,6 +567,9 @@
         "PORT": {
             "Ethernet0": {
                 "alias": "Eth1/1",
+                "core_id": "1",
+                "core_port_id": "1",
+                "num_voq": "8",
                 "lanes": "65",
                 "description": "",
                 "speed": "11100",
@@ -581,6 +586,9 @@
             },
             "Ethernet1": {
                 "alias": "Eth1/2",
+                "core_id": "1",
+                "core_port_id": "1",
+                "num_voq": "8",
                 "lanes": "66",
                 "description": "",
                 "speed": "11100",
@@ -596,6 +604,9 @@
             },
             "Ethernet2": {
                 "alias": "Eth1/3",
+                "core_id": "1",
+                "core_port_id": "1",
+                "num_voq": "8",
                 "lanes": "67",
                 "description": "",
                 "speed": "11100",
@@ -1294,6 +1305,13 @@
                 "report_type": "periodic"
             }
         },
+        "BMP": {
+            "table": {
+                "bgp_neighbor_table": "true",
+                "bgp_rib_in_table": "false",
+                "bgp_rib_out_table": "false"
+            }
+        },
         "GNMI": {
             "certs": {
                 "ca_crt": "/etc/sonic/credentials/dsmsroot.cer",
@@ -1702,7 +1720,7 @@
                 "ip_range": [
                     "10.1.0.0/24"
                 ],
-                "name": "BGPSentinel", 
+                "name": "BGPSentinel",
                 "src_address": "10.1.0.32"
             },
             "BGPSentinelV6": {
@@ -2625,6 +2643,14 @@
             },
             "dpu1": {
                 "midplane_interface": "dpu1"
+            }
+        },
+        "BANNER_MESSAGE": {
+            "global": {
+                "state": "enabled",
+                "login": "Some login message",
+                "motd": "Some message of the day",
+                "logout": "Some logout message"
             }
         }
     },
