@@ -184,8 +184,10 @@
             "vrf": "default"
         }
     },
-    "STORAGEMOND_CONFIG" : {
-        "daemon_polling_interval" : "60",
-        "fsstats_sync_interval"   : "60"
+    "STORMOND_CONFIG": {
+        "INTERVALS": {
+            "daemon_polling_interval" : "60",
+            "fsstats_sync_interval"   : "360"
+        }
     }
 }
