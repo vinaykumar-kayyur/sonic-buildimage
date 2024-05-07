@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2019-2023 NVIDIA CORPORATION & AFFILIATES.
+# Copyright (c) 2019-2024 NVIDIA CORPORATION & AFFILIATES.
 # Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -355,23 +355,40 @@ class SFP(NvidiaSFPCommon):
         Returns:
             bytearray: the content of EEPROM
         """
-        _, page, page_offset = self._get_page_and_page_offset(offset)
-        if not page:
-            return None
+        result = None
+        while num_bytes > 0:
+            _, page, page_offset = self._get_page_and_page_offset(offset)
+            if not page:
+                return None
 
-        try:
-            with open(page, mode='rb', buffering=0) as f:
-                f.seek(page_offset)
-                content = f.read(num_bytes)
-                if ctypes.get_errno() != 0:
-                    raise IOError(f'errno = {os.strerror(ctypes.get_errno())}')
-        except (OSError, IOError) as e:
-            if log_on_error:
-                logger.log_warning(f'Failed to read sfp={self.sdk_index} EEPROM page={page}, page_offset={page_offset}, \
-                    size={num_bytes}, offset={offset}, error = {e}')
-            return None
+            try:
+                with open(page, mode='rb', buffering=0) as f:
+                    f.seek(page_offset)
+                    content = f.read(num_bytes)
+                    if not result:
+                        result = content
+                    else:
+                        result += content
+                    read_length = len(content)
+                    num_bytes -= read_length
+                    if num_bytes > 0:
+                        page_size = f.seek(0, os.SEEK_END)
+                        if page_offset + read_length == page_size:
+                            offset += read_length
+                        else:
+                            # Indicate read finished
+                            num_bytes = 0
+                    if ctypes.get_errno() != 0:
+                        raise IOError(f'errno = {os.strerror(ctypes.get_errno())}')
+                    logger.log_debug(f'read EEPROM sfp={self.sdk_index}, page={page}, page_offset={page_offset}, '\
+                        f'size={read_length}, data={content}')
+            except (OSError, IOError) as e:
+                if log_on_error:
+                    logger.log_warning(f'Failed to read sfp={self.sdk_index} EEPROM page={page}, page_offset={page_offset}, '\
+                        f'size={num_bytes}, offset={offset}, error = {e}')
+                return None
 
-        return bytearray(content)
+        return bytearray(result)
 
     # write eeprom specfic bytes beginning from offset with size as num_bytes
     def write_eeprom(self, offset, num_bytes, write_buffer):
@@ -387,27 +404,37 @@ class SFP(NvidiaSFPCommon):
             logger.log_error("Error mismatch between buffer length and number of bytes to be written")
             return False
 
-        page_num, page, page_offset = self._get_page_and_page_offset(offset)
-        if not page:
-            return False
+        while num_bytes > 0:
+            page_num, page, page_offset = self._get_page_and_page_offset(offset)
+            if not page:
+                return False
 
-        try:
-            if self._is_write_protected(page_num, page_offset, num_bytes):
-                # write limited eeprom is not supported
-                raise IOError('write limited bytes')
-
-            with open(page, mode='r+b', buffering=0) as f:
-                f.seek(page_offset)
-                ret = f.write(write_buffer[0:num_bytes])
-                if ret != num_bytes:
-                    raise IOError(f'write return code = {ret}')
-                if ctypes.get_errno() != 0:
-                    raise IOError(f'errno = {os.strerror(ctypes.get_errno())}')
-        except (OSError, IOError) as e:
-            data = ''.join('{:02x}'.format(x) for x in write_buffer)
-            logger.log_error(f'Failed to write EEPROM data sfp={self.sdk_index} EEPROM page={page}, page_offset={page_offset}, size={num_bytes}, \
-                offset={offset}, data = {data}, error = {e}')
-            return False
+            try:
+                if self._is_write_protected(page_num, page_offset, num_bytes):
+                    # write limited eeprom is not supported
+                    raise IOError('write limited bytes')
+                with open(page, mode='r+b', buffering=0) as f:
+                    f.seek(page_offset)
+                    ret = f.write(write_buffer[0:num_bytes])
+                    written_buffer = write_buffer[0:ret]
+                    if ret != num_bytes:
+                        page_size = f.seek(0, os.SEEK_END)
+                        if page_offset + ret == page_size:
+                            # Move to next page
+                            write_buffer = write_buffer[ret:num_bytes]
+                            offset += ret
+                        else:
+                            raise IOError(f'write return code = {ret}')
+                    num_bytes -= ret
+                    if ctypes.get_errno() != 0:
+                        raise IOError(f'errno = {os.strerror(ctypes.get_errno())}')
+                    logger.log_debug(f'write EEPROM sfp={self.sdk_index}, page={page}, page_offset={page_offset}, '\
+                        f'size={ret}, left={num_bytes}, data={written_buffer}')
+            except (OSError, IOError) as e:
+                data = ''.join('{:02x}'.format(x) for x in write_buffer)
+                logger.log_error(f'Failed to write EEPROM data sfp={self.sdk_index} EEPROM page={page}, page_offset={page_offset}, size={num_bytes}, '\
+                    f'offset={offset}, data = {data}, error = {e}')
+                return False
         return True
 
     @classmethod
@@ -640,7 +667,12 @@ class SFP(NvidiaSFPCommon):
                 if api.get_lpmode() == lpmode:
                     return True
                 api.set_lpmode(lpmode)
-                return api.get_lpmode() == lpmode
+                # check_lpmode is a lambda function which checks if current lpmode already updated to the desired lpmode
+                check_lpmode = lambda api, lpmode: api.get_lpmode() == lpmode
+                # utils.wait_until function will call check_lpmode function every 1 second for a total timeout of 2 seconds.
+                # If at some point get_lpmode=desired_lpmode, it will return true.
+                # If after timeout ends, lpmode will not be desired_lpmode, it will return false.
+                return utils.wait_until(check_lpmode, 2, 1, api=api, lpmode=lpmode)
             elif DeviceDataManager.is_independent_mode():
                 # FW control under CMIS host management mode. 
                 # Currently, we don't support set LPM under this mode.

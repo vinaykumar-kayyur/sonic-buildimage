@@ -13,6 +13,7 @@ Table of Contents
 
          * [ACL and Mirroring](#acl-and-mirroring)
          * [BGP BBR](#bgp-bbr)
+         * [ASIC SDK health event](#asic-sdk-health-event)
          * [BGP Device Global](#bgp-device-global)
          * [BGP Sessions](#bgp-sessions)
          * [BUFFER_PG](#buffer_pg)
@@ -33,6 +34,7 @@ Table of Contents
          * [Device neighbor metada](#device-neighbor-metada)
          * [DHCP_RELAY](#dhcp_relay)
          * [DHCP Server IPV4](#dhcp_server_ipv4)
+         * [BMP](#bmp)
          * [DSCP_TO_TC_MAP](#dscp_to_tc_map)
          * [FG_NHG](#fg_nhg)
          * [FG_NHG_MEMBER](#fg_nhg_member)
@@ -85,7 +87,7 @@ Table of Contents
          * [LOGGER](#logger)
          * [WRED_PROFILE](#wred_profile)
          * [PASSWORD_HARDENING](#password_hardening)
-         * [SSH_SERVER](#ssh_server)  
+         * [SSH_SERVER](#ssh_server)
          * [SYSTEM_DEFAULTS table](#systemdefaults-table)
          * [RADIUS](#radius)
          * [Static DNS](#static-dns)
@@ -382,6 +384,27 @@ The **BGP_BBR** table contains device-level BBR state.
         }
 }
 ```
+### ASIC SDK health event
+
+ASIC/SDK health event related configuration is defined in **SUPPRESS_ASIC_SDK_HEALTH_EVENT** table.
+
+```
+"SUPPRESS_ASIC_SDK_HEALTH_EVENT": {
+    "notice": {
+        "categories": [
+            "asic_hw"
+        ],
+        "max_events": "1000"
+    },
+    "warning": {
+        "categories": [
+            "software",
+            "cpu_hw"
+        ]
+    }
+}
+```
+
 ### BGP Device Global
 
 The **BGP_DEVICE_GLOBAL** table contains device-level BGP global state.
@@ -942,6 +965,8 @@ instance is supported in SONiC.
 {
 "DEVICE_METADATA": {
         "localhost": {
+        "asic_id": "06:00.0",
+        "asic_name": "asic0",
         "hwsku": "Force10-S6100",
         "default_bgp_status": "up",
         "docker_routing_config_mode": "unified",
@@ -956,7 +981,8 @@ instance is supported in SONiC.
         "buffer_model": "traditional",
         "yang_config_validation": "disable",
         "rack_mgmt_map": "dummy_value",
-        "timezome": "Europe/Kiev"
+        "timezome": "Europe/Kiev",
+        "bgp_router_id": "8.8.8.8"
     }
   }
 }
@@ -1003,6 +1029,21 @@ instance is supported in SONiC.
     "interface_id": "true"
 }
 
+```
+
+### BMP
+BMP related configuration are defined in **bgp_neighbor_table**,**bgp_rib_in_table**, **bgp_rib_out_table** tables.
+
+```
+{
+    "BMP": {
+        "table": {
+            "bgp_neighbor_table": "true",
+            "bgp_rib_in_table": "false",
+            "bgp_rib_out_table": "false"
+        }
+    }
+}
 ```
 
 ### DHCP_SERVER_IPV4
@@ -1210,7 +1251,7 @@ The FG_NHG_PREFIX table provides the FG_NHG_PREFIX for which FG behavior is desi
 
 ### Hash
 
-Generic hash allows user to configure various aspects of hashing algorithm.  
+Generic hash allows user to configure various aspects of hashing algorithm.
 The configuration is applied globally for each ECMP and LAG on a switch.
 
 ***ECMP/LAG HASH***
@@ -1807,7 +1848,11 @@ optional attributes.
             "speed": "40000",
             "link_training": "off",
             "laser_freq": "191300",
-            "tx_power": "-27.3"
+            "tx_power": "-27.3",
+            "dom_polling": "enabled",
+            "core_id": "1",
+            "core_port_id": "1",
+            "num_voq": "8"
         },
         "Ethernet1": {
             "index": "1",
@@ -1819,7 +1864,11 @@ optional attributes.
             "speed": "40000",
             "link_training": "on",
             "laser_freq": "191300",
-            "tx_power": "-27.3"
+            "tx_power": "-27.3",
+            "dom_polling": "enabled",
+            "core_id": "0",
+            "core_port_id": "14",
+            "num_voq": "8"
         },
         "Ethernet63": {
             "index": "63",
@@ -1829,7 +1878,11 @@ optional attributes.
             "alias": "fortyGigE1/4/16",
             "speed": "40000",
             "laser_freq": "191300",
-            "tx_power": "-27.3"
+            "tx_power": "-27.3",
+            "dom_polling": "disabled",
+            "core_id": "0",
+            "core_port_id": "15",
+            "num_voq": "8"
         }
     }
 }
@@ -1845,7 +1898,8 @@ optional attributes.
             "mtu": "9100",
             "alias": "etp1a",
             "speed": "100000",
-            "subport": 1
+            "subport": 1,
+            "dom_polling": "enabled"
         },
         "Ethernet4": {
             "admin_status": "up",
@@ -1855,7 +1909,8 @@ optional attributes.
             "mtu": "9100",
             "alias": "etp1b",
             "speed": "100000",
-            "subport": 2
+            "subport": 2,
+            "dom_polling": "enabled"
         },
     }
 }
