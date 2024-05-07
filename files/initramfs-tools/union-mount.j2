@@ -41,7 +41,7 @@ for x in $(cat /proc/cmdline); do
         logs_inram=on)
             logs_inram=true
             ;;
-        mount_pmem=on)
+        memmap=*)
             mount_pmem=true
             ;;
         varlog_size=*)
