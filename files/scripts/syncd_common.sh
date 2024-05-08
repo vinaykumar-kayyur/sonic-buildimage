@@ -101,33 +101,7 @@ start() {
 
     lock_service_state_change
 
-    # Create directories if they don't exist
     mkdir -p /host/warmboot
-    mkdir -p /host/warmboot.bak
-	
-    if [ -n "$(ls -A /host/warmboot)" ]; then
-	# /host/warmboot has contents
-	# Move them to /host/warmboot.bak
-	mv /host/warmboot/* /host/warmboot.bak
-    fi
-
-    # Check if /host/warmboot is already mounted on tmpfs
-    if [[ "$(findmnt /host/warmboot -o FSTYPE -n)" != "tmpfs" ]]; then
-	mount -t tmpfs tmpfs /host/warmboot
-    fi
-
-    # Check if a specific file exists in /pmem/
-    if [ -f "/pmem/pmem_presence_file.txt" ]; then
-	#  Found pmem_presence_file.txt in /pmem/. Copying from /pmem/ to /host/warmboot
-	cp -r /pmem/* "/host/warmboot/."
-    elif [ -n "$(ls -A /host/warmboot.bak)" ]; then
-	# No pmem_presence_file.txt found in /pmem/. Copying from /host/warmboot.bak/ to /host/warmboot."
-	cp -r /host/warmboot.bak/* "/host/warmboot/."
-    else
-	# Neither pmem_presence_file.txt found in /pmem/ nor /host/warmboot.bak/ has contents."
-	# Nothing to copy to /host/warmboot."
-    fi
-
 
     wait_for_database_service
     check_warm_boot
