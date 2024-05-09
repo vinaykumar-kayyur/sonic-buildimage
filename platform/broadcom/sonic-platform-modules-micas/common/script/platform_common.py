@@ -15,7 +15,6 @@ __all__ = [
     "OPTOE",
     "REBOOT_CAUSE_PARA",
     "UPGRADE_SUMMARY",
-    "FW_UPGRADE_STARTED_FLAG",
     "WARM_UPGRADE_PARAM",
     "WARM_UPG_FLAG",
     "WARM_UPGRADE_STARTED_FLAG",
@@ -68,8 +67,7 @@ __all__ = [
     "MONITOR_DEV_STATUS",
     "MONITOR_DEV_STATUS_DECODE",
     "DEV_LEDS",
-    "fanloc",
-    "PLATFORM_POWER_CONF"
+    "fanloc"
 ]
 
 # driver blacklist parameter
@@ -113,7 +111,6 @@ REBOOT_CAUSE_PARA = []
 
 # upgrade parameter
 UPGRADE_SUMMARY = {}
-FW_UPGRADE_STARTED_FLAG = "/etc/sonic/.doing_fw_upg"
 
 # warm_uprade parameter
 WARM_UPGRADE_PARAM = {}
@@ -138,9 +135,6 @@ SET_MAC_CONF = []
 
 # driver update config
 DRVIER_UPDATE_CONF = {}
-
-# platform power config
-PLATFORM_POWER_CONF = []
 
 ################################ fancontrol parameter###################################
 MONITOR_TEMP_MIN = 38

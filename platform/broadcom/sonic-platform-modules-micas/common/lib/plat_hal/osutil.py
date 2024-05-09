@@ -53,31 +53,37 @@ def retry(maxretry=6, delay=0.01):
     return decorator
 
 
+pidfile = None
+
+
 def file_rw_lock(file_path):
+    global pidfile
     pidfile = open(file_path, "r")
     try:
         fcntl.flock(pidfile, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        platform_hal_debug("%s file_rw_lock success, pidfile: %s" % (file_path, pidfile))
-        return True, pidfile
+        platform_hal_debug("file_rw_lock success")
+        return True
     except Exception:
         if pidfile is not None:
             pidfile.close()
             pidfile = None
-        return False, pidfile
+        return False
 
 
-def file_rw_unlock(pidfile):
+def file_rw_unlock():
     try:
+        global pidfile
+
         if pidfile is not None:
             fcntl.flock(pidfile, fcntl.LOCK_UN)
             pidfile.close()
-            platform_hal_debug("file_rw_unlock success, pidfile: %s" % pidfile)
             pidfile = None
+            platform_hal_debug("file_rw_unlock success")
         else:
             platform_hal_debug("pidfile is invalid, do nothing")
         return True
     except Exception as e:
-        platform_hal_debug("file_rw_unlock err, pidfile: %s, msg: %s" % (pidfile, str(e)))
+        platform_hal_debug("file_rw_unlock err, msg: %s" % (str(e)))
         return False
 
 
@@ -85,11 +91,11 @@ def take_file_rw_lock(file_path):
     loop = 1000
     ret = False
     for i in range(0, loop):
-        ret, pidfile = file_rw_lock(file_path)
+        ret = file_rw_lock(file_path)
         if ret is True:
             break
         time.sleep(0.001)
-    return ret, pidfile
+    return ret
 
 
 class osutil(object):
@@ -246,7 +252,6 @@ class osutil(object):
     @staticmethod
     def readsysfs(location, flock_path=None):
         flock_path_tmp = None
-        pidfile = None
         platform_hal_debug("readsysfs, location:%s, flock_path:%s" % (location, flock_path))
         try:
             if flock_path is not None:
@@ -254,7 +259,7 @@ class osutil(object):
                 if len(flock_paths) != 0:
                     flock_path_tmp = flock_paths[0]
                     platform_hal_debug("try to get file lock, path:%s" % flock_path_tmp)
-                    ret, pidfile = take_file_rw_lock(flock_path_tmp)
+                    ret = take_file_rw_lock(flock_path_tmp)
                     if ret is False:
                         platform_hal_debug("take file lock timeout, path:%s" % flock_path_tmp)
                         return False, ("take file rw lock timeout, path:%s" % flock_path_tmp)
@@ -265,14 +270,14 @@ class osutil(object):
             with open(locations[0], 'rb') as fd1:
                 retval = fd1.read()
             retval = osutil.byteTostr(retval)
-            if pidfile is not None:
-                file_rw_unlock(pidfile)
+            if flock_path_tmp is not None:
+                file_rw_unlock()
 
             retval = retval.rstrip('\r\n')
             retval = retval.lstrip(" ")
         except Exception as e:
-            if pidfile is not None:
-                file_rw_unlock(pidfile)
+            if flock_path_tmp is not None:
+                file_rw_unlock()
             platform_hal_debug("readsysfs error, msg:%s" % str(e))
             return False, (str(e) + " location[%s]" % location)
         return True, retval

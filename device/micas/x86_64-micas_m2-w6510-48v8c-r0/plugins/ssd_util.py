@@ -67,7 +67,8 @@ class SsdUtil(SsdBase):
              "SSDSCK"       : { "temperature" : "\n194\s+(.+?)\n", "remainingLife" : "\n233\s+(.+?)\n" },
              "SM619GXC"     : { "temperature" : "\n194\s+(.+?)\n", "remainingLife" : "\n169\s+(.+?)\n" },
              "MZNLH"        : { "temperature" : "\n190\s+(.+?)\n", "remainingLife" : "\n245\s+(.+?)\n" },
-             "IM2S3134N"    : { "temperature" : "\n194\s+(.+?)\n", "remainingLife" : "\n231\s+(.+?)\n" }
+             "IM2S3134N"    : { "temperature" : "\n194\s+(.+?)\n", "remainingLife" : "\n231\s+(.+?)\n" },
+             "MTFDDAV240TCB-1AR1ZABAA"    : { "temperature" : "\n194\s+(.+?)\n", "remainingLife" : "\n202\s+(.+?)\n" }
         }
 
         self.key_list = list(self.model_attr.keys())
@@ -203,7 +204,10 @@ class SsdUtil(SsdBase):
             A float number of current ssd health
             e.g. 83.5
         """
-        return float(self.health)
+        if self.health == 'N/A':
+            return "NA"
+        else:
+            return float(self.health)
 
     def get_temperature(self):
         """
@@ -213,7 +217,10 @@ class SsdUtil(SsdBase):
             A float number of current temperature in Celsius
             e.g. 40.1
         """
-        return float(self.temperature)
+        if self.temperature == 'N/A':
+            return 'NA'
+        else:
+            return float(self.temperature)
 
     def get_model(self):
         """

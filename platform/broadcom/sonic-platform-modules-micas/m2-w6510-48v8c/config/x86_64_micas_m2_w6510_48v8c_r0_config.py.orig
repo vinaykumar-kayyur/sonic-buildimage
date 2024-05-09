@@ -738,8 +738,8 @@ DRIVERLISTS = [
     {"name": "wb_i2c_mux_pca954x_device", "delay": 0},
     {"name": "wb_i2c_dev_device", "delay": 0},
     {"name": "wb_lm75", "delay": 0},
-    {"name": "optoe", "delay": 0},
-    {"name": "at24", "delay": 0},
+    {"name": "wb_optoe", "delay": 0},
+    {"name": "wb_at24", "delay": 0},
     {"name": "wb_mac_bsc", "delay": 0},
     {"name": "wb_pmbus_core", "delay": 0},
     {"name": "wb_isl68137", "delay": 0},
@@ -754,17 +754,17 @@ DRIVERLISTS = [
 ]
 
 DEVICE = [
-    {"name": "24c02", "bus": 0, "loc": 0x56},
+    {"name": "wb_24c02", "bus": 0, "loc": 0x56},
     {"name": "wb_mac_bsc_td3", "bus": 3, "loc": 0x44},
     # fan
-    {"name": "24c02", "bus": 16, "loc": 0x50},
-    {"name": "24c02", "bus": 17, "loc": 0x50},
-    {"name": "24c02", "bus": 18, "loc": 0x50},
-    {"name": "24c02", "bus": 19, "loc": 0x50},
+    {"name": "wb_24c02", "bus": 16, "loc": 0x50},
+    {"name": "wb_24c02", "bus": 17, "loc": 0x50},
+    {"name": "wb_24c02", "bus": 18, "loc": 0x50},
+    {"name": "wb_24c02", "bus": 19, "loc": 0x50},
     # psu
-    {"name": "24c02", "bus": 24, "loc": 0x50},
+    {"name": "wb_24c02", "bus": 24, "loc": 0x50},
     {"name": "wb_dps550", "bus": 24, "loc": 0x58},
-    {"name": "24c02", "bus": 25, "loc": 0x50},
+    {"name": "wb_24c02", "bus": 25, "loc": 0x50},
     {"name": "wb_dps550", "bus": 25, "loc": 0x58},
     # temp
     {"name": "wb_lm75", "bus": 3, "loc": 0x48},
@@ -783,8 +783,8 @@ DEVICE = [
 ]
 
 OPTOE = [
-    {"name": "optoe2", "startbus": 32, "endbus": 79},
-    {"name": "optoe1", "startbus": 80, "endbus": 87},
+    {"name": "wb_optoe2", "startbus": 32, "endbus": 79},
+    {"name": "wb_optoe1", "startbus": 80, "endbus": 87},
 ]
 
 DEV_MONITOR_PARAM = {
@@ -795,7 +795,7 @@ DEV_MONITOR_PARAM = {
             "present": {"gettype": "i2c", "bus": 6, "loc": 0x0d, "offset": 0x51, "presentbit": 0, "okval": 0},
             "device": [
                 {"id": "psu1pmbus", "name": "wb_dps550", "bus": 24, "loc": 0x58, "attr": "hwmon"},
-                {"id": "psu1frue2", "name": "24c02", "bus": 24, "loc": 0x50, "attr": "eeprom"},
+                {"id": "psu1frue2", "name": "wb_24c02", "bus": 24, "loc": 0x50, "attr": "eeprom"},
             ],
         },
         {
@@ -803,7 +803,7 @@ DEV_MONITOR_PARAM = {
             "present": {"gettype": "i2c", "bus": 6, "loc": 0x0d, "offset": 0x51, "presentbit": 4, "okval": 0},
             "device": [
                 {"id": "psu2pmbus", "name": "wb_dps550", "bus": 25, "loc": 0x58, "attr": "hwmon"},
-                {"id": "psu2frue2", "name": "24c02", "bus": 25, "loc": 0x50, "attr": "eeprom"},
+                {"id": "psu2frue2", "name": "wb_24c02", "bus": 25, "loc": 0x50, "attr": "eeprom"},
             ],
         },
     ],
@@ -841,7 +841,7 @@ DEV_MONITOR_PARAM = {
         {
             "name": "eeprom",
             "device": [
-                {"id": "eeprom_1", "name": "24c02", "bus": 0, "loc": 0x56, "attr": "eeprom"},
+                {"id": "eeprom_1", "name": "wb_24c02", "bus": 0, "loc": 0x56, "attr": "eeprom"},
             ],
         },
         {

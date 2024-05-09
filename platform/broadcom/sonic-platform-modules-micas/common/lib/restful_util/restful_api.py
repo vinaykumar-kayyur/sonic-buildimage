@@ -6,7 +6,6 @@ import syslog
 
 import requests
 
-
 class RestfulApiClient():
     Debug_file = "/tmp/restful_api_debug"
     BmcBaseUrl = 'http://240.1.1.2:8080'
@@ -58,7 +57,6 @@ class RestfulApiClient():
             full_url = self.BmcBaseUrl + url
             self.restful_api_debug_log("POST: %s -d %s" % (full_url, str(data)))
             response = requests.post(full_url, json=data, timeout=time_out)
-            # 检查响应状态码
             if response.status_code == 200:
                 self.restful_api_debug_log("RET: %s" % str(response.json()))
                 return response.json()
@@ -72,25 +70,20 @@ class RestfulApiClient():
 if __name__ == '__main__':
     client = RestfulApiClient()
 
-    # 发送 GET 请求
     time_data = client.get_request(client.TimeUrl)
     print("Current time:", time_data)
 
-    # 获取fans
     fans = client.get_request(client.FansUrl)
     print("Current fans:", fans)
 
-    # 发送 POST 请求
     new_time = "2023-08-31 14:41:28 +0800"
     response = client.post_request(client.TimeUrl, {"time": new_time})
     print("Time set successfully:", response)
 
-    # 发送 POST 请求
     cmd = "bmc reset cold"
     response = client.post_request(client.PowerUrl, {"cmd": cmd})
     print("Time set successfully:", response)
 
-    # 发送 GET 请求
     #sensors = client.get_request(client.SensorsUrl)
     #print("sensors:", sensors)
 '''

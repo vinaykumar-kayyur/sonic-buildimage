@@ -13,7 +13,7 @@ export  INSTALL_MOD_DIR top_srcdir KVERSION  KERNEL_SRC CC  KBUILD_OUTPUT CUSTOM
 
 include $(CUSTOM_RULES_DIR)/rule.mk
 
-#all product need common
+#all products need common
 COMPILE_DIRS = $(MODULE_DIRS)
 
 clean_dirs = $(MODULE_DIRS)

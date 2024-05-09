@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: UTF-8 -*-
 import click
+import os
+import sys
 
 from eepromutil.fru import ipmifru
 from eepromutil.cust_fru import CustFru
@@ -436,4 +438,7 @@ def onie_tlv(e2_path, e2_size):
 
 
 if __name__ == '__main__':
+    if os.geteuid() != 0:
+        print("Root privileges are required for this operation")
+        sys.exit(1)
     main()

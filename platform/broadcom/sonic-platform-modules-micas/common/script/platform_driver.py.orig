@@ -75,7 +75,7 @@ def addDev(name, bus, loc):
     cmd = "echo  %s 0x%02x > /sys/bus/i2c/devices/i2c-%d/new_device" % (name, loc, bus)
     devpath = "/sys/bus/i2c/devices/%d-%04x" % (bus, loc)
     if os.path.exists(devpath) is False:
-        log_os_system(cmd)
+        os.system(cmd)
 
 
 def removeOPTOE(startbus, endbus):

@@ -185,12 +185,6 @@ class interface(object):
             return -1
         return psu.present
 
-    def get_psu_fan_number(self, psu_name):
-        psu = self.chas.get_psu_byname(psu_name)
-        if psu is None:
-            return -1
-        return psu.PsuFanNumber
-
     def get_psu_fru_info(self, psu_name):
         '''
                     {
@@ -920,8 +914,6 @@ class interface(object):
             dic["High"] = self.error_ret
             dic["Value"] = self.error_ret
             dic["Unit"] = self.error_ret
-            dic["Invalid"] = self.error_ret
-            dic["Error"] = self.error_ret
         else:
             dic["Name"] = temptmp.name
             dic["Api_name"] = temptmp.api_name
@@ -932,8 +924,6 @@ class interface(object):
             temp_value = temptmp.Value
             dic["Value"] = temp_value if (temp_value is not None) else self.error_ret
             dic["Unit"] = temptmp.Unit
-            dic["Invalid"] = temptmp.temp_invalid
-            dic["Error"] = temptmp.temp_error
         return dic
 
     def get_temp_info(self):
