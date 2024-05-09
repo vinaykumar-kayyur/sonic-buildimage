@@ -117,7 +117,7 @@ int set_peer_link(int mid, const char* ifname)
                        csm->mlag_id, ifname);
     }
 
-    memset(csm->peer_itf_name, 0, MAX_L_PORT_NAME);
+    memset(csm->peer_itf_name, 0, IFNAMSIZ);
     memcpy(csm->peer_itf_name, ifname, len);
 
     /* update peer-link link handler*/
@@ -162,7 +162,7 @@ int unset_peer_link(int mid)
     scheduler_session_disconnect_handler(csm);
 
     /* clean peer-link*/
-    memset(csm->peer_itf_name, 0, MAX_L_PORT_NAME);
+    memset(csm->peer_itf_name, 0, IFNAMSIZ);
     if (csm->peer_link_if)
     {
         csm->peer_link_if->is_peer_link = 0;
