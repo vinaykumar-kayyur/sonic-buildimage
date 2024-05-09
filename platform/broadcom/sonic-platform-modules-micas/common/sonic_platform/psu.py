@@ -32,7 +32,10 @@ class Psu(PsuBase):
         self.psu_status_dict_update_time = 0
         self.psu_power_dict_update_time = 0
 
-        self._fan_list.append(Fan(self.int_case, 1, 1, psu_fan=True, psu_index=index))
+        self.psufannum = self.int_case.get_psu_fan_number(self.name)
+
+        if self.psufannum:
+            self._fan_list.append(Fan(self.int_case, 1, 1, psu_fan=True, psu_index=index))
 
     def psu_dict_update(self):
         local_time = time.time()

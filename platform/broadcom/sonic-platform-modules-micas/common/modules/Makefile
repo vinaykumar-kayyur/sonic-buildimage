@@ -29,7 +29,7 @@ obj-m += wb_i2c_dev.o
 obj-m += wb_platform_i2c_dev.o
 obj-m += wb_io_dev.o
 obj-m += wb_eeprom_93xx46.o
-#obj-m += wb_spi_93xx46.o
+obj-m += wb_spi_93xx46.o
 obj-m += wb_gpio_d1500.o
 obj-m += wb_gpio_device.o
 obj-m += wb_i2c_ocores.o
@@ -38,10 +38,12 @@ obj-m += wb_spi_dev.o
 obj-m += wb_wdt.o
 obj-m += wb_spi_gpio.o
 obj-m += wb_spi_gpio_device.o
-#obj-m += wb_spi_nor_device.o
+obj-m += wb_spi_nor_device.o
 obj-m += wb_xdpe132g5c.o
 obj-m += wb_uio_irq.o
 obj-m += hw_test.o
+obj-m += wb_spi_master.o
+obj-m += wb_spi_intel_pci.o
 obj-y += r8168/
 
 all :

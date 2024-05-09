@@ -5,6 +5,8 @@
 #include <linux/spi/spi.h>
 #include <linux/spi/spi_gpio.h>
 
+#include "wb_spi_master.h"
+
 /* The SPI Bus number that the device is mounted on can be specified manually when this module is loaded */
 #define DEFAULT_SPI_BUS_NUM     (0)
 #define DEFAULT_SPI_CS_NUM      (0)
@@ -46,12 +48,14 @@ static int __init wb_spi_nor_dev_init(void)
     SPI_NOR_DEV_DEBUG_VERBOSE("Enter.\n");
 
     spi_nor_device_info.bus_num = spi_bus_num;
-    master = spi_busnum_to_master(spi_nor_device_info.bus_num);  /* Get the controller according to the SPI Bus number */
+    master = wb_spi_master_busnum_to_master(spi_nor_device_info.bus_num);  /* Get the controller according to the SPI Bus number */
     if (!master) {
-        SPI_NOR_DEV_DEBUG_ERROR("get bus_num %u spi master failed.\n",
-            spi_nor_device_info.bus_num);
+        SPI_NOR_DEV_DEBUG_ERROR("get bus_num %u spi master failed.\n", spi_nor_device_info.bus_num);
         return -EINVAL;
     }
+
+    SPI_NOR_DEV_DEBUG_VERBOSE("master->bus_num = %d.\n", master->bus_num);
+    SPI_NOR_DEV_DEBUG_VERBOSE("master->num_chipselect = %d.\n", master->num_chipselect);
 
     g_spi_device = spi_new_device(master, &spi_nor_device_info);
     put_device(&master->dev);
@@ -70,6 +74,8 @@ static int __init wb_spi_nor_dev_init(void)
 
 static void __exit wb_spi_nor_dev_exit(void)
 {
+    SPI_NOR_DEV_DEBUG_VERBOSE("Enter.\n");
+    
     spi_unregister_device(g_spi_device);
 
     if (g_wb_spi_nor_dev_debug) {

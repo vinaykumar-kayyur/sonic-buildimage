@@ -17,6 +17,8 @@
 #include <linux/spi/spi_gpio.h>
 #include <linux/eeprom_93xx46.h>
 
+#include "wb_spi_master.h"
+
 #define DEFAULT_SPI_BUS_NUM     (0)
 #define DEFAULT_SPI_CS_NUM      (0)
 #define DEFAULT_SPI_HZ          (100000)
@@ -46,7 +48,7 @@ module_param(spi_cs_gpio, int, S_IRUGO | S_IWUSR);
 } while (0)
 
 struct eeprom_93xx46_platform_data eeprom_data = {
-    .flags      = EE_ADDR16,
+    .flags      = EE_ADDR16 | EE_SIZE1K,
     .quirks     = EEPROM_93XX46_QUIRK_SINGLE_WORD_READ,
 };
 
@@ -70,12 +72,15 @@ static int __init wb_spi_93xx46_init(void)
 
     eeprom_93xx46_info.bus_num = spi_bus_num;
     eeprom_93xx46_info.controller_data = (void *)(long)spi_cs_gpio;
-    master = spi_busnum_to_master(eeprom_93xx46_info.bus_num);
+    master = wb_spi_master_busnum_to_master(eeprom_93xx46_info.bus_num);
     if (!master) {
         SPI_93xx46_DEBUG_ERROR("get bus_num %u spi master failed.\n",
             eeprom_93xx46_info.bus_num);
         return -EINVAL;
     }
+
+    SPI_93xx46_DEBUG_VERBOSE("master->bus_num = %d.\n", master->bus_num);
+    SPI_93xx46_DEBUG_VERBOSE("master->num_chipselect = %d.\n", master->num_chipselect);
 
     g_spi_device = spi_new_device(master, &eeprom_93xx46_info);
     put_device(&master->dev);
@@ -88,6 +93,10 @@ static int __init wb_spi_93xx46_init(void)
         dev_info(&g_spi_device->dev, "register %u bus_num spi 93xx46 eeprom success\n",
             eeprom_93xx46_info.bus_num);
     }
+
+    SPI_93xx46_DEBUG_VERBOSE("g_spi_device->modalias = %s.\n", g_spi_device->modalias);
+    SPI_93xx46_DEBUG_VERBOSE("g_spi_device->chip_select = %d.\n", g_spi_device->chip_select);
+    SPI_93xx46_DEBUG_VERBOSE("g_spi_device->max_speed_hz = %d.\n", g_spi_device->max_speed_hz);
 
     return 0;
 }

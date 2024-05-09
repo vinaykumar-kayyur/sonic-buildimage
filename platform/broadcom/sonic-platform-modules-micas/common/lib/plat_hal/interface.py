@@ -185,6 +185,12 @@ class interface(object):
             return -1
         return psu.present
 
+    def get_psu_fan_number(self, psu_name):
+        psu = self.chas.get_psu_byname(psu_name)
+        if psu is None:
+            return -1
+        return psu.PsuFanNumber
+
     def get_psu_fru_info(self, psu_name):
         '''
                     {

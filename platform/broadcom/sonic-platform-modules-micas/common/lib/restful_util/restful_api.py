@@ -6,6 +6,7 @@ import syslog
 
 import requests
 
+
 class RestfulApiClient():
     Debug_file = "/tmp/restful_api_debug"
     BmcBaseUrl = 'http://240.1.1.2:8080'
