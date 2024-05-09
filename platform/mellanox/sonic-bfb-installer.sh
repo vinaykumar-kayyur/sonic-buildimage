@@ -110,7 +110,6 @@ main(){
         appendix="-c ${config}"
     fi
     dev_names_det+=($(
-        IFS='\n'
         ls /dev/rshim* | awk -F'/' '/^\/dev\/rshim/ {gsub(/:/,"",$NF); print $NF}'
     ))
     if [ "${#dev_names_det[@]}" -eq 0 ]; then
