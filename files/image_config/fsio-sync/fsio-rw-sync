@@ -4,13 +4,14 @@ import os
 import sys
 import json
 import syslog
+from sonic_py_common import daemon_base
 
 BASE_PATH = "/sys/block"
-DISKSTATS_FILE = "/proc/diskstats"
 FSSTATS_PATHS = ["/host/pmon/storagemon/", "/usr/share/storagemon/"]
 FSSTATS_FILE = "fsio-rw-stats.json"
-FSSTATS_FILE_SYNC_ERROR = 127
+STATE_DB_FIELDS = ["fs_io_reads", "fs_io_writes", "latest_fs_io_reads", "latest_fs_io_writes"]
 SYSLOG_ID="fsio-rw-sync"
+FSSTATS_FILE_SYNC_ERROR = 127
 
 devices = []
 json_file_dict = {}
@@ -51,17 +52,14 @@ def main():
         log_error("{} not found in {} directories. Cannot sync FSIO reads and writes.".format(FSSTATS_FILE, FSSTATS_PATHS))
         sys.exit(FSSTATS_FILE_SYNC_ERROR)
 
+    state_db = daemon_base.db_connect("STATE_DB")
     get_storage_disks()
 
-    with open(DISKSTATS_FILE) as fd:
-        diskstats = fd.readlines()
-
     for device in devices:
-        for line in diskstats:
-            if device == line.split()[2]:
-                json_file_dict[device]["reads"] = line.split()[3]
-                json_file_dict[device]["writes"] = line.split()[7]
-                break
+
+        # Sync accumulated and latest procfs reads and writes from STATE_DB
+        for field in STATE_DB_FIELDS:
+            json_file_dict[device][field] = state_db.hget('STORAGE_INFO|{}'.format(device), field)
 
     with open(filepath, 'w+') as f:
         f.write(json.dumps(json_file_dict))

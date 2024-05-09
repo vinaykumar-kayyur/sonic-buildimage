@@ -46,6 +46,17 @@ function check_redundant_type()
     debug "DEVICE_SUBTYPE: ${DEVICE_SUBTYPE}, CONFIG_KNOB: ${CONFIG_KNOB}"
 }
 
+function sync_fsio_rw()
+{
+    if [ -x /usr/local/bin/fsio-rw-sync ]; then
+        VERBOSE=yes debug "Syncing FS I/O reads and writes to disk"
+        /usr/local/bin/fsio-rw-sync
+        rc=$?
+        VERBOSE=yes debug "fsio-rw-sync returned $rc"
+        sleep 1
+    fi
+}
+
 start() {
     debug "Starting ${SERVICE}$DEV service..."
 
@@ -66,6 +77,11 @@ stop() {
     check_redundant_type
     debug "Warm boot flag: ${SERVICE}$DEV ${WARM_BOOT}."
     debug "Fast boot flag: ${SERVICE}$DEV ${FAST_BOOT}."
+
+    if [ ${SERVICE} == 'database' ]; then
+        debug "Writing STORAGE_INFO table to disk"
+        sync_fsio_rw
+    fi
 
     # For WARM/FAST boot do not perform service stop
     if [[ x"$WARM_BOOT" != x"true" ]] && [[ x"$FAST_BOOT" != x"true" ]]; then
