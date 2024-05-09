@@ -246,12 +246,6 @@ ifeq ($(SONIC_ENABLE_BOOTCHART),y)
 ENABLE_BOOTCHART = y
 endif
 
-ifeq ($(CONFIGURED_PLATFORM),vs)
-ifneq ($(SONIC_ENABLE_DASH_SAI),)
-override ENABLE_DASH_SAI := $(SONIC_ENABLE_DASH_SAI)
-endif
-endif
-
 ifeq ($(ENABLE_ASAN),y)
 ifneq ($(CONFIGURED_ARCH),amd64)
 $(Q)echo "Disabling SWSS address sanitizer due to incompatible CPU architecture: $(CONFIGURED_ARCH)"
@@ -461,7 +455,6 @@ $(info "ENABLE_ASAN"                     : "$(ENABLE_ASAN)")
 $(info "DEFAULT_CONTAINER_REGISTRY"      : "$(SONIC_DEFAULT_CONTAINER_REGISTRY)")
 ifeq ($(CONFIGURED_PLATFORM),vs)
 $(info "BUILD_MULTIASIC_KVM"             : "$(BUILD_MULTIASIC_KVM)")
-$(info "ENABLE_DASH_SAI"                 : "$(ENABLE_DASH_SAI)")
 endif
 $(info "CROSS_BUILD_ENVIRON"             : "$(CROSS_BUILD_ENVIRON)")
 $(info "GZ_COMPRESS_PROGRAM"             : "$(GZ_COMPRESS_PROGRAM)")
@@ -1419,7 +1412,6 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 	export image_type="$($*_IMAGE_TYPE)"
 	export sonicadmin_user="$(USERNAME)"
 	export sonic_asic_platform="$(patsubst %-$(CONFIGURED_ARCH),%,$(CONFIGURED_PLATFORM))"
-	export ENABLE_DASH_SAI="$(ENABLE_DASH_SAI)"
 	export enable_organization_extensions="$(ENABLE_ORGANIZATION_EXTENSIONS)"
 	export enable_ztp="$(ENABLE_ZTP)"
 	export include_teamd="$(INCLUDE_TEAMD)"
