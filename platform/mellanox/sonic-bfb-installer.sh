@@ -109,8 +109,10 @@ main(){
         echo "Using ${config} file"
         appendix="-c ${config}"
     fi
-    IFS=$'\n'
-    dev_names_det+=($(ls /dev/rshim* | awk -F'/' '/^\/dev\/rshim/ {gsub(/:/,"",$NF); print $NF}'))
+    dev_names_det+=($(
+        IFS=$'\n'
+        ls /dev/rshim* | awk -F'/' '/^\/dev\/rshim/ {gsub(/:/,"",$NF); print $NF}'
+    ))
     if [ "${#dev_names_det[@]}" -eq 0 ]; then
         echo "No rshim interfaces detected! Make sure to run the $command_name script from the host device/ switch!"
         exit 1
