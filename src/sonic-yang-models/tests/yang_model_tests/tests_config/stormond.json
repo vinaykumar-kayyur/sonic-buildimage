@@ -14,7 +14,7 @@
         "sonic-stormond-config:sonic-stormond-config": {
             "sonic-stormond-config:STORMOND_CONFIG": {
                 "INTERVALS":{
-                    "daemon_polling_interval" : "",
+                    "daemon_polling_interval" : "-1",
                     "fsstats_sync_interval"   : "86400"
 
                 }
@@ -26,7 +26,7 @@
             "sonic-stormond-config:STORMOND_CONFIG": {
                 "INTERVALS":{
                     "daemon_polling_interval" : "3600",
-                    "fsstats_sync_interval"   : ""
+                    "fsstats_sync_interval"   : "five_thousand_two_hundred_seconds"
 
                 }
             }
