@@ -283,6 +283,12 @@ function postStartAction()
     fi
     chgrp -f redis $REDIS_SOCK && chmod -f 0760 $REDIS_SOCK
 {%- elif docker_container_name == "swss" %}
+    # Wait until swss container state is Running
+    until [[ ($(docker inspect -f {{"'{{.State.Running}}'"}} swss$DEV) == "true") ]]; do
+        sleep 0.1
+    done
+    echo "swss container is up and running"
+
     docker exec swss$DEV rm -f /ready   # remove cruft
     if [[ "$BOOT_TYPE" == "fast" ]] && [[ -d /host/fast-reboot ]]; then
         test -e /host/fast-reboot/fdb.json && docker cp /host/fast-reboot/fdb.json swss$DEV:/
@@ -292,6 +298,9 @@ function postStartAction()
         rm -fr /host/fast-reboot
     fi
     docker exec swss$DEV touch /ready # signal swssconfig.sh to go
+    # Re-confirm that file is indeed created and log an error if not
+    docker exec swss$DEV test -f /ready && echo "File swss:/ready created" || echo "Error: File swss:/ready doesn't exist"
+
 {%- elif docker_container_name == "pmon" %}
 
     DEVPATH="/usr/share/sonic/device"
@@ -330,6 +339,18 @@ start() {
     PLATFORM_ENV_CONF=/usr/share/sonic/device/$PLATFORM/platform_env.conf
     if [ -f "$PLATFORM_ENV_CONF" ]; then
         source $PLATFORM_ENV_CONF
+    fi
+
+    # Parse the platform.json file to get the platform specific information
+    PLATFORM_JSON=/usr/share/sonic/device/$PLATFORM/platform.json
+    if [ -f "$PLATFORM_JSON" ]; then
+        NUM_DPU=$(jq -r '.DPUS | length' $PLATFORM_JSON 2>/dev/null)
+        jq -e '.DPU' $PLATFORM_JSON >/dev/null
+        if [[ $? -eq 0 ]]; then
+            IS_DPU_DEVICE="true"
+        else
+            IS_DPU_DEVICE="false"
+        fi
     fi
 
     {%- if sonic_asic_platform == "broadcom" %}
@@ -395,28 +416,33 @@ start() {
 
     DOCKERCHECK=`docker inspect --type container ${DOCKERNAME} 2>/dev/null`
     if [ "$?" -eq "0" ]; then
-        {%- if docker_container_name == "database" %}
-        DOCKERMOUNT=""
-        {%- else %}
-        DOCKERMOUNT=`getMountPoint "$DOCKERCHECK"`
-        {%- endif %}
-        if [ x"$DOCKERMOUNT" == x"$MOUNTPATH" ]; then
-            CONTAINER_EXISTS="yes"
-            preStartAction
-            {%- if docker_container_name == "database" %}
-            echo "Starting existing ${DOCKERNAME} container"
-            docker start ${DOCKERNAME}
-            {%- else %}
-            echo "Starting existing ${DOCKERNAME} container with HWSKU $HWSKU"
-            /usr/local/bin/container start ${DOCKERNAME}
-            {%- endif %}
-            postStartAction
-            exit $?
-        fi
-
-        # docker created with a different HWSKU, remove and recreate
-        echo "Removing obsolete ${DOCKERNAME} container with HWSKU $DOCKERMOUNT"
+        {%- if docker_container_name == "database" and sonic_asic_platform == "vs" %}
+        echo "Removing existing ${DOCKERNAME} container"
         docker rm -f ${DOCKERNAME}
+        {%- else %}
+            {%- if docker_container_name == "database" %}
+            DOCKERMOUNT=""
+            {%- else %}
+            DOCKERMOUNT=`getMountPoint "$DOCKERCHECK"`
+            {%- endif %}
+            if [ x"$DOCKERMOUNT" == x"$MOUNTPATH" ]; then
+                CONTAINER_EXISTS="yes"
+                preStartAction
+                {%- if docker_container_name == "database" %}
+                echo "Starting existing ${DOCKERNAME} container"
+                docker start ${DOCKERNAME}
+                {%- else %}
+                echo "Starting existing ${DOCKERNAME} container with HWSKU $HWSKU"
+                /usr/local/bin/container start ${DOCKERNAME}
+                {%- endif %}
+                postStartAction
+                exit $?
+            fi
+
+            # docker created with a different HWSKU, remove and recreate
+            echo "Removing obsolete ${DOCKERNAME} container with HWSKU $DOCKERMOUNT"
+            docker rm -f ${DOCKERNAME}
+        {%- endif %}
     fi
 
     {%- if docker_container_name == "database" %}
@@ -481,7 +507,7 @@ start() {
         redis_dir_list=`/usr/bin/python -c "import sys; import os; import json; f=open(sys.argv[1]); \
                         global_db_dir = os.path.dirname(sys.argv[1]); data=json.load(f); \
                         print(\" \".join([os.path.normpath(global_db_dir+'/'+elem['include']).partition('sonic-db')[0]\
-                        for elem in data['INCLUDES'] if 'namespace' in elem])); f.close()" $SONIC_DB_GLOBAL_JSON`
+                        for elem in data['INCLUDES'] if 'namespace' in elem or 'container_name' in elem ])); f.close()" $SONIC_DB_GLOBAL_JSON`
     fi
 
     {%- if docker_container_name == "database" %}
@@ -524,6 +550,7 @@ start() {
             DB_OPT=$DB_OPT" -v /var/run/redis$DEV:/var/run/redis:rw "
             DB_OPT=$DB_OPT" --env DATABASE_TYPE=$DATABASE_TYPE "
             DB_OPT=$DB_OPT" --env NUM_DPU=$NUM_DPU "
+            DB_OPT=$DB_OPT" --env IS_DPU_DEVICE=$IS_DPU_DEVICE "
             if [[ "$DEV" ]]; then
                 DB_OPT=$DB_OPT" -v /var/run/redis$DEV:/var/run/redis$DEV:rw "
             fi

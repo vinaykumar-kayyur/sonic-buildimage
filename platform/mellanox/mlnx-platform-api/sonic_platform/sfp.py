@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2019-2023 NVIDIA CORPORATION & AFFILIATES.
+# Copyright (c) 2019-2024 NVIDIA CORPORATION & AFFILIATES.
 # Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -327,17 +327,10 @@ class SFP(NvidiaSFPCommon):
         Returns:
             bool: True if device is present, False if not
         """
-        if DeviceDataManager.is_independent_mode():
-            if utils.read_int_from_file(f'/sys/module/sx_core/asic0/module{self.sdk_index}/control') != 0:
-                if not utils.read_int_from_file(f'/sys/module/sx_core/asic0/module{self.sdk_index}/hw_present'):
-                    return False
-                if not utils.read_int_from_file(f'/sys/module/sx_core/asic0/module{self.sdk_index}/power_good'):
-                    return False
-                if not utils.read_int_from_file(f'/sys/module/sx_core/asic0/module{self.sdk_index}/power_on'):
-                    return False
-                if utils.read_int_from_file(f'/sys/module/sx_core/asic0/module{self.sdk_index}/hw_reset') == 1:
-                    return False
-                
+        try:
+            self.is_sw_control()
+        except:
+            return False
         eeprom_raw = self._read_eeprom(0, 1, log_on_error=False)
         return eeprom_raw is not None
 
@@ -362,23 +355,40 @@ class SFP(NvidiaSFPCommon):
         Returns:
             bytearray: the content of EEPROM
         """
-        _, page, page_offset = self._get_page_and_page_offset(offset)
-        if not page:
-            return None
+        result = None
+        while num_bytes > 0:
+            _, page, page_offset = self._get_page_and_page_offset(offset)
+            if not page:
+                return None
 
-        try:
-            with open(page, mode='rb', buffering=0) as f:
-                f.seek(page_offset)
-                content = f.read(num_bytes)
-                if ctypes.get_errno() != 0:
-                    raise IOError(f'errno = {os.strerror(ctypes.get_errno())}')
-        except (OSError, IOError) as e:
-            if log_on_error:
-                logger.log_warning(f'Failed to read sfp={self.sdk_index} EEPROM page={page}, page_offset={page_offset}, \
-                    size={num_bytes}, offset={offset}, error = {e}')
-            return None
+            try:
+                with open(page, mode='rb', buffering=0) as f:
+                    f.seek(page_offset)
+                    content = f.read(num_bytes)
+                    if not result:
+                        result = content
+                    else:
+                        result += content
+                    read_length = len(content)
+                    num_bytes -= read_length
+                    if num_bytes > 0:
+                        page_size = f.seek(0, os.SEEK_END)
+                        if page_offset + read_length == page_size:
+                            offset += read_length
+                        else:
+                            # Indicate read finished
+                            num_bytes = 0
+                    if ctypes.get_errno() != 0:
+                        raise IOError(f'errno = {os.strerror(ctypes.get_errno())}')
+                    logger.log_debug(f'read EEPROM sfp={self.sdk_index}, page={page}, page_offset={page_offset}, '\
+                        f'size={read_length}, data={content}')
+            except (OSError, IOError) as e:
+                if log_on_error:
+                    logger.log_warning(f'Failed to read sfp={self.sdk_index} EEPROM page={page}, page_offset={page_offset}, '\
+                        f'size={num_bytes}, offset={offset}, error = {e}')
+                return None
 
-        return bytearray(content)
+        return bytearray(result)
 
     # write eeprom specfic bytes beginning from offset with size as num_bytes
     def write_eeprom(self, offset, num_bytes, write_buffer):
@@ -394,27 +404,37 @@ class SFP(NvidiaSFPCommon):
             logger.log_error("Error mismatch between buffer length and number of bytes to be written")
             return False
 
-        page_num, page, page_offset = self._get_page_and_page_offset(offset)
-        if not page:
-            return False
+        while num_bytes > 0:
+            page_num, page, page_offset = self._get_page_and_page_offset(offset)
+            if not page:
+                return False
 
-        try:
-            if self._is_write_protected(page_num, page_offset, num_bytes):
-                # write limited eeprom is not supported
-                raise IOError('write limited bytes')
-
-            with open(page, mode='r+b', buffering=0) as f:
-                f.seek(page_offset)
-                ret = f.write(write_buffer[0:num_bytes])
-                if ret != num_bytes:
-                    raise IOError(f'write return code = {ret}')
-                if ctypes.get_errno() != 0:
-                    raise IOError(f'errno = {os.strerror(ctypes.get_errno())}')
-        except (OSError, IOError) as e:
-            data = ''.join('{:02x}'.format(x) for x in write_buffer)
-            logger.log_error(f'Failed to write EEPROM data sfp={self.sdk_index} EEPROM page={page}, page_offset={page_offset}, size={num_bytes}, \
-                offset={offset}, data = {data}, error = {e}')
-            return False
+            try:
+                if self._is_write_protected(page_num, page_offset, num_bytes):
+                    # write limited eeprom is not supported
+                    raise IOError('write limited bytes')
+                with open(page, mode='r+b', buffering=0) as f:
+                    f.seek(page_offset)
+                    ret = f.write(write_buffer[0:num_bytes])
+                    written_buffer = write_buffer[0:ret]
+                    if ret != num_bytes:
+                        page_size = f.seek(0, os.SEEK_END)
+                        if page_offset + ret == page_size:
+                            # Move to next page
+                            write_buffer = write_buffer[ret:num_bytes]
+                            offset += ret
+                        else:
+                            raise IOError(f'write return code = {ret}')
+                    num_bytes -= ret
+                    if ctypes.get_errno() != 0:
+                        raise IOError(f'errno = {os.strerror(ctypes.get_errno())}')
+                    logger.log_debug(f'write EEPROM sfp={self.sdk_index}, page={page}, page_offset={page_offset}, '\
+                        f'size={ret}, left={num_bytes}, data={written_buffer}')
+            except (OSError, IOError) as e:
+                data = ''.join('{:02x}'.format(x) for x in write_buffer)
+                logger.log_error(f'Failed to write EEPROM data sfp={self.sdk_index} EEPROM page={page}, page_offset={page_offset}, size={num_bytes}, '\
+                    f'offset={offset}, data = {data}, error = {e}')
+                return False
         return True
 
     @classmethod
@@ -647,7 +667,12 @@ class SFP(NvidiaSFPCommon):
                 if api.get_lpmode() == lpmode:
                     return True
                 api.set_lpmode(lpmode)
-                return api.get_lpmode() == lpmode
+                # check_lpmode is a lambda function which checks if current lpmode already updated to the desired lpmode
+                check_lpmode = lambda api, lpmode: api.get_lpmode() == lpmode
+                # utils.wait_until function will call check_lpmode function every 1 second for a total timeout of 2 seconds.
+                # If at some point get_lpmode=desired_lpmode, it will return true.
+                # If after timeout ends, lpmode will not be desired_lpmode, it will return false.
+                return utils.wait_until(check_lpmode, 2, 1, api=api, lpmode=lpmode)
             elif DeviceDataManager.is_independent_mode():
                 # FW control under CMIS host management mode. 
                 # Currently, we don't support set LPM under this mode.
@@ -877,6 +902,13 @@ class SFP(NvidiaSFPCommon):
         return [False] * api.NUM_CHANNELS if api else None
 
     def get_temperature(self):
+        """Get SFP temperature
+
+        Returns:
+            None if there is an error (sysfs does not exist or sysfs return None or module EEPROM not readable)
+            0.0 if module temperature is not supported or module is under initialization
+            other float value if module temperature is available
+        """
         try:
             if not self.is_sw_control():
                 temp_file = f'/sys/module/sx_core/asic0/module{self.sdk_index}/temperature/input'
@@ -893,59 +925,68 @@ class SFP(NvidiaSFPCommon):
         temperature = super().get_temperature()
         return temperature if temperature is not None else None
 
-    def get_temperature_warning_threashold(self):
+    def get_temperature_warning_threshold(self):
         """Get temperature warning threshold
 
         Returns:
-            int: temperature warning threshold
+            None if there is an error (module EEPROM not readable)
+            0.0 if warning threshold is not supported or module is under initialization
+            other float value if warning threshold is available
         """
         try:
-            if not self.is_sw_control():
-                emergency = utils.read_int_from_file(f'/sys/module/sx_core/asic0/module{self.sdk_index}/temperature/emergency',
-                                                     log_func=None,
-                                                     default=None)
-                return emergency / SFP_TEMPERATURE_SCALE if emergency is not None else SFP_DEFAULT_TEMP_WARNNING_THRESHOLD
+            self.is_sw_control()
         except:
-            return SFP_DEFAULT_TEMP_WARNNING_THRESHOLD
+            return 0.0
+        
+        support, thresh = self._get_temperature_threshold()
+        if support is None or thresh is None:
+            # Failed to read from EEPROM
+            return None
+        if support is False:
+            # Do not support
+            return 0.0
+        return thresh.get(consts.TEMP_HIGH_WARNING_FIELD, SFP_DEFAULT_TEMP_WARNNING_THRESHOLD)
 
-        thresh = self._get_temperature_threshold()
-        if thresh and consts.TEMP_HIGH_WARNING_FIELD in thresh:
-            return thresh[consts.TEMP_HIGH_WARNING_FIELD]
-        return SFP_DEFAULT_TEMP_WARNNING_THRESHOLD
-
-    def get_temperature_critical_threashold(self):
+    def get_temperature_critical_threshold(self):
         """Get temperature critical threshold
 
         Returns:
-            int: temperature critical threshold
+            None if there is an error (module EEPROM not readable)
+            0.0 if critical threshold is not supported or module is under initialization
+            other float value if critical threshold is available
         """
         try:
-            if not self.is_sw_control():
-                critical = utils.read_int_from_file(f'/sys/module/sx_core/asic0/module{self.sdk_index}/temperature/critical',
-                                                    log_func=None,
-                                                    default=None)
-                return critical / SFP_TEMPERATURE_SCALE if critical is not None else SFP_DEFAULT_TEMP_CRITICAL_THRESHOLD
+            self.is_sw_control()
         except:
-            return SFP_DEFAULT_TEMP_CRITICAL_THRESHOLD
+            return 0.0
 
-        thresh = self._get_temperature_threshold()
-        if thresh and consts.TEMP_HIGH_ALARM_FIELD in thresh:
-            return thresh[consts.TEMP_HIGH_ALARM_FIELD]
-        return SFP_DEFAULT_TEMP_CRITICAL_THRESHOLD
+        support, thresh = self._get_temperature_threshold()
+        if support is None or thresh is None:
+            # Failed to read from EEPROM
+            return None
+        if support is False:
+            # Do not support
+            return 0.0
+        return thresh.get(consts.TEMP_HIGH_ALARM_FIELD, SFP_DEFAULT_TEMP_CRITICAL_THRESHOLD)
 
     def _get_temperature_threshold(self):
+        """Get temperature thresholds data from EEPROM
+
+        Returns:
+            tuple: (support, thresh_dict)
+        """
         self.reinit()
         api = self.get_xcvr_api()
         if not api:
-            return None
+            return None, None
 
         thresh_support = api.get_transceiver_thresholds_support()
         if thresh_support:
             if isinstance(api, sff8636.Sff8636Api) or isinstance(api, sff8436.Sff8436Api):
-                return api.xcvr_eeprom.read(consts.TEMP_THRESHOLDS_FIELD)
-            return api.xcvr_eeprom.read(consts.THRESHOLDS_FIELD)
+                return thresh_support, api.xcvr_eeprom.read(consts.TEMP_THRESHOLDS_FIELD)
+            return thresh_support, api.xcvr_eeprom.read(consts.THRESHOLDS_FIELD)
         else:
-            return None
+            return thresh_support, {}
 
     def get_xcvr_api(self):
         """
@@ -964,17 +1005,22 @@ class SFP(NvidiaSFPCommon):
     def is_sw_control(self):
         if not DeviceDataManager.is_independent_mode():
             return False
-
+        
         db = utils.DbUtils.get_db_instance('STATE_DB')
         logical_port = NvidiaSFPCommon.get_logical_port_by_sfp_index(self.sdk_index)
         if not logical_port:
-            raise Exception(f'Module {self.sdk_index} is not present or in initialization')
+            raise Exception(f'Module {self.sdk_index} is not present or under initialization')
         
         initialized = db.exists('STATE_DB', f'TRANSCEIVER_STATUS|{logical_port}')
         if not initialized:
-            raise Exception(f'Module {self.sdk_index} is not present or in initialization')
+            raise Exception(f'Module {self.sdk_index} is not present or under initialization')
         
-        return utils.read_int_from_file(f'/sys/module/sx_core/asic0/module{self.sdk_index}/control') == 1
+        try:
+            return utils.read_int_from_file(f'/sys/module/sx_core/asic0/module{self.sdk_index}/control', 
+                                            raise_exception=True, log_func=None) == 1
+        except:
+            # just in case control file does not exist
+            raise Exception(f'Module {self.sdk_index} is under initialization')
 
 
 class RJ45Port(NvidiaSFPCommon):
