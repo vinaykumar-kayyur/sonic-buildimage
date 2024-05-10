@@ -28,6 +28,8 @@
 #include <linux/i2c.h>
 #include <linux/mutex.h>
 
+#define _memset(s, c, n) memset(s, c, n)
+
 /* Addresses to scan */
 static const unsigned short normal_i2c[] = { /*0x50, 0x51, 0x52, 0x53, 0x54,
                     0x55, 0x56, 0x57,*/ I2C_CLIENT_END };
@@ -220,7 +222,7 @@ static int sys_eeprom_probe(struct i2c_client *client,
 #ifdef __STDC_LIB_EXT1__
     memset_s(data->data, EEPROM_SIZE, 0xff, EEPROM_SIZE);
 #else
-    memset(data->data, 0xff, EEPROM_SIZE);
+    _memset(data->data, 0xff, EEPROM_SIZE);
 #endif
 
     i2c_set_clientdata(client, data);
