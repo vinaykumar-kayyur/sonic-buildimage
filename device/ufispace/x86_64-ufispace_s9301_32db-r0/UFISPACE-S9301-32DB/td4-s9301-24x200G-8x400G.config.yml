@@ -1,4 +1,4 @@
-#r1.0.1
+#r1.0.2
 #
 # BCM56780 24x200g 8x400g port configuration.
 #
@@ -232,7 +232,7 @@ device:
                 SPEED: 200000
                 NUM_LANES: 4
                 FEC_MODE: PC_FEC_RS544_2XN
-                LINK_TRAINING: 1
+                LINK_TRAINING: 0
                 MAX_FRAME_SIZE: 9416
             ?
                 PORT_ID: [[44, 46],
@@ -243,7 +243,7 @@ device:
                 SPEED: 400000
                 NUM_LANES: 8
                 FEC_MODE: PC_FEC_RS544_2XN
-                LINK_TRAINING: 1
+                LINK_TRAINING: 0
                 MAX_FRAME_SIZE: 9416
 ...
 ---
