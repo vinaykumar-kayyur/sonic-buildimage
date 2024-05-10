@@ -7,7 +7,7 @@ KERNEL_SRC ?=  /lib/modules/$(KVERSION)
 module_out_put_dir := $(PWD)/build
 export module_out_put_dir
 
-KERNEL_MODULES_SRC = $(PWD)/linux-5.10
+KERNEL_MODULES_SRC = $(PWD)/linux
 
 PLAT_SYSFS_DIR = $(PWD)/plat_sysfs
 PHY = $(PWD)/phy
@@ -36,7 +36,6 @@ obj-m += wb_i2c_ocores.o
 obj-m += wb_spi_ocores.o
 obj-m += wb_spi_dev.o
 obj-m += wb_wdt.o
-obj-m += wb_optoe.o
 obj-m += wb_spi_gpio.o
 obj-m += wb_spi_gpio_device.o
 #obj-m += wb_spi_nor_device.o

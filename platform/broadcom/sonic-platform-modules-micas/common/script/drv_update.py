@@ -135,16 +135,16 @@ def doDrvUpdate():
 
     if update_initramfs_flag == 1:
         drv_update_debug("starting to update initramfs")
-        os.system("update-initramfs -u")
+        exec_os_cmd("update-initramfs -u")
         drv_update_debug("update initramfs finish")
 
-    os.system("sync")
+    exec_os_cmd("sync")
     if update_initramfs_flag == 1 and err_cnt == 0 and reboot_flag == 1:
         reboot_log = "%DRV_UPDATE-5-REBOOT: Update initramfs is completed, restarting the system to take effect."
         reboot_log_cmd = "echo '%s' > /dev/ttyS0" % reboot_log
         exec_os_cmd(reboot_log_cmd)
         drv_update_info(reboot_log)
-        os.system("/sbin/reboot")
+        exec_os_cmd("/sbin/reboot")
     return
 
 if __name__ == '__main__':

@@ -275,4 +275,7 @@ def getsensors():
 
 
 if __name__ == "__main__":
+    if os.geteuid() != 0:
+        print("Root privileges are required for this operation")
+        sys.exit(1)
     getsensors()
