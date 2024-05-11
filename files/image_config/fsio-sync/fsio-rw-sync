@@ -5,11 +5,11 @@ import sys
 import json
 import syslog
 from sonic_py_common import daemon_base
+from time import time
 
 BASE_PATH = "/sys/block"
-FSSTATS_PATHS = ["/host/pmon/storagemon/", "/usr/share/storagemon/"]
-FSSTATS_FILE = "fsio-rw-stats.json"
-STATE_DB_FIELDS = ["fs_io_reads", "fs_io_writes", "latest_fs_io_reads", "latest_fs_io_writes"]
+FSSTATS_FILE = "/host/pmon/stormond/fsio-rw-stats.json"
+STATE_DB_FIELDS = ["total_fsio_reads", "total_fsio_writes", "latest_fsio_reads", "latest_fsio_writes"]
 SYSLOG_ID="fsio-rw-sync"
 FSSTATS_FILE_SYNC_ERROR = 127
 
@@ -35,36 +35,25 @@ def get_storage_disks():
             devices.append(fd)
             json_file_dict[fd] = {}
 
-def find_fsstats_file():
-    fullpath = ""
-
-    for path in FSSTATS_PATHS:
-        if os.path.exists(os.path.join(path, FSSTATS_FILE)):
-            fullpath = os.path.join(path, FSSTATS_FILE)
-            break
-
-    return fullpath
-
 def main():
 
-    filepath = find_fsstats_file()
-    if filepath == "":
-        log_error("{} not found in {} directories. Cannot sync FSIO reads and writes.".format(FSSTATS_FILE, FSSTATS_PATHS))
-        sys.exit(FSSTATS_FILE_SYNC_ERROR)
-
-    state_db = daemon_base.db_connect("STATE_DB")
-    get_storage_disks()
-
-    for device in devices:
+    log_info("Syncing total and latest procfs reads and writes from STATE_DB to JSON file")
+    try:
+        state_db = daemon_base.db_connect("STATE_DB")
+        get_storage_disks()
 
         # Sync accumulated and latest procfs reads and writes from STATE_DB
-        for field in STATE_DB_FIELDS:
-            json_file_dict[device][field] = state_db.hget('STORAGE_INFO|{}'.format(device), field)
+        for device in devices:
+            for field in STATE_DB_FIELDS:
+                json_file_dict[device][field] = state_db.hget('STORAGE_INFO|{}'.format(device), field)
+        
+        json_file_dict["successful_sync_time"] = state_db.hget('STORAGE_INFO|FSSTATS_SYNC', "successful_sync_time")
 
-    with open(filepath, 'w+') as f:
-        f.write(json.dumps(json_file_dict))
+        with open(FSSTATS_FILE, 'w+') as f:
+            f.write(json.dumps(json_file_dict))
+    except Exception as ex:
+        log_error("Unable to sync state_db to disk: {}".format(ex))
 
-    sys.exit(0)
 
 if __name__ == "__main__":
     main()
