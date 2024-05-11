@@ -243,12 +243,14 @@ def print_boarddcdc():
     if len(val_ret) != 0:
         print_info_str += toptile + '\n'
         for item in val_ret:
-            if float(item["dcdc_input"]) > float(item["dcdc_max"]) or float(item["dcdc_input"]) < float(item["dcdc_min"]):
-                item["dcdc_status"] = "NOT OK"
-                formatstr = nok_formatstr
+            if item.get('errcode', 0) == 0:
+                if float(item["dcdc_input"]) > float(item["dcdc_max"]) or float(item["dcdc_input"]) < float(item["dcdc_min"]):
+                    item["dcdc_status"] = "NOT OK"
+                    realformat = nok_formatstr
+                else:
+                    realformat = ok_formatstr
             else:
-                formatstr = ok_formatstr
-            realformat = formatstr if item.get('errcode', 0) == 0 else errformat
+                realformat = errformat
             print_info_str += realformat.format(**item) + '\n'
         print_console(print_info_str)
 
