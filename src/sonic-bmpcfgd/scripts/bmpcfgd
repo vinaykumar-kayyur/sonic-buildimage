@@ -17,7 +17,7 @@ from swsscommon.swsscommon import ConfigDBConnector, DBConnector, Table
 from swsscommon import swsscommon
 
 CFG_DB = "CONFIG_DB"
-STATE_DB = "STATE_DB"
+BMP_STATE_DB = "STATE_DB"
 
 
 class BMPCfg(object):
@@ -53,9 +53,9 @@ class BMPCfg(object):
 
     def reset_bmp_table(self):
         syslog.syslog(syslog.LOG_INFO, 'Reset bmp table from state_db')
-        self.state_db_conn.delete_all_by_pattern('STATE_DB', 'BGP_NEIGHBOR*')
-        self.state_db_conn.delete_all_by_pattern('STATE_DB', 'BGP_RIB_IN_TABLE*')
-        self.state_db_conn.delete_all_by_pattern('STATE_DB', 'BGP_RIB_OUT_TABLE*')
+        self.state_db_conn.delete_all_by_pattern(BMP_STATE_DB, 'BGP_NEIGHBOR*')
+        self.state_db_conn.delete_all_by_pattern(BMP_STATE_DB, 'BGP_RIB_IN_TABLE*')
+        self.state_db_conn.delete_all_by_pattern(BMP_STATE_DB, 'BGP_RIB_OUT_TABLE*')
 
     def start_bmp(self):
         syslog.syslog(syslog.LOG_INFO, 'start bmp daemon')
@@ -64,7 +64,7 @@ class BMPCfg(object):
 
 class BMPCfgDaemon:
     def __init__(self):
-        self.state_db_conn = DBConnector(STATE_DB, 0)
+        self.state_db_conn = DBConnector(BMP_STATE_DB, 0)
         self.config_db = ConfigDBConnector()
         self.config_db.connect(wait_for_init=True, retry_on=True)
         syslog.syslog(syslog.LOG_INFO, 'ConfigDB connect success')

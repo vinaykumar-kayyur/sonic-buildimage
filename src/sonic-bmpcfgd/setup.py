@@ -29,18 +29,15 @@ setup(
     url = 'https://github.com/Azure/sonic-buildimage',
     maintainer = 'Feng Pan',
     maintainer_email = 'fenpan@microsoft.com',
-    packages = [
-        'host_modules'
-    ],
+    packages = setuptools.find_packages(),
     scripts = [
         'scripts/bmpcfgd'
     ],
     install_requires = [
-        'dbus-python',
-        'systemd-python',
-        'Jinja2>=2.10',
-        'PyGObject',
-        'psutil'
+        'jinja2>=2.10',
+        'netaddr==0.8.0',
+        'pyyaml==6.0.1',
+        'ipaddress==1.0.23'
     ] + sonic_dependencies,
     setup_requires = [
         'pytest-runner',
@@ -51,16 +48,14 @@ setup(
         'pytest',
         'pyfakefs',
         'sonic-py-common',
-        'deepdiff==6.2.2',
-        'psutil'
+        'pytest-cov'
     ],
     extras_require = {
         "testing": [
             'parameterized',
             'pytest',
             'pyfakefs',
-            'sonic-py-common',
-            'deepdiff==6.2.2'
+            'sonic-py-common'
         ]
     },
     classifiers = [
