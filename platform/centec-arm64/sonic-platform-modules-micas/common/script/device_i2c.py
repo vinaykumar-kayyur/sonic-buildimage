@@ -71,21 +71,21 @@ def start_avs_ctrl():
         cmd = "nohup avscontrol.py start >/dev/null 2>&1 &"
         rets = get_pid("avscontrol.py")
         if len(rets) == 0:
-            os.system(cmd)
+            log_os_system(cmd)
 
 def stop_avs_ctrl():
     if STARTMODULE.get('avscontrol', 0) == 1:
         rets = get_pid("avscontrol.py")  #
         for ret in rets:
             cmd = "kill "+ ret
-            os.system(cmd)
+            log_os_system(cmd)
 
 def start_fan_ctrl():
     if STARTMODULE.get('fancontrol', 0) == 1:
         cmd = "nohup fancontrol.py start >/dev/null 2>&1 &"
         rets = get_pid("fancontrol.py")
         if len(rets) == 0:
-            os.system(cmd)
+            log_os_system(cmd)
 
 def stop_fan_ctrl():
     u'''disable fan timer service'''
@@ -93,7 +93,7 @@ def stop_fan_ctrl():
         rets = get_pid("fancontrol.py")  #
         for ret in rets:
             cmd = "kill "+ ret
-            os.system(cmd)
+            log_os_system(cmd)
 
 def rm_dev(bus, loc):
     cmd = "echo  0x%02x > /sys/bus/i2c/devices/i2c-%d/delete_device" % (loc, bus)
@@ -115,7 +115,7 @@ def add_dev(name, bus, loc):
     cmd = "echo  %s 0x%02x > /sys/bus/i2c/devices/i2c-%d/new_device" % (name, loc, bus)
     devpath = "/sys/bus/i2c/devices/%d-%04x"%(bus, loc)
     if os.path.exists(devpath) == False:
-        os.system(cmd)
+        log_os_system(cmd)
 
 def removedevs():
     devs = GLOBALCONFIG["DEVS"]
