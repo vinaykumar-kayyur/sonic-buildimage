@@ -18,7 +18,13 @@ from swsscommon import swsscommon
 
 CFG_DB = "CONFIG_DB"
 BMP_STATE_DB = "STATE_DB"
+REDIS_HOSTIP = "127.0.0.1"
 
+def is_true(val):
+    if val == 'True' or val == 'true':
+        return True
+    elif val == 'False' or val == 'false':
+        return False
 
 class BMPCfg(object):
     def __init__(self, state_db_conn):
@@ -30,50 +36,53 @@ class BMPCfg(object):
 
     def load(self, data={}):
         common_config = data.get('table', {})
-        if not common_config:
-            syslog.syslog(syslog.LOG_INFO, f'BMPCfg: skipped the bmp config, the BMP setting is empty.')
-            return
 
         self.bgp_neighbor_table = is_true(common_config.get('bgp_neighbor_table', 'false'))
         self.bgp_rib_in_table = is_true(common_config.get('bgp_rib_in_table', 'false'))
         self.bgp_rib_out_table = is_true(common_config.get('bgp_rib_out_table', 'false'))
-        syslog.syslog(syslog.LOG_INFO, f'BMPCfg: update : {self.bgp_neighbor_table}, {self.bgp_rib_in_table}, {self.bgp_rib_out_table}.')
+        syslog.syslog(syslog.LOG_INFO, f'BMPCfg: update : {self.bgp_neighbor_table}, {self.bgp_rib_in_table}, {self.bgp_rib_out_table}')
 
         # reset bmp table state once config is changed.
         self.stop_bmp()
         self.reset_bmp_table()
         self.start_bmp()
 
+
     def cfg_handler(self, data):
         self.load(data)
-  
+
+
     def stop_bmp(self):
-        syslog.syslog(syslog.LOG_INFO, 'stop bmp daemon')
+        syslog.syslog(syslog.LOG_INFO, 'BMPCfg: stop bmp daemon')
         subprocess.call(["service", "openbmpd", "stop"])
 
+
     def reset_bmp_table(self):
-        syslog.syslog(syslog.LOG_INFO, 'Reset bmp table from state_db')
+        syslog.syslog(syslog.LOG_INFO, 'BMPCfg: Reset bmp table from state_db')
         self.state_db_conn.delete_all_by_pattern(BMP_STATE_DB, 'BGP_NEIGHBOR*')
         self.state_db_conn.delete_all_by_pattern(BMP_STATE_DB, 'BGP_RIB_IN_TABLE*')
         self.state_db_conn.delete_all_by_pattern(BMP_STATE_DB, 'BGP_RIB_OUT_TABLE*')
 
+
     def start_bmp(self):
-        syslog.syslog(syslog.LOG_INFO, 'start bmp daemon')
+        syslog.syslog(syslog.LOG_INFO, 'BMPCfg: start bmp daemon')
         subprocess.call(["service", "openbmpd", "start"])
 
 
 class BMPCfgDaemon:
     def __init__(self):
-        self.state_db_conn = DBConnector(BMP_STATE_DB, 0)
+        #self.state_db_conn = DBConnector(BMP_STATE_DB, 0)
+        self.state_db_conn = swsscommon.SonicV2Connector(host=REDIS_HOSTIP)
+        self.state_db_conn.connect(BMP_STATE_DB)
         self.config_db = ConfigDBConnector()
         self.config_db.connect(wait_for_init=True, retry_on=True)
-        syslog.syslog(syslog.LOG_INFO, 'ConfigDB connect success')
         self.bmpcfg = BMPCfg(self.state_db_conn)
 
+
     def bmp_handler(self, key, op, data):
-        syslog.syslog(syslog.LOG_INFO, 'BMP table handler...')
         data = self.config_db.get_table("BMP")
         self.bmpcfg.cfg_handler(data)
+
 
     def register_callbacks(self):
 
@@ -89,8 +98,10 @@ class BMPCfgDaemon:
 
         self.config_db.subscribe('BMP', make_callback(self.bmp_handler))
 
+
     def start(self):
         self.config_db.listen(init_data_handler=self.load)
+
 
 def signal_handler(sig, frame):
     if sig == signal.SIGHUP:
@@ -104,6 +115,7 @@ def signal_handler(sig, frame):
     else:
         syslog.syslog(syslog.LOG_INFO, "bmpcfgd: invalid signal - ignoring..")
 
+
 def main():
     signal.signal(signal.SIGTERM, signal_handler)
     signal.signal(signal.SIGINT, signal_handler)
@@ -111,6 +123,7 @@ def main():
     daemon = BMPCfgDaemon()
     daemon.register_callbacks()
     daemon.start()
+
 
 if __name__ == "__main__":
     main()
