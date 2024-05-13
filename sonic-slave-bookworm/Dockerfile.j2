@@ -701,7 +701,4 @@ RUN apt install -y python-is-python3
 {%- if CONFIGURED_ARCH == "amd64" or CONFIGURED_ARCH == "arm64" %}
 ARG bazelisk_url=https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-{{ CONFIGURED_ARCH }}
 RUN curl -fsSL -o /usr/local/bin/bazel ${bazelisk_url} && chmod 755 /usr/local/bin/bazel
-# Bazel requires "python"
-# TODO(PINS): remove when Bazel is okay with "python3" binary name
-#RUN apt install -y python-is-python3
 {% endif -%}
