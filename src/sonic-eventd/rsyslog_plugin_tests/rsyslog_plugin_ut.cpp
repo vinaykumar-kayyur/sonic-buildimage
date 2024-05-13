@@ -267,6 +267,7 @@ TEST(rsyslog_plugin, run) {
 TEST(rsyslog_plugin, run_SIGTERM) {
     unique_ptr<RsyslogPlugin> plugin(new RsyslogPlugin("test_mod_name", "./rsyslog_plugin_tests/test_regex_5.rc.json"));
     EXPECT_EQ(0, plugin->onInit());
+    EXPECT_TRUE(RsyslogPlugin::g_running);
     thread pluginThread([&]() {
         plugin->run();
     });
