@@ -233,8 +233,17 @@ class TestMultiNpuCfgGen(TestCase):
              "Ethernet-BP8": { "admin_status": "up",  "alias": "Eth6-ASIC0",  "asic_port_name": "Eth6-ASIC0",  "description": "ASIC3:Eth0-ASIC3",  "index": "2",  "lanes": "21,22,23,24",  "mtu": "9100", "tpid": "0x8100", "pfc_asym": "off",  "role": "Int",  "speed": "40000" },
              "Ethernet-BP12": { "admin_status": "up",  "alias": "Eth7-ASIC0",  "asic_port_name": "Eth7-ASIC0",  "description": "ASIC3:Eth1-ASIC3",  "index": "3",  "lanes": "25,26,27,28",  "mtu": "9100", "tpid": "0x8100", "pfc_asym": "off",  "role": "Int",  "speed": "40000" }})
 
-    def test_hwsku_option_port_list(self):
+    def test_hwsku_option_port_list_port_config_ini(self):
         mock.patch('device_info.get_path_to_port_config_file', mock.MagicMock(return_value=self.sample_port_config_0))
+        argument = ["-k", ASIC_SKU, "-n", "asic0", "-v", "PORT.keys()|list"]
+        output = self.run_script(argument)
+        self.assertEqual(
+            utils.liststr_to_dict(output.strip()),
+            utils.liststr_to_dict("['Ethernet0','Ethernet4','Ethernet8','Ethernet12','Ethernet-BP0','Ethernet-BP4','Ethernet-BP8','Ethernet-BP12']")
+        )
+
+    def test_hwsku_option_port_list_configdb(self):
+        mock.patch('device_info.get_path_to_port_config_file', mock.MagicMock(return_value=None))
         argument = ["-k", ASIC_SKU, "-n", "asic0", "-v", "PORT.keys()|list"]
         output = self.run_script(argument)
         self.assertEqual(
