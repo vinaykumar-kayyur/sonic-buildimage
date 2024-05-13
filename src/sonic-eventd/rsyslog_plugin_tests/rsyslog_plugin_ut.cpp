@@ -8,6 +8,7 @@ extern "C"
 #include <fstream>
 #include <memory>
 #include <regex>
+#include <thread>
 #include "gtest/gtest.h"
 #include <nlohmann/json.hpp>
 #include "events.h"
@@ -261,6 +262,20 @@ TEST(rsyslog_plugin, run) {
     cin.rdbuf(ss.rdbuf());
     plugin->run();
     cin.rdbuf(cinbuf);
+}
+
+TEST(rsyslog_plugin, run_SIGTERM) {
+    unique_ptr<RsyslogPlugin> plugin(new RsyslogPlugin("test_mod_name", "./rsyslog_plugin_tests/test_regex_5.rc.json"));
+    EXPECT_EQ(0, plugin->onInit());
+    thread pluginThread([&]() {
+        plugin->run();
+    });
+
+    RsyslogPlugin::signalHandler(SIGTERM);
+
+    pluginThread.join();
+
+    EXPECT_FALSE(RsyslogPlugin::g_running);
 }
 
 TEST(timestampFormatter, changeTimestampFormat) {
