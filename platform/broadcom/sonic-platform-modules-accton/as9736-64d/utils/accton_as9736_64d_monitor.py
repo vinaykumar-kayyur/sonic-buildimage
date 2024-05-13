@@ -77,7 +77,7 @@ class switch(object):
 #    - SMB TMP75 (0x49)
 #    - SMB TMP422(0x4c)
 #    - FCM TMP75 (0x48)
-#    - FCM TTMP75 (0x49)
+#    - FCM TMP75 (0x49)
 #    - PDB_L TMP75 (0x48)
 #    - PDB_R TMP75 (0x49)
 #    - UDB TMP75 (0x48)
@@ -176,6 +176,7 @@ send_mac_shutdown_warning = 0
 send_cpu_shutdown_warning = 0
 
 thermal_min_to_mid_waring_flag = [0]
+fan_failed_msg_flag = 0
 
 platform_chassis= None
 
@@ -258,13 +259,20 @@ class device_monitor(object):
 
         sys_handler = logging.handlers.SysLogHandler(address = '/dev/log')
         sys_handler.setLevel(logging.INFO)
+        formatter = logging.Formatter('#%(module)s: %(message)s')
+        sys_handler.setFormatter(formatter)
         logging.getLogger('').addHandler(sys_handler)
         #logging.debug('SET. logfile:%s / loglevel:%d', log_file, log_level)
 
         self.transceiver_dom_sensor_table = None
 
-    def set_fan_duty_cycle(self, fan_level, duty_cycle_percentage):
-        logging.debug("- [Fan]: fan_policy_state = %d, set new_duty_cycle = %d", fan_level, duty_cycle_percentage)
+    def set_fan_duty_cycle(self, duty_cycle_percentage, old_duty_cycle_percentage):
+
+        if duty_cycle_percentage > old_duty_cycle_percentage:
+            logging.warning('Increase fan duty_cycle from %d%% to %d%%.', old_duty_cycle_percentage, duty_cycle_percentage)
+        else:
+            logging.info('Decrease fan duty_cycle from %d%% to %d%%.', old_duty_cycle_percentage, duty_cycle_percentage)
+
         self.fan.set_fan_duty_cycle(duty_cycle_percentage)
 
     def get_transceiver_temperature(self, iface_name):
@@ -294,6 +302,7 @@ class device_monitor(object):
         global send_mac_shutdown_warning
         global send_cpu_shutdown_warning
         global thermal_min_to_mid_waring_flag
+        global fan_failed_msg_flag
         global int_port_mapping
 
         LEVEL_FAN_INIT=0
@@ -377,13 +386,13 @@ class device_monitor(object):
             if fan_policy_state == LEVEL_FAN_INIT:
                 if (self.init_duty_cycle > fan_speed_policy[FAN_LEVEL_2][0] and
                     self.init_duty_cycle < fan_speed_policy[FAN_LEVEL_3][0]):
-                    fan_policy_state =  FAN_LEVEL_2
+                    fan_policy_state = FAN_LEVEL_2
                 else:
-                    fan_policy_state =  FAN_LEVEL_1
+                    fan_policy_state = FAN_LEVEL_1
 
-                self.set_fan_duty_cycle(fan_policy_state, fan_speed_policy[fan_policy_state][0])
+                self.set_fan_duty_cycle(fan_speed_policy[fan_policy_state][0], self.init_duty_cycle)
 
-            return
+            return True
 
         self.ori_duty_cycle = fan.get_fan_duty_cycle()
         self.new_duty_cycle = 0
@@ -398,12 +407,10 @@ class device_monitor(object):
         #1 Check fan: Unpresent or fan_fault status
         fan_fail = 0
         for i in range (fan.FAN_NUM_1_IDX, fan.FAN_NUM_ON_MAIN_BROAD+1):
-            if fan.get_fan_present(i) == 0:
+            if fan.get_fan_present(i) == 0: #unpresent
                 fan_fail = 1
-                logging.debug('- fan_%d absent, set duty_cycle to 100%', i)
-            elif fan.get_fan_fault(i) == 1:
+            elif fan.get_fan_fault(i) == 1: #fan_speed is 0
                 fan_fail = 1
-                logging.debug('- fan_%d fail, set duty_cycle to 100%', i)
             else:
                 if fan_fail == 1:
                     continue
@@ -411,19 +418,30 @@ class device_monitor(object):
         ori_state     = fan_policy_state
         current_state = fan_policy_state
 
+        #Fan protect policy: increase fan_speed need 50% --> 75% --> 100%
         if fan_fail == 1:
             if ori_state == FAN_LEVEL_2 or ori_state == FAN_LEVEL_3:
                 current_state = FAN_LEVEL_3
             elif ori_state == FAN_LEVEL_1:
                 current_state = FAN_LEVEL_2
 
-            if current_state != ori_state:
-                fan_policy_state = current_state
-                self.new_duty_cycle = fan_speed_policy[fan_policy_state][0]
+            fan_policy_state = current_state
+            self.new_duty_cycle = fan_speed_policy[fan_policy_state][0]
+
+            if fan_failed_msg_flag == 0 :
+                logging.warning('Monitor FAN absent/failed.')
+                fan_failed_msg_flag = 1
 
             if self.new_duty_cycle != self.ori_duty_cycle:
-                self.set_fan_duty_cycle(fan_policy_state, fan_speed_policy[fan_policy_state][0])
+                self.set_fan_duty_cycle(self.new_duty_cycle, self.ori_duty_cycle)
+
                 return True
+
+        # All fans are normal
+        else:
+            if fan_failed_msg_flag == 1:
+                logging.info('All fans are normal.')
+                fan_failed_msg_flag = 0
 
         #2-1 Board Sensors get value:
         for i in range (thermal.THERMAL_NUM_1_IDX, thermal.THERMAL_NUM_11_IDX+1):
@@ -433,7 +451,7 @@ class device_monitor(object):
                 board_thermal_or_chk_min_to_mid[i-1] = 1
                 # During this fan-speed rise, each sensors can only send warning log on syslog once
                 if thermal_min_to_mid_waring_flag[i-1] == 0:
-                    logging.warning('- Monitor %s, temperature is %d. Temperature is over %d.',
+                    logging.warning('Monitor %s, temperature is %d. Temperature is over %d.',
                                     thermal.get_thermal_name(i),
                                     board_thermal_val[i-1][2]/1000,
                                     thermal_spec["min_to_mid_temp"][i-1][1]/1000)
@@ -454,7 +472,7 @@ class device_monitor(object):
                 board_thermal_or_chk_min_to_mid[thermal.THERMAL_NUM_11_IDX + port_num] = 1
                 # During this fan-speed rise, each xcvr can only send warning log on syslog once
                 if thermal_min_to_mid_waring_flag[thermal.THERMAL_NUM_11_IDX + port_num] == 0:
-                    logging.warning('- Monitor port %d, temperature is %d. Temperature is over %d.',
+                    logging.warning('Monitor port %d, temperature is %d. Temperature is over %d.',
                                     port_num+1,
                                     board_thermal_val[thermal.THERMAL_NUM_11_IDX + port_num][2]/1000,
                                     thermal_spec["min_to_mid_temp"][thermal.THERMAL_NUM_BD_SENSOR][1]/1000)
@@ -470,7 +488,7 @@ class device_monitor(object):
         for i in range (thermal.THERMAL_NUM_1_IDX, thermal.THERMAL_NUM_10_IDX+1): #Not include TH4-TMP422(0x4c)
             if board_thermal_val[i-1][2] >= thermal_spec["shutdown_temp"][i-1][1]:
                 broad_thermal_need_shutdown = 1
-                logging.warning('- Monitor %s, temperature is %d. Temperature is over %d. Need shutdown DUT.',
+                logging.warning('Monitor %s, temperature is %d. Temperature is over %d. Need shutdown DUT.',
                                 thermal.get_thermal_name(i),
                                 board_thermal_val[i-1][2]/1000,
                                 thermal_spec["shutdown_temp"][i-1][1]/1000)
@@ -518,14 +536,13 @@ class device_monitor(object):
                 logging.warning('Monitor MAC, temperature is %d. Temperature is over %d', mactemp_thermal_val[0]/1000, thermal_spec["mac_temp"][1][1]/1000)
             mac_fan_policy_state = POLICY_NEED_SHUTDOWN
 
-
         #4 Condition of change fan speed by sensors policy:
         if ori_state == FAN_LEVEL_3:
             if thermal_fan_policy_state == POLICY_NEED_SHUTDOWN or cpu_fan_policy_state == POLICY_NEED_SHUTDOWN:
                 if send_cpu_shutdown_warning == 0:
                     send_cpu_shutdown_warning = 1
                     stop_syncd_service()
-                    logging.critical("CPU sensor for temperature high is detected, shutdown DUT.")
+                    logging.critical("CPU/TMP75/TMP422 sensor for temperature high is detected, shutdown DUT.")
                     sync_log_buffer_to_disk()
                     shutdown_except_cpu()
                     return True
@@ -537,6 +554,9 @@ class device_monitor(object):
                     logging.critical("MAC sensor for temperature high is detected, shutdown MAC chip.")
                     shutdown_mac()  # No return, keep monitoring.
 
+            elif fan_fail == 1:
+                current_state = FAN_LEVEL_3
+
             else:
                 current_state = FAN_LEVEL_2
 
@@ -546,7 +566,7 @@ class device_monitor(object):
 
             elif thermal_fan_policy_state == FAN_LEVEL_1:
                 current_state = FAN_LEVEL_1
-                logging.info('- Monitor all sensors, temperature is less than threshold. Decrease fan duty_cycle from %d to %d.', fan_speed_policy[FAN_LEVEL_2][0], fan_speed_policy[FAN_LEVEL_1][0])
+                logging.info('- Monitor all sensors, temperature is less than threshold.')
                 # Clear sensors send-syslog-warning record
                 thermal_min_to_mid_waring_flag = [0] * TOTAL_DETECT_SENSOR_NUM
             else:
@@ -558,8 +578,6 @@ class device_monitor(object):
 
             elif thermal_fan_policy_state == FAN_LEVEL_2:
                 current_state = FAN_LEVEL_2
-                logging.warning('- Increase fan duty_cycle from %d to %d.', fan_speed_policy[FAN_LEVEL_1][0], fan_speed_policy[FAN_LEVEL_2][0])
-
             else:
                 current_state = FAN_LEVEL_1
 
@@ -570,11 +588,11 @@ class device_monitor(object):
             self.new_duty_cycle = fan_speed_policy[fan_policy_state][0]
 
             if self.new_duty_cycle != self.ori_duty_cycle:
-                self.set_fan_duty_cycle(fan_policy_state, fan_speed_policy[fan_policy_state][0])
+                self.set_fan_duty_cycle(fan_speed_policy[fan_policy_state][0], fan_speed_policy[ori_state][0])
                 return True
 
             if self.new_duty_cycle == 0 :
-                self.set_fan_duty_cycle(FAN_LEVEL_3, fan_speed_policy[FAN_LEVEL_3][0])
+                self.set_fan_duty_cycle(fan_speed_policy[FAN_LEVEL_3][0], fan_speed_policy[ori_state][0])
 
         return True
 

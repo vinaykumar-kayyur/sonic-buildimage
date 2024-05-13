@@ -104,6 +104,8 @@ class device_monitor(object):
         sys_handler = logging.handlers.SysLogHandler(address = '/dev/log')
         #sys_handler.setLevel(logging.WARNING)
         sys_handler.setLevel(logging.INFO)
+        formatter = logging.Formatter('#%(module)s: %(message)s')
+        sys_handler.setFormatter(formatter)
         logging.getLogger('').addHandler(sys_handler)
 
         #logging.debug('SET. logfile:%s / loglevel:%d', log_file, log_level)
@@ -195,3 +197,4 @@ def main(argv):
 
 if __name__ == '__main__':
     main(sys.argv[1:])
+
