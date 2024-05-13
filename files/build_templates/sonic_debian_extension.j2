@@ -47,6 +47,7 @@ DOCKER_CTL_SCRIPT="$DOCKER_CTL_DIR/docker.sh"
 FILESYSTEM_ROOT_USR="$FILESYSTEM_ROOT/usr"
 FILESYSTEM_ROOT_USR_LIB="$FILESYSTEM_ROOT/usr/lib/"
 FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM="$FILESYSTEM_ROOT_USR_LIB/systemd/system"
+FILESYSTEM_ROOT_USR_LIB_SYSTEMD_NETWORK="$FILESYSTEM_ROOT_USR_LIB/systemd/network"
 FILESYSTEM_ROOT_USR_SHARE="$FILESYSTEM_ROOT_USR/share"
 FILESYSTEM_ROOT_USR_SHARE_SONIC="$FILESYSTEM_ROOT_USR_SHARE/sonic"
 FILESYSTEM_ROOT_USR_SHARE_SONIC_SCRIPTS="$FILESYSTEM_ROOT_USR_SHARE_SONIC/scripts"
@@ -86,6 +87,7 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
 # Apply environtment configuration files
 sudo cp $IMAGE_CONFIGS/environment/environment $FILESYSTEM_ROOT/etc/
 sudo cp $IMAGE_CONFIGS/environment/motd $FILESYSTEM_ROOT/etc/
+sudo cp $IMAGE_CONFIGS/environment/logout_message $FILESYSTEM_ROOT/etc/
 
 # Create all needed directories
 sudo mkdir -p $FILESYSTEM_ROOT/etc/sonic/
@@ -227,6 +229,7 @@ sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/bash_*.deb || \
 # sonic-utilities-data installs bash-completion as a dependency. However, it is disabled by default
 # in bash.bashrc, so we copy a version of the file with it enabled here.
 sudo cp -f $IMAGE_CONFIGS/bash/bash.bashrc $FILESYSTEM_ROOT/etc/
+sudo cp -f $IMAGE_CONFIGS/bash/bash.bash_logout $FILESYSTEM_ROOT/etc/
 
 # Install readline's initialization file
 sudo cp -f $IMAGE_CONFIGS/readline/inputrc $FILESYSTEM_ROOT/etc/
@@ -240,6 +243,15 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-mark manu
 
 # Install systemd-python for SONiC host services
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install systemd-python
+
+if [[ $CONFIGURED_ARCH == armhf ]]; then
+    # Install pygobject from apt repos, since it has armhf prebuilt. The version in Debian is
+    # a bit older than what is in pip.
+    #
+    # When doing the next Debian upgrade (to Trixie), consider installing this package for all
+    # architectures instead of just armhf.
+    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install python3-gi
+fi
 
 # Install SONiC host services package
 SONIC_HOST_SERVICES_PY3_WHEEL_NAME=$(basename {{sonic_host_services_py3_wheel_path}})
@@ -272,6 +284,19 @@ sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/sonic-device-data_*.deb || \
 # package for supporting password hardening
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install libpam-pwquality
 
+# Install pam-ldap, nss-ldap, ldap-utils
+sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install      \
+    libnss-ldapd \
+    libpam-ldapd \
+    ldap-utils
+
+# add networking.service dependancy to nslcd
+sudo LANG=C chroot $FILESYSTEM_ROOT sed -i '/# Required-Start:/ s/$/ networking.service/' /etc/init.d/nslcd
+
+# nslcd disable default
+sudo LANG=C chroot $FILESYSTEM_ROOT systemctl stop nslcd.service
+sudo LANG=C chroot $FILESYSTEM_ROOT systemctl mask nslcd.service
+
 # Install pam-tacplus and nss-tacplus
 sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/libtac2_*.deb || \
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
@@ -285,14 +310,14 @@ sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/bash-tacplus_*.deb || \
 # Install audisp-tacplus
 sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/audisp-tacplus_*.deb || \
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
-# Disable tacplus by default
+# Disable tacplus and LDAP by default
 ## NOTE: this syntax of pam-auth-update is meant to be used when the package gets removed, not for specifying
 ## some local configuration of a PAM module. Currently, there's no clean way of noninteractively specifying
 ## whether some PAM module needs to be enabled or disabled on a system (there are hacky ways, though).
 ##
 ## If there is some PAM module that's installed/removed after this point, then this setting will end up having
 ## no impact, and there may be errors/test failures related to authentication.
-sudo LANG=C chroot $FILESYSTEM_ROOT pam-auth-update --remove tacplus
+sudo LANG=C chroot $FILESYSTEM_ROOT pam-auth-update --remove tacplus ldap
 sudo sed -i -e '/^passwd/s/ tacplus//' $FILESYSTEM_ROOT/etc/nsswitch.conf
 
 # Install pam-radius-auth and nss-radius
@@ -595,6 +620,11 @@ sudo cp $IMAGE_CONFIGS/hostname/hostname-config.service $FILESYSTEM_ROOT_USR_LIB
 echo "hostname-config.service" | sudo tee -a $GENERATED_SERVICE_FILE
 sudo cp $IMAGE_CONFIGS/hostname/hostname-config.sh $FILESYSTEM_ROOT/usr/bin/
 
+# Copy banner configuration scripts
+sudo cp $IMAGE_CONFIGS/bannerconfig/banner-config.service $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM
+echo "banner-config.service" | sudo tee -a $GENERATED_SERVICE_FILE
+sudo cp $IMAGE_CONFIGS/bannerconfig/banner-config.sh $FILESYSTEM_ROOT/usr/bin/
+
 # Copy miscellaneous scripts
 sudo cp $IMAGE_CONFIGS/misc/docker-wait-any $FILESYSTEM_ROOT/usr/bin/
 
@@ -636,6 +666,34 @@ j2 files/build_templates/config-chassisdb.service.j2 | sudo tee $FILESYSTEM_ROOT
 sudo cp $IMAGE_CONFIGS/config-chassisdb/config-chassisdb $FILESYSTEM_ROOT/usr/bin/config-chassisdb
 echo "config-chassisdb.service" | sudo tee -a $GENERATED_SERVICE_FILE
 sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable config-chassisdb.service
+
+# Copy midplane network service file for smart switch
+sudo cp $IMAGE_CONFIGS/midplane-network/bridge-midplane.netdev $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_NETWORK/bridge-midplane.netdev
+sudo cp $IMAGE_CONFIGS/midplane-network/bridge-midplane.network $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_NETWORK/bridge-midplane.network
+sudo cp $IMAGE_CONFIGS/midplane-network/dummy-midplane.netdev $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_NETWORK/dummy-midplane.netdev
+sudo cp $IMAGE_CONFIGS/midplane-network/dummy-midplane.network $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_NETWORK/dummy-midplane.network
+sudo cp $IMAGE_CONFIGS/midplane-network/midplane-network-npu.network $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_NETWORK/midplane-network-npu.network
+sudo cp $IMAGE_CONFIGS/midplane-network/midplane-network-dpu.network $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_NETWORK/midplane-network-dpu.network
+sudo cp $IMAGE_CONFIGS/midplane-network/midplane-network-npu.service $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM/midplane-network-npu.service
+sudo cp $IMAGE_CONFIGS/midplane-network/midplane-network-dpu.service $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM/midplane-network-dpu.service
+
+# Disable smart switch unit by default, these units will be controlled by systemd-sonic-generator
+sudo ln -s /dev/null $FILESYSTEM_ROOT/etc/systemd/network/bridge-midplane.netdev
+sudo ln -s /dev/null $FILESYSTEM_ROOT/etc/systemd/network/bridge-midplane.network
+sudo ln -s /dev/null $FILESYSTEM_ROOT/etc/systemd/network/dummy-midplane.netdev
+sudo ln -s /dev/null $FILESYSTEM_ROOT/etc/systemd/network/dummy-midplane.network
+sudo ln -s /dev/null $FILESYSTEM_ROOT/etc/systemd/network/midplane-network-npu.network
+sudo ln -s /dev/null $FILESYSTEM_ROOT/etc/systemd/network/midplane-network-dpu.network
+echo "midplane-network-npu.service" | sudo tee -a $GENERATED_SERVICE_FILE
+sudo LANG=C chroot $FILESYSTEM_ROOT systemctl disable midplane-network-npu.service
+echo "midplane-network-dpu.service" | sudo tee -a $GENERATED_SERVICE_FILE
+sudo LANG=C chroot $FILESYSTEM_ROOT systemctl disable midplane-network-dpu.service
+
+# According to the issue: https://github.com/systemd/systemd/issues/19106, To disable ManageForeignRoutingPolicyRules to avoid the ip rules being deleted by systemd-networkd
+sudo sed -i 's/#ManageForeignRoutingPolicyRules=yes/ManageForeignRoutingPolicyRules=no/g' $FILESYSTEM_ROOT/etc/systemd/networkd.conf
+
+sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable systemd-networkd
+sudo LANG=C chroot $FILESYSTEM_ROOT systemctl disable systemd-networkd-wait-online.service
 
 # Copy backend-acl script and service file
 sudo cp $IMAGE_CONFIGS/backend_acl/backend-acl.service $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM/backend-acl.service
@@ -967,6 +1025,7 @@ for fw_file_name in ${!FW_FILE_MAP[@]}; do
 done
 sudo cp $files_path/$ISSU_VERSION_FILE $FILESYSTEM_ROOT/$PLATFORM_DIR/fw/asic/issu-version
 sudo ln -s /host/image-$SONIC_IMAGE_VERSION/$PLATFORM_DIR/fw/asic/issu-version $FILESYSTEM_ROOT/etc/mlnx/issu-version
+sudo cp $files_path/$COMPONENT_VERSIONS_FILE $FILESYSTEM_ROOT/etc/mlnx/component-versions
 sudo cp $files_path/$MLNX_FFB_SCRIPT $FILESYSTEM_ROOT/usr/bin/mlnx-ffb.sh
 sudo cp $files_path/$MLNX_ONIE_FW_UPDATE $FILESYSTEM_ROOT/usr/bin/$MLNX_ONIE_FW_UPDATE
 sudo cp $files_path/$MLNX_SSD_FW_UPDATE $FILESYSTEM_ROOT/usr/bin/$MLNX_SSD_FW_UPDATE
@@ -975,6 +1034,8 @@ sudo mkdir -p $FILESYSTEM_ROOT/etc/mlnx/cpld/
 for MLNX_CPLD_ARCHIVE in $MLNX_CPLD_ARCHIVES; do
     sudo cp $files_path/$MLNX_CPLD_ARCHIVE $FILESYSTEM_ROOT/etc/mlnx/cpld/
 done
+sudo cp platform/mellanox/get_component_versions/get_component_versions.py $FILESYSTEM_ROOT/usr/bin/get_component_versions.py
+sudo chmod 755 $FILESYSTEM_ROOT/usr/bin/get_component_versions.py
 j2 platform/mellanox/mlnx-fw-upgrade.j2 | sudo tee $FILESYSTEM_ROOT/usr/bin/mlnx-fw-upgrade.sh
 sudo chmod 755 $FILESYSTEM_ROOT/usr/bin/mlnx-fw-upgrade.sh
 
@@ -987,6 +1048,28 @@ sudo rm -rf $FILESYSTEM_ROOT/$MLNX_SONIC_PLATFORM_PY3_WHEEL_NAME
 # Install service that manages Nvidia specific shared storage
 sudo cp platform/mellanox/nv-syncd-shared/nv-syncd-shared.service $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM/
 sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable nv-syncd-shared
+
+# Install minicom package
+sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install minicom
+
+sudo LANG=C chroot $FILESYSTEM_ROOT systemctl disable rshim.service
+{% endif %}
+
+{% if sonic_asic_platform == "nvidia-bluefield" %}
+declare -rA FW_FILE_MAP=( \
+    [$BF3_FW_FILE]="fw-BF3.mfa" \
+)
+sudo mkdir -p $FILESYSTEM_ROOT/$PLATFORM_DIR/fw/dpu/
+sudo mkdir -p $FILESYSTEM_ROOT/etc/bluefield/
+for fw_file_name in ${!FW_FILE_MAP[@]}; do
+    sudo cp $files_path/$fw_file_name $FILESYSTEM_ROOT/$PLATFORM_DIR/fw/dpu/${FW_FILE_MAP[$fw_file_name]}
+    sudo ln -s /host/image-$SONIC_IMAGE_VERSION/$PLATFORM_DIR/fw/dpu/${FW_FILE_MAP[$fw_file_name]} $FILESYSTEM_ROOT/etc/bluefield/${FW_FILE_MAP[$fw_file_name]}
+done
+
+SONIC_PLATFORM_PY3_WHEEL_NAME=$(basename {{platform_api_py3_wheel_path}})
+sudo cp {{platform_api_py3_wheel_path}} $FILESYSTEM_ROOT/$SONIC_PLATFORM_PY3_WHEEL_NAME
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install $SONIC_PLATFORM_PY3_WHEEL_NAME
+sudo rm -rf $FILESYSTEM_ROOT/$SONIC_PLATFORM_PY3_WHEEL_NAME
 {% endif %}
 
 {%- if SONIC_ROUTING_STACK == "frr" %}
