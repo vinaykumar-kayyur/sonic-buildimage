@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2020-2024 NVIDIA CORPORATION & AFFILIATES.
+# Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 # Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
 # Mellanox specific Tool for installing bfb image on all DPUs attached to SmartSwitch
 
 MLNX_SONIC_BFB_INSTALL = sonic-bfb-installer.sh
