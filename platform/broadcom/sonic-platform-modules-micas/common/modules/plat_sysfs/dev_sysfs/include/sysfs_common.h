@@ -4,7 +4,6 @@
 #include <linux/string.h>
 
 #define mem_clear(data, size) memset((data), 0, (size))
-#define strcpy_s(dest, src, size) strncpy((dest), (src), (size))
 
 #define DIR_NAME_MAX_LEN        (64)
 
