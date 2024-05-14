@@ -55,11 +55,15 @@ module sonic-vxlan {
                    name should have a max of 10 chars */
 
                     type string {
-                        length 1..10;
+                        length 1..30;
                     }
                 }
 
                 leaf src_ip {
+                    type inet:ip-address;
+                }
+
+                leaf dst_ip {
                     type inet:ip-address;
                 }
             }
