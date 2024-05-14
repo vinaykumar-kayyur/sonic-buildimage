@@ -267,7 +267,7 @@ stages:
     continueOnError: true
     pool: ubuntu-20.04
     steps:
-      - template: .azure-pipelines/run-test-elastictest-template.yml
+      - template: .azure-pipelines/run-test-elastictest-template.yml@sonic-mgmt
         parameters:
           TOPOLOGY: t0
           MIN_WORKER: $(T0_ONBOARDING_SONIC_INSTANCE_NUM)
