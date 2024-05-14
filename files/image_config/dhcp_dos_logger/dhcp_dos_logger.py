@@ -23,13 +23,21 @@ drop_pkts = {}
 # Get list of ports
 ports = config_db.get_table('PORT').keys()
 
-for port in ports:
-    drop_pkts[port] = 0
+drop_pkts = {port: 0 for port in get_ports()}
 
 # Main handler function
 def handler():
     while True:
         for port in drop_pkts.keys():
-            output = subprocess.run(["tc -s qdisc show dev {} handle ffff:".format(str(port))], shell=True, capture_output=True)
+
+            output = subprocess.run(["tc", "-s", "qdisc", "show", "dev", str(port), "handle", "ffff:"], shell=True, capture_output=True)
+
+            #output = subprocess.run(["tc -s qdisc show dev {} handle ffff:".format(str(port))], shell=True, capture_output=True)
             if output is not None:
                 match = re.search(r'dropped (\d+)', output.stdout)
+
+                if int(match) > drop_pkts[port]:
+                        logger.log_info(f"Port {port}: Current DHCP drop counter is {int(match)}")
+                        drop_pkts[port] = int(match)
+                else:
+                    logger.log_warning(f"No dropped packets found on port {port}")
