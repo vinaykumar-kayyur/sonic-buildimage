@@ -48,6 +48,9 @@ RUN pip3 install requests
 # We install the libpci module in order to be able to do PCI transactions
 RUN pip3 install libpci
 
+# Install psutil for process and system monitoring operations
+RUN pip3 install psutil==5.9.8
+
 {% if docker_platform_monitor_debs.strip() -%}
 # Copy locally-built Debian package dependencies
 {{ copy_files("debs/", docker_platform_monitor_debs.split(' '), "/debs/") }}
