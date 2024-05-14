@@ -16,7 +16,7 @@ RUN apt-get update &&       \
         python3-dev         \
         build-essential
 
-RUN mkdir -p /var/run/kea
+RUN mkdir -p /var/run
 
 RUN pip3 install psutil
 # TODO issue on remote rsyslog server in non-host container
