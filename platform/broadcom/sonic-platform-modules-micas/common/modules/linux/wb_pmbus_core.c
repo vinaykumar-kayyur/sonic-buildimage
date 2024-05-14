@@ -1238,8 +1238,8 @@ static int pmbus_add_label(struct pmbus_data *data,
     snprintf(label->name, sizeof(label->name), "%s%d_label", name, seq);
     if (!index) {
         if (phase == 0xff)
-            strncpy(label->label, lstring,
-                sizeof(label->label) - 1);
+            strlcpy(label->label, lstring,
+                sizeof(label->label));
         else
             snprintf(label->label, sizeof(label->label), "%s.%d",
                  lstring, phase);
