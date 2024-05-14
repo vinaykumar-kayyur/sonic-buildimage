@@ -30,7 +30,7 @@ def handler():
     while True:
         for port in drop_pkts.keys():
 
-            output = subprocess.run(["tc", "-s", "qdisc", "show", "dev", str(port), "handle", "ffff:"], shell=True, capture_output=True)
+            output = subprocess.run(["tc", "-s", "qdisc", "show", "dev", str(port), "handle", "ffff:"], shell=False, capture_output=True)
 
             #output = subprocess.run(["tc -s qdisc show dev {} handle ffff:".format(str(port))], shell=True, capture_output=True)
             if output is not None:
