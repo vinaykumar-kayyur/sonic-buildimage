@@ -23,21 +23,43 @@ drop_pkts = {}
 # Get list of ports
 ports = config_db.get_table('PORT').keys()
 
-drop_pkts = {port: 0 for port in get_ports()}
+# Initialize the ports with zero initial packet drops
+drop_pkts = {port: 0 for port in ports}
 
 # Main handler function
+# Main handler function
 def handler():
+    """
+    Continuously monitors ports for dropped DHCP packets and logs them.
+    """
     while True:
         for port in drop_pkts.keys():
+            try:
+                output = subprocess.run(["tc", "-s", "qdisc", "show", "dev", str(port), "handle", "ffff:"], shell=True, capture_output=True)
+                if output.returncode == 0:  # Check for successful execution
+                    match = re.search(r'dropped (\d+)', output.stdout)
+                    if match:
+                        dropped_count = int(match.group(1))
+                        if dropped_count > drop_pkts[port]:
+                            logger.log_info(f"Port {port}: Current DHCP drop counter is {dropped_count}")
+                            drop_pkts[port] = dropped_count
+                        else:
+                            logger.log_warning(f"No new dropped packets found on port {port}")
+                    else:
+                        logger.log_warning(f"No dropped packet information found for port {port}")
+            except subprocess.CalledProcessError as e:
+                logger.log_error(f"Error executing 'tc' command: {e}")
 
-            output = subprocess.run(["tc", "-s", "qdisc", "show", "dev", str(port), "handle", "ffff:"], shell=False, capture_output=True)
+        time.sleep(10)  # Adjust sleep time as needed (e.g., check for dropped packets every 10 seconds)
 
-            #output = subprocess.run(["tc -s qdisc show dev {} handle ffff:".format(str(port))], shell=True, capture_output=True)
-            if output is not None:
-                match = re.search(r'dropped (\d+)', output.stdout)
 
-                if int(match) > drop_pkts[port]:
-                        logger.log_info(f"Port {port}: Current DHCP drop counter is {int(match)}")
-                        drop_pkts[port] = int(match)
-                else:
-                    logger.log_warning(f"No dropped packets found on port {port}")
+# Entry point function
+def main():
+    """
+    Entry point for the daemon.
+  """
+    handler()
+
+
+if __name__ == "__main__":
+    main()
