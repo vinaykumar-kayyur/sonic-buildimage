@@ -8,7 +8,6 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/dhcp_dos_logger.py
-
+ExecStart=/usr/bin/dhcp_dos_logger.py 
 [Install]
 WantedBy=sonic.target
