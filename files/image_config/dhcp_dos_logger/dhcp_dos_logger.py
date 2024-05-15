@@ -35,7 +35,7 @@ def handler():
     while True:
         for port in drop_pkts.keys():
             try:
-                output = subprocess.run(["tc", "-s", "qdisc", "show", "dev", str(port), "handle", "ffff:"], shell=True, capture_output=True)
+                output = subprocess.run(["tc", "-s", "qdisc", "show", "dev", str(port), "handle", "ffff:"], shell=False, capture_output=True)
                 if output.returncode == 0:  # Check for successful execution
                     match = re.search(r'dropped (\d+)', output.stdout)
                     if match:
