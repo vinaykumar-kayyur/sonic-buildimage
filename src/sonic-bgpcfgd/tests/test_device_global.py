@@ -82,6 +82,9 @@ def test_idf_isolation_withdraw_all(mocked_log_info):
 @patch('bgpcfgd.managers_device_global.log_debug')
 def test_idf_unisolation(mocked_log_info): 
     m = constructor()
+    res = m.set_handler("STATE", {"idf_isolation_state": "isolated_withdraw_all"})
+    assert res, "Expect True return value for set_handler"
+
     res = m.set_handler("STATE", {"idf_isolation_state": "unisolated"})
     assert res, "Expect True return value for set_handler"
     mocked_log_info.assert_called_with("DeviceGlobalCfgMgr::Done")
@@ -99,6 +102,9 @@ def test_isolate_device_internal_session(mocked_log_info):
 @patch('bgpcfgd.managers_device_global.log_debug')
 def test_unisolate_device(mocked_log_info):
     m = constructor()
+    res = m.set_handler("STATE", {"tsa_enabled": "true"})
+    assert res, "Expect True return value for set_handler"
+
     res = m.set_handler("STATE", {"tsa_enabled": "false"})
     assert res, "Expect True return value for set_handler"
     mocked_log_info.assert_called_with("DeviceGlobalCfgMgr::Done")
@@ -107,6 +113,9 @@ def test_unisolate_device(mocked_log_info):
 @patch('bgpcfgd.managers_device_global.log_debug')
 def test_unisolate_device_internal_session(mocked_log_info):
     m = constructor(check_internal=True)
+    res = m.set_handler("STATE", {"tsa_enabled": "true"})
+    assert res, "Expect True return value for set_handler"
+    
     res = m.set_handler("STATE", {"tsa_enabled": "false"})
     assert res, "Expect True return value for set_handler"
     mocked_log_info.assert_called_with("DeviceGlobalCfgMgr::Done")

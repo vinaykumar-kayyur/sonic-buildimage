@@ -29,7 +29,7 @@ done
 if [ $valid == false ]; then
     echo "Invalid parameter $1, Operation not supported"
     echo ""
-    echo "Usage: ./idf_isolation <isolated_no_export|isolated_withdraw_all|unisolated|status>"
+    echo "Usage: sudo idf_isolation <isolated_no_export|isolated_withdraw_all|unisolated|status>"
     exit 0
 fi
 
