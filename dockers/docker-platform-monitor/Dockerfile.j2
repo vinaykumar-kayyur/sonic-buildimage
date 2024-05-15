@@ -49,7 +49,7 @@ RUN pip3 install requests
 RUN pip3 install libpci
 
 # Install psutil for process and system monitoring operations
-RUN pip3 install psutil==5.9.8
+RUN pip3 install psutil
 
 {% if docker_platform_monitor_debs.strip() -%}
 # Copy locally-built Debian package dependencies
