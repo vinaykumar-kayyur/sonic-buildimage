@@ -426,7 +426,7 @@ RUN apt-get update && apt-get install -y eatmydata && eatmydata apt-get install 
         default-jdk \
         libgoogle-gson-java
 
-{%- if CONFIGURED_PLATFORM != "marvell" %}
+{%- if CONFIGURED_ARCH != "arm64" and CONFIGURED_ARCH != "armhf" %}
 # For DASH BMv2
 RUN eatmydata apt install -y \
 # For grpc
