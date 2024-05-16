@@ -998,7 +998,7 @@
     "alias": "Eth36/3",
     "pfc_asym": "off",
     "speed": "50000",
-    "subport": "3"
+    "subport": "3",
     "role": "Dpc"
   },
   "Ethernet144": {
