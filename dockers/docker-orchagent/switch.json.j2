@@ -22,6 +22,7 @@
 [
     {
         "SWITCH_TABLE:switch": {
+{% if not DEVICE_METADATA.localhost.switch_type or DEVICE_METADATA.localhost.switch_type != "dpu" %}
             "ecmp_hash_seed": "{{ hash_seed_value }}",
             "lag_hash_seed": "{{ hash_seed_value }}",
             "fdb_aging_time": "600",
@@ -31,6 +32,7 @@
             "ordered_ecmp": "true"
 {% else %}
             "ordered_ecmp": "false"
+{% endif %}
 {% endif %}
         },
         "OP": "SET"
