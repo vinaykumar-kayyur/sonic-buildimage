@@ -130,6 +130,7 @@ do {                                                \
  *       structure & variable declare
  * *********************************************/
 typedef struct pci_fpga_device_s {
+    void  __iomem *data_base_addr0;
     void  __iomem *data_base_addr1;
     void  __iomem *data_base_addr2;
     resource_size_t data_region1;
@@ -148,6 +149,7 @@ struct as9817_64_fpga_data {
 static struct platform_device *pdev = NULL;
 extern spinlock_t cpld_access_lock;
 extern int wait_spi(u32 mask, unsigned long timeout);
+extern void __iomem *spi_busy_reg;
 
 /***********************************************
  *       enum define
@@ -951,7 +953,6 @@ static int as9817_64_pcie_fpga_stat_probe(struct platform_device *pdev)
     int i;
     int status = 0, err = 0;
     unsigned long bar_base;
-    void  __iomem *data_base_addr0;
     unsigned int val;
 
     fpga_ctl = devm_kzalloc(dev, sizeof(struct as9817_64_fpga_data), GFP_KERNEL);
@@ -981,14 +982,14 @@ static int as9817_64_pcie_fpga_stat_probe(struct platform_device *pdev)
     /*
      * Detect platform for changing the setting behavior of LP mode.
      */
-    data_base_addr0 = pci_iomap(pcidev, BAR0_NUM, 0);
-    if (data_base_addr0 == NULL) {
+    fpga_ctl->pci_fpga_dev.data_base_addr0 = pci_iomap(pcidev, BAR0_NUM, 0);
+    if (fpga_ctl->pci_fpga_dev.data_base_addr0 == NULL) {
         dev_err(dev, "Failed to map BAR0\n");
         status = -EIO;
         goto exit_pci_disable;
     }
 
-    val = ioread8(data_base_addr0 + FPGA_BOARD_INFO_REG);
+    val = ioread8(fpga_ctl->pci_fpga_dev.data_base_addr0 + FPGA_BOARD_INFO_REG);
     switch (val & 0x0C)
     {
         case 0x00: /* OSFP */
@@ -1006,7 +1007,15 @@ static int as9817_64_pcie_fpga_stat_probe(struct platform_device *pdev)
 	    dev_warn(dev, "Unknown platform detected\n");
             break;
     }
-    pci_iounmap(pcidev, data_base_addr0);
+
+    /*
+     * The register address of SPI Busy is 0x33.
+     * It can not only read one byte. It needs to read four bytes from 0x30.
+     * The value is obtained by '(ioread32(spi_busy_reg) >> 24) & 0xFF'.
+     */
+    spi_busy_reg = fpga_ctl->pci_fpga_dev.data_base_addr0 + 0x30;
+
+
 
     /*
      * Cannot use 'pci_request_regions(pcidev, DRVNAME)' 
@@ -1017,7 +1026,7 @@ static int as9817_64_pcie_fpga_stat_probe(struct platform_device *pdev)
     if (fpga_ctl->pci_fpga_dev.data_base_addr1 == NULL) {
         dev_err(dev, "Failed to map BAR1\n");
         status = -EIO;
-        goto exit_pci_disable;
+        goto exit_pci_iounmap0;
     }
     fpga_ctl->pci_fpga_dev.data_region1 = pci_resource_start(pcidev, BAR1_NUM) + CPLD1_PCIE_START_OFFSET;
     ret = request_mem_region(fpga_ctl->pci_fpga_dev.data_region1, REGION_LEN, DRVNAME"_cpld1");
@@ -1097,6 +1106,9 @@ exit_pci_release1:
     release_mem_region(fpga_ctl->pci_fpga_dev.data_region1, REGION_LEN);
 exit_pci_iounmap1:
     pci_iounmap(fpga_ctl->pci_fpga_dev.pci_dev, fpga_ctl->pci_fpga_dev.data_base_addr1);
+exit_pci_iounmap0:
+    spi_busy_reg = NULL;
+    pci_iounmap(fpga_ctl->pci_fpga_dev.pci_dev, fpga_ctl->pci_fpga_dev.data_base_addr0);
 exit_pci_disable:
     pci_disable_device(fpga_ctl->pci_fpga_dev.pci_dev);
 
@@ -1115,6 +1127,8 @@ static int as9817_64_pcie_fpga_stat_remove(struct platform_device *pdev)
         for (i = 0; i < PORT_NUM; i++) {
             platform_device_unregister(fpga_ctl->pci_fpga_dev.fpga_i2c[i]);
         }
+        spi_busy_reg = NULL;
+        pci_iounmap(fpga_ctl->pci_fpga_dev.pci_dev, fpga_ctl->pci_fpga_dev.data_base_addr0);
         pci_iounmap(fpga_ctl->pci_fpga_dev.pci_dev, fpga_ctl->pci_fpga_dev.data_base_addr1);
         pci_iounmap(fpga_ctl->pci_fpga_dev.pci_dev, fpga_ctl->pci_fpga_dev.data_base_addr2);
         release_mem_region(fpga_ctl->pci_fpga_dev.data_region1, REGION_LEN);
