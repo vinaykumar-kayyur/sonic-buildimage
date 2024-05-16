@@ -17,5 +17,13 @@
     "STORMOND_SYNC_INTVL_BAD_LEN_MAX": {
         "desc": "Configure an invalid fsstats file sync interval: out of range value",
         "eStrKey" : "InvalidValue"
+    },
+    "STORMOND_SYNC_INTVL_EMPTY_VALUE": {
+        "desc": "Configure an empty file sync interval",
+        "eStrKey" : "InvalidValue"
+    },
+    "STORMOND_POLLING_INTVL_EMPTY_VALUE": {
+        "desc": "Configure an empty file sync interval",
+        "eStrKey" : "InvalidValue"
     }
 }

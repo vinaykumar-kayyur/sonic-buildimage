@@ -53,5 +53,27 @@
                 }
             }
         }
+    },
+    "STORMOND_SYNC_INTVL_EMPTY_VALUE": {
+        "sonic-stormond-config:sonic-stormond-config": {
+            "sonic-stormond-config:STORMOND_CONFIG": {
+                "INTERVALS":{
+                    "daemon_polling_interval" : "3600",
+                    "fsstats_sync_interval"   : ""
+
+                }
+            }
+        }
+    },
+    "STORMOND_POLLING_INTVL_EMPTY_VALUE": {
+        "sonic-stormond-config:sonic-stormond-config": {
+            "sonic-stormond-config:STORMOND_CONFIG": {
+                "INTERVALS":{
+                    "daemon_polling_interval" : "",
+                    "fsstats_sync_interval"   : "86400"
+
+                }
+            }
+        }
     }
 }
