@@ -146,12 +146,6 @@
   fn: '0'
   id: b274
   name: 'Ethernet controller: Broadcom Inc. and subsidiaries Device b274 (rev 02)'
-- bus: '05'
-  dev: '00'
-  fn: '0'
-  id: '8168'
-  name: 'Ethernet controller: Realtek Semiconductor Co., Ltd. RTL8111/8168/8411 PCI
-    Express Gigabit Ethernet Controller (rev 15)'
 - bus: '06'
   dev: '00'
   fn: '0'

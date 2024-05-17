@@ -5,7 +5,7 @@
 #
 import os
 import re
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 import glob
 import json
 from decimal import Decimal
@@ -290,7 +290,7 @@ class status():
         root = status.getETroot(filename)
         for neighbor in root.iter(tagname):
             prob_t = {}
-            prob_t = neighbor.attrib
+            prob_t.update(neighbor.attrib)
             prob_t['errcode'] = 0
             prob_t['errmsg'] = ''
             for pros in neighbor.iter("property"):

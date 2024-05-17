@@ -19,7 +19,7 @@ import os
 import syslog
 import json
 from platform_config import AIR_FLOW_CONF, AIRFLOW_RESULT_FILE
-from platform_util import dev_file_read, byteTostr
+from platform_util import dev_file_read, byteTostr, exec_os_cmd
 from eepromutil.fru import ipmifru
 from eepromutil.cust_fru import CustFru
 from eepromutil.fantlv import fan_tlv
@@ -241,11 +241,11 @@ def generate_airflow():
     out_file_dir = os.path.dirname(AIRFLOW_RESULT_FILE)
     if len(out_file_dir) != 0:
         cmd = "mkdir -p %s" % out_file_dir
-        os.system(cmd)
-        os.system("sync")
+        exec_os_cmd(cmd)
+        exec_os_cmd("sync")
     with open(AIRFLOW_RESULT_FILE, "w") as fd:
         fd.write(ret_json)
-    os.system("sync")
+    exec_os_cmd("sync")
 
 
 if __name__ == '__main__':

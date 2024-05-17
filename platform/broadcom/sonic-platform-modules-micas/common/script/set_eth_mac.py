@@ -185,13 +185,13 @@ def set_e2_mac_to_config_file(eth_name, mac, ifcfg):
         if not os.path.exists(cfg_file_dir):
             cmd = "mkdir -p %s" % cfg_file_dir
             setmac_info("Create interfaces config directory: %s" % cfg_file_dir)
-            os.system(cmd)
-            os.system("sync")
+            exec_os_cmd(cmd)
+            exec_os_cmd("sync")
         wr_val = cfg_prefix + " %s\n" % eth_name
         wr_val += "    %s %s\n" % (mac_prefix, mac)
         with open(ifcfg_file_path, "w") as fd:
             fd.write(wr_val)
-        os.system("sync")
+        exec_os_cmd("sync")
         setmac_info("Create interfaces config: %s with mac address: %s" % (ifcfg_file_path, mac))
         return True
     except Exception as e:

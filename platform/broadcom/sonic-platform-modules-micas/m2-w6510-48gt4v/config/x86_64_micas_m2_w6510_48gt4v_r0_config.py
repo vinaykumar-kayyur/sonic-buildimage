@@ -12,7 +12,7 @@ STARTMODULE = {
     "sff_temp_polling": 1,
     "generate_airflow": 1,
     "set_eth_mac": 1,
-    "drv_update": 1,
+    "drv_update": 0,
 }
 
 MANUINFO_CONF = {
@@ -401,8 +401,8 @@ DRIVERLISTS = [
     {"name": "wb_i2c_mux_pca954x_device", "delay": 0},
     {"name": "wb_i2c_dev_device", "delay": 0},
     {"name": "wb_lm75", "delay": 0},
-    {"name": "wb_optoe", "delay": 0},
-    {"name": "wb_at24", "delay": 0},
+    {"name": "optoe", "delay": 0},
+    {"name": "at24", "delay": 0},
     {"name": "wb_mac_bsc", "delay": 0},
     {"name": "wb_pmbus_core", "delay": 0},
     {"name": "wb_xdpe12284", "delay": 0},
@@ -418,15 +418,15 @@ DRIVERLISTS = [
 ]
 
 DEVICE = [
-    {"name": "wb_24c02", "bus": 2, "loc": 0x56},
+    {"name": "24c02", "bus": 2, "loc": 0x56},
     {"name": "wb_mac_bsc_td3_x2", "bus": 18, "loc": 0x44},
     # fan
-    {"name": "wb_24c02", "bus": 8, "loc": 0x53},
-    {"name": "wb_24c02", "bus": 9, "loc": 0x53},
+    {"name": "24c02", "bus": 8, "loc": 0x53},
+    {"name": "24c02", "bus": 9, "loc": 0x53},
 
     # psu
-    {"name": "wb_24c02", "bus": 7, "loc": 0x56},
-    {"name": "wb_24c02", "bus": 7, "loc": 0x57},
+    {"name": "24c02", "bus": 7, "loc": 0x56},
+    {"name": "24c02", "bus": 7, "loc": 0x57},
     # temp
     {"name": "wb_tmp275", "bus": 6, "loc": 0x48},
     {"name": "wb_tmp275", "bus": 6, "loc": 0x49},
@@ -439,10 +439,10 @@ DEVICE = [
     {"name": "wb_ina3221", "bus": 3, "loc": 0x41},
     {"name": "wb_ina3221", "bus": 3, "loc": 0x42},
     # port
-    {"name": "wb_optoe2", "bus": 11, "loc": 0x50},
-    {"name": "wb_optoe2", "bus": 12, "loc": 0x50},
-    {"name": "wb_optoe2", "bus": 13, "loc": 0x50},
-    {"name": "wb_optoe2", "bus": 14, "loc": 0x50},
+    {"name": "optoe2", "bus": 11, "loc": 0x50},
+    {"name": "optoe2", "bus": 12, "loc": 0x50},
+    {"name": "optoe2", "bus": 13, "loc": 0x50},
+    {"name": "optoe2", "bus": 14, "loc": 0x50},
 ]
 
 REBOOT_CTRL_PARAM = {
@@ -458,14 +458,14 @@ DEV_MONITOR_PARAM = {
             "name": "psu1",
             "present": {"gettype": "io", "io_addr": 0xb10, "presentbit": 0, "okval": 0},
             "device": [
-                {"id": "psu1frue2", "name": "wb_24c02", "bus": 7, "loc": 0x56, "attr": "eeprom"},
+                {"id": "psu1frue2", "name": "24c02", "bus": 7, "loc": 0x56, "attr": "eeprom"},
             ],
         },
         {
             "name": "psu2",
             "present": {"gettype": "io", "io_addr": 0xb10, "presentbit": 1, "okval": 0},
             "device": [
-                {"id": "psu2frue2", "name": "wb_24c02", "bus": 7, "loc": 0x57, "attr": "eeprom"},
+                {"id": "psu2frue2", "name": "24c02", "bus": 7, "loc": 0x57, "attr": "eeprom"},
             ],
         },
     ],
@@ -474,14 +474,14 @@ DEV_MONITOR_PARAM = {
             "name": "fan1",
             "present": {"gettype": "io", "io_addr": 0x994, "presentbit": 0, "okval": 0},
             "device": [
-                {"id": "fan1frue2", "name": "wb_24c02", "bus": 8, "loc": 0x53, "attr": "eeprom"},
+                {"id": "fan1frue2", "name": "24c02", "bus": 8, "loc": 0x53, "attr": "eeprom"},
             ],
         },
         {
             "name": "fan2",
             "present": {"gettype": "io", "io_addr": 0x994, "presentbit": 1, "okval": 0},
             "device": [
-                {"id": "fan2frue2", "name": "wb_24c02", "bus": 9, "loc": 0x53, "attr": "eeprom"},
+                {"id": "fan2frue2", "name": "24c02", "bus": 9, "loc": 0x53, "attr": "eeprom"},
             ],
         },
     ],
@@ -489,7 +489,7 @@ DEV_MONITOR_PARAM = {
         {
             "name": "eeprom",
             "device": [
-                {"id": "eeprom_1", "name": "wb_24c02", "bus": 2, "loc": 0x56, "attr": "eeprom"},
+                {"id": "eeprom_1", "name": "24c02", "bus": 2, "loc": 0x56, "attr": "eeprom"},
             ],
         },
         {

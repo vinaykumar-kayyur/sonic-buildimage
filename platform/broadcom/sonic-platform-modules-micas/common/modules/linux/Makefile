@@ -16,7 +16,6 @@ obj-m += wb_i2c_i801.o
 obj-m += wb_i2c_algo_bit.o
 obj-m += wb_i2c_gpio.o
 obj-m += wb_i2c_gpio_device.o
-obj-m += wb_at24.o
 obj-m += wb_pmbus_core.o
 obj-m += wb_csu550.o
 obj-m += wb_ina3221.o

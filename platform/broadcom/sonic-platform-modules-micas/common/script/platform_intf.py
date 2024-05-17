@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import os
 import syslog
+import glob
 import importlib.machinery
 from platform_util import getplatform_name, dev_file_read, dev_file_write, write_sysfs, read_sysfs
 
@@ -29,9 +30,8 @@ PLATFORM_INTF_DEBUG_FILE = "/etc/.platform_intf_debug_flag"
 
 CONFIG_FILE_LIST = [
     "/usr/local/bin/",
-    "/usr/local/lib/python3/dist-packages/config/",
-    "/usr/local/lib/python3.7/dist-packages/config/",
-    "/usr/local/lib/python3.9/dist-packages/config/"]
+    "/usr/local/lib/*/dist-packages/config/"
+]
 
 
 def platform_intf_debug(s):
@@ -54,6 +54,11 @@ class IntfPlatform:
         real_path = None
         platform_name = (getplatform_name()).replace("-", "_")
         for configfile_path in CONFIG_FILE_LIST:
+            if "/*/" in configfile_path:
+                filepath = glob.glob(configfile_path)
+                if len(filepath) == 0:
+                    continue
+                configfile_path = filepath[0]
             configfile = configfile_path + platform_name + "_port_config.py"
             if os.path.exists(configfile):
                 real_path = configfile
