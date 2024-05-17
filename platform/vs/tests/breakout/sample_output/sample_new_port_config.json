@@ -144,28 +144,28 @@
 		"alias": "fortyGigE0/6",
 		"lanes": "31",
 		"speed": "25000",
-		"index": "0",
+		"index": "1",
 		"subport": "3"
 	},
 	"Ethernet7": {
 		"alias": "fortyGigE0/7",
 		"lanes": "32",
 		"speed": "25000",
-		"index": "0",
+		"index": "1",
 		"subport": "4"
 	},
 	"Ethernet4": {
 		"alias": "fortyGigE0/4",
 		"lanes": "29",
 		"speed": "25000",
-		"index": "0",
+		"index": "1",
 		"subport": "1"
 	},
 	"Ethernet5": {
 		"alias": "fortyGigE0/5",
 		"lanes": "30",
 		"speed": "25000",
-		"index": "0",
+		"index": "1",
 		"subport": "2"
 	}
     },
