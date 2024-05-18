@@ -8,7 +8,6 @@ INSTALL_SCRIPT_DIR = $(SUB_BUILD_DIR)/usr/local/bin
 INSTALL_LIB_DIR = $(SUB_BUILD_DIR)/usr/lib/python3/dist-packages
 INSTALL_SYSFS_CFG_DIR = $(SUB_BUILD_DIR)/etc/plat_sysfs_cfg
 
-
 all:
 	$(MAKE) -C $(KBUILD_OUTPUT) M=$(DIR_KERNEL_SRC) modules
 	@if [ ! -d ${INSTALL_DIR} ]; then mkdir -p ${INSTALL_DIR} ;fi
