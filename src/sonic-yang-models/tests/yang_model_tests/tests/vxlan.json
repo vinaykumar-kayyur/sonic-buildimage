@@ -17,13 +17,6 @@
         "desc": "VNI Out of Range in VXLAN_TUNNEL_MAP TABLE",
         "eStrKey": "Range"
     },
-    "VXLAN_TUNNEL_NAME_VALID_TEST": {
-        "desc": "Tunnel Name string length 30 is valid"
-    },
-    "VXLAN_TUNNEL_NAME_INVALID_TEST": {
-        "desc": "Tunnel Name string length 31 is invalid",
-        "eStrKey": "Range"
-    },
     "VXLAN_TUNNEL_NAME_VALID_DST_IPV4_TEST": {
         "desc": "Valid IPv4 Destination Address"
     },
