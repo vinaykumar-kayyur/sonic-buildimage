@@ -82,8 +82,10 @@ def test_idf_isolation_withdraw_all(mocked_log_info):
 @patch('bgpcfgd.managers_device_global.log_debug')
 def test_idf_unisolation(mocked_log_info): 
     m = constructor()
+    m.directory.put(m.db_name, m.table_name, "idf_isolation_state", "isolated_no_export")
     res = m.set_handler("STATE", {"idf_isolation_state": "unisolated"})
     assert res, "Expect True return value for set_handler"
+    mocked_log_info.assert_called_with("DeviceGlobalCfgMgr::Done")
     assert m.cfg_mgr.get_config() == get_string_from_file("/result_all_idf_unisolated.conf")
 
 @patch('bgpcfgd.managers_device_global.log_debug')
@@ -98,15 +100,19 @@ def test_isolate_device_internal_session(mocked_log_info):
 @patch('bgpcfgd.managers_device_global.log_debug')
 def test_unisolate_device(mocked_log_info):
     m = constructor()
+    m.directory.put(m.db_name, m.table_name, "tsa_enabled", "true")
     res = m.set_handler("STATE", {"tsa_enabled": "false"})
     assert res, "Expect True return value for set_handler"
+    mocked_log_info.assert_called_with("DeviceGlobalCfgMgr::Done")
     assert m.cfg_mgr.get_config() == get_string_from_file("/result_all_unisolate.conf")
 
 @patch('bgpcfgd.managers_device_global.log_debug')
 def test_unisolate_device_internal_session(mocked_log_info):
     m = constructor(check_internal=True)
+    m.directory.put(m.db_name, m.table_name, "tsa_enabled", "true")
     res = m.set_handler("STATE", {"tsa_enabled": "false"})
     assert res, "Expect True return value for set_handler"
+    mocked_log_info.assert_called_with("DeviceGlobalCfgMgr::Done")
     assert m.cfg_mgr.get_config() == get_string_from_file("/result_chassis_packet_unisolate.conf", INTERNAL_BASE_PATH)
 
 
