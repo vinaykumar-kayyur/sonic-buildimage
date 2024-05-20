@@ -8,7 +8,7 @@ import json
 import jinja2
 import subprocess
 from collections import defaultdict
-import mock
+
 
 from lxml import etree as ET
 from lxml.etree import QName
@@ -26,7 +26,8 @@ else:
     UNICODE_TYPE = unicode
 
 try:
-    if os.environ["UTILITIES_UNIT_TESTING_TOPOLOGY"] == "multi_asic":
+    if os.environ["CFGGEN_UNIT_TESTING_TOPOLOGY"] == "multi_asic":
+        import mock
         is_multi_asic = mock.MagicMock(return_value=True)
 except KeyError:
     pass
@@ -423,6 +424,7 @@ def parse_chassis_deviceinfo(deviceinfos, chassis_linecards_info, chassis_hwsku,
 
             system_ports, chassis_port_alias, port_default_speed  = parse_chassis_deviceinfo_intf_metadata(
                     device_info, chassis_linecards_info, chassis_hwsku, num_voq, chassis_type, chassis_intf_map, voq_intf_attributes)
+    return system_ports, chassis_port_alias, port_default_speed
 
 
 class minigraph_encoder(json.JSONEncoder):
@@ -858,7 +860,6 @@ def parse_dpg(dpg, hname):
         ipintfs = child.find(str(QName(ns, "IPInterfaces")))
         intfs = {}
         ip_intfs_map = {}
-        voq_inband_intfs = {}
         for ipintf in ipintfs.findall(str(QName(ns, "IPInterface"))):
             ipprefix = ipintf.find(str(QName(ns, "Prefix"))).text
             ipintf_name  = ipintf.find(str(QName(ns, "Name"))).text
@@ -911,7 +912,6 @@ def parse_dpg(dpg, hname):
             mgmt_intf[(intfname, ipprefix)] = {'gwaddr': gwaddr}
 
         voqinbandintfs = child.find(str(QName(ns, "VoqInbandInterfaces")))
-        voq_inband_intfs = {}
         if voqinbandintfs:
             for voqintf in voqinbandintfs.findall(str(QName(ns1, "VoqInbandInterface"))):
                 intfname = voqintf.find(str(QName(ns, "Name"))).text
@@ -1629,7 +1629,7 @@ def parse_asic_meta(meta, hname):
                 value = device_property.find(str(QName(ns1, "Value"))).text
                 if name == "SubRole":
                     sub_role = value
-                elif name == "SwitchId":
+                elif name == "SwitchId" or name == "AsicSwitchId":
                     switch_id = value
                 elif name == "SwitchType":
                     switch_type = value
@@ -2103,7 +2103,6 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         try:
             current_device = [devices[key] for key in devices if key.lower() == asic_name.lower()][0]
         except:
-            print("Warning: no asic configuration found for {} in minigraph".format(asic_name), file=sys.stderr)
             current_device = {}
 
     # on single asic linecards, parse_dpg() will not get the mmanagement interface information
@@ -2170,13 +2169,13 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     if len(system_defaults) > 0:
         results['SYSTEM_DEFAULTS'] = system_defaults
    
+    if asic_name is not None:
+        results['DEVICE_METADATA']['localhost']['asic_name'] =  asic_name
+    
     # for single asic Voq Linecards the asic_name needs to populated to "ASIC0"
     if switch_type == "voq" or chassis_type in [CHASSIS_CARD_VOQ]:
         if not is_multi_asic():
-            results['DEVICE_METADATA']['localhost']['asic_name'] =  "Asic0"
-    else:
-        if asic_name is not None:
-            results['DEVICE_METADATA']['localhost']['asic_name'] =  asic_name
+            results['DEVICE_METADATA']['localhost']['asic_name'] =  "ASIC0"
 
     if sub_role is not None:
         results['DEVICE_METADATA']['localhost']['sub_role'] =  sub_role

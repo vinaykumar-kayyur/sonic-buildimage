@@ -35,7 +35,7 @@ class TestMultiNpuCfgGen(TestCase):
         self.sample_no_asic_port_config = os.path.join(self.test_data_dir, 'sample_port_config-4.ini')
         self.output_file = os.path.join(self.test_dir, 'output')
         os.environ["CFGGEN_UNIT_TESTING"] = "2"
-        os.environ["UTILITIES_UNIT_TESTING_TOPOLOGY"] = "multi_asic"
+        os.environ["CFGGEN_UNIT_TESTING_TOPOLOGY"] = "multi_asic"
 
     def run_script(self, argument, check_stderr=True, output_file=None, validateYang=True):
         print('\n    Running sonic-cfggen ' + ' '.join(argument))
@@ -558,4 +558,4 @@ class TestMultiNpuCfgGen(TestCase):
 
     def tearDown(self):
         os.environ["CFGGEN_UNIT_TESTING"] = ""
-        os.environ["UTILITIES_UNIT_TESTING_TOPOLOGY"] = ""
+        os.environ["CFGGEN_UNIT_TESTING_TOPOLOGY"] = ""
