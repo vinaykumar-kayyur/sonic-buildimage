@@ -13,15 +13,13 @@ class TestChassis(TestCase):
     def setUp(self):
         self.yang = utils.YangWrapper()
         self.test_dir = os.path.dirname(os.path.realpath(__file__))
-        self.test_data_dir = os.path.join(
-            self.test_dir,  'chassis_data/voq_chassis_data')
         self.script_file = [utils.PYTHON_INTERPRETTER,
                             os.path.join(self.test_dir, '..', 'sonic-cfggen')]
         self.output_file = os.path.join(self.test_dir, 'output')
         self.macsec_profile = os.path.join(
             self.test_dir, 'macsec_profile.json')
 
-    def run_script(self, argument, check_stderr=True, output_file=None, validateYang=True):
+    def run_script(self, argument, check_stderr=True, output_file=None, validateYang=True, ignore_warning=False):
         print('\n    Running sonic-cfggen ' + ' '.join(argument))
         # if validateYang:
         # self.assertTrue(self.yang.validate(argument))
@@ -37,12 +35,21 @@ class TestChassis(TestCase):
             with open(output_file, 'w') as f:
                 f.write(output)
 
+        if ignore_warning:
+            output_without_warning = []
+            for line in output.split('\n'):
+                if line.startswith("Warning"):
+                    continue
+                output_without_warning.append(line)
+            output = '\n'.join(output_without_warning)
+            
         linecount = output.strip().count('\n')
         if linecount <= 0:
             print('    Output: ' + output.strip())
         else:
             print('    Output: ({0} lines, {1} bytes)'.format(
                 linecount + 1, len(output)))
+        
         return output
 
     def run_diff(self, file1, file2):
@@ -53,6 +60,8 @@ class TestChassis(TestCase):
 class TestVoqChassisSingleAsic(TestChassis):
     def setUp(self):
         super().setUp()
+        self.test_data_dir = os.path.join(
+            self.test_dir,  'chassis_data/voq_chassis_data')
         self.sample_graph = os.path.join(
             self.test_data_dir, 'voq_chassis_lc_single_asic.xml')
         self.sample_port_config = os.path.join(
@@ -361,6 +370,8 @@ class TestVoqChassisMultiAsic(TestChassis):
 
     def setUp(self):
         super().setUp()
+        self.test_data_dir = os.path.join(
+            self.test_dir,  'chassis_data/voq_chassis_data')
         self.sample_graph = os.path.join(
             self.test_data_dir, 'voq_chassis_lc_multi_asic.xml')
         self.sample_port_config = os.path.join(
@@ -816,6 +827,8 @@ class TestVoqChassisSup(TestChassis):
 
     def setUp(self):
         super().setUp()
+        self.test_data_dir = os.path.join(
+            self.test_dir,  'chassis_data/voq_chassis_data')
         self.sample_graph = os.path.join(
             self.test_data_dir, 'voq_chassis_sup.xml')
         os.environ['CFGGEN_UNIT_TESTING'] = '2'
@@ -930,6 +943,195 @@ class TestVoqChassisSup(TestChassis):
         )
 
     
+    def tearDown(self):
+        os.environ['CFGGEN_UNIT_TESTING'] = ''
+        os.environ['CFGGEN_UNIT_TESTING_TOPOLOGY'] = ''
+        if os.path.exists(self.output_file):
+            os.remove(self.output_file)
+
+
+class TestPacketChassisSup(TestChassis):
+
+    def setUp(self):
+        super().setUp()
+        self.test_data_dir = os.path.join(
+            self.test_dir,  'chassis_data/packet_chassis_data')
+        self.sample_graph = os.path.join(
+            self.test_data_dir, 'packet_chassis_sup.xml')
+        self.sample_port_config = os.path.join(
+            self.test_data_dir, 'packet-chassis-port-config-1.ini')
+        os.environ['CFGGEN_UNIT_TESTING'] = '2'
+        os.environ["CFGGEN_UNIT_TESTING_TOPOLOGY"] = "multi_asic"
+
+    def test_dummy_run(self):
+        argument = []
+        output = self.run_script(argument)
+        self.assertEqual(output, '')
+
+    def test_print_data(self):
+        argument = ['-m', self.sample_graph, '--print-data']
+        output = self.run_script(argument)
+        self.assertGreater(len(output.strip()), 0)
+
+    def test_read_yaml(self):
+        argument = ['-v', 'yml_item', '-y',
+                    os.path.join(self.test_dir, 'test.yml')]
+        output = yaml.safe_load(self.run_script(argument))
+        self.assertListEqual(output, ['value1', 'value2'])
+
+    def test_render_template(self):
+        argument = ['-y', os.path.join(self.test_dir, 'test.yml'),
+                    '-t', os.path.join(self.test_dir, 'test.j2')]
+        output = self.run_script(argument)
+        self.assertEqual(output.strip(), 'value1\nvalue2')
+
+    def test_tacacs(self):
+        argument = [
+            '-m', self.sample_graph,
+            '--var-json', 'TACPLUS_SERVER'
+        ]
+        output = json.loads(self.run_script(argument))
+        self.assertDictEqual(
+            output, {'123.46.98.21': {'priority': '1', 'tcp_port': '49'}})
+        # TACPLUS_SERVER not present in the asic configuration.
+        argument = ['-m', self.sample_graph, '--var-json', 'TACPLUS_SERVER']
+
+    def test_ntp(self):
+        argument = [
+            '-m', self.sample_graph,
+            '--var-json', 'NTP_SERVER'
+        ]
+        output = json.loads(self.run_script(argument))
+        self.assertDictEqual(output, {'17.39.1.130': {}, '17.39.1.129': {}})
+        # NTP data is present only in the host config
+        argument = ['-m', self.sample_graph, '--var-json', 'NTP_SERVER']
+
+    def test_mgmt_port(self):
+        argument = [
+            '-m', self.sample_graph, 
+            '--var-json', 'MGMT_PORT'
+        ]
+        output = json.loads(self.run_script(argument))
+        self.assertDictEqual(
+            output, {'eth0': {'alias': 'Management1/1', 'admin_status': 'up'}})
+
+    def test_device_metadata(self):
+        argument = [
+            '-m', self.sample_graph,
+            '--var-json', 'DEVICE_METADATA'
+        ]
+        output = json.loads(self.run_script(argument))
+        print(output['localhost'])
+        self.assertDictEqual(output['localhost'], 
+            {
+                "localhost": {
+                "bgp_asn": None,
+                "region": "test",
+                "cloudtype": "Public",
+                "docker_routing_config_mode": "separated",
+                "hostname": "str-sonic-sup00",
+                "hwsku": "sonic-sup-sku",
+                "type": "SpineRouter",
+                "synchronous_mode": "enable",
+                "yang_config_validation": "disable",
+                "chassis_hostname": "str-sonic",
+                "deployment_id": "3",
+                "cluster": "TestbedForstr-sonic",
+                "switch_type": "chassis-packet",
+                "max_cores": 64
+    }
+            }
+        )
+
+    def test_device_metadata_for_namespace(self):
+        argument = [
+            '-m', self.sample_graph,
+            '-n', 'asic0',
+            '--var-json', 'DEVICE_METADATA'
+        ]
+        output = json.loads(self.run_script(argument))
+        print(output['localhost'])
+        self.assertDictEqual(output['localhost'], 
+            {
+                "bgp_asn": None,
+                "region": "test",
+                "cloudtype": None,
+                "docker_routing_config_mode": "separated",
+                "hostname": "str-sonic-sup00",
+                "hwsku": "sonic-sup-sku",
+                "type": "SpineRouter",
+                "synchronous_mode": "enable",
+                "yang_config_validation": "disable",
+                "chassis_hostname": "str-sonic",
+                "deployment_id": "3",
+                "cluster": "TestbedForstr-sonic",
+                "sub_role": "BackEnd",
+                "asic_name": "asic0",
+                "switch_type": "chassis-packet",
+                "max_cores": 64
+            }
+        )
+
+    def test_port(self):
+        argument = [
+            '-m', self.sample_graph,
+            '-p', self.sample_port_config,
+            '-n', 'asic0',
+            '-v', "PORT[\'Ethernet-BP244\']"
+        ]
+        output = self.run_script(argument, ignore_warning=True)
+        print(output)
+        self.assertEqual(
+           output.strip(),
+           "{'lanes': '2828,2829', 'alias': 'Eth244-ASIC0', 'index': '122', 'speed': '100000', 'asic_port_name': 'Eth244-ASIC0', 'role': 'Int', 'fec': 'rs', 'description': 'Eth244-ASIC0', 'mtu': '9100', 'tpid': '0x8100', 'pfc_asym': 'off', 'admin_status': 'up'}"
+        )
+
+    def test_port_channel(self):
+        argument = [
+            '-m', self.sample_graph, 
+            '-p', self.sample_port_config,
+            '-n', 'asic0',
+            '-v', "PORTCHANNEL[\'PortChannel5004\']"
+        ]
+        output = self.run_script(argument, ignore_warning=True)
+        print(output)
+        self.assertEqual(
+            output.strip(),
+            """{'min_links': '2', 'lacp_key': 'auto', 'mtu': '9100', 'tpid': '0x8100', 'admin_status': 'up'}""")
+    
+    def test_port_channel_member(self):
+        argument = [
+            '-m', self.sample_graph,
+            '-p', self.sample_port_config,
+            '-n', 'asic0',
+            '-v', "PORTCHANNEL_MEMBER.keys()|list"
+        ]
+        output = self.run_script(argument, ignore_warning=True)
+        print(output)
+        self.assertEqual(
+            utils.liststr_to_dict(output.strip()),
+            utils.liststr_to_dict(
+                "[('PortChannel5004', 'Ethernet-BP128'), "
+                "('PortChannel5004', 'Ethernet-BP132'), "
+                "('PortChannel5005', 'Ethernet-BP136'), "
+                "('PortChannel5005', 'Ethernet-BP140'), "
+                "('PortChannel5006', 'Ethernet-BP154'), "
+                "('PortChannel5006', 'Ethernet-BP168'), "
+                "('PortChannel5006', 'Ethernet-BP178'), "
+                "('PortChannel5007', 'Ethernet-BP156'), "
+                "('PortChannel5007', 'Ethernet-BP170'), "
+                "('PortChannel5007', 'Ethernet-BP180'), "
+                "('PortChannel5008', 'Ethernet-BP160'), "
+                "('PortChannel5008', 'Ethernet-BP164'), "
+                "('PortChannel5009', 'Ethernet-BP184'), "
+                "('PortChannel5009', 'Ethernet-BP194'), "
+                "('PortChannel5009', 'Ethernet-BP220'), "
+                "('PortChannel5010', 'Ethernet-BP190'), "
+                "('PortChannel5010', 'Ethernet-BP192'), "
+                "('PortChannel5010', 'Ethernet-BP218')]"
+            )
+        )
+
     def tearDown(self):
         os.environ['CFGGEN_UNIT_TESTING'] = ''
         os.environ['CFGGEN_UNIT_TESTING_TOPOLOGY'] = ''
