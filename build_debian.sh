@@ -527,7 +527,8 @@ set /files/lib/systemd/system/rsyslog.service/Service/ExecStart/arguments/1 -n
 "
 
 # Ensure pstore service is running
-sudo cp files/image_config/system-pstore/systemd-pstore.service $FILESYSTEM_ROOT/lib/systemd/system/systemd-pstore.service
+sudo mkdir -p $FILESYSTEM_ROOT/lib/systemd/system/systemd-pstore.service.d
+sudo cp files/image_config/system-pstore/override.conf $FILESYSTEM_ROOT/lib/systemd/system/systemd-pstore.service.d/override.conf
 
 sudo mkdir -p $FILESYSTEM_ROOT/var/core
 
