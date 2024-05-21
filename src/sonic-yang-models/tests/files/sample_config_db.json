@@ -7,7 +7,8 @@
         },
         "DHCP_SERVER": {
             "192.0.0.8": {},
-            "192.0.0.8": {}
+            "192.0.0.8": {},
+            "2603:10e1:0:6f4::1": {}
         },
         "DNS_NAMESERVER": {
             "1.1.1.1": {},
@@ -361,7 +362,6 @@
                 "region": "usfoo",
                 "asic_name": "Asic0",
                 "switch_id": "2",
-                "switch_type": "voq",
                 "max_cores": "8",
                 "sub_role": "FrontEnd",
                 "dhcp_server": "disabled",
@@ -1197,10 +1197,7 @@
             "Vlan111|Ethernet0": {
                 "tagging_mode": "untagged"
             },
-            "Vlan111|Ethernet1": {
-                "tagging_mode": "untagged"
-            },
-            "Vlan111|Ethernet2": {
+            "Vlan111|PortChannel0004": {
                 "tagging_mode": "untagged"
             },
             "Vlan111|Ethernet3": {
@@ -1629,6 +1626,22 @@
                 "priority": "4",
                 "retransmit": "2",
                 "timeout": "5"
+            }
+        },
+        "LDAP": {
+            "global": {
+                "bind_dn": "test_bind",
+                "bind_password": "secret",
+                "bind_timeout": "5",
+                "version": "3",
+                "base_dn": "test_base",
+                "port": "389",
+                "timeout": "5"
+            }
+        },
+        "LDAP_SERVER": {
+            "192.168.1.1": {
+                "priority": "5"
             }
         },
         "NAT_BINDINGS": {
@@ -2281,7 +2294,7 @@
             "span": {
                 "direction": "RX",
                 "type": "SPAN",
-                "dst_port": "Ethernet2",
+                "dst_port": "Ethernet7",
                 "src_port": "Ethernet3,Ethernet4"
             }
         },
@@ -2531,6 +2544,12 @@
                 "SNMP_USER_ENCRYPTION_PASSWORD": ""
             }
 
+        },
+        "SUPPRESS_ASIC_SDK_HEALTH_EVENT": {
+            "notice": {
+                "categories": ["firmware", "asic_hw"],
+                "max_events": "1024"
+            }
         },
         "SYSTEM_DEFAULTS": {
             "tunnel_qos_remap": {
