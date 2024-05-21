@@ -133,7 +133,7 @@ class TestVoqChassisSingleAsic(TestChassis):
             'chassis_hostname': 'str-sonic',
             'deployment_id': '3',
             'cluster': 'TestbedForstr-sonic',
-            'asic_name': 'ASIC0',
+            'asic_name': 'Asic0',
             'sub_role': 'FrontEnd',
             'switch_type': 'voq',
             'switch_id': 20,
@@ -822,6 +822,12 @@ class TestVoqChassisMultiAsic(TestChassis):
                 'PortChannel1020',\
                 ('PortChannel1020', 'fc00::31/126')]")
         )
+    def tearDown(self):
+        os.environ['CFGGEN_UNIT_TESTING'] = ''
+        os.environ["CFGGEN_UNIT_TESTING_TOPOLOGY"] = ""
+        if os.path.exists(self.output_file):
+            os.remove(self.output_file)
+
 
 class TestVoqChassisSup(TestChassis):
 
@@ -831,6 +837,7 @@ class TestVoqChassisSup(TestChassis):
             self.test_dir,  'chassis_data/voq_chassis_data')
         self.sample_graph = os.path.join(
             self.test_data_dir, 'voq_chassis_sup.xml')
+        self.sample_port_config = ""
         os.environ['CFGGEN_UNIT_TESTING'] = '2'
         os.environ["CFGGEN_UNIT_TESTING_TOPOLOGY"] = "multi_asic"
 
@@ -840,7 +847,11 @@ class TestVoqChassisSup(TestChassis):
         self.assertEqual(output, '')
 
     def test_print_data(self):
-        argument = ['-m', self.sample_graph, '--print-data']
+        argument = [
+            '-m', self.sample_graph, 
+            '-p', self.sample_port_config,
+            '--print-data'
+        ]
         output = self.run_script(argument)
         self.assertGreater(len(output.strip()), 0)
 
@@ -859,27 +870,27 @@ class TestVoqChassisSup(TestChassis):
     def test_tacacs(self):
         argument = [
             '-m', self.sample_graph,
+            '-p', self.sample_port_config,
             '--var-json', 'TACPLUS_SERVER'
         ]
         output = json.loads(self.run_script(argument))
         self.assertDictEqual(
             output, {'123.46.98.21': {'priority': '1', 'tcp_port': '49'}})
-        # TACPLUS_SERVER not present in the asic configuration.
-        argument = ['-m', self.sample_graph, '--var-json', 'TACPLUS_SERVER']
 
     def test_ntp(self):
         argument = [
             '-m', self.sample_graph,
+            '-p', self.sample_port_config,
             '--var-json', 'NTP_SERVER'
         ]
         output = json.loads(self.run_script(argument))
         self.assertDictEqual(output, {'17.39.1.130': {}, '17.39.1.129': {}})
-        # NTP data is present only in the host config
-        argument = ['-m', self.sample_graph, '--var-json', 'NTP_SERVER']
+
 
     def test_mgmt_port(self):
         argument = [
-            '-m', self.sample_graph, 
+            '-m', self.sample_graph,
+            '-p', self.sample_port_config,
             '--var-json', 'MGMT_PORT'
         ]
         output = json.loads(self.run_script(argument))
@@ -889,9 +900,12 @@ class TestVoqChassisSup(TestChassis):
     def test_device_metadata(self):
         argument = [
             '-m', self.sample_graph,
+            '-p', self.sample_port_config,
             '--var-json', 'DEVICE_METADATA'
         ]
-        output = json.loads(self.run_script(argument))
+        out =(self.run_script(argument))
+        print(out)
+        output = json.loads(out)
         print(output['localhost'])
         self.assertDictEqual(output['localhost'], 
             {
@@ -969,7 +983,10 @@ class TestPacketChassisSup(TestChassis):
         self.assertEqual(output, '')
 
     def test_print_data(self):
-        argument = ['-m', self.sample_graph, '--print-data']
+        argument = [
+            '-m', self.sample_graph, 
+            '-p', self.sample_port_config,    
+            '--print-data']
         output = self.run_script(argument)
         self.assertGreater(len(output.strip()), 0)
 
@@ -988,6 +1005,7 @@ class TestPacketChassisSup(TestChassis):
     def test_tacacs(self):
         argument = [
             '-m', self.sample_graph,
+            '-p', self.sample_port_config,
             '--var-json', 'TACPLUS_SERVER'
         ]
         output = json.loads(self.run_script(argument))
@@ -999,6 +1017,7 @@ class TestPacketChassisSup(TestChassis):
     def test_ntp(self):
         argument = [
             '-m', self.sample_graph,
+            '-p', self.sample_port_config,
             '--var-json', 'NTP_SERVER'
         ]
         output = json.loads(self.run_script(argument))
@@ -1008,7 +1027,8 @@ class TestPacketChassisSup(TestChassis):
 
     def test_mgmt_port(self):
         argument = [
-            '-m', self.sample_graph, 
+            '-m', self.sample_graph,
+            '-p', self.sample_port_config, 
             '--var-json', 'MGMT_PORT'
         ]
         output = json.loads(self.run_script(argument))
@@ -1018,13 +1038,13 @@ class TestPacketChassisSup(TestChassis):
     def test_device_metadata(self):
         argument = [
             '-m', self.sample_graph,
+            '-p', self.sample_port_config,
             '--var-json', 'DEVICE_METADATA'
         ]
         output = json.loads(self.run_script(argument))
         print(output['localhost'])
         self.assertDictEqual(output['localhost'], 
             {
-                "localhost": {
                 "bgp_asn": None,
                 "region": "test",
                 "cloudtype": "Public",
@@ -1038,8 +1058,8 @@ class TestPacketChassisSup(TestChassis):
                 "deployment_id": "3",
                 "cluster": "TestbedForstr-sonic",
                 "switch_type": "chassis-packet",
+                "sub_role": "BackEnd",
                 "max_cores": 64
-    }
             }
         )
 

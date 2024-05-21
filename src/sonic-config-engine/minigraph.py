@@ -2172,10 +2172,10 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     if asic_name is not None:
         results['DEVICE_METADATA']['localhost']['asic_name'] =  asic_name
     
-    # for single asic Voq Linecards the asic_name needs to populated to "ASIC0"
+    # for single asic Voq Linecards the asic_name needs to populated to "Asic0"
     if switch_type == "voq" or chassis_type in [CHASSIS_CARD_VOQ]:
         if not is_multi_asic():
-            results['DEVICE_METADATA']['localhost']['asic_name'] =  "ASIC0"
+            results['DEVICE_METADATA']['localhost']['asic_name'] =  "Asic0"
 
     if sub_role is not None:
         results['DEVICE_METADATA']['localhost']['sub_role'] =  sub_role
