@@ -21,3 +21,4 @@ echo "SAI $3" >> temp_versions_file
 echo "HW-MGMT $4" >> temp_versions_file
 echo "MFT $5-$6" >> temp_versions_file
 echo "Kernel $7" >> temp_versions_file
+echo "SIMX $8" >> temp_versions-file

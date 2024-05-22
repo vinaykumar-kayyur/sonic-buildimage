@@ -28,7 +28,7 @@ COMPONENT_VERSIONS_FILE = "/etc/mlnx/component-versions"
 HEADERS = ["COMPONENT", "COMPILATION", "ACTUAL"]
 COMMANDS_FOR_ACTUAL = {
     "MFT": [["dpkg", "-l"], ["grep", "mft "], "mft *([0-9.-]*)"],
-    "HW-MGMT": [["dpkg", "-l"], ["grep", "hw"], ".*1\\.mlnx\\.([0-9.]*)"],
+    "HW_MANAGEMENT": [["dpkg", "-l"], ["grep", "hw"], ".*1\\.mlnx\\.([0-9.]*)"],
     "SDK": [["docker", "exec", "-it", "syncd", "bash", "-c", 'dpkg -l | grep sdk'], ".*1\\.mlnx\\.([0-9.]*)"],
     "SAI": [["docker", "exec", "-it", "syncd", "bash", "-c", 'dpkg -l | grep mlnx-sai'], ".*1\\.mlnx\\.([A-Za-z0-9.]*)"],
     "FW": [["mlxfwmanager", "--query"], "FW * [0-9]{2}\\.([0-9.]*)"],
@@ -45,7 +45,7 @@ UNAVAILABLE_COMPILED_VERSIONS = {
     "SDK": "N/A",
     "FW": "N/A",
     "SAI": "N/A",
-    "HW-MGMT": "N/A",
+    "HW_MANAGEMENT": "N/A",
     "MFT": "N/A",
     "Kernel": "N/A"
 }
@@ -59,8 +59,11 @@ def parse_compiled_components_file():
 
     with open(COMPONENT_VERSIONS_FILE, 'r') as component_versions:
         for line in component_versions.readlines():
-            comp, version = line.split()
-            compiled_versions[comp] = version
+            try:
+                comp, version = line.split()
+                compiled_versions[comp] = version
+            except ValueError:
+                continue 
 
     return compiled_versions
 
