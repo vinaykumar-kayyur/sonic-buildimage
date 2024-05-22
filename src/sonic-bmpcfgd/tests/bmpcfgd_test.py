@@ -38,11 +38,13 @@ bmpcfgd.Table = mock.Mock()
 swsscommon.SonicV2Connector = MockConnector
 
 class TestBMPCfgDaemon(TestCase):
+    """
+        Test bmpcfgd daemon
+    """
     def setUp(self):
         self.test_data = {}
         self.test_data['BMP'] = {}
         self.test_data['BMP']['table'] = {'bgp_neighbor_table': 'false', 'bgp_rib_in_table': 'false', 'bgp_rib_out_table': 'false'}
-
 
     @mock.patch('sonic_installer.bootloader.get_bootloader', side_effect=[MockBootloader()])
     @mock.patch('syslog.syslog')
@@ -51,6 +53,7 @@ class TestBMPCfgDaemon(TestCase):
         self.test_data['BMP']['table']['bgp_neighbor_table'] = 'true'
         MockConfigDb.set_config_db(self.test_data)
         bmp_config_daemon = bmpcfgd.BMPCfgDaemon()
+        bmp_config_daemon.register_callbacks()
         bmp_config_daemon.bmp_handler("BMP", '', self.test_data)
         expected_calls = [
             mock.call(original_syslog.LOG_INFO, 'BMPCfg: update : True, False, False'),
@@ -59,7 +62,6 @@ class TestBMPCfgDaemon(TestCase):
             mock.call(original_syslog.LOG_INFO, 'BMPCfg: start bmp daemon'),
         ]
         mock_syslog.assert_has_calls(expected_calls)
-
 
     @mock.patch('sonic_installer.bootloader.get_bootloader', side_effect=[MockBootloader()])
     @mock.patch('syslog.syslog')
@@ -76,7 +78,6 @@ class TestBMPCfgDaemon(TestCase):
             mock.call(original_syslog.LOG_INFO, 'BMPCfg: start bmp daemon'),
         ]
         mock_syslog.assert_has_calls(expected_calls)
-
 
     @mock.patch('sonic_installer.bootloader.get_bootloader', side_effect=[MockBootloader()])
     @mock.patch('syslog.syslog')

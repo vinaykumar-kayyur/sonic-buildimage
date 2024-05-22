@@ -83,25 +83,10 @@ class BMPCfgDaemon:
         data = self.config_db.get_table("BMP")
         self.bmpcfg.cfg_handler(data)
 
-
     def register_callbacks(self):
-
-        def make_callback(func):
-            def callback(table, key, data):
-                if data is None:
-                    op = "DEL"
-                    data = {}
-                else:
-                    op = "SET"
-                return func(key, op, data)
-            return callback
-
-        self.config_db.subscribe('BMP', make_callback(self.bmp_handler))
-
-
-    def start(self):
-        self.config_db.listen(init_data_handler=self.load)
-
+        self.config_db.subscribe('BMP',
+                                 lambda table, key, data:
+                                     self.bmp_handler(key, op, data))
 
 def signal_handler(sig, frame):
     if sig == signal.SIGHUP:
@@ -122,7 +107,6 @@ def main():
     signal.signal(signal.SIGHUP, signal_handler)
     daemon = BMPCfgDaemon()
     daemon.register_callbacks()
-    daemon.start()
 
 
 if __name__ == "__main__":
