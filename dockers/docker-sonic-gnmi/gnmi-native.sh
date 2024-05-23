@@ -50,6 +50,14 @@ else
     TELEMETRY_ARGS+=" --noTLS"
 fi
 
+# gNMI save-on-set behavior is disabled by default.
+# Save-on-set can be turned on by setting the "TELEMETRY|gnmi|save_on_set"
+# to "true".
+readonly SAVE_ON_SET=$(echo $GNMI | jq -r '.save_on_set // empty')
+if [ ! -z "$SAVE_ON_SET" ]; then
+    TELEMETRY_ARGS+=" --with-save-on-set=$SAVE_ON_SET"
+fi
+
 # If no configuration entry exists for TELEMETRY, create one default port
 if [ -z "$GNMI" ]; then
     PORT=8080
@@ -100,16 +108,6 @@ else
         echo "Incorrect idle_conn_duration value, expecting positive integers" >&2
         exit $INCORRECT_TELEMETRY_VALUE
     fi
-fi
-
-# gNMI save-on-set behavior is disabled by default.
-# Save-on-set can be turned on by setting the "TELEMETRY|gnmi|save_on_set"
-# to "true".
-readonly SAVE_ON_SET=$(echo ${GNMI} | jq -r '.save_on_set // empty')
-if [ ! -z "${SAVE_ON_SET}" ]; then
-    TELEMETRY_ARGS+=" --with-save-on-set=${SAVE_ON_SET}"
-else
-    TELEMETRY_ARGS+=" --with-save-on-set=false"
 fi
 
 exec /usr/sbin/telemetry ${TELEMETRY_ARGS}
