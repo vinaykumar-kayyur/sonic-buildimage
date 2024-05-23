@@ -175,6 +175,5 @@
     },
     "DEVICE_METADATA_INVALID_NEXTHOP_GROUP": {
         "desc": "Verifying invalid nexthop_group configuration.",
-        "eStrKey": "Pattern"
     }
 }
