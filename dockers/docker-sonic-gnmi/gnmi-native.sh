@@ -50,14 +50,6 @@ else
     TELEMETRY_ARGS+=" --noTLS"
 fi
 
-# gNMI save-on-set behavior is disabled by default.
-# Save-on-set can be turned on by setting the "TELEMETRY|gnmi|save_on_set"
-# to "true".
-readonly SAVE_ON_SET=$(echo $GNMI | jq -r '.save_on_set // empty')
-if [ ! -z "$SAVE_ON_SET" ]; then
-    TELEMETRY_ARGS+=" --with-save-on-set=$SAVE_ON_SET"
-fi
-
 # If no configuration entry exists for TELEMETRY, create one default port
 if [ -z "$GNMI" ]; then
     PORT=8080
