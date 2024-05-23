@@ -51,6 +51,7 @@ module sonic-vxlan {
                 leaf name {
                     type string;
                 }
+                must "string-length(name) != 0";
 
                 leaf src_ip {
                     type inet:ip-address;
