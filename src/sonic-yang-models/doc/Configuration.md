@@ -13,6 +13,7 @@ Table of Contents
 
          * [ACL and Mirroring](#acl-and-mirroring)
          * [BGP BBR](#bgp-bbr)
+         * [ASIC SDK health event](#asic-sdk-health-event)
          * [BGP Device Global](#bgp-device-global)
          * [BGP Sessions](#bgp-sessions)
          * [BUFFER_PG](#buffer_pg)
@@ -33,6 +34,7 @@ Table of Contents
          * [Device neighbor metada](#device-neighbor-metada)
          * [DHCP_RELAY](#dhcp_relay)
          * [DHCP Server IPV4](#dhcp_server_ipv4)
+         * [BMP](#bmp)
          * [DSCP_TO_TC_MAP](#dscp_to_tc_map)
          * [FG_NHG](#fg_nhg)
          * [FG_NHG_MEMBER](#fg_nhg_member)
@@ -382,18 +384,41 @@ The **BGP_BBR** table contains device-level BBR state.
         }
 }
 ```
+### ASIC SDK health event
+
+ASIC/SDK health event related configuration is defined in **SUPPRESS_ASIC_SDK_HEALTH_EVENT** table.
+
+```
+"SUPPRESS_ASIC_SDK_HEALTH_EVENT": {
+    "notice": {
+        "categories": [
+            "asic_hw"
+        ],
+        "max_events": "1000"
+    },
+    "warning": {
+        "categories": [
+            "software",
+            "cpu_hw"
+        ]
+    }
+}
+```
+
 ### BGP Device Global
 
-The **BGP_DEVICE_GLOBAL** table contains device-level BGP global state.
-It has a STATE object containing device state like **tsa_enabled**
-which is set to true if device is currently isolated using
-traffic-shift-away (TSA) route-maps in BGP
+The **BGP_DEVICE_GLOBAL** table contains device-level BGP global state. 
+It has a STATE object containing device state like **tsa_enabled** 
+which is set to true if device is currently isolated using 
+traffic-shift-away (TSA) route-maps in BGP. It also holds IDF isolation state
+which could be one of isolated_no_export, isolated_withdraw_all or unisolated
 
 ```
 {
 "BGP_DEVICE_GLOBAL": {
     "STATE": {
-        "tsa_enabled": "true"
+        "tsa_enabled": "true",
+        "idf_isolation_state": "isolated_no_export"
     }
 }
 ```
@@ -958,7 +983,8 @@ instance is supported in SONiC.
         "buffer_model": "traditional",
         "yang_config_validation": "disable",
         "rack_mgmt_map": "dummy_value",
-        "timezome": "Europe/Kiev"
+        "timezome": "Europe/Kiev",
+        "bgp_router_id": "8.8.8.8"
     }
   }
 }
@@ -1005,6 +1031,21 @@ instance is supported in SONiC.
     "interface_id": "true"
 }
 
+```
+
+### BMP
+BMP related configuration are defined in **bgp_neighbor_table**,**bgp_rib_in_table**, **bgp_rib_out_table** tables.
+
+```
+{
+    "BMP": {
+        "table": {
+            "bgp_neighbor_table": "true",
+            "bgp_rib_in_table": "false",
+            "bgp_rib_out_table": "false"
+        }
+    }
+}
 ```
 
 ### DHCP_SERVER_IPV4
@@ -1811,9 +1852,9 @@ optional attributes.
             "laser_freq": "191300",
             "tx_power": "-27.3",
             "dom_polling": "enabled",
-            "coreId": "1",
-            "corePortId": "1",
-            "numVoq": "8"
+            "core_id": "1",
+            "core_port_id": "1",
+            "num_voq": "8"
         },
         "Ethernet1": {
             "index": "1",
@@ -1827,9 +1868,9 @@ optional attributes.
             "laser_freq": "191300",
             "tx_power": "-27.3",
             "dom_polling": "enabled",
-            "coreId": "0",
-            "corePortId": "14",
-            "numVoq": "8"
+            "core_id": "0",
+            "core_port_id": "14",
+            "num_voq": "8"
         },
         "Ethernet63": {
             "index": "63",
@@ -1841,9 +1882,9 @@ optional attributes.
             "laser_freq": "191300",
             "tx_power": "-27.3",
             "dom_polling": "disabled",
-            "coreId": "0",
-            "corePortId": "15",
-            "numVoq": "8"
+            "core_id": "0",
+            "core_port_id": "15",
+            "num_voq": "8"
         }
     }
 }
@@ -2032,6 +2073,27 @@ key - name
 | collector_ip   | IPv4/IPv6 address of the Sflow collector                                                | true        |           |             |
 | collector_port | Destination L4 port of the Sflow collector                                              |             | 6343      |             |
 | collector_vrf  | Specify the Collector VRF. In this revision, it is either default VRF or Management VRF.|             |           |             |
+
+### Storage Monitoring Daemon Interval Configuration
+
+These options are used to configure the daemon polling and sync-to-disk interval
+of the Storage Monitoring Daemon (stormond)
+
+**Config Sample**
+```
+{
+    "STORMOND_CONFIG": {
+        "INTERVALS": {
+            "daemon_polling_interval" : "60",
+            "fsstats_sync_interval"   : "360"
+        }
+    }
+}
+```
+
+*   `daemon_polling_interval` - Determines how often stormond queries the disk for relevant information and posts to STATE_DB
+*   `fsstats_sync_interval`   - Determines how often key information from the STATE_DB is synced to a file on disk
+
 
 ### Syslog Global Configuration
 
@@ -2448,7 +2510,8 @@ VXLAN_EVPN_NVO holds the VXLAN_TUNNEL object to be used for BGP-EVPN discovered 
 {
 "VXLAN_TUNNEL": {
         "vtep1": {
-            "src_ip": "10.10.10.10"
+            "src_ip": "10.10.10.10",
+            "dst_ip": "12.12.12.12"
         }
   }
 "VXLAN_TUNNEL_MAP" : {
