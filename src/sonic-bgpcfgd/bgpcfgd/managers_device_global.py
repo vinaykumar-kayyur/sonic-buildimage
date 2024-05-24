@@ -52,18 +52,21 @@ class DeviceGlobalCfgMgr(Manager):
         if self.directory.path_exist("CONFIG_DB", swsscommon.CFG_BGP_DEVICE_GLOBAL_TABLE_NAME, "idf_isolation_state"):
             idf_isolation_state = self.directory.get_slot("CONFIG_DB", swsscommon.CFG_BGP_DEVICE_GLOBAL_TABLE_NAME)["idf_isolation_state"]
 
-        if "tsa_enabled" in data and tsa_status != data["tsa_enabled"]:
-            self.cfg_mgr.commit()
-            self.cfg_mgr.update()
-            self.isolate_unisolate_device(data["tsa_enabled"])
+        if "tsa_enabled" in data:
             self.directory.put(self.db_name, self.table_name, "tsa_enabled", data["tsa_enabled"])
+            if tsa_status != data["tsa_enabled"]:
+                self.cfg_mgr.commit()
+                self.cfg_mgr.update()
+                self.isolate_unisolate_device(data["tsa_enabled"])
+
             
-        if "idf_isolation_state" in data and idf_isolation_state != data["idf_isolation_state"]:
+        if "idf_isolation_state" in data:
             self.directory.put(self.db_name, self.table_name, "idf_isolation_state", data["idf_isolation_state"])
-            if self.switch_type and self.switch_type != "SpineRouter":
-                log_debug("DeviceGlobalCfgMgr:: Skipping IDF isolation configuration on Switch type: %s" % self.switch_type)
-                return True
-            self.downstream_isolate_unisolate(data["idf_isolation_state"])
+            if idf_isolation_state != data["idf_isolation_state"]:
+                if self.switch_type and self.switch_type != "SpineRouter":
+                    log_debug("DeviceGlobalCfgMgr:: Skipping IDF isolation configuration on Switch type: %s" % self.switch_type)
+                    return True
+                self.downstream_isolate_unisolate(data["idf_isolation_state"])
             
         return True
 
