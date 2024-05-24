@@ -407,16 +407,18 @@ ASIC/SDK health event related configuration is defined in **SUPPRESS_ASIC_SDK_HE
 
 ### BGP Device Global
 
-The **BGP_DEVICE_GLOBAL** table contains device-level BGP global state.
-It has a STATE object containing device state like **tsa_enabled**
-which is set to true if device is currently isolated using
-traffic-shift-away (TSA) route-maps in BGP
+The **BGP_DEVICE_GLOBAL** table contains device-level BGP global state. 
+It has a STATE object containing device state like **tsa_enabled** 
+which is set to true if device is currently isolated using 
+traffic-shift-away (TSA) route-maps in BGP. It also holds IDF isolation state
+which could be one of isolated_no_export, isolated_withdraw_all or unisolated
 
 ```
 {
 "BGP_DEVICE_GLOBAL": {
     "STATE": {
-        "tsa_enabled": "true"
+        "tsa_enabled": "true",
+        "idf_isolation_state": "isolated_no_export"
     }
 }
 ```
@@ -2508,7 +2510,8 @@ VXLAN_EVPN_NVO holds the VXLAN_TUNNEL object to be used for BGP-EVPN discovered 
 {
 "VXLAN_TUNNEL": {
         "vtep1": {
-            "src_ip": "10.10.10.10"
+            "src_ip": "10.10.10.10",
+            "dst_ip": "12.12.12.12"
         }
   }
 "VXLAN_TUNNEL_MAP" : {
