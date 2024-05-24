@@ -38,3 +38,10 @@
 0038-bgpd-Increase-install-uninstall-speed-of-evpn-vpn-vn.patch
 0039-zebra-Actually-display-I-O-buffer-sizes.patch
 0040-zebra-Actually-display-I-O-buffer-sizes-part-2.patch
+0041-bgpd-backpressure-Fix-to-withdraw-evpn-type-5-routes.patch
+0042-bgpd-backpressure-Fix-to-avoid-CPU-hog.patch
+0043-zebra-Use-built-in-data-structure-counter.patch
+0044-zebra-Use-the-ctx-queue-counters.patch
+0045-zebra-Modify-dplane-loop-to-allow-backpressure-to-fi.patch
+0046-zebra-Limit-queue-depth-in-dplane_fpm_nl.patch
+0047-zebra-Modify-show-zebra-dplane-providers-to-give-mor.patch
