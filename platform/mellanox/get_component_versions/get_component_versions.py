@@ -20,7 +20,11 @@ import os
 import subprocess
 import re
 
-from fwutil.lib import PlatformDataProvider
+try:
+    from fwutil.lib import PlatformDataProvider
+except Exception:
+    PlatformDataProvider = None
+
 from sonic_py_common.general import check_output_pipe
 from tabulate import tabulate
 
@@ -32,7 +36,8 @@ COMMANDS_FOR_ACTUAL = {
     "SDK": [["docker", "exec", "-it", "syncd", "bash", "-c", 'dpkg -l | grep sdk'], ".*1\\.mlnx\\.([0-9.]*)"],
     "SAI": [["docker", "exec", "-it", "syncd", "bash", "-c", 'dpkg -l | grep mlnx-sai'], ".*1\\.mlnx\\.([A-Za-z0-9.]*)"],
     "FW": [["mlxfwmanager", "--query"], "FW * [0-9]{2}\\.([0-9.]*)"],
-    "Kernel": [["uname", "-r"], "([0-9][0-9.-]*)-.*"]
+    "Kernel": [["uname", "-r"], "([0-9][0-9.-]*)-.*"],
+    "SIMX": [["lspci", "-vv"], ["grep", "SimX"], "([0-9]+\\.[0-9]+-[0-9]+)"]
 }
 
 UNAVAILABLE_PLATFORM_VERSIONS = {
@@ -69,8 +74,9 @@ def parse_compiled_components_file():
 
 
 def get_platform_component_versions():
-    pdp = PlatformDataProvider()
-    ccm = pdp.chassis_component_map
+    if PlatformDataProvider:
+        pdp = PlatformDataProvider()
+        ccm = pdp.chassis_component_map
 
     if not ccm:
         return UNAVAILABLE_PLATFORM_VERSIONS
@@ -94,15 +100,18 @@ def get_platform_component_versions():
 
 def get_current_version(comp):
     version = ""
-    # If there's only one command
-    if len(COMMANDS_FOR_ACTUAL[comp]) == 2:
-        version = subprocess.run(COMMANDS_FOR_ACTUAL[comp][0], shell=False, stdout=subprocess.PIPE, text=True)
-        version = str(version.stdout)
-    #If there are two commands and we need a pipe
-    elif len(COMMANDS_FOR_ACTUAL[comp]) == 3:
-        version = check_output_pipe(COMMANDS_FOR_ACTUAL[comp][0], COMMANDS_FOR_ACTUAL[comp][1])
-    parsed_version = re.search(COMMANDS_FOR_ACTUAL[comp][-1], version)
-    return parsed_version.group(1) if parsed_version else "N/A"
+    try:
+        # If there's only one command
+        if len(COMMANDS_FOR_ACTUAL[comp]) == 2:
+            version = subprocess.run(COMMANDS_FOR_ACTUAL[comp][0], shell=False, stdout=subprocess.PIPE, text=True)
+            version = str(version.stdout)
+        #If there are two commands and we need a pipe
+        elif len(COMMANDS_FOR_ACTUAL[comp]) == 3:
+            version = check_output_pipe(COMMANDS_FOR_ACTUAL[comp][0], COMMANDS_FOR_ACTUAL[comp][1])
+        parsed_version = re.search(COMMANDS_FOR_ACTUAL[comp][-1], version)
+        return parsed_version.group(1) if parsed_version else "N/A"
+    except Exception:
+        return "N/A"
 
 
 def format_output_table(table):
