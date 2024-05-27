@@ -50,8 +50,8 @@ TRUSTED_GPG_DIR=$BUILD_TOOL_PATH/trusted.gpg.d
     echo "Error: Invalid ONIE_IMAGE_PART_SIZE in onie image config file"
     exit 1
 }
-[ -n "$ONIE_INSTALLER_PAYLOAD" ] || {
-    echo "Error: Invalid ONIE_INSTALLER_PAYLOAD in onie image config file"
+[ -n "$INSTALLER_PAYLOAD" ] || {
+    echo "Error: Invalid INSTALLER_PAYLOAD in onie image config file"
     exit 1
 }
 [ -n "$FILESYSTEM_SQUASHFS" ] || {
@@ -150,9 +150,7 @@ else
 fi
 
 ## docker and mkinitramfs on target system will use pigz/unpigz automatically
-if [[ $GZ_COMPRESS_PROGRAM == pigz ]]; then
-    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install pigz
-fi
+sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install pigz
 
 ## Install initramfs-tools and linux kernel
 ## Note: initramfs-tools recommends depending on busybox, and we really want busybox for
@@ -271,16 +269,25 @@ sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install docker-ce=${DOCKER_VERSIO
 
 install_kubernetes () {
     local ver="$1"
-    sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT curl -fsSL \
-        https://packages.cloud.google.com/apt/doc/apt-key.gpg | \
-        sudo LANG=C chroot $FILESYSTEM_ROOT apt-key add -
-    ## Check out the sources list update matches current Debian version
-    sudo cp files/image_config/kubernetes/kubernetes.list $FILESYSTEM_ROOT/etc/apt/sources.list.d/
-    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get update
-    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install kubernetes-cni=${KUBERNETES_CNI_VERSION}
-    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install kubelet=${ver}
-    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install kubectl=${ver}
-    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install kubeadm=${ver}
+    ## Install k8s package from storage
+    local storage_prefix="https://sonicstorage.blob.core.windows.net/public/kubernetes"
+    sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT curl -o /tmp/cri-tools.deb -fsSL \
+        ${storage_prefix}/cri-tools_${KUBERNETES_CRI_TOOLS_VERSION}_${CONFIGURED_ARCH}.deb
+    sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT curl -o /tmp/kubernetes-cni.deb -fsSL \
+        ${storage_prefix}/kubernetes-cni_${KUBERNETES_CNI_VERSION}_${CONFIGURED_ARCH}.deb
+    sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT curl -o /tmp/kubelet.deb -fsSL \
+        ${storage_prefix}/kubelet_${ver}_${CONFIGURED_ARCH}.deb
+    sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT curl -o /tmp/kubectl.deb -fsSL \
+        ${storage_prefix}/kubectl_${ver}_${CONFIGURED_ARCH}.deb
+    sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT curl -o /tmp/kubeadm.deb -fsSL \
+        ${storage_prefix}/kubeadm_${ver}_${CONFIGURED_ARCH}.deb
+
+    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install -f /tmp/cri-tools.deb
+    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install -f /tmp/kubernetes-cni.deb
+    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install -f /tmp/kubelet.deb
+    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install -f /tmp/kubectl.deb
+    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install -f /tmp/kubeadm.deb
+    sudo LANG=C chroot $FILESYSTEM_ROOT rm -f /tmp/{cri-tools,kubernetes-cni,kubelet,kubeadm,kubectl}.deb
 }
 
 if [ "$INCLUDE_KUBERNETES" == "y" ]
@@ -298,9 +305,7 @@ then
     echo '[INFO] Install kubernetes master'
     install_kubernetes ${MASTER_KUBERNETES_VERSION}
 
-    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get update
-    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install hyperv-daemons gnupg xmlstarlet parted netcat
-    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y remove gnupg
+    sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install hyperv-daemons xmlstarlet parted netcat-openbsd
     sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT curl -o /tmp/cri-dockerd.deb -fsSL \
         https://github.com/Mirantis/cri-dockerd/releases/download/v${MASTER_CRI_DOCKERD}/cri-dockerd_${MASTER_CRI_DOCKERD}.3-0.debian-${IMAGE_DISTRO}_amd64.deb
     sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install -f /tmp/cri-dockerd.deb
@@ -377,7 +382,6 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     mtr-tiny                \
     locales                 \
     cgroup-tools            \
-    ipmitool                \
     ndisc6                  \
     makedumpfile            \
     conntrack               \
@@ -387,8 +391,8 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     python-is-python3       \
     cron                    \
     libprotobuf32           \
-    libgrpc++1              \
     libgrpc29               \
+    libgrpc++1.51           \
     haveged                 \
     fdisk                   \
     gpg                     \
@@ -396,10 +400,13 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     auditd                  \
     linux-perf              \
     resolvconf              \
-	lsof                    \
-	sysstat                 \
-	xxd                     \
-	zstd
+    lsof                    \
+    sysstat                 \
+    xxd                     \
+    wireless-regdb          \
+    ethtool                 \
+    zstd                    \
+    nvme-cli
 
 # Have systemd create the auditd log directory
 sudo mkdir -p ${FILESYSTEM_ROOT}/etc/systemd/system/auditd.service.d
@@ -412,12 +419,6 @@ EOF
 # latest tcpdump control resource access with AppArmor.
 # override tcpdump profile to allow tcpdump access TACACS config file.
 sudo cp files/apparmor/usr.bin.tcpdump $FILESYSTEM_ROOT/etc/apparmor.d/local/usr.bin.tcpdump
-
-if [[ $CONFIGURED_ARCH == amd64 ]]; then
-## Pre-install the fundamental packages for amd64 (x86)
-sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install      \
-    rasdaemon
-fi
 
 ## Set /etc/shadow permissions to -rw-------.
 sudo LANG=c chroot $FILESYSTEM_ROOT chmod 600 /etc/shadow
@@ -484,10 +485,14 @@ rm /files/etc/ssh/sshd_config/ClientAliveInterval
 rm /files/etc/ssh/sshd_config/ClientAliveCountMax
 touch /files/etc/ssh/sshd_config/EmptyLineHack
 rename /files/etc/ssh/sshd_config/EmptyLineHack ""
-set /files/etc/ssh/sshd_config/ClientAliveInterval 900
+set /files/etc/ssh/sshd_config/ClientAliveInterval 300
 set /files/etc/ssh/sshd_config/ClientAliveCountMax 0
 ins #comment before /files/etc/ssh/sshd_config/ClientAliveInterval
-set /files/etc/ssh/sshd_config/#comment[following-sibling::*[1][self::ClientAliveInterval]] "Close inactive client sessions after 15 minutes"
+set /files/etc/ssh/sshd_config/#comment[following-sibling::*[1][self::ClientAliveInterval]] "Close inactive client sessions after 5 minutes"
+rm /files/etc/ssh/sshd_config/MaxAuthTries
+set /files/etc/ssh/sshd_config/MaxAuthTries 3
+rm /files/etc/ssh/sshd_config/Banner
+set /files/etc/ssh/sshd_config/Banner /etc/issue
 rm /files/etc/ssh/sshd_config/LogLevel
 set /files/etc/ssh/sshd_config/LogLevel VERBOSE
 save
@@ -753,14 +758,27 @@ sudo chroot $FILESYSTEM_ROOT update-initramfs -u
 ## Convert initrd image to u-boot format
 if [[ $TARGET_BOOTLOADER == uboot ]]; then
     INITRD_FILE=initrd.img-${LINUX_KERNEL_VERSION}-${CONFIGURED_ARCH}
+    KERNEL_FILE=vmlinuz-${LINUX_KERNEL_VERSION}-${CONFIGURED_ARCH}
     if [[ $CONFIGURED_ARCH == armhf ]]; then
         INITRD_FILE=initrd.img-${LINUX_KERNEL_VERSION}-armmp
         sudo LANG=C chroot $FILESYSTEM_ROOT mkimage -A arm -O linux -T ramdisk -C gzip -d /boot/$INITRD_FILE /boot/u${INITRD_FILE}
         ## Overwriting the initrd image with uInitrd
         sudo LANG=C chroot $FILESYSTEM_ROOT mv /boot/u${INITRD_FILE} /boot/$INITRD_FILE
     elif [[ $CONFIGURED_ARCH == arm64 ]]; then
-        sudo cp -v $PLATFORM_DIR/${sonic_asic_platform}-${CONFIGURED_ARCH}/sonic_fit.its $FILESYSTEM_ROOT/boot/
-        sudo LANG=C chroot $FILESYSTEM_ROOT mkimage -f /boot/sonic_fit.its /boot/sonic_${CONFIGURED_ARCH}.fit
+        if [[ $CONFIGURED_PLATFORM == pensando ]]; then
+            ## copy device tree file into boot (XXX: need to compile dtb from dts)
+            sudo cp -v $PLATFORM_DIR/pensando/elba-asic-psci.dtb $FILESYSTEM_ROOT/boot/
+            ## make kernel as gzip file
+            sudo LANG=C chroot $FILESYSTEM_ROOT gzip /boot/${KERNEL_FILE}
+            sudo LANG=C chroot $FILESYSTEM_ROOT mv /boot/${KERNEL_FILE}.gz /boot/${KERNEL_FILE}
+            ## Convert initrd image to u-boot format
+            sudo LANG=C chroot $FILESYSTEM_ROOT mkimage -A arm64 -O linux -T ramdisk -C gzip -d /boot/$INITRD_FILE /boot/u${INITRD_FILE}
+            ## Overwriting the initrd image with uInitrd
+            sudo LANG=C chroot $FILESYSTEM_ROOT mv /boot/u${INITRD_FILE} /boot/$INITRD_FILE
+        else
+            sudo cp -v $PLATFORM_DIR/$CONFIGURED_PLATFORM/sonic_fit.its $FILESYSTEM_ROOT/boot/
+            sudo LANG=C chroot $FILESYSTEM_ROOT mkimage -f /boot/sonic_fit.its /boot/sonic_${CONFIGURED_ARCH}.fit
+        fi
     fi
 fi
 
@@ -811,7 +829,7 @@ if [[ "$CHANGE_DEFAULT_PASSWORD" == "y" ]]; then
 fi
 
 ## Compress most file system into squashfs file
-sudo rm -f $ONIE_INSTALLER_PAYLOAD $FILESYSTEM_SQUASHFS
+sudo rm -f $INSTALLER_PAYLOAD $FILESYSTEM_SQUASHFS
 ## Output the file system total size for diag purpose
 ## Note: -x to skip directories on different file systems, such as /proc
 sudo du -hsx $FILESYSTEM_ROOT
@@ -853,8 +871,8 @@ if [[ $MULTIARCH_QEMU_ENVIRON == y || $CROSS_BUILD_ENVIRON == y ]]; then
 fi
 
 ## Compress docker files
-pushd $FILESYSTEM_ROOT && sudo tar -I $GZ_COMPRESS_PROGRAM -cf $OLDPWD/$FILESYSTEM_DOCKERFS -C ${DOCKERFS_PATH}var/lib/docker .; popd
+pushd $FILESYSTEM_ROOT && sudo tar -I pigz -cf $OLDPWD/$FILESYSTEM_DOCKERFS -C ${DOCKERFS_PATH}var/lib/docker .; popd
 
 ## Compress together with /boot, /var/lib/docker and $PLATFORM_DIR as an installer payload zip file
-pushd $FILESYSTEM_ROOT && sudo tar -I $GZ_COMPRESS_PROGRAM -cf platform.tar.gz -C $PLATFORM_DIR . && sudo zip -n .gz $OLDPWD/$ONIE_INSTALLER_PAYLOAD -r boot/ platform.tar.gz; popd
-sudo zip -g -n .squashfs:.gz $ONIE_INSTALLER_PAYLOAD $FILESYSTEM_SQUASHFS $FILESYSTEM_DOCKERFS
+pushd $FILESYSTEM_ROOT && sudo tar -I pigz -cf platform.tar.gz -C $PLATFORM_DIR . && sudo zip -n .gz $OLDPWD/$INSTALLER_PAYLOAD -r boot/ platform.tar.gz; popd
+sudo zip -g -n .squashfs:.gz $INSTALLER_PAYLOAD $FILESYSTEM_SQUASHFS $FILESYSTEM_DOCKERFS
