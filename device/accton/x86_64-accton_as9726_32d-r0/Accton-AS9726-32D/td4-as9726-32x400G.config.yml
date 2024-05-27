@@ -24,7 +24,7 @@
 bcm_device:
     0:
         global:
-            bcm_tunnel_term_compatible_mode: 1
+            bcm_tunnel_term_compatible_mode: 0
             # Multicast group allocated by brcm-sai, setting "vlan_flooding_l2mc_num_reserved=0" 
             vlan_flooding_l2mc_num_reserved: 0
             shared_block_mask_section: uc_bc
@@ -37,6 +37,8 @@ bcm_device:
             pktio_mode: 1
             skip_protocol_default_entries: 1
             ifa_enable: 1
+            multi_network_groups: 1
+
 ...
 ---
 device:
