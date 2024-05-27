@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2020-2023 NVIDIA CORPORATION & AFFILIATES.
+# Copyright (c) 2020-2024 NVIDIA CORPORATION & AFFILIATES.
 # Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,8 +17,11 @@
 
 import glob
 import os
+import time
 
 from . import utils
+
+DEFAULT_WD_PERIOD = 65535
 
 DEVICE_DATA = {
     'x86_64-mlnx_msn2700-r0': {
@@ -53,6 +56,9 @@ DEVICE_DATA = {
                 "cpu_pack": False,
                 "comex_amb": False
             }
+        },
+        'watchdog': {
+            "max_period": 32
         }
     },
     'x86_64-mlnx_msn2410-r0': {
@@ -67,6 +73,16 @@ DEVICE_DATA = {
             "capability": {
                 "cpu_pack": False,
                 "comex_amb": False
+            }
+        },
+        'watchdog': {
+            "max_period": 32
+        }
+    },
+    'x86_64-mlnx_msn4700_simx-r0': {
+        'thermal': {
+            "capability": {
+                "cpu_pack": False
             }
         }
     },
@@ -104,11 +120,27 @@ DEVICE_DATA = {
             }
         }
     },
+    'x86_64-nvidia_sn5400-r0': {
+        'thermal': {
+            "capability": {
+                "comex_amb": False,
+                "pch_temp": True
+            }
+        }
+    },
     'x86_64-nvidia_sn5600-r0': {
         'thermal': {
             "capability": {
                 "comex_amb": False,
                 "pch_temp": True
+            }
+        }
+    },
+    'x86_64-nvidia_sn4280_simx-r0': {
+        'thermal': {
+            "capability": {
+                "cpu_pack": False,
+                "comex_amb": False
             }
         }
     }
@@ -160,7 +192,11 @@ class DeviceDataManager:
     @classmethod
     @utils.read_only_cache()
     def get_sfp_count(cls):
-        return utils.read_int_from_file('/run/hw-management/config/sfp_counter')
+        from sonic_py_common import device_info
+        platform_path = device_info.get_path_to_platform_dir()
+        platform_json_path = os.path.join(platform_path, 'platform.json')
+        platform_data = utils.load_json_file(platform_json_path)
+        return len(platform_data['chassis']['sfps'])
 
     @classmethod
     def get_linecard_sfp_count(cls, lc_index):
@@ -227,3 +263,45 @@ class DeviceDataManager:
             # Currently, only fetching BIOS version is supported
             return ComponentCPLDSN2201.get_component_list()
         return ComponentCPLD.get_component_list()
+
+    @classmethod
+    @utils.read_only_cache()
+    def is_module_host_management_mode(cls):
+        from sonic_py_common import device_info
+        _, hwsku_dir = device_info.get_paths_to_platform_and_hwsku_dirs()
+        sai_profile_file = os.path.join(hwsku_dir, 'sai.profile')
+        data = utils.read_key_value_file(sai_profile_file, delimeter='=')
+        return data.get('SAI_INDEPENDENT_MODULE_MODE') == '1'
+    
+    @classmethod
+    def wait_platform_ready(cls):
+        """
+        Wait for Nvidia platform related services(SDK, hw-management) ready
+        Returns:
+            bool: True if wait success else timeout
+        """
+        conditions = []
+        sysfs_nodes = ['power_mode', 'power_mode_policy', 'present', 'reset', 'status', 'statuserror']
+        if cls.is_module_host_management_mode():
+            sysfs_nodes.extend(['control', 'frequency', 'frequency_support', 'hw_present', 'hw_reset',
+                                'power_good', 'power_limit', 'power_on', 'temperature/input'])
+        else:
+            conditions.append(lambda: utils.read_int_from_file('/var/run/hw-management/config/asics_init_done') == 1)
+        sfp_count = cls.get_sfp_count()
+        for sfp_index in range(sfp_count):
+            for sysfs_node in sysfs_nodes:
+                conditions.append(lambda: os.path.exists(f'/sys/module/sx_core/asic0/module{sfp_index}/{sysfs_node}'))
+        return utils.wait_until_conditions(conditions, 300, 1)
+
+    @classmethod
+    @utils.read_only_cache()
+    def get_watchdog_max_period(cls):
+        platform_data = DEVICE_DATA.get(cls.get_platform_name(), None)
+        if not platform_data:
+            return DEFAULT_WD_PERIOD
+
+        watchdog_data = platform_data.get('watchdog', None)
+        if not watchdog_data:
+            return DEFAULT_WD_PERIOD
+
+        return watchdog_data.get('max_period', None)

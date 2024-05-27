@@ -98,15 +98,16 @@ endif
 							--kernel_version $(KERNEL_VERSION) \
 							--hw_mgmt_ver ${MLNX_HW_MANAGEMENT_VERSION} $(LOG_SIMPLE)
 
-	$(BUILD_WORKDIR)/$($(MLNX_HW_MANAGEMENT)_SRC_PATH)/hw-mgmt/recipes-kernel/linux/deploy_kernel_patches.py \
-							--dst_accepted_folder $(PTCH_DIR) \
-							--dst_candidate_folder $(NON_UP_PTCH_DIR) \
-							--series_file $(PTCH_LIST) \
-							--config_file $(KCFG_LIST_ARM) \
-							--config_file_downstream $(KCFG_DOWN_LIST_ARM) \
-							--kernel_version $(KERNEL_VERSION) \
-							--arch arm64 \
-							--os_type sonic $(LOG_SIMPLE)
+	# Disable Writing KConfigs for arm64 platform
+	# $(BUILD_WORKDIR)/$($(MLNX_HW_MANAGEMENT)_SRC_PATH)/hw-mgmt/recipes-kernel/linux/deploy_kernel_patches.py \
+	# 						--dst_accepted_folder $(PTCH_DIR) \
+	# 						--dst_candidate_folder $(NON_UP_PTCH_DIR) \
+	# 						--series_file $(PTCH_LIST) \
+	# 						--config_file $(KCFG_LIST_ARM) \
+	# 						--config_file_downstream $(KCFG_DOWN_LIST_ARM) \
+	# 						--kernel_version $(KERNEL_VERSION) \
+	# 						--arch arm64 \
+	# 						--os_type sonic $(LOG_SIMPLE)
 	
 	$(BUILD_WORKDIR)/$($(MLNX_HW_MANAGEMENT)_SRC_PATH)/hw-mgmt/recipes-kernel/linux/deploy_kernel_patches.py \
 							--dst_accepted_folder $(PTCH_DIR) \
@@ -162,11 +163,8 @@ endif
 	git add -- $(PLATFORM_PATH)/non-upstream-patches/
 	git add -- $(PLATFORM_PATH)/hw-management.mk
 
-	echo -en '\n###-> Non Upstream external-changes.patch changes <-###\n' >> ${HWMGMT_USER_OUTFILE}
-	git diff --no-color --staged -- $(PLATFORM_PATH)/non-upstream-patches/external-changes.patch >> ${HWMGMT_USER_OUTFILE}
-
-	echo -en '\n###-> Non Upstream kconfig-inclusions.patch changes <-###\n' >> ${HWMGMT_USER_OUTFILE}
-	git diff --no-color --staged -- $(PLATFORM_PATH)/non-upstream-patches/kconfig-inclusions.patch >> ${HWMGMT_USER_OUTFILE}
+	echo -en '\n###-> Non Upstream changes <-###\n' >> ${HWMGMT_USER_OUTFILE}
+	git diff --no-color --staged -- $(PLATFORM_PATH)/non-upstream-patches/ >> ${HWMGMT_USER_OUTFILE}
 
 	echo -en '\n###-> Non Upstream patch list file <-###\n' >> ${HWMGMT_USER_OUTFILE}
 	git diff --no-color --staged -- $($(MLNX_HW_MANAGEMENT)_SRC_PATH)/hwmgmt_nonup_patches >> ${HWMGMT_USER_OUTFILE}

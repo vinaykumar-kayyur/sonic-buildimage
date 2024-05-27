@@ -129,7 +129,7 @@ class TestCfgGenCaseInsensitive(TestCase):
         output = self.run_script(argument)
         expected = {
                        'Vlan1000|Ethernet8': {'tagging_mode': 'untagged'},
-                       'Vlan2000|Ethernet4': {'tagging_mode': 'untagged'}
+                       'Vlan2000|PortChannel01': {'tagging_mode': 'untagged'}
                    }
         self.assertEqual(
                 utils.to_dict(output.strip()),
@@ -139,7 +139,10 @@ class TestCfgGenCaseInsensitive(TestCase):
     def test_minigraph_vlan_interfaces_keys(self):
         argument = ['-m', self.sample_graph, '-p', self.port_config, '-v', "VLAN_INTERFACE.keys()|list"]
         output = self.run_script(argument)
-        self.assertEqual(output.strip(), "[('Vlan1000', '192.168.0.1/27'), 'Vlan1000']")
+        expected_list_dict = {
+            'list': ['Vlan1000', 'Vlan1000|192.168.0.1/27', 'Vlan1000|192.168.1.1/27']
+        }
+        self.assertEqual(utils.liststr_to_dict(output.strip()), expected_list_dict)
 
     def test_minigraph_vlan_interfaces(self):
         argument = ['-m', self.sample_graph, '-p', self.port_config, '-v', "VLAN_INTERFACE"]
@@ -149,6 +152,9 @@ class TestCfgGenCaseInsensitive(TestCase):
             'Vlan1000': {
                 'proxy_arp': 'enabled',
                 'grat_arp': 'enabled'
+            },
+            'Vlan1000|192.168.1.1/27': {
+                'secondary': 'true'
             }
         }
         self.assertEqual(utils.to_dict(output.strip()), expected_table)
@@ -208,6 +214,7 @@ class TestCfgGenCaseInsensitive(TestCase):
 
         expected_table = {
             'switch2-t0': {
+                'cluster': 'DB5PrdApp11',
                 'lo_addr': '25.1.1.10/32',
                 'mgmt_addr': '10.7.0.196/26',
                 'hwsku': 'Force10-S6000',
@@ -228,6 +235,7 @@ class TestCfgGenCaseInsensitive(TestCase):
                 'type': 'Server'
             },
             'switch-01t1': {
+                'cluster': 'DB5PrdApp11',
                 'lo_addr': '10.1.0.186/32',
                 'deployment_id': '2',
                 'hwsku': 'Force10-S6000',
@@ -520,7 +528,7 @@ class TestCfgGenCaseInsensitive(TestCase):
         }
         # TC1: Minigraph contains acl table type BmcData
         sample_mx_graph = os.path.join(self.test_dir,'simple-sample-graph-mx.xml')
-        result = minigraph.parse_xml(sample_mx_graph)
+        result = minigraph.parse_xml(sample_mx_graph, port_config_file=self.port_config)
         self.assertIn('ACL_TABLE_TYPE', result)
         self.assertIn('BMCDATA', result['ACL_TABLE_TYPE'])
         self.assertIn('BMCDATAV6', result['ACL_TABLE_TYPE'])
@@ -529,7 +537,7 @@ class TestCfgGenCaseInsensitive(TestCase):
         self.assertDictEqual(result['ACL_TABLE']['BMC_ACL_NORTHBOUND'], expected_acl_table_bmc_acl_northbound)
         self.assertDictEqual(result['ACL_TABLE']['BMC_ACL_NORTHBOUND_V6'], expected_acl_table_bmc_acl_northbound_v6)
         # TC2: Minigraph doesn't contain acl table type BmcData
-        result = minigraph.parse_xml(self.sample_graph)
+        result = minigraph.parse_xml(self.sample_graph, port_config_file=self.port_config)
         self.assertNotIn('ACL_TABLE_TYPE', result)
 
     def test_parse_device_desc_xml_mgmt_interface(self):
@@ -556,7 +564,7 @@ class TestCfgGenCaseInsensitive(TestCase):
         mgmt_graphs = ['simple-sample-graph-mx.xml', 'simple-sample-graph-m0.xml']
         for graph in mgmt_graphs:
             graph_path = os.path.join(self.test_dir, graph)
-            result = minigraph.parse_xml(graph_path)
+            result = minigraph.parse_xml(graph_path, port_config_file=self.port_config)
             self.assertIn('FLEX_COUNTER_TABLE', result)
             for counter in expected_mgmt_disabled_counters:
                 self.assertIn(counter, result['FLEX_COUNTER_TABLE'])
@@ -565,5 +573,5 @@ class TestCfgGenCaseInsensitive(TestCase):
                 if counter in result['FLEX_COUNTER_TABLE']:
                     self.assertDictEqual(result['FLEX_COUNTER_TABLE'][counter], {'FLEX_COUNTER_STATUS': 'enable'})
         # TC2: For other minigraph, result should not contain FLEX_COUNTER_TABLE
-        result = minigraph.parse_xml(self.sample_graph)
+        result = minigraph.parse_xml(self.sample_graph, port_config_file=self.port_config)
         self.assertNotIn('FLEX_COUNTER_TABLE', result)

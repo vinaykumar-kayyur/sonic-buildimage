@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2021-2023 NVIDIA CORPORATION & AFFILIATES.
+# Copyright (c) 2021-2024 NVIDIA CORPORATION & AFFILIATES.
 # Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,8 +16,10 @@
 #
 
 import os
+import random
 import sys
 import subprocess
+import threading
 
 from mock import MagicMock
 if sys.version_info.major == 3:
@@ -122,6 +124,7 @@ class TestChassis:
         chassis._fan_drawer_list = []
         assert chassis.get_num_fan_drawers() == 2
 
+    @mock.patch('sonic_platform.device_data.DeviceDataManager.is_module_host_management_mode', mock.MagicMock(return_value=False))
     def test_sfp(self):
         # Test get_num_sfps, it should not create any SFP objects
         DeviceDataManager.get_sfp_count = mock.MagicMock(return_value=3)
@@ -167,32 +170,36 @@ class TestChassis:
         assert len(sfp_list) == 3
         assert chassis.sfp_initialized_count == 3
 
-    @mock.patch('sonic_platform.sfp_event.sfp_event.check_sfp_status', MagicMock())
-    @mock.patch('sonic_platform.sfp_event.sfp_event.__init__', MagicMock(return_value=None))
-    @mock.patch('sonic_platform.sfp_event.sfp_event.initialize', MagicMock())
-    @mock.patch('sonic_platform.device_data.DeviceDataManager.get_sfp_count', MagicMock(return_value=3))
-    def test_change_event(self):
-        from sonic_platform.sfp_event import sfp_event
-
-        return_port_dict = {1: '1'}
-        def mock_check_sfp_status(self, port_dict, error_dict, timeout):
-            port_dict.update(return_port_dict)
-            return True if port_dict else False
-
-        sfp_event.check_sfp_status = mock_check_sfp_status
+        # Get all SFPs, with RJ45 ports
+        sonic_platform.chassis.extract_RJ45_ports_index = mock.MagicMock(return_value=[0,1,2])
+        DeviceDataManager.get_sfp_count = mock.MagicMock(return_value=3)
         chassis = Chassis()
+        assert chassis.get_num_sfps() == 6
+        sonic_platform.chassis.extract_RJ45_ports_index = mock.MagicMock(return_value=[])
 
-        # Call get_change_event with timeout=0, wait until an event is detected
-        status, event_dict = chassis.get_change_event()
-        assert status is True
-        assert 'sfp' in event_dict and event_dict['sfp'][1] == '1'
-        assert len(chassis._sfp_list) == 3
+    @mock.patch('sonic_platform.device_data.DeviceDataManager.is_module_host_management_mode', mock.MagicMock(return_value=False))
+    def test_create_sfp_in_multi_thread(self):
+        DeviceDataManager.get_sfp_count = mock.MagicMock(return_value=3)
 
-        # Call get_change_event with timeout=1.0
-        return_port_dict = {}
-        status, event_dict = chassis.get_change_event(timeout=1.0)
-        assert status is True
-        assert 'sfp' in event_dict and not event_dict['sfp']
+        iteration_num = 100
+        while iteration_num > 0:
+            chassis = Chassis()
+            assert chassis.sfp_initialized_count == 0
+            t1 = threading.Thread(target=lambda: chassis.get_sfp(1))
+            t2 = threading.Thread(target=lambda: chassis.get_sfp(1))
+            t3 = threading.Thread(target=lambda: chassis.get_all_sfps())
+            t4 = threading.Thread(target=lambda: chassis.get_all_sfps())
+            threads = [t1, t2, t3, t4]
+            random.shuffle(threads)
+            for t in threads:
+                t.start()
+            for t in threads:
+                t.join()
+            assert len(chassis.get_all_sfps()) == 3
+            assert chassis.sfp_initialized_count == 3
+            for index, s in enumerate(chassis.get_all_sfps()):
+                assert s.sdk_index == index
+            iteration_num -= 1
 
     @mock.patch('sonic_platform.chassis.Chassis._wait_reboot_cause_ready', MagicMock(return_value=True))
     def test_reboot_cause(self):

@@ -86,6 +86,10 @@ function startplatform() {
             /etc/init.d/xpnet.sh start
         fi
     fi
+
+    if [[ x"$sonic_asic_platform" == x"nvidia-bluefield" ]]; then
+        /usr/bin/bfnet.sh start
+    fi
 }
 
 function waitplatform() {
@@ -103,17 +107,6 @@ function waitplatform() {
             debug "Starting pmon service..."
             /bin/systemctl start pmon
             debug "Started pmon service"
-        fi
-    fi
-    if [[ x"$BOOT_TYPE" = @(x"fast"|x"warm"|x"fastfast") ]]; then
-        debug "LLDP service is delayed by a timer for better fast/warm boot performance"
-    else
-        lldp_state=$(systemctl is-enabled lldp.timer)
-        if [[ $lldp_state == "enabled" ]]
-        then
-            debug "Starting lldp service..."
-            /bin/systemctl start lldp
-            debug "Started lldp service"
         fi
     fi
 }
@@ -166,6 +159,8 @@ function stopplatform2() {
         elif [ x$sonic_asic_platform == x'cavium' ]; then
             /etc/init.d/xpnet.sh stop
             /etc/init.d/xpnet.sh start
+        elif [ x"$sonic_asic_platform" == x"nvidia-bluefield" ]; then
+            /usr/bin/bfnet.sh stop
         fi
     fi
 }

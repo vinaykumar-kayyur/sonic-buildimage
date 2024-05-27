@@ -1,6 +1,5 @@
 *master builds*:
 
-[![Barefoot](https://dev.azure.com/mssonic/build/_apis/build/status/barefoot/Azure.sonic-buildimage.official.barefoot?branchName=master&label=Barefoot)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=146&branchName=master)
 [![Broadcom](https://dev.azure.com/mssonic/build/_apis/build/status/broadcom/Azure.sonic-buildimage.official.broadcom?branchName=master&label=Broadcom)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=138&branchName=master)
 [![Centec](https://dev.azure.com/mssonic/build/_apis/build/status/centec/Azure.sonic-buildimage.official.centec?branchName=master&label=Centec)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=143&branchName=master)
 [![Centec(arm64)](https://dev.azure.com/mssonic/build/_apis/build/status/centec/Azure.sonic-buildimage.official.centec-arm64?branchName=master&label=Centec-arm64)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=140&branchName=master)
@@ -9,7 +8,19 @@
 [![Marvell(armhf)](https://dev.azure.com/mssonic/build/_apis/build/status/marvell/Azure.sonic-buildimage.official.marvell-armhf?branchName=master&label=Marvell-armhf)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=141&branchName=master)
 [![Marvell(arm64)](https://dev.azure.com/mssonic/build/_apis/build/status/marvell/Azure.sonic-buildimage.official.marvell-arm64?branchName=master&label=Marvell-arm64)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=999&branchName=master)
 [![Nephos](https://dev.azure.com/mssonic/build/_apis/build/status/nephos/Azure.sonic-buildimage.official.nephos?branchName=master&label=Nephos)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=149&branchName=master)
+[![Pensando](https://dev.azure.com/mssonic/build/_apis/build/status/pensando/Azure.sonic-buildimage.official.pensando?branchName=master&label=Pensando)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=1366&branchName=master)
 [![VS](https://dev.azure.com/mssonic/build/_apis/build/status/vs/Azure.sonic-buildimage.official.vs?branchName=master&label=VS)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=142&branchName=master)
+
+*202311 builds*:
+
+[![Broadcom](https://dev.azure.com/mssonic/build/_apis/build/status/broadcom/Azure.sonic-buildimage.official.broadcom?branchName=202311&label=Broadcom)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=138&branchName=202311)
+[![Centec](https://dev.azure.com/mssonic/build/_apis/build/status/centec/Azure.sonic-buildimage.official.centec?branchName=202311&label=Centec)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=143&branchName=202311)
+[![Centec(arm64)](https://dev.azure.com/mssonic/build/_apis/build/status/centec/Azure.sonic-buildimage.official.centec-arm64?branchName=202311&label=Centec-arm64)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=140&branchName=202311)
+[![Innovium](https://dev.azure.com/mssonic/build/_apis/build/status/innovium/Azure.sonic-buildimage.official.innovium?branchName=202311&label=Innovium)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=148&branchName=202311)
+[![Mellanox](https://dev.azure.com/mssonic/build/_apis/build/status/mellanox/Azure.sonic-buildimage.official.mellanox?branchName=202311&label=Mellanox)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=139&branchName=202311)
+[![Marvell(armhf)](https://dev.azure.com/mssonic/build/_apis/build/status/marvell/Azure.sonic-buildimage.official.marvell-armhf?branchName=202311&label=Marvell-armhf)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=141&branchName=202311)
+[![Marvell(arm64)](https://dev.azure.com/mssonic/build/_apis/build/status/marvell/Azure.sonic-buildimage.official.marvell-arm64?branchName=202311&label=Marvell-arm64)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=999&branchName=202311)
+[![VS](https://dev.azure.com/mssonic/build/_apis/build/status/vs/Azure.sonic-buildimage.official.vs?branchName=202311&label=VS)](https://dev.azure.com/mssonic/build/_build/latest?definitionId=142&branchName=202311)
 
 *202305 builds*:
 
@@ -131,6 +142,7 @@ pip3 install --user j2cli
   system to allow running the 'docker' command without 'sudo':
   * Add current user to the docker group: `sudo gpasswd -a ${USER} docker`
   * Log out and log back in so that your group membership is re-evaluated
+  * If you are using Linux kernel 5.3 or newer, then you must use Docker 20.10.10 or newer. This is because older Docker versions did not allow the `clone3` syscall, which is now used in Bookworm.
 
 > Note: If a previous installation of Docker using snap was present on the
 > system, remove it and also remove docker from snap before reinstallating docker.
@@ -187,9 +199,6 @@ The supported ASIC vendors are:
 
 ## Usage for ARM Architecture
 
-ARM build has dependency in docker version 18.
-If docker version is 19, downgrade to 18 with:
-
 ```shell
 sudo apt-get install --allow-downgrades -y docker-ce=5:18.09.0~3-0~ubuntu-xenial
 sudo apt-get install --allow-downgrades -y docker-ce-cli=5:18.09.0~3-0~ubuntu-xenial
@@ -206,7 +215,7 @@ make target/sonic-[ASIC_VENDER]-armhf.bin
 _example:_
 
 ```shell
-make configure PLATFORM=marvell-armhf PLATFORM_ARCH=armhf
+make configure PLATFORM=marvell PLATFORM_ARCH=armhf
 make target/sonic-marvell-armhf.bin
 ```
 
@@ -217,7 +226,7 @@ using cross-compilation, run the following commands:
 # Execute make configure once to configure ASIC and ARCH for cross-compilation build
 
 NOJESSIE=1 NOSTRETCH=1 BLDENV=buster CROSS_BLDENV=1 \
-make configure PLATFORM=marvell-armhf PLATFORM_ARCH=armhf
+make configure PLATFORM=marvell PLATFORM_ARCH=armhf
 
 # Execute Arm32 build using cross-compilation environment
 
@@ -236,7 +245,7 @@ make configure PLATFORM=[ASIC_VENDOR] PLATFORM_ARCH=arm64
 
 # example:
 
-make configure PLATFORM=marvell-arm64 PLATFORM_ARCH=arm64
+make configure PLATFORM=marvell PLATFORM_ARCH=arm64
 ```
 
  **NOTE**:
