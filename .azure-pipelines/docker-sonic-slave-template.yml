@@ -29,9 +29,9 @@ parameters:
   default: sonicdev
 - name: pool
   type: string
-  default: sonicbld
+  default: sonicbld1es
   values:
-  - sonicbld
+  - sonicbld1es
   - sonicbld-arm64
   - sonicbld-armhf
 
