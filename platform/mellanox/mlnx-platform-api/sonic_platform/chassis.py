@@ -919,14 +919,14 @@ class Chassis(ChassisBase):
         Returns:
             string: Revision value of device
         """
-        if self.vpd_data is None:
+        if not self.vpd_data:
             self.vpd_data = self._parse_vpd_data(VPD_DATA_FILE)
 
         return self.vpd_data.get(REVISION, "N/A")
 
     def _parse_vpd_data(self, filename):
         """
-        Read DMI data chassis data and returns a dictionary of values
+        Read vpd_data and returns a dictionary of values
 
         Returns:
             A dictionary containing the dmi table of the switch chassis info
@@ -936,16 +936,10 @@ class Chassis(ChassisBase):
             if not os.access(filename, os.R_OK):
                 return result
 
-            with open(filename, "r") as vpd_file:
-                data = vpd_file.readlines()
-
-            for line in data:
-                field,value = line.split(": ")
-                value = value.strip()
-                result[field] = value
+            result = utils.read_key_value_file(filename, delimeter=": ")
                 
         except Exception as e:
-            logger.log_error("Fail to decode DMI {} due to {}".format(filename, repr(e)))
+            logger.log_error("Fail to decode vpd_data {} due to {}".format(filename, repr(e)))
 
         return result
 

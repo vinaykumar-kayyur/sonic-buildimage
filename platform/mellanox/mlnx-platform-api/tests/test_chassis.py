@@ -324,19 +324,6 @@ class TestChassis:
         assert len(module_list) == 3
         assert chassis.module_initialized_count == 3
 
-    """def test_revision_permission(self):
-        old_dmi_file =  sonic_platform.chassis.DMI_FILE
-        #Override the dmi file
-        sonic_platform.chassis.DMI_FILE = "/tmp/dmi_file"
-        new_dmi_file = sonic_platform.chassis.DMI_FILE
-        subprocess.call(["touch", new_dmi_file])
-        subprocess.call(["chmod", "-r", new_dmi_file])
-        chassis = Chassis()
-        rev = chassis.get_revision()
-        sonic_platform.chassis.DMI_FILE = old_dmi_file
-        subprocess.call(["rm", "-f", new_dmi_file])
-        assert rev == "N/A" """
-
     def test_get_port_or_cage_type(self):
         chassis = Chassis()
         chassis._RJ45_port_inited = True
