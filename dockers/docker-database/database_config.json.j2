@@ -25,6 +25,8 @@
         }
 {% endif %}
         ,"redis_bmp":{
+            "hostname" : "{{HOST_IP}}",
+            "port" : {{BMP_DB_PORT}},
             "unix_socket_path": "/var/run/redis-bmp/redis_bmp.sock",
             "persistence_for_warm_boot" : "yes"
         }
