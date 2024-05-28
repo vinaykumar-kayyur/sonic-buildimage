@@ -509,7 +509,7 @@ class SFP(NvidiaSFPCommon):
         """
         presence_sysfs = f'/sys/module/sx_core/asic0/module{self.sdk_index}/hw_present' if self.is_sw_control() else f'/sys/module/sx_core/asic0/module{self.sdk_index}/present'
         if utils.read_int_from_file(presence_sysfs) != 1:
-            logger.log_warning(f'Failed attempt to read EEPROM for sfp={self.sdk_index}: No module connected')
+            logger.log_info(f'Failed attempt to read EEPROM for sfp={self.sdk_index}: No module connected')
             return None
 
         result = bytearray(0)
