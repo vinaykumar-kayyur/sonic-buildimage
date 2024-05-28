@@ -23,6 +23,7 @@ class TestCfgGenCaseInsensitive(TestCase):
         self.sample_subintf_graph = os.path.join(self.test_dir, 'sample-graph-subintf.xml')
         self.sample_simple_device_desc = os.path.join(self.test_dir, 'simple-sample-device-desc.xml')
         self.sample_simple_device_desc_ipv6_only = os.path.join(self.test_dir, 'simple-sample-device-desc-ipv6-only.xml')
+        self.sample_simple_deviceinfo_asic_sensors = os.path.join(self.test_dir, 'simple-sample-graph-asic-sensors.xml')
         self.port_config = os.path.join(self.test_dir, 't0-sample-port-config.ini')
 
     def run_script(self, argument, check_stderr=False):
@@ -575,3 +576,19 @@ class TestCfgGenCaseInsensitive(TestCase):
         # TC2: For other minigraph, result should not contain FLEX_COUNTER_TABLE
         result = minigraph.parse_xml(self.sample_graph, port_config_file=self.port_config)
         self.assertNotIn('FLEX_COUNTER_TABLE', result)
+
+    def test_minigraph_asic_sensors(self):
+        """
+        This testcase is to verify if asic sensors are parsed correctly by minigraph.py 
+        """
+        expected_asic_sensors = {
+                'ASIC_SENSORS_POLLER_INTERVAL': {
+                    'interval': '10'
+                    },
+                'ASIC_SENSORS_POLLER_STATUS': {
+                    'admin_status': 'enable'
+                    }
+                }
+        result = minigraph.parse_xml(self.sample_simple_deviceinfo_asic_sensors, port_config_file=self.port_config)
+        self.assertIn('ASIC_SENSORS',result)
+        self.assertDictEqual(result['ASIC_SENSORS'],expected_asic_sensors)

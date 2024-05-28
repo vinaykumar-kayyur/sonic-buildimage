@@ -1203,6 +1203,7 @@ def parse_deviceinfo(meta, hwsku):
     port_speeds = {}
     port_descriptions = {}
     sys_ports = {}
+    asic_sensors = {}
     for device_info in meta.findall(str(QName(ns, "DeviceInfo"))):
         dev_sku = device_info.find(str(QName(ns, "HwSku"))).text
         if dev_sku == hwsku:
@@ -1234,8 +1235,13 @@ def parse_deviceinfo(meta, hwsku):
                     if hostname is not None:
                        key = "%s|%s" % (hostname.text, key)
                     sys_ports[key] = {"system_port_id": system_port_id, "switch_id": switch_id, "core_index": core_id, "core_port_index": core_port_id, "speed": speed, "num_voq": num_voq}
-
-    return port_speeds, port_descriptions, sys_ports
+            asic_sensor = device_info.find(str(QName(ns,"AsicSensors")))
+            if asic_sensor is not None:
+                asic_sensors_poller_status = asic_sensor.find(str(QName(ns,"AsicSensorsPollerStatus"))).text
+                asic_sensors_poller_interval = asic_sensor.find(str(QName(ns,"AsicSensorsPollerInterval"))).text
+                asic_sensors = {"ASIC_SENSORS_POLLER_STATUS" : {"admin_status": asic_sensors_poller_status}, "ASIC_SENSORS_POLLER_INTERVAL": {"interval":asic_sensors_poller_interval}}
+    
+    return port_speeds, port_descriptions, sys_ports, asic_sensors
 
 # Function to check if IP address is present in the key.
 # If it is present, then the key would be a tuple.
@@ -1566,7 +1572,8 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     redundancy_type = None
     qos_profile = None
     rack_mgmt_map = None
-
+    asic_sensors = {}
+    
     hwsku_qn = QName(ns, "HwSku")
     hostname_qn = QName(ns, "Hostname")
     docker_routing_config_mode_qn = QName(ns, "DockerRoutingConfigMode")
@@ -1602,7 +1609,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
             elif child.tag == str(QName(ns, "LinkMetadataDeclaration")):
                 linkmetas = parse_linkmeta(child, hostname)
             elif child.tag == str(QName(ns, "DeviceInfos")):
-                (port_speeds_default, port_descriptions, sys_ports) = parse_deviceinfo(child, hwsku)
+                (port_speeds_default, port_descriptions, sys_ports, asic_sensors) = parse_deviceinfo(child, hwsku)
         else:
             if child.tag == str(QName(ns, "DpgDec")):
                 (intfs, lo_intfs, mvrf, mgmt_intf, voq_inband_intfs, vlans, vlan_members, dhcp_relay_table, pcs, pc_members, acls, acl_table_types, vni, tunnel_intfs, dpg_ecmp_content, static_routes, tunnel_intfs_qos_remap_config) = parse_dpg(child, asic_name)
@@ -1616,7 +1623,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
             elif child.tag == str(QName(ns, "LinkMetadataDeclaration")):
                 linkmetas = parse_linkmeta(child, hostname)
             elif child.tag == str(QName(ns, "DeviceInfos")):
-                (port_speeds_default, port_descriptions, sys_ports) = parse_deviceinfo(child, hwsku)
+                (port_speeds_default, port_descriptions, sys_ports, asic_sensors) = parse_deviceinfo(child, hwsku)
 
     select_mmu_profiles(qos_profile, platform, hwsku)
     # set the host device type in asic metadata also
@@ -2178,6 +2185,10 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     if current_device and current_device['type'] in leafrouter_device_types:
         results['DEVICE_METADATA']['localhost']['suppress-fib-pending'] = 'enabled'
 
+    # Enable asic sensors for thermal monitoring
+    if asic_sensors:
+        results["ASIC_SENSORS"] = asic_sensors
+    
     return results
 
 def get_tunnel_entries(tunnel_intfs, tunnel_intfs_qos_remap_config, lo_intfs, tunnel_qos_remap, mux_tunnel_name, peer_switch_ip):
