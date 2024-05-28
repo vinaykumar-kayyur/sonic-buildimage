@@ -81,7 +81,7 @@ stages:
           PLATFORM_ARCH: armhf
 
 - stage: Test
-#  dependsOn: BuildVS
+  dependsOn: [] #BuildVS
 #  condition: and(succeeded(), and(ne(stageDependencies.BuildVS.outputs['vs.SetVar.SKIP_VSTEST'], 'YES'), in(dependencies.BuildVS.result, 'Succeeded', 'SucceededWithIssues')))
   variables:
   - group: SONiC-Elastictest
