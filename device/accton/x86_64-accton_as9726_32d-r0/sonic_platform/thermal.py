@@ -282,11 +282,15 @@ class Thermal(ThermalBase):
             A float number, the high threshold temperature of thermal in Celsius
             up to nearest thousandth of one degree Celsius, e.g. 30.125
         """
-        if self.is_psu:
-            return 80.0
+        value = self.conf.get_high_threshold()
+        if value != self.conf.NOT_AVAILABLE:
+            return float(value)
 
-        temp_file = "temp{}_max".format(self.ss_index)
-        return self.__get_temp(temp_file)
+        default_value = self.default_threshold[self.get_name()][self.conf.HIGH_THRESHOLD_FIELD]
+        if default_value != self.conf.NOT_AVAILABLE:
+            return float(default_value)
+
+        raise NotImplementedError
 
     def set_high_threshold(self, temperature):
         """
@@ -297,9 +301,15 @@ class Thermal(ThermalBase):
         Returns:
             A boolean, True if threshold is set successfully, False if not
         """
-        temp_file = "temp{}_max".format(self.ss_index)
-        temperature = temperature *1000
-        self.__set_threshold(temp_file, temperature)
+        try:
+            value = float(temperature)
+        except:
+            return False
+
+        try:
+            self.conf.set_high_threshold(str(value))
+        except:
+            return False
 
         return True
 
