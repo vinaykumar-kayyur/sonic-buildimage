@@ -335,6 +335,8 @@ class TestMultiNpuCfgGen(TestCase):
             else:
                 self.assertEqual(output['localhost']['sub_role'], 'BackEnd')
             self.assertEqual(output['localhost']['deployment_id'], "1")
+            if asic != 3:
+                self.assertEqual(output['localhost']['slice_type'], "AZNG_Production")
 
     def test_global_asic_acl(self):
         argument = ["-m", self.sample_graph, "-p", self.sample_port_config, "--var-json", "ACL_TABLE"]
