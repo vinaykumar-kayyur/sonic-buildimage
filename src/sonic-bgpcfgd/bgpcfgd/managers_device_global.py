@@ -120,7 +120,7 @@ class DeviceGlobalCfgMgr(Manager):
         return route_map_names
 
     def get_chassis_tsa_status(self):
-        chassis_tsa_status = ""
+        chassis_tsa_status = "false"
         try:
             ch = swsscommon.SonicV2Connector(use_unix_socket_path=False)
             ch.connect(ch.CHASSIS_APP_DB, False)

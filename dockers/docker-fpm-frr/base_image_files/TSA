@@ -19,6 +19,8 @@ if [ -f /etc/sonic/chassisdb.conf ]; then
     echo "Chassis Mode: Normal -> Maintenance"
     logger -t TSA -p user.info "Chassis Mode: Normal -> Maintenance"
   fi
+  echo "Please execute \"rexec all -c 'sudo config save -y'\" to preserve System mode in Maintenance after reboot\
+  or config reload on all linecards"
   exit 0
 fi
 # toggle the mux to standby if dualtor and any mux active
