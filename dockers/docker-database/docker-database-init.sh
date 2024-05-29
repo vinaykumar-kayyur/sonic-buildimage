@@ -41,8 +41,6 @@ then
     fi
 fi
 
-export BMP_DB_PORT=6400
-
 REDIS_DIR=/var/run/redis$NAMESPACE_ID
 mkdir -p $REDIS_DIR/sonic-db
 mkdir -p /etc/supervisor/conf.d/
