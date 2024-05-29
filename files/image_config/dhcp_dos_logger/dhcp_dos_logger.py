@@ -27,7 +27,6 @@ ports = config_db.get_table('PORT').keys()
 drop_pkts = {port: 0 for port in ports}
 
 # Main handler function
-# Main handler function
 def handler():
     """
     Continuously monitors ports for dropped DHCP packets and logs them.
@@ -41,16 +40,16 @@ def handler():
                     if match:
                         dropped_count = int(match.group(1))
                         if dropped_count > drop_pkts[port]:
-                            logger.log_info(f"Port {port}: Current DHCP drop counter is {dropped_count}")
+                            logger.log_warning(f"Port {port}: Current DHCP drop counter is {dropped_count}")
                             drop_pkts[port] = dropped_count
                         else:
-                            logger.log_warning(f"No new dropped packets found on port {port}")
+                            pass
                     else:
-                        logger.log_warning(f"No dropped packet information found for port {port}")
+                        logger.log_warning(f"Failed to get dropped packet information for port {port}")
             except subprocess.CalledProcessError as e:
                 logger.log_error(f"Error executing 'tc' command: {e}")
 
-        time.sleep(10)  # Adjust sleep time as needed (e.g., check for dropped packets every 10 seconds)
+        time.sleep(10)
 
 
 # Entry point function
