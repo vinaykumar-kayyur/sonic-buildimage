@@ -71,7 +71,6 @@ class BMPCfg(object):
 
 class BMPCfgDaemon:
     def __init__(self):
-        #self.state_db_conn = DBConnector(BMP_STATE_DB, 0)
         self.state_db_conn = swsscommon.SonicV2Connector(host=REDIS_HOSTIP)
         self.state_db_conn.connect(BMP_STATE_DB)
         self.config_db = ConfigDBConnector()
