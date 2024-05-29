@@ -33,6 +33,11 @@ if [ -n "$CERTS" ]; then
     if [ ! -z $CA_CRT ]; then
         TELEMETRY_ARGS+=" --ca_crt $CA_CRT"
     fi
+
+    CLIENT_CERT_CNAME=$(echo $CERTS | jq -r '.client_crt_cname')
+    if [ ! -z $CLIENT_CERT_CNAME ]; then
+        TELEMETRY_ARGS+=" --client_crt_cname $CLIENT_CERT_CNAME"
+    fi
 elif [ -n "$X509" ]; then
     SERVER_CRT=$(echo $X509 | jq -r '.server_crt')
     SERVER_KEY=$(echo $X509 | jq -r '.server_key')
