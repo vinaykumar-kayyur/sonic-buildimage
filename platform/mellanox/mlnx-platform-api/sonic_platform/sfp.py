@@ -507,7 +507,7 @@ class SFP(NvidiaSFPCommon):
         Returns:
             bytearray: the content of EEPROM
         """
-        result = None
+        result = bytearray(0)
         while num_bytes > 0:
             _, page, page_offset = self._get_page_and_page_offset(offset)
             if not page:
@@ -1492,8 +1492,9 @@ class SFP(NvidiaSFPCommon):
         
     @classmethod
     def action_on_fw_control(cls, sfp):
-        logger.log_info(f'SFP {sfp.sdk_index} is set to firmware control')
-        sfp.set_control_type(SFP_FW_CONTROL)
+        if sfp.get_control_type() != SFP_FW_CONTROL:
+            logger.log_info(f'SFP {sfp.sdk_index} is set to firmware control')
+            sfp.set_control_type(SFP_FW_CONTROL)
         
     @classmethod
     def action_on_cancel_wait(cls, sfp):
