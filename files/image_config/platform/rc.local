@@ -210,7 +210,7 @@ program_console_speed()
 
 #### Begin Main Body ####
 
-logger "SONiC version ${SONIC_VERSION} starting up..."
+logger --id="$$" "SONiC version ${SONIC_VERSION} starting up..."
 
 # If the machine.conf is absent, it indicates that the unit booted
 # into SONiC from another NOS. Extract the machine.conf from ONIE.
@@ -400,7 +400,7 @@ fi
 
 # Copy the fsck log into syslog
 if [ -f /var/log/fsck.log.gz ]; then
-    gunzip -d -c /var/log/fsck.log.gz | logger -t "FSCK"
+    gunzip -d -c /var/log/fsck.log.gz | logger --id="$$" -t "FSCK"
     rm -f /var/log/fsck.log.gz
 fi
 

@@ -9,7 +9,7 @@ PCIE_STATUS_TABLE="PCIE_DEVICES|status"
 
 function debug()
 {
-    /usr/bin/logger "$0 : $1"
+    /usr/bin/logger --id="$$" "$0 : $1"
     if [[ x"${VERBOSE}" == x"yes" ]]; then
         echo "$(date) $0: $1"
     fi

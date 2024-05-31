@@ -2,7 +2,7 @@
 
 function debug()
 {
-    /usr/bin/logger $1
+    /usr/bin/logger --id="$$" $1
 }
 
 function check_warm_boot()

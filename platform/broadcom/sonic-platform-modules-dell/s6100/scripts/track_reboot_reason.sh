@@ -81,13 +81,13 @@ _get_smf_reset_register(){
             echo "Third reset - $third_reset" >> $RESET_REASON_FILE
             echo "Fourth reset - $fourth_reset" >> $RESET_REASON_FILE
         fi
-        logger -p user.info -t DELL_S6100_REBOOT_CAUSE "RST value in NVRAM: $first_reset, $second_reset, $third_reset, $fourth_reset"
+        logger --id="$$" -p user.info -t DELL_S6100_REBOOT_CAUSE "RST value in NVRAM: $first_reset, $second_reset, $third_reset, $fourth_reset"
 
         if [[ $BIOS_VERSION_MINOR -gt 8 ]]; then
             # Retrieve TCO reset status
             tco_nvram=$((16#$(nvram_rd_wr.py --get --offset $TCO_RESET_NVRAM_OFFSET | cut -d " " -f 2)))
             TCO_WD_RESET=$(($tco_nvram & 1))
-            logger -p user.info -t DELL_S6100_REBOOT_CAUSE "TCO status value in NVRAM: $TCO_WD_RESET"
+            logger --id="$$" -p user.info -t DELL_S6100_REBOOT_CAUSE "TCO status value in NVRAM: $TCO_WD_RESET"
 
             # Clear TCO reset status in NVRAM
             tco_nvram=$(printf "%x" $(($tco_nvram & 0xfe)))
@@ -185,7 +185,7 @@ update_mailbox_register(){
         rst=$(cat $SMF_RESET_REASON)
         mbr=$(cat $MAILBOX_POWERON_REASON)
         reason=$(echo $mbr | cut -d 'x' -f2)
-        logger -p user.info -t DELL_S6100_REBOOT_CAUSE "POR: $por, RST: $rst, MBR: $mbr"
+        logger --id="$$" -p user.info -t DELL_S6100_REBOOT_CAUSE "POR: $por, RST: $rst, MBR: $mbr"
 
         SMF_MSS_VERSION=$(cat $SMF_MSS_VERSION_FILE)
         SMF_MSS_VERSION_MAJOR=$(echo $SMF_MSS_VERSION | cut -d '.' -f1)

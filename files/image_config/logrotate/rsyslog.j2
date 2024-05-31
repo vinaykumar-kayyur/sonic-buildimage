@@ -88,11 +88,11 @@
                 OLDEST_ARCHIVE_FILE=$(find /var/log -type f -printf '%T+ %p\n' | grep -E '.+\.[0-9]+(\.gz)?$' | sort | head -n 1 | awk '{ print $2; }')
 
                 if [ -z "$OLDEST_ARCHIVE_FILE" ]; then
-                    logger -p syslog.err -t "logrotate" "No archive file to delete -- potential for filling up /var/log partition!"
+                    logger --id="$$" -p syslog.err -t "logrotate" "No archive file to delete -- potential for filling up /var/log partition!"
                     break
                 fi
 
-                logger -p syslog.info -t "logrotate" "Deleting archive file $OLDEST_ARCHIVE_FILE to free up space"
+                logger --id="$$" -p syslog.info -t "logrotate" "Deleting archive file $OLDEST_ARCHIVE_FILE to free up space"
                 rm -rf "$OLDEST_ARCHIVE_FILE"
             fi
         done
@@ -109,10 +109,10 @@
             if [ $NUM_ASIC -gt 1 ]; then
                 log_file=$1
                 log_file_name=${log_file#/var/log/swss/}
-                logger -p syslog.info -t "logrotate" "Sending SIGHUP to OA log_file_name: $log_file_name"
+                logger --id="$$" -p syslog.info -t "logrotate" "Sending SIGHUP to OA log_file_name: $log_file_name"
                 pgrep -xa orchagent | grep $log_file_name | awk '{ print $1; }' | xargs /bin/kill -HUP 2>/dev/null || true
             else
-                logger -p syslog.info -t "logrotate" "Sending SIGHUP to OA log_file_name: $1"
+                logger --id="$$" -p syslog.info -t "logrotate" "Sending SIGHUP to OA log_file_name: $1"
                 pgrep -x orchagent | xargs /bin/kill -HUP 2>/dev/null || true
             fi
         else

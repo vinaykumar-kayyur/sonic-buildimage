@@ -215,7 +215,7 @@ function log_msg() {
   local msg=$2
 
   if [ $GBL_LOG_FILE == $DEF_LOG_FILE ]; then
-    `logger -t $DAEMON_NAME -p $msg_lvl $msg`
+    `logger --id="$$" -t $DAEMON_NAME -p $msg_lvl $msg`
   else
     echo -e "`date +"%b %_d %T"` `hostname` $DAEMON_NAME[$DAEMON_PID]: ${msg}" >> ${GBL_LOG_FILE}
   fi

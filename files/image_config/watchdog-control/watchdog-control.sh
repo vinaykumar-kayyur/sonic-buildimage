@@ -5,7 +5,7 @@ WATCHDOG_UTIL="/usr/local/bin/watchdogutil"
 
 function debug()
 {
-    /usr/bin/logger "$0 : $1"
+    /usr/bin/logger --id="$$" "$0 : $1"
     if [[ x"${VERBOSE}" == x"yes" ]]; then
         echo "$(date) $0: $1"
     fi

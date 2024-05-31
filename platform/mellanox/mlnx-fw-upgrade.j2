@@ -105,11 +105,11 @@ function ParseArguments() {
 function LogError() {
     if [[ "${VERBOSE_LEVEL}" -ge "${VERBOSE_ERROR}" ]]; then
         echo "ERROR: $*"
-        logger -p "ERROR" -t "${SCRIPT_NAME}" "$*"
+        logger --id="$$" -p "ERROR" -t "${SCRIPT_NAME}" "$*"
     fi
 
     if [[ "${SYSLOG_LOGGER}" = "${YES_PARAM}" ]]; then
-        logger -p "ERROR" -t "${SCRIPT_NAME}" "$*"
+        logger --id="$$" -p "ERROR" -t "${SCRIPT_NAME}" "$*"
     fi
 }
 
@@ -119,7 +119,7 @@ function LogWarning() {
     fi
 
     if [[ "${SYSLOG_LOGGER}" = "${YES_PARAM}" ]]; then
-        logger -p "WARNING" -t "${SCRIPT_NAME}" "$*"
+        logger --id="$$" -p "WARNING" -t "${SCRIPT_NAME}" "$*"
     fi
 }
 
@@ -129,7 +129,7 @@ function LogNotice() {
     fi
 
     if [[ "${SYSLOG_LOGGER}" = "${YES_PARAM}" ]]; then
-        logger -p "NOTICE" -t "${SCRIPT_NAME}" "$*"
+        logger --id="$$" -p "NOTICE" -t "${SCRIPT_NAME}" "$*"
     fi
 }
 
@@ -139,7 +139,7 @@ function LogInfo() {
     fi
 
     if [[ "${SYSLOG_LOGGER}" = "${YES_PARAM}" ]]; then
-        logger -p "INFO" -t "${SCRIPT_NAME}" "$*"
+        logger --id="$$" -p "INFO" -t "${SCRIPT_NAME}" "$*"
     fi
 }
 
