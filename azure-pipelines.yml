@@ -70,6 +70,7 @@ stages:
       - name: broadcom
         variables:
           swi_image: yes
+          dbg_image: yes
           INCLUDE_RESTAPI: y
       - name: mellanox
         variables:
