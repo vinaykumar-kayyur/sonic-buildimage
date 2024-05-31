@@ -35,6 +35,7 @@ expected_kea_config = {
         },
         "subnet4": [
             {
+                "id": 0,
                 "subnet": "169.254.200.0/24",
                 "pools": [
                     {
