@@ -108,7 +108,7 @@ class ServiceChecker(HealthChecker):
                     # if gnmi container image is present, check gnmi container instead of telemetry
                     ret = check_docker_image("docker-sonic-gnmi")
                     if not ret:
-                        print("Ignoring telemetry container check on image which has no corresponding docker image")
+                        logger.log_debug("Ignoring telemetry container check on image which has no corresponding docker image")
                     else:
                         container_list.append("gnmi")
                     continue
