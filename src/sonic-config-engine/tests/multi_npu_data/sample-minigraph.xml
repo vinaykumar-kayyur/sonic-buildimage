@@ -913,7 +913,7 @@
           <a:IPPrefix>::/0</a:IPPrefix>
         </AddressV6>
         <AssociatedClustersStr/>
-	<AssociatedSliceStr>AZNG_Production</AssociatedSliceStr>
+        <AssociatedSliceStr/>
         <AssociatedTagsStr/>
         <ClusterName/>
         <DeploymentId i:nil="true"/>
@@ -938,7 +938,7 @@
           <a:IPPrefix>::/0</a:IPPrefix>
         </AddressV6>
         <AssociatedClustersStr/>
-	<AssociatedSliceStr>AZNG_Production</AssociatedSliceStr>
+        <AssociatedSliceStr/>
         <AssociatedTagsStr/>
         <ClusterName/>
         <DeploymentId i:nil="true"/>
@@ -963,7 +963,7 @@
           <a:IPPrefix>::/0</a:IPPrefix>
         </AddressV6>
         <AssociatedClustersStr/>
-	<AssociatedSliceStr>AZNG_Production</AssociatedSliceStr>
+        <AssociatedSliceStr/>
         <AssociatedTagsStr/>
         <ClusterName/>
         <DeploymentId i:nil="true"/>
@@ -988,7 +988,7 @@
           <a:IPPrefix>::/0</a:IPPrefix>
         </AddressV6>
         <AssociatedClustersStr/>
-	<AssociatedSliceStr/>
+        <AssociatedSliceStr/>
         <AssociatedTagsStr/>
         <ClusterName/>
         <DeploymentId i:nil="true"/>
