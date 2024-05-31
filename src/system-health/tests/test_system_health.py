@@ -12,6 +12,7 @@
 import copy
 import os
 import sys
+import docker
 from imp import load_source
 from swsscommon import swsscommon
 
@@ -200,8 +201,10 @@ def test_service_checker_telemetry(mock_config_db, mock_run, mock_docker_client)
     mock_docker_client_object = MagicMock()
     mock_docker_client.return_value = mock_docker_client_object
     mock_docker_client_object.containers = mock_containers
-    mock_docker_client.images = MagicMock()
-    mock_docker_client.images.get = MagicMock()
+    mock_docker_client_object.images = MagicMock()
+    mock_docker_client_object.images.get = MagicMock()
+    except_err = docker.errors.ImageNotFound("Unit test")
+    mock_docker_client_object.images.get.side_effect = [except_err, None]
 
     mock_run.return_value = "gnmi-native                       RUNNING   pid 67, uptime 1:03:56"
 
