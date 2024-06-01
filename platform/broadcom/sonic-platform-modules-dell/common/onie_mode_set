@@ -51,7 +51,7 @@ function debug()
     if [[ x"${VERBOSE}" == x"yes" ]]; then
         echo `date` $@
     fi
-    logger "$@"
+    logger --id="$$" "$@"
 }
 
 

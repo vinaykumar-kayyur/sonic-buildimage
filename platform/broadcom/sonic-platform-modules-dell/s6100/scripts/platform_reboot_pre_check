@@ -4,8 +4,8 @@ SSD_FW_UPGRADE="/host/ssd_fw_upgrade"
 _error_msg(){
     echo "The SSD on this unit is $1. Do not power-cycle/reboot this unit."
     echo "soft-/fast-/warm-reboot is allowed."
-    logger -p user.crit -t DELL_S6100_SSD_MON "The SSD on this unit is $1. Do not power-cycle/reboot this unit."
-    logger -p user.crit -t DELL_S6100_SSD_MON "soft-/fast-/warm-reboot is allowed."
+    logger --id="$$" -p user.crit -t DELL_S6100_SSD_MON "The SSD on this unit is $1. Do not power-cycle/reboot this unit."
+    logger --id="$$" -p user.crit -t DELL_S6100_SSD_MON "soft-/fast-/warm-reboot is allowed."
 }
 
 # Check SSD Status

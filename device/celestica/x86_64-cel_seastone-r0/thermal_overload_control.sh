@@ -42,12 +42,12 @@ usage() {
 }
 
 cpu_overload() {
-	logger "Enable CPU thermal overload control"
+	logger --id="$$" "Enable CPU thermal overload control"
 	set_reg=`echo ${TOVERREG} ${CPUOVER} > ${SETREG_FILE}`
 }
 
 asic_overload() {
-	logger "Enable ASIC thermal overload control"
+	logger --id="$$" "Enable ASIC thermal overload control"
 	set_reg=`echo ${TOVERREG} ${ASICOVER} > ${SETREG_FILE}`
 }
 

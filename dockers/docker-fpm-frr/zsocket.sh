@@ -27,10 +27,10 @@ done
 start=$(date +%s.%N)
 timeout 5s bash -c -- "until </dev/tcp/${addr}/${port}; do sleep 0.1;done"
 if [ "$?" != "0" ]; then
-    logger -p error "Error: zebra is not ready to accept connections"
+    logger --id="$$" -p error "Error: zebra is not ready to accept connections"
 else
     timespan=$(awk "BEGIN {print $(date +%s.%N)-$start; exit}")
-    logger -p info "It took ${timespan} seconds to wait for zebra to be ready to accept connections"
+    logger --id="$$" -p info "It took ${timespan} seconds to wait for zebra to be ready to accept connections"
 fi
 
 exit 0

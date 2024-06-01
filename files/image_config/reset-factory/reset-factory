@@ -56,12 +56,12 @@ error_cleanup()
 
     if [ $SERVICES_STOPPED -eq 0 ]; then
         ERRMSG="reset-factory: halted with error before stopping critical services; exiting"
-        logger $ERRMSG
+        logger --id="$$" $ERRMSG
         echo $ERRMSG
         exit 1
     else
         ERRMSG="reset-factory: halted with error after stopping critical services; rebooting"
-        logger $ERRMSG
+        logger --id="$$" $ERRMSG
         echo $ERRMSG
         run_reboot
     fi

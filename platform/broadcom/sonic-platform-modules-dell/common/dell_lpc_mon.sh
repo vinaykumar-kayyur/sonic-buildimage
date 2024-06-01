@@ -15,7 +15,7 @@ smf_scratch_reg=0x202
 function log_crit() {
    local msg=$1
 
-  `logger -p user.crit -t DELL_LPC_BUS_MON $msg`
+  `logger --id="$$" -p user.crit -t DELL_LPC_BUS_MON $msg`
 }
 
 function validate_lpc() {

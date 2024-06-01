@@ -26,7 +26,7 @@ ASSISTANT_SCRIPT="/usr/local/bin/neighbor_advertiser"
 
 function debug()
 {
-    /usr/bin/logger "WARMBOOT_FINALIZER : $1"
+    /usr/bin/logger --id="$$" "WARMBOOT_FINALIZER : $1"
     if [[ x"${VERBOSE}" == x"yes" ]]; then
         echo `date` "- $1"
     fi

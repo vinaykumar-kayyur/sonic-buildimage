@@ -19,5 +19,5 @@ DEF_SEVERITY="INFO"
 function log_msg() {
   local msg=$1
 
-  `logger -t $DAEMON_NAME -p $DEF_SEVERITY $msg`
+  `logger --id="$$" -t $DAEMON_NAME -p $DEF_SEVERITY $msg`
 }

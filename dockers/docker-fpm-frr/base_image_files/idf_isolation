@@ -60,7 +60,7 @@ if [[ ($NUM_ASIC -gt 1) ]]; then
                     echo "BGP$asic: IDF is already in $1 state"
                 else
                     sonic-cfggen -a "$IDF_ISOLATION_STATE" -w -n $NAMESPACE_PREFIX$asic
-                    logger -t $1 -p user.info "IDF isolation state: $1"
+                    logger --id="$$" -t $1 -p user.info "IDF isolation state: $1"
                     echo "BGP$asic: IDF isolation state: $1"
                 fi
             fi
@@ -76,7 +76,7 @@ else
             echo "IDF is already in $1 state"
         else
             sonic-cfggen -a "$IDF_ISOLATION_STATE" -w
-            logger -t $1 -p user.info "IDF isolation state: $1"
+            logger --id="$$" -t $1 -p user.info "IDF isolation state: $1"
             echo "IDF isolation state: $1"
         fi
     fi

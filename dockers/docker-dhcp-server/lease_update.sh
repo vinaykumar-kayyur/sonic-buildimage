@@ -5,7 +5,7 @@
 
 pid=`ps aux | grep 'dhcpservd' | grep -nv 'grep' | awk '{print $2}'`
 if [ -z "$pid" ]; then
-    logger -p daemon.error Cannot find running dhcpservd.py.
+    logger --id="$$" -p daemon.error Cannot find running dhcpservd.py.
 else
     # Send SIGUSR1 signal to dhcpservd.py
     kill -s 10 ${pid}

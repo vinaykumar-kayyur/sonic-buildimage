@@ -7,7 +7,7 @@ KEEPALIVE=60
 
 function log_info()
 {
-    logger -p info -t ${SYSLOG_IDENTIFIER}  "$@"
+    logger --id="$$" -p info -t ${SYSLOG_IDENTIFIER}  "$@"
 }
 
 function usage()

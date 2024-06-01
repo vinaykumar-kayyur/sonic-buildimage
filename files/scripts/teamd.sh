@@ -4,7 +4,7 @@
 
 function debug()
 {
-    /usr/bin/logger $1
+    /usr/bin/logger --id="$$" $1
     /bin/echo `date` "- $1" >> ${DEBUG_LOG}
 }
 

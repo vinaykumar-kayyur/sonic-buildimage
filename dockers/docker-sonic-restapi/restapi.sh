@@ -26,7 +26,7 @@ do
                 fi
         fi
     fi
-    logger "Waiting for certificates..."
+    logger --id="$$" "Waiting for certificates..."
     sleep 60
 done
 
@@ -37,5 +37,5 @@ else
     RESTAPI_ARGS+=" -loglevel=trace"
 fi 
 
-logger "RESTAPI_ARGS: $RESTAPI_ARGS"
+logger --id="$$" "RESTAPI_ARGS: $RESTAPI_ARGS"
 exec /usr/sbin/go-server-server ${RESTAPI_ARGS}

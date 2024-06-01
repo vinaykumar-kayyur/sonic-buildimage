@@ -46,10 +46,10 @@ if [[ ($NUM_ASIC -gt 1) ]]; then
                 current_tsa_state="$(sonic-cfggen -d -v BGP_DEVICE_GLOBAL.STATE.tsa_enabled -n $NAMESPACE_PREFIX$asic)"
                 if [[ $current_tsa_state  == $desired_tsa_state ]]; then
                     echo "$err_msg"
-                    logger -t $1 -p user.info "$err_msg"
+                    logger --id="$$" -t $1 -p user.info "$err_msg"
                 else 
                     sonic-cfggen -a "$TSA_STATE_UPDATE" -w -n $NAMESPACE_PREFIX$asic
-                    logger -t $1 -p user.info "$log_msg"
+                    logger --id="$$" -t $1 -p user.info "$log_msg"
                     echo "$log_msg"
                 fi
             else
@@ -64,10 +64,10 @@ else
             current_tsa_state="$(sonic-cfggen -d -v BGP_DEVICE_GLOBAL.STATE.tsa_enabled)"
             if [[ $current_tsa_state  == $desired_tsa_state ]]; then
                 echo "$err_msg"
-                logger -t $1 -p user.info "$err_msg"
+                logger --id="$$" -t $1 -p user.info "$err_msg"
             else              
                 sonic-cfggen -a "$TSA_STATE_UPDATE" -w
-                logger -t $1 -p user.info "$log_msg"
+                logger --id="$$" -t $1 -p user.info "$log_msg"
                 echo "$log_msg"
             fi
         else
