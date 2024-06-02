@@ -483,6 +483,9 @@ class SFP(NvidiaSFPCommon):
         Returns:
             bool: True if device is present, False if not
         """
+        presence_sysfs = f'/sys/module/sx_core/asic0/module{self.sdk_index}/hw_present' if self.is_sw_control() else f'/sys/module/sx_core/asic0/module{self.sdk_index}/present'
+        if utils.read_int_from_file(presence_sysfs) != 1:
+            return False
         eeprom_raw = self._read_eeprom(0, 1, log_on_error=False)
         return eeprom_raw is not None
 
@@ -1061,6 +1064,8 @@ class SFP(NvidiaSFPCommon):
             0.0 if module temperature is not supported or module is under initialization
             other float value if module temperature is available
         """
+        if not self.get_presence():
+            return None
         try:
             if not self.is_sw_control():
                 temp_file = f'/sys/module/sx_core/asic0/module{self.sdk_index}/temperature/input'
@@ -1085,6 +1090,8 @@ class SFP(NvidiaSFPCommon):
             0.0 if warning threshold is not supported or module is under initialization
             other float value if warning threshold is available
         """
+        if not self.get_presence():
+            return None
         try:
             self.is_sw_control()
         except:
@@ -1107,6 +1114,8 @@ class SFP(NvidiaSFPCommon):
             0.0 if critical threshold is not supported or module is under initialization
             other float value if critical threshold is available
         """
+        if not self.get_presence():
+            return None
         try:
             self.is_sw_control()
         except:
@@ -1938,3 +1947,4 @@ class RJ45Port(NvidiaSFPCommon):
         """
         status = super().get_module_status()
         return SFP_STATUS_REMOVED if status == SFP_STATUS_UNKNOWN else status
+
