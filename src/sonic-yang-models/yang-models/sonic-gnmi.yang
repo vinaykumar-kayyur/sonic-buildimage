@@ -43,13 +43,6 @@ module sonic-gnmi {
                     description "Local path for server_crt.";
                 }
 
-                leaf client_crt_cname {
-                    type string {
-                        pattern '([a-zA-Z0-9_\-\.]+,)*([a-zA-Z0-9_\-\.]+)';
-                    }
-                    description "Client cert name.";
-                }
-
                 leaf server_key {
                     type string {
                         pattern '(/[a-zA-Z0-9_-]+)*/([a-zA-Z0-9_-]+).key';
@@ -79,7 +72,27 @@ module sonic-gnmi {
                 }
 
             }
+        }
 
+        container GNMI_CLIENT_CERT {
+            description "GNMI client cert list";
+
+            list GNMI_CLIENT_CERT_LIST {
+                max-elements 8;
+                key "cert_cname";
+
+                leaf cert_cname {
+                    type string;
+                    description
+                        "client cert common name";
+                }
+
+                leaf role {
+                    type string;
+                    description
+                        "role of client cert common name";
+                }
+            }
         }
     }
 }
