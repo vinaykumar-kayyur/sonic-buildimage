@@ -70,31 +70,6 @@ class DeviceGlobalCfgMgr(Manager):
         # IDF configuration
         self.configure_idf(data)
 
-<<<<<<< TSA
-        if self.directory.path_exist("CONFIG_DB", swsscommon.CFG_BGP_DEVICE_GLOBAL_TABLE_NAME, "tsa_enabled"):
-            tsa_status = self.directory.get_slot("CONFIG_DB", swsscommon.CFG_BGP_DEVICE_GLOBAL_TABLE_NAME)["tsa_enabled"]
-        if self.directory.path_exist("CONFIG_DB", swsscommon.CFG_BGP_DEVICE_GLOBAL_TABLE_NAME, "idf_isolation_state"):
-            idf_isolation_state = self.directory.get_slot("CONFIG_DB", swsscommon.CFG_BGP_DEVICE_GLOBAL_TABLE_NAME)["idf_isolation_state"]
-
-        if "tsa_enabled" in data:
-            self.directory.put(self.db_name, self.table_name, "tsa_enabled", data["tsa_enabled"])
-
-            self.chassis_tsa = self.get_chassis_tsa_status()
-            if self.chassis_tsa == "false" and tsa_status != data["tsa_enabled"]:
-                self.cfg_mgr.commit()
-                self.cfg_mgr.update()
-                self.isolate_unisolate_device(data["tsa_enabled"])
-
-        if "idf_isolation_state" in data:
-            self.directory.put(self.db_name, self.table_name, "idf_isolation_state", data["idf_isolation_state"])
-            if idf_isolation_state != data["idf_isolation_state"]:
-                if self.switch_type and self.switch_type != "SpineRouter":
-                    log_debug("DeviceGlobalCfgMgr:: Skipping IDF isolation configuration on Switch type: %s" % self.switch_type)
-                    return True
-                self.downstream_isolate_unisolate(data["idf_isolation_state"])
-            
-=======
->>>>>>> master
         return True
 
     def del_handler(self, key):
@@ -123,11 +98,16 @@ class DeviceGlobalCfgMgr(Manager):
             if "tsa_enabled" in data:
                 state = data["tsa_enabled"]
 
-        if self.is_update_required("tsa_enabled", state):
+        self.chassis_tsa = self.get_chassis_tsa_status()
+        requires_update = self.is_update_required("tsa_enabled", state)
+
+        if state in ["true", "false"] and self.directory.path_exist(self.db_name, self.table_name, "tsa_enabled"):
+            self.directory.put(self.db_name, self.table_name, "tsa_enabled", state)
+
+        if requires_update and self.chassis_tsa == "false":
             self.cfg_mgr.commit()
             self.cfg_mgr.update()
-            if self.isolate_unisolate_device(state):
-                self.directory.put(self.db_name, self.table_name, "tsa_enabled", state)
+            self.isolate_unisolate_device(state)
         else:
             log_notice("DeviceGlobalCfgMgr:: TSA configuration is up-to-date")
 
@@ -299,10 +279,6 @@ class DeviceGlobalCfgMgr(Manager):
             idf_isolation_state = self.directory.get_slot("CONFIG_DB", swsscommon.CFG_BGP_DEVICE_GLOBAL_TABLE_NAME)["idf_isolation_state"]
             if idf_isolation_state != "unisolated":
                 log_notice("DeviceGlobalCfgMgr:: IDF is isolated. Applying required route-maps")
-<<<<<<< TSA
-                cmd = self.idf_isolate_template.render(isolation_status=idf_isolation_state, constants=self.constants)           
-=======
                 cmd = self.idf_isolate_template.render(isolation_status=idf_isolation_state, constants=self.constants)
 
->>>>>>> master
         return cmd
