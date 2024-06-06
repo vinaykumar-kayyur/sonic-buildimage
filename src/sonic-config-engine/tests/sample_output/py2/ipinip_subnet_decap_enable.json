@@ -9,6 +9,20 @@
         "OP": "SET"
     },
     {
+        "TUNNEL_DECAP_TERM_TABLE:IPINIP_SUBNET:192.168.0.0/27" : {
+            "term_type":"MP2MP",
+            "subnet_type": "vlan"
+        },
+        "OP": "SET"
+    },
+    {
+        "TUNNEL_DECAP_TERM_TABLE:IPINIP_SUBNET:192.168.200.0/27" : {
+            "term_type":"MP2MP",
+            "subnet_type": "vlan"
+        },
+        "OP": "SET"
+    },
+    {
         "TUNNEL_DECAP_TABLE:IPINIP_TUNNEL" : {
             "tunnel_type":"IPINIP",
             "dscp_mode":"uniform",
@@ -55,18 +69,6 @@
     },
     {
         "TUNNEL_DECAP_TERM_TABLE:IPINIP_TUNNEL:10.21.64.2" : {
-            "term_type":"P2MP"
-        },
-        "OP": "SET"
-    },
-    {
-        "TUNNEL_DECAP_TERM_TABLE:IPINIP_TUNNEL:192.168.0.1" : {
-            "term_type":"P2MP"
-        },
-        "OP": "SET"
-    },
-    {
-        "TUNNEL_DECAP_TERM_TABLE:IPINIP_TUNNEL:192.168.200.1" : {
             "term_type":"P2MP"
         },
         "OP": "SET"
