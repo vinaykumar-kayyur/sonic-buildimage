@@ -5,7 +5,7 @@ import ipaddress
 import string
 
 
-SUPPORT_TYPE = ["binary", "boolean", "ipv4-address", "string", "uint8", "uint16", "uint32"]
+SUPPORTED_TYPE = ["binary", "boolean", "ipv4-address", "string", "uint8", "uint16", "uint32"]
 
 
 def validate_str_type(type_, value):
@@ -20,7 +20,7 @@ def validate_str_type(type_, value):
     """
     if not isinstance(value, str):
         return False
-    if type_ not in SUPPORT_TYPE:
+    if type_ not in SUPPORTED_TYPE:
         return False
     if type_ == "string":
         return True
@@ -45,13 +45,17 @@ def validate_str_type(type_, value):
     return False
 
 
-@click.group(cls=clicommon.AbbreviationGroup, name="dhcp_server")
-def dhcp_server():
+@click.group(cls=clicommon.AbbreviationGroup, name="dhcp_server", invoke_without_command=True)
+@clicommon.pass_db
+def dhcp_server(db):
     """config DHCP Server information"""
     ctx = click.get_current_context()
     dbconn = db.db
     if dbconn.get("CONFIG_DB", "FEATURE|dhcp_server", "state") != "enabled":
         ctx.fail("Feature dhcp_server is not enabled")
+    if ctx.invoked_subcommand is None:
+        click.echo(ctx.get_help())
+        ctx.exit()
 
 
 @dhcp_server.group(cls=clicommon.AliasedGroup, name="ipv4")
@@ -215,7 +219,7 @@ def dhcp_server_ipv4_range_add(db, range_name, ip_start, ip_end):
     if dbconn.exists("CONFIG_DB", key):
         ctx.fail("Range {} already exist".format(range_name))
     else:
-        dbconn.hmset("CONFIG_DB", key, {"range": ip_start + "," + ip_end})
+        dbconn.hmset("CONFIG_DB", key, {"range@": ip_start + "," + ip_end})
 
 
 @dhcp_server_ipv4_range.command(name="update")
@@ -234,7 +238,7 @@ def dhcp_server_ipv4_range_update(db, range_name, ip_start, ip_end):
     dbconn = db.db
     key = "DHCP_SERVER_IPV4_RANGE|" + range_name
     if dbconn.exists("CONFIG_DB", key):
-        dbconn.set("CONFIG_DB", key, "range", ip_start + "," + ip_end)
+        dbconn.set("CONFIG_DB", key, "range@", ip_start + "," + ip_end)
     else:
         ctx.fail("Range {} does not exist, cannot update".format(range_name))
 
@@ -250,7 +254,7 @@ def dhcp_sever_ipv4_range_del(db, range_name, force):
     if dbconn.exists("CONFIG_DB", key):
         if not force:
             for port in dbconn.keys("CONFIG_DB", "DHCP_SERVER_IPV4_PORT*"):
-                ranges = dbconn.get("CONFIG_DB", port, "ranges")
+                ranges = dbconn.get("CONFIG_DB", port, "ranges@")
                 if ranges and range_name in ranges.split(","):
                     ctx.fail("Range {} is referenced in {}, cannot delete, add --force to bypass or range unbind to unbind range first".format(range_name, port))
         dbconn.delete("CONFIG_DB", key)
@@ -276,7 +280,7 @@ def dhcp_server_ipv4_ip_bind(db, dhcp_interface, member_interface, range_, ip_li
         for r in range_:
             if not dbconn.exists("CONFIG_DB", "DHCP_SERVER_IPV4_RANGE|" + r):
                 ctx.fail("Cannot bind nonexistent range {} to interface".format(r))
-            ip_range = dbconn.get("CONFIG_DB", "DHCP_SERVER_IPV4_RANGE|" + r, "range").split(",")
+            ip_range = dbconn.get("CONFIG_DB", "DHCP_SERVER_IPV4_RANGE|" + r, "range@").split(",")
             if len(ip_range) == 1:
                 ip_start = ip_range[0]
                 ip_end = ip_range[0]
@@ -296,7 +300,7 @@ def dhcp_server_ipv4_ip_bind(db, dhcp_interface, member_interface, range_, ip_li
         ctx.fail("Only one of range and ip list need to be provided")
     key = "DHCP_SERVER_IPV4_PORT|" + dhcp_interface + "|" + member_interface
     key_exist = dbconn.exists("CONFIG_DB", key)
-    for bind_value_name, bind_value in [["ips", ip_list], ["ranges", range_]]:
+    for bind_value_name, bind_value in [["ips@", ip_list], ["ranges@", range_]]:
         if key_exist:
             existing_value = dbconn.get("CONFIG_DB", key, bind_value_name)
             if (not not existing_value) == (not bind_value):
@@ -326,7 +330,7 @@ def dhcp_server_ipv4_ip_unbind(db, dhcp_interface, member_interface, range_, ip_
         ctx.fail("Only one of range and ip list need to be provided")
     if not dbconn.exists("CONFIG_DB", key):
         ctx.fail("The specified dhcp_interface and member interface is not bind to ip or range")
-    for unbind_value_name, unbind_value in [["ips", ip_list], ["ranges", range_]]:
+    for unbind_value_name, unbind_value in [["ips@", ip_list], ["ranges@", range_]]:
         if unbind_value:
             unbind_value = set(unbind_value.split(","))
             existing_value = dbconn.get("CONFIG_DB", key, unbind_value_name)
@@ -341,9 +345,107 @@ def dhcp_server_ipv4_ip_unbind(db, dhcp_interface, member_interface, range_, ip_
                 ctx.fail("Attempting to unbind range or ip that is not binded")
 
 
-def register(cli):
-    # cli.add_command(dhcp_server)
+@dhcp_server_ipv4.group(cls=clicommon.AliasedGroup, name="option")
+def dhcp_server_ipv4_option():
     pass
+
+
+SUPPORTED_OPTION_ID = ["147", "148", "149", "163", "164", "165", "166", "167", "168", "169", "170", "171", "172", "173", "174", "178", "179", "180", "181", "182", "183", "184", "185", "186", "187", "188", "189", "190", "191", "192", "193", "194", "195", "196", "197", "198", "199", "200", "201", "202", "203", "204", "205", "206", "207", "214", "215", "216", "217", "218", "219", "222", "223"]
+
+
+@dhcp_server_ipv4_option.command(name="add")
+@click.argument("option_name", required=True)
+@click.argument("option_id", required=True)
+@click.argument("type_", required=True)
+@click.argument("value", required=True)
+@clicommon.pass_db
+def dhcp_server_ipv4_option_add(db, option_name, option_id, type_, value):
+    ctx = click.get_current_context()
+    if option_id not in SUPPORTED_OPTION_ID:
+        ctx.fail("Option id {} is not supported".format(option_id))
+    if type_ not in SUPPORTED_TYPE:
+        ctx.fail("Input type is not supported")
+    if not validate_str_type(type_, value):
+        ctx.fail("Value {} is not of type {}".format(value, type_))
+    dbconn = db.db
+    key = "DHCP_SERVER_IPV4_CUSTOMIZED_OPTIONS|" + option_name
+    if dbconn.exists("CONFIG_DB", key):
+        ctx.fail("Option {} already exist".format(option_name))
+    dbconn.hmset("CONFIG_DB", key, {
+        "id": option_id,
+        "type": type_,
+        "value": value,
+        })
+
+
+@dhcp_server_ipv4_option.command(name="del")
+@click.argument("option_name", required=True)
+@clicommon.pass_db
+def dhcp_server_ipv4_option_del(db, option_name):
+    ctx = click.get_current_context()
+    dbconn = db.db
+    option_key = "DHCP_SERVER_IPV4_CUSTOMIZED_OPTIONS|" + option_name
+    if not dbconn.exists("CONFIG_DB", option_key):
+        ctx.fail("Option {} does not exist, cannot delete".format(option_name))
+    for key in dbconn.keys("CONFIG_DB", "DHCP_SERVER_IPV4|*"):
+        existing_options = dbconn.get("CONFIG_DB", key, "customized_options@")
+        if existing_options and option_name in existing_options.split(","):
+            ctx.fail("Option {} is referenced in {}, cannot delete".format(option_name, key[len("DHCP_SERVER_IPV4|"):]))
+    dbconn.delete("CONFIG_DB", option_key)
+
+
+@dhcp_server_ipv4_option.command(name="bind")
+@click.argument("dhcp_interface", required=True)
+@click.argument("option_list", required=True)
+@clicommon.pass_db
+def dhcp_server_ipv4_option_bind(db, dhcp_interface, option_list):
+    ctx = click.get_current_context()
+    dbconn = db.db
+    key = "DHCP_SERVER_IPV4|" + dhcp_interface
+    if not dbconn.exists("CONFIG_DB", key):
+        ctx.fail("Interface {} is not valid dhcp interface".format(dhcp_interface))
+    option_list = option_list.split(",")
+    for option_name in option_list:
+        option_key = "DHCP_SERVER_IPV4_CUSTOMIZED_OPTIONS|" + option_name
+        if not dbconn.exists("CONFIG_DB", option_key):
+            ctx.fail("Option {} does not exist, cannot bind".format(option_name))
+    existing_value = dbconn.get("CONFIG_DB", key, "customized_options@")
+    value_set = set(existing_value.split(",")) if existing_value else set()
+    new_value_set = value_set.union(option_list)
+    dbconn.set("CONFIG_DB", key, "customized_options@", ",".join(new_value_set))
+
+
+@dhcp_server_ipv4_option.command(name="unbind")
+@click.argument("dhcp_interface", required=True)
+@click.argument("option_list", required=False)
+@click.option("--all", "all_", required=False, default=False, is_flag=True)
+@clicommon.pass_db
+def dhcp_server_ipv4_option_unbind(db, dhcp_interface, option_list, all_):
+    ctx = click.get_current_context()
+    dbconn = db.db
+    key = "DHCP_SERVER_IPV4|" + dhcp_interface
+    if not dbconn.exists("CONFIG_DB", key):
+        ctx.fail("Interface {} is not valid dhcp interface".format(dhcp_interface))
+    if all_:
+        redis_client = dbconn.get_redis_client("CONFIG_DB")
+        redis_client.hdel(key, "customized_options@")
+    else:
+        unbind_value = set(option_list.split(","))
+        existing_value = dbconn.get("CONFIG_DB", key, "customized_options@")
+        value_set = set(existing_value.split(",")) if existing_value else set()
+        if value_set.issuperset(unbind_value):
+            new_value_set = value_set.difference(unbind_value)
+            if new_value_set:
+                dbconn.set("CONFIG_DB", key, "customized_options@", ",".join(new_value_set))
+            else:
+                redis_client = dbconn.get_redis_client("CONFIG_DB")
+                redis_client.hdel(key, "customized_options@")
+        else:
+            ctx.fail("Attempting to unbind option that is not binded")
+
+
+def register(cli):
+    cli.add_command(dhcp_server)
 
 
 if __name__ == '__main__':
