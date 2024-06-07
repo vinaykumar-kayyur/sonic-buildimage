@@ -1,4 +1,3 @@
-sse-g3748/scripts/setup_all_ports_l2.py usr/local/bin
 sse-g3748/scripts/show-techsupport usr/local/bin
 sse-g3748/scripts/techfile_v2.py usr/local/bin
 sse-g3748/scripts/sse-g3748_plt_setup.sh usr/local/bin

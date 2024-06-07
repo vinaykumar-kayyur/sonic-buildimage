@@ -790,14 +790,13 @@ exit_remove_files:
     return err;
 }
 
-static int g3748cpld_remove(struct i2c_client *client)
+static void g3748cpld_remove(struct i2c_client *client)
 {
     struct cpld_data *data = i2c_get_clientdata(client);
 
     hwmon_device_unregister(data->hwmon_dev);
     //devm_hwmon_device_unregister(&client->dev);
     sysfs_remove_group(&client->dev.kobj, &cpld_sysfs_group);
-    return 0;
 }
 
 static const struct i2c_device_id g3748cpld_id[] = {

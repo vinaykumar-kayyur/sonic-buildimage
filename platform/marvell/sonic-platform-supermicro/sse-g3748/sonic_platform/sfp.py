@@ -218,22 +218,22 @@ class Sfp(SfpOptoeBase):
 
             #Avoid re-initialization of the QSFP/SFP optic on QSFP/SFP port.
             if self.sfp_type == 'SFP' and driver_name in ['optoe1', 'optoe3']:
-                subprocess.Popen(delete_device, shell=True, stdout=subprocess.PIPE)
+                subprocess.Popen(delete_device, shell=False, stdout=subprocess.PIPE)
                 time.sleep(0.2)
                 new_device = "echo optoe2 0x50 >" + new_sfp_path
-                subprocess.Popen(new_device, shell=True, stdout=subprocess.PIPE)
+                subprocess.Popen(new_device, shell=False, stdout=subprocess.PIPE)
                 time.sleep(2)
             elif self.sfp_type == 'QSFP' and driver_name in ['optoe2', 'optoe3']:
-                subprocess.Popen(delete_device, shell=True, stdout=subprocess.PIPE)
+                subprocess.Popen(delete_device, shell=False, stdout=subprocess.PIPE)
                 time.sleep(0.2)
                 new_device = "echo optoe1 0x50 >" + new_sfp_path
-                subprocess.Popen(new_device, shell=True, stdout=subprocess.PIPE)
+                subprocess.Popen(new_device, shell=False, stdout=subprocess.PIPE)
                 time.sleep(2)
             elif self.sfp_type == 'QSFP_DD' and driver_name in ['optoe1', 'optoe2']:
-                subprocess.Popen(delete_device, shell=True, stdout=subprocess.PIPE)
+                subprocess.Popen(delete_device, shell=False, stdout=subprocess.PIPE)
                 time.sleep(0.2)
                 new_device = "echo optoe3 0x50 >" + new_sfp_path
-                subprocess.Popen(new_device, shell=True, stdout=subprocess.PIPE)
+                subprocess.Popen(new_device, shell=False, stdout=subprocess.PIPE)
                 time.sleep(2)
 
         except IOError as err:

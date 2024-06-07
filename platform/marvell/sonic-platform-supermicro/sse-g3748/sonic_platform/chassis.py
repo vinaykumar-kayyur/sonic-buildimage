@@ -66,7 +66,6 @@ class Chassis(ChassisBase):
     reset_reason_dict[0x10] = ChassisBase.REBOOT_CAUSE_WATCHDOG
     PLATFORM_ROOT_PATH = "/usr/share/sonic/device"
     PMON_HWSKU_PATH = "/usr/share/sonic/hwsku"
-    HOST_CHK_CMD = "docker > /dev/null 2>&1"
     PLATFORM = "arm64-supermicro_sse_g3748-r0"
     HWSKU = "supermicro_sse_g3748"
 
@@ -176,9 +175,6 @@ class Chassis(ChassisBase):
                 rv = 'ERR'
 
         return rv
-
-    def __is_host(self):
-        return os.system(self.HOST_CHK_CMD) == 0
 
     def get_presence(self):
         """

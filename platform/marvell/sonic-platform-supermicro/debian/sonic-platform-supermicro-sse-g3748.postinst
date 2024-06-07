@@ -22,7 +22,6 @@ case "$1" in
     configure)
 	sh /usr/local/bin/sse-g3748_plt_setup.sh
 	chmod a+x /usr/local/bin/sse-g3748-init.sh
-	chmod a+x /usr/local/bin/setup_all_ports_l2.py
 	chmod a+x /usr/local/bin/add_port_range
 	chmod a+x /usr/local/bin/reset-to-factory-default
 	chmod a+x /usr/local/bin/show-techsupport

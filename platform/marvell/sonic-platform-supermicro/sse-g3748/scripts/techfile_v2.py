@@ -58,7 +58,9 @@ sys.stdout.write("\b" * (toolbar_width+1)) # return to start of line, after '['
 for command in commands:
     time.sleep(0.1) 
     output =  output + str(command) + '\n'
-    output =  output + os.popen(str(command)).read() + '\n'
+    proc = subprocess.Popen(str(command), shell=True, text=True, stdout=subprocess.PIPE)
+    (out,_) = proc.communicate()
+    output = output + out + '\n'
     output = str(output)
 # update the bar
     sys.stdout.write("-")
@@ -68,7 +70,9 @@ for interface in pattern_int:
     time.sleep(0.1) 
     int_command = '\n' + 'show interface counters detailed ' + str(interface) + '\n'
     output = '\n' + output + int_command + '\n'
-    output = output + os.popen(str(int_command)).read()
+    proc = subprocess.Popen(str(int_command), shell=True, text=True, stdout=subprocess.PIPE)
+    (out,_) = proc.communicate()
+    output = output + out
     output = str(output)
 # update the bar
     sys.stdout.write("-")
