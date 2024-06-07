@@ -483,6 +483,9 @@ class SFP(NvidiaSFPCommon):
         Returns:
             bool: True if device is present, False if not
         """
+        presence_sysfs = f'/sys/module/sx_core/asic0/module{self.sdk_index}/hw_present' if self.is_sw_control() else f'/sys/module/sx_core/asic0/module{self.sdk_index}/present'
+        if utils.read_int_from_file(presence_sysfs) != 1:
+            return False
         eeprom_raw = self._read_eeprom(0, 1, log_on_error=False)
         return eeprom_raw is not None
 
@@ -1492,8 +1495,9 @@ class SFP(NvidiaSFPCommon):
         
     @classmethod
     def action_on_fw_control(cls, sfp):
-        logger.log_info(f'SFP {sfp.sdk_index} is set to firmware control')
-        sfp.set_control_type(SFP_FW_CONTROL)
+        if sfp.get_control_type() != SFP_FW_CONTROL:
+            logger.log_info(f'SFP {sfp.sdk_index} is set to firmware control')
+            sfp.set_control_type(SFP_FW_CONTROL)
         
     @classmethod
     def action_on_cancel_wait(cls, sfp):
