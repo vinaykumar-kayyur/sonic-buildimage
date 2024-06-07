@@ -212,9 +212,11 @@ def test_del_handler():
     "value", [ "invalid_value" ]
 )
 @patch('bgpcfgd.managers_device_global.log_err')
-def test_tsa_neg(mocked_log_err, value):
+@patch('bgpcfgd.managers_device_global.DeviceGlobalCfgMgr.get_chassis_tsa_status')
+def test_tsa_neg(mock_get_chassis_tsa_status, mocked_log_err, value):
     m = constructor()
     m.cfg_mgr.changes = ""
+    mock_get_chassis_tsa_status.return_value = "false"
     res = m.set_handler("STATE", {"tsa_enabled": value})
     assert res, "Expect True return value for set_handler"
     mocked_log_err.assert_called_with("TSA: invalid value({}) is provided".format(value))
