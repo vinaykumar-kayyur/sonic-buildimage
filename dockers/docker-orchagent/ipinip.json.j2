@@ -52,10 +52,8 @@
         {%- set ipv6_vlan_addresses = ipv6_vlan_addresses.append(prefix) %}
     {%- endif %}
 {% endfor %}
-{% if not subnet_decap.enable %}
-    {%- set ipv4_addresses = ipv4_addresses + ipv4_vlan_addresses %}
-    {%- set ipv6_addresses = ipv6_addresses + ipv6_vlan_addresses %}
-{% endif %}
+{%- set ipv4_addresses = ipv4_addresses + ipv4_vlan_addresses %}
+{%- set ipv6_addresses = ipv6_addresses + ipv6_vlan_addresses %}
 [
 {% if ipv4_loopback_addresses %}
 {% if subnet_decap.enable %}
