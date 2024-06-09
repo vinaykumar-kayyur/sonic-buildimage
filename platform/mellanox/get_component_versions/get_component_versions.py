@@ -36,7 +36,7 @@ COMMANDS_FOR_ACTUAL = {
     "SDK": [["docker", "exec", "-it", "syncd", "bash", "-c", 'dpkg -l | grep sdk'], ".*1\\.mlnx\\.([0-9.]*)"],
     "SAI": [["docker", "exec", "-it", "syncd", "bash", "-c", 'dpkg -l | grep mlnx-sai'], ".*1\\.mlnx\\.([A-Za-z0-9.]*)"],
     "FW": [["mlxfwmanager", "--query"], "FW * [0-9]{2}\\.([0-9.]*)"],
-    "Kernel": [["uname", "-r"], "([0-9][0-9.-]*)-.*"],
+    "KERNEL": [["uname", "-r"], "([0-9][0-9.-]*)-.*"],
     "SIMX": [["lspci", "-vv"], ["grep", "SimX"], "([0-9]+\\.[0-9]+-[0-9]+)"]
 }
 
@@ -52,7 +52,7 @@ UNAVAILABLE_COMPILED_VERSIONS = {
     "SAI": "N/A",
     "HW_MANAGEMENT": "N/A",
     "MFT": "N/A",
-    "Kernel": "N/A"
+    "KERNEL": "N/A"
 }
 
 
@@ -74,6 +74,8 @@ def parse_compiled_components_file():
 
 
 def get_platform_component_versions():
+    ccm = None
+    
     if PlatformDataProvider:
         pdp = PlatformDataProvider()
         ccm = pdp.chassis_component_map
@@ -118,6 +120,12 @@ def format_output_table(table):
     return tabulate(table, HEADERS)
 
 
+def is_simx_switch():
+    simx_version = get_current_version("SIMX")
+
+    return simx_version != 'N/A'
+
+
 def main():
 
     if os.getuid() != 0:
@@ -125,11 +133,19 @@ def main():
         return
 
     compiled_versions = parse_compiled_components_file()
-    platform_versions = get_platform_component_versions()
+
+    if is_simx_switch():
+        platform_versions = UNAVAILABLE_PLATFORM_VERSIONS
+    else:  
+        platform_versions = get_platform_component_versions()
 
     output_table = []
     for comp in compiled_versions.keys():
         actual = get_current_version(comp)
+
+        if comp == "SIMX" and actual == "N/A":
+            continue
+        
         output_table.append([comp, compiled_versions[comp], actual])
 
     for comp in platform_versions.keys():
