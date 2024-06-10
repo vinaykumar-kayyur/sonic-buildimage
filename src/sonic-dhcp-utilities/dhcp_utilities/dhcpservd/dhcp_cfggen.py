@@ -16,6 +16,7 @@ VLAN_INTERFACE = "VLAN_INTERFACE"
 VLAN_MEMBER = "VLAN_MEMBER"
 DPUS = "DPUS"
 MID_PLANE_BRIDGE = "MID_PLANE_BRIDGE"
+MID_PLANE_BRIDGE_SUBNET_ID = 10000
 PORT_MODE_CHECKER = ["DhcpServerTableCfgChangeEventChecker", "DhcpPortTableEventChecker", "DhcpRangeTableEventChecker",
                      "DhcpOptionTableEventChecker", "VlanTableEventChecker", "VlanIntfTableEventChecker",
                      "VlanMemberTableEventChecker"]
@@ -225,7 +226,7 @@ class DhcpServCfgGenerator(object):
                             })
 
                     subnet_obj = {
-                        "id": 0 if smart_switch else dhcp_interface_name.replace("Vlan", ""),
+                        "id": MID_PLANE_BRIDGE_SUBNET_ID if smart_switch else dhcp_interface_name.replace("Vlan", ""),
                         "subnet": str(ipaddress.ip_network(dhcp_interface_ip, strict=False)),
                         "pools": pools,
                         "gateway": dhcp_config["gateway"],
