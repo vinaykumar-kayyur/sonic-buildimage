@@ -4,6 +4,7 @@ import jinja2
 from .manager import Manager
 from .log import log_err, log_debug, log_notice
 from swsscommon import swsscommon
+from sonic_py_common import device_info
 
 class DeviceGlobalCfgMgr(Manager):
     """This class responds to change in device-specific state"""
@@ -238,12 +239,16 @@ class DeviceGlobalCfgMgr(Manager):
 
     def get_chassis_tsa_status(self):
         chassis_tsa_status = "false"
+
+        if not device_info.is_chassis():
+            return chassis_tsa_status
+
         try:
             ch = swsscommon.SonicV2Connector(use_unix_socket_path=False)
             ch.connect(ch.CHASSIS_APP_DB, False)
             chassis_tsa_status = ch.get(ch.CHASSIS_APP_DB, "BGP_DEVICE_GLOBAL|STATE", 'tsa_enabled')
-        except Exception:
-            pass
+        except Exception as e:
+            log_err("Got an exception {}".format(e))
 
         return chassis_tsa_status
 

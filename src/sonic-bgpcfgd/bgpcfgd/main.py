@@ -77,7 +77,7 @@ def do_work():
         DeviceGlobalCfgMgr(common_objs, "CONFIG_DB", swsscommon.CFG_BGP_DEVICE_GLOBAL_TABLE_NAME),
     ]
 
-    if device_info.get_platform_info().get('switch_type') == "voq":
+    if device_info.is_chassis():
         managers.append(ChassisAppDbMgr(common_objs, "CHASSIS_APP_DB", "BGP_DEVICE_GLOBAL"))
 
     runner = Runner(common_objs['cfg_mgr'])
