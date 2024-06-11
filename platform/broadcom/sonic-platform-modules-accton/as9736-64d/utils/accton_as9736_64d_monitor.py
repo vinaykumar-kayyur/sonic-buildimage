@@ -451,7 +451,7 @@ class device_monitor(object):
                 board_thermal_or_chk_min_to_mid[i-1] = 1
                 # During this fan-speed rise, each sensors can only send warning log on syslog once
                 if thermal_min_to_mid_waring_flag[i-1] == 0:
-                    logging.warning('Monitor %s, temperature is %d. Temperature is over %d.',
+                    logging.warning('Monitor %s, temperature is %d. Temperature is over the warning threshold(%d) of thermal policy.',
                                     thermal.get_thermal_name(i),
                                     board_thermal_val[i-1][2]/1000,
                                     thermal_spec["min_to_mid_temp"][i-1][1]/1000)
@@ -472,7 +472,7 @@ class device_monitor(object):
                 board_thermal_or_chk_min_to_mid[thermal.THERMAL_NUM_11_IDX + port_num] = 1
                 # During this fan-speed rise, each xcvr can only send warning log on syslog once
                 if thermal_min_to_mid_waring_flag[thermal.THERMAL_NUM_11_IDX + port_num] == 0:
-                    logging.warning('Monitor port %d, temperature is %d. Temperature is over %d.',
+                    logging.warning('Monitor port %d, temperature is %d. Temperature is over the warning threshold(%d) of thermal policy.',
                                     port_num+1,
                                     board_thermal_val[thermal.THERMAL_NUM_11_IDX + port_num][2]/1000,
                                     thermal_spec["min_to_mid_temp"][thermal.THERMAL_NUM_BD_SENSOR][1]/1000)
@@ -488,7 +488,7 @@ class device_monitor(object):
         for i in range (thermal.THERMAL_NUM_1_IDX, thermal.THERMAL_NUM_10_IDX+1): #Not include TH4-TMP422(0x4c)
             if board_thermal_val[i-1][2] >= thermal_spec["shutdown_temp"][i-1][1]:
                 broad_thermal_need_shutdown = 1
-                logging.warning('Monitor %s, temperature is %d. Temperature is over %d. Need shutdown DUT.',
+                logging.warning('Monitor %s, temperature is %d. Temperature is over the shutdown threshold(%d) of thermal policy. Need shutdown DUT.',
                                 thermal.get_thermal_name(i),
                                 board_thermal_val[i-1][2]/1000,
                                 thermal_spec["shutdown_temp"][i-1][1]/1000)
@@ -524,7 +524,7 @@ class device_monitor(object):
 
             if cpucore_thermal_val[i-1] >= thermal_spec["cpu_temp"][1][1] :  #Case of shutdown
                 if send_cpu_shutdown_warning == 0:
-                    logging.warning('Monitor %s, temperature is %d. Temperature is over %d',
+                    logging.warning('Monitor %s, temperature is %d. Temperature is over the shutdown threshold(%d) of thermal policy.',
                                      thermal.get_thermal_name(thermal.THERMAL_NUM_BD_SENSOR+i),
                                      cpucore_thermal_val[i-1]/1000,
                                      thermal_spec["cpu_temp"][1][1]/1000)
@@ -533,7 +533,7 @@ class device_monitor(object):
         #3-3 Decide the MAC thermal policy:
         if mactemp_thermal_val[0] >= thermal_spec["mac_temp"][1][1] :  #Case of shutdown
             if send_mac_shutdown_warning == 0:
-                logging.warning('Monitor MAC, temperature is %d. Temperature is over %d', mactemp_thermal_val[0]/1000, thermal_spec["mac_temp"][1][1]/1000)
+                logging.warning('Monitor MAC, temperature is %d. Temperature is over the shutdown threshold(%d) of thermal policy.', mactemp_thermal_val[0]/1000, thermal_spec["mac_temp"][1][1]/1000)
             mac_fan_policy_state = POLICY_NEED_SHUTDOWN
 
         #4 Condition of change fan speed by sensors policy:
@@ -542,7 +542,7 @@ class device_monitor(object):
                 if send_cpu_shutdown_warning == 0:
                     send_cpu_shutdown_warning = 1
                     stop_syncd_service()
-                    logging.critical("CPU/TMP75/TMP422 sensor for temperature high is detected, shutdown DUT.")
+                    logging.critical("CPU/TMP75/TMP422 sensor for temperature high(over shutdown threshold) is detected, shutdown DUT.")
                     sync_log_buffer_to_disk()
                     shutdown_except_cpu()
                     return True
@@ -551,7 +551,7 @@ class device_monitor(object):
                 if send_mac_shutdown_warning == 0:
                     send_mac_shutdown_warning =1
                     stop_syncd_service()
-                    logging.critical("MAC sensor for temperature high is detected, shutdown MAC chip.")
+                    logging.critical("MAC sensor for temperature high is detected(over shutdown threshold), shutdown MAC chip.")
                     shutdown_mac()  # No return, keep monitoring.
 
             elif fan_fail == 1:
@@ -566,7 +566,7 @@ class device_monitor(object):
 
             elif thermal_fan_policy_state == FAN_LEVEL_1:
                 current_state = FAN_LEVEL_1
-                logging.info('- Monitor all sensors, temperature is less than threshold.')
+                logging.info('- Monitor all sensors, temperature is less than the warning threshold of thermal policy.')
                 # Clear sensors send-syslog-warning record
                 thermal_min_to_mid_waring_flag = [0] * TOTAL_DETECT_SENSOR_NUM
             else:
