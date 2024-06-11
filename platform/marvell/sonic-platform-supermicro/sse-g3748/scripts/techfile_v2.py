@@ -4,6 +4,8 @@ import sys
 import re
 import time
 import sys
+import subprocess
+import shlex
 
 interface_output = str(os.popen('show interface stat').read())
 pattern_int = re.findall('Ethernet[0-9]+',interface_output)
@@ -22,7 +24,7 @@ if not mclag_output:
                 'show vlan brief', 'show lldp neighbors' , 'show lldp table', 'show ztp status', 'show ip bgp summary', 'show ip bgp neighbors', 'show route-map',
                 'show interface portchannel', 'show ip route', 'sudo route -n', 'show arp', 'sudo arp -n', 'show mac',
                 'show acl rule', 'sudo aclshow -a -vv', 'show acl table', 'show interface counters -a', 'show int autoneg status',
-                'mclagdctl dump state','sudo show system-health detail', 'show system-mem',
+                'sudo show system-health detail', 'show system-mem',
                 'docker ps', 'top -n 1', 'show uptime', 'show reboot-cause history', 
                 'sudo show system-health summary','show int transceiver presence', 'show int transceiver eeprom', 'show int transceiver error-status',
                 'show int transceiver lpmode', 'show clock', 'show ntp', 'sudo timedatectl status', 'show runningconfiguration all']
@@ -58,7 +60,7 @@ sys.stdout.write("\b" * (toolbar_width+1)) # return to start of line, after '['
 for command in commands:
     time.sleep(0.1) 
     output =  output + str(command) + '\n'
-    proc = subprocess.Popen(str(command), shell=True, text=True, stdout=subprocess.PIPE)
+    proc = subprocess.Popen(shlex.split(command), text=True, stdout=subprocess.PIPE)
     (out,_) = proc.communicate()
     output = output + out + '\n'
     output = str(output)
@@ -70,7 +72,7 @@ for interface in pattern_int:
     time.sleep(0.1) 
     int_command = '\n' + 'show interface counters detailed ' + str(interface) + '\n'
     output = '\n' + output + int_command + '\n'
-    proc = subprocess.Popen(str(int_command), shell=True, text=True, stdout=subprocess.PIPE)
+    proc = subprocess.Popen(shlex.split(int_command), text=True, stdout=subprocess.PIPE)
     (out,_) = proc.communicate()
     output = output + out
     output = str(output)
