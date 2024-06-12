@@ -60,6 +60,7 @@ midplane_iface=bridge-midplane
 
 if ! ifconfig "$midplane_iface" > /dev/null 2>&1; then
     echo "$midplane_iface doesn't exist! Please run on smart switch system"
+    exit 1
 fi
 
 case $1 in
