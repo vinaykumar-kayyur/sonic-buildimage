@@ -58,6 +58,10 @@ ctrl_dpu_forwarding(){
 mgmt_iface=eth0
 midplane_iface=bridge-midplane
 
+if ! ifconfig "$midplane_iface" > /dev/null 2>&1; then
+    echo "$midplane_iface doesn't exist! Please run on smart switch system"
+fi
+
 case $1 in
     -e|--enable)
         ctrl_dpu_forwarding enable
