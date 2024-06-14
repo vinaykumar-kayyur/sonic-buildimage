@@ -1926,3 +1926,48 @@ device:
         DEVICE_CONFIG:
             AUTOLOAD_BOARD_SETTINGS: 0
 ...
+---
+device:
+    0:
+        TM_ING_THD_HEADROOM_POOL:
+            ?
+                BUFFER_POOL: [[0,1]]
+                TM_HEADROOM_POOL_ID: [[0,3]]
+            :
+                LIMIT_CELLS: 0
+
+        TM_ING_THD_SERVICE_POOL:
+            ?
+                BUFFER_POOL: [[0,1]]
+                TM_ING_SERVICE_POOL_ID: [[0,3]]
+            :
+                SHARED_LIMIT_CELLS: 0
+                SHARED_RESUME_OFFSET_CELLS: 0
+                COLOR_SPECIFIC_LIMITS: 0
+
+        TM_EGR_THD_SERVICE_POOL:
+            ?
+                BUFFER_POOL: [[0,1]]
+                TM_EGR_SERVICE_POOL_ID: [[0,3]]
+            :
+                SHARED_LIMIT_CELLS: 0
+                SHARED_RESUME_LIMIT_CELLS: 0
+                COLOR_SPECIFIC_LIMITS: 0
+                YELLOW_SHARED_LIMIT_CELLS: 0
+                YELLOW_SHARED_RESUME_LIMIT_CELLS: 0
+                RED_SHARED_LIMIT_CELLS: 0
+                RED_SHARED_RESUME_LIMIT_CELLS: 0
+
+        TM_THD_MC_EGR_SERVICE_POOL:
+            ?
+                BUFFER_POOL: [[0,1]]
+                TM_EGR_SERVICE_POOL_ID: [[0,3]]
+            :
+                SHARED_LIMIT_CELLS: 0
+                SHARED_RESUME_LIMIT_CELLS: 0
+                COLOR_SPECIFIC_LIMITS: 0
+                YELLOW_SHARED_LIMIT_CELLS: 0
+                YELLOW_SHARED_RESUME_LIMIT_CELLS: 0
+                RED_SHARED_LIMIT_CELLS: 0
+                RED_SHARED_RESUME_LIMIT_CELLS: 0
+...
