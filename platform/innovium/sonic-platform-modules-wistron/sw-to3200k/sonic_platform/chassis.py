@@ -180,9 +180,9 @@ class Chassis(ChassisBase):
     def get_sfp(self, index):
         sfp = None
         try:
-            sfp = self._sfp_list[index]
+            sfp = self._sfp_list[index - 1]
         except IndexError:
-            sys.stderr.write("SFP index {} out of range (0-{})\n".format(index, len(self._sfp_list)-1))
+            sys.stderr.write("SFP index {} out of range (1-{})\n".format(index, len(self._sfp_list)))
 
         return sfp
 
@@ -221,12 +221,12 @@ class Chassis(ChassisBase):
                 if cur_presence[port] != self._transceiver_presence[port]:
                     change_event = True
                     if cur_presence[port] == 1:
-                        port_dict[port] = '1'
+                        port_dict[port + 1] = '1'
                     else:
-                        port_dict[port] = '0'
+                        port_dict[port + 1] = '0'
 
             self._transceiver_presence = cur_presence
-            if change_event == True:
+            if change_event is True:
                 break
 
             if not forever:
