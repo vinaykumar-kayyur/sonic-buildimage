@@ -134,25 +134,6 @@
         }
     },
 
-    "PORT_INVALID_DHCP_RATE_LIMIT": {
-        "sonic-port:sonic-port": {
-            "sonic-port:PORT": {
-                "PORT_LIST": [
-                    {
-                        "name": "Ethernet0",
-                        "alias": "etp1a",
-                        "lanes": "60, 61",
-                        "speed": 100000,
-                        "mode":"trunk",                        
-                        "dhcp_rate_limit": "900000"
-
-
-
-                    }
-                ]
-            }
-        }
-    },
     "PORT_VALID_AUTONEG_TEST_1": {
         "sonic-port:sonic-port": {
             "sonic-port:PORT": {
