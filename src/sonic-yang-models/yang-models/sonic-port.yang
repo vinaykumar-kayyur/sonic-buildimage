@@ -93,9 +93,7 @@ module sonic-port{
 
 				leaf dhcp_rate_limit {
 					description "DHCP DOS Mitigation Rate with default value 300";
-					type uint32 {
-						range 0..800000;
-					}
+					type uint32 
 					default 300;
 				}
 
