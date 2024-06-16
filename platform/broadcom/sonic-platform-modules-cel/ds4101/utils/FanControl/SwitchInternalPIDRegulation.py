@@ -63,7 +63,8 @@ class SwitchInternalPIDRegulation(object):
         Get Switch internal temperature
         """
         try:
-            temp = os.popen("cat %s" % SWITCH_TEMP).read().strip()
+            proc = subprocess.run(["cat", SWITCH_TEMP], stdout=subprocess.PIPE, text=True, check=True)
+            temp = proc.stdout.strip()
             return int(temp)//1000
         except Exception as E:
             self.syslog.warning("Can't Get switch internal temperature! Cause:%s" % str(E))

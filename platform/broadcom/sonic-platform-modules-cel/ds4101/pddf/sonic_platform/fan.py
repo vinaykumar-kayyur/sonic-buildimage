@@ -75,15 +75,15 @@ class Fan(PddfFan):
         fan_name = self.get_name()
         speed_rpm = self.get_speed_rpm()
         if "PSU" in fan_name:
-            max_psu_fan_rpm = eval(self.plugin_data['PSU']['PSU_FAN_MAX_SPEED'])
-            psu_speed_percentage = round(speed_rpm / max_psu_fan_rpm * 100)
+            max_psu_fan_rpm = int(self.plugin_data['PSU']['PSU_FAN_MAX_SPEED'])
+            psu_speed_percentage = int(round(speed_rpm / max_psu_fan_rpm * 100))
             return speed_rpm if psu_speed_percentage > 100 else psu_speed_percentage
         
         if self.helper.get_bmc_status():
             # if use 'get_direction' to get the fan direction, it will make python maximum recursion depth exceeded.
             fan_index = int(re.findall(r"Fantray(\d+)_\d+", fan_name)[0])
             direction_cmd = Fan_Direction_Cmd.format(fan_index - 1)
-            status, direction = self.helper.ipmi_raw(direction_cmd)
+            status, direction = self.helper.ipmi_raw(direction_cmd.split())
             if not status:
                 return 0
             direction = str(int(direction, 16))
@@ -96,8 +96,8 @@ class Fan(PddfFan):
             direction = output['status'].rstrip()
 
         f_r_fan = "Front" if fan_name.endswith("1") else "Rear"
-        max_fan_rpm = eval(self.plugin_data['FAN']['FAN_MAX_RPM_SPEED'][direction][f_r_fan])
-        speed_percentage = round(speed_rpm / max_fan_rpm * 100)
+        max_fan_rpm = int(self.plugin_data['FAN']['FAN_MAX_RPM_SPEED'][direction][f_r_fan])
+        speed_percentage = int(round(speed_rpm / max_fan_rpm * 100))
         return 100 if speed_percentage > 100 else speed_percentage
 
     def get_status_led(self):

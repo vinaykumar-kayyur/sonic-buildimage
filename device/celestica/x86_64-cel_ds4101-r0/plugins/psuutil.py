@@ -13,11 +13,11 @@ class PsuUtil(PsuBase):
     """Platform-specific PSUutil class"""
 
     def __init__(self):
-        self.ipmi_sensor = "ipmitool sensor"
+        self.ipmi_sensor = ["ipmitool", "sensor"]
         PsuBase.__init__(self)
 
     def run_command(self, command):
-        proc = subprocess.Popen(command, shell=True, universal_newlines=True, stdout=subprocess.PIPE)
+        proc = subprocess.Popen(command, shell=False, universal_newlines=True, stdout=subprocess.PIPE)
         (out, err) = proc.communicate()
 
         if proc.returncode != 0:
@@ -29,6 +29,15 @@ class PsuUtil(PsuBase):
         result = re.search(".+\| (0x\d{2})\d{2}\|.+", grep_string)
         if result:
             return result.group(1)
+        else:
+            return result
+
+    def find_psu(self, grep_psu, output):
+        pattern = '^%s\s+[\|].*$' % re.escape(grep_psu)
+        result = re.search(pattern, output, re.MULTILINE)
+        print(result)
+        if result:
+            return result.group()
         else:
             return result
 
@@ -49,8 +58,9 @@ class PsuUtil(PsuBase):
         if index is None:
             return False
 
-        grep_key = "PSUL_Status" if index == 1 else "PSUR_Status"
-        grep_string = self.run_command(self.ipmi_sensor + ' | grep ' + grep_key)
+        grep_key = "PSU1_Status" if index == 1 else "PSU2_Status"
+        output = self.run_command(self.ipmi_sensor)
+        grep_string = self.find_psu(grep_key, output)
         status_byte = self.find_value(grep_string)
 
         if status_byte is None:
@@ -73,8 +83,9 @@ class PsuUtil(PsuBase):
         if index is None:
             return False
 
-        grep_key = "PSUL_Status" if index == 1 else "PSUR_Status"
-        grep_string = self.run_command(self.ipmi_sensor + ' | grep ' + grep_key)
+        grep_key = "PSU1_Status" if index == 1 else "PSU2_Status"
+        output = self.run_command(self.ipmi_sensor)
+        grep_string = self.find_psu(grep_key, output)
         status_byte = self.find_value(grep_string)
 
         if status_byte is None:

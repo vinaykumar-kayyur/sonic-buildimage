@@ -19,9 +19,9 @@ except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
 bcm_exist = helper.APIHelper().get_bmc_status()
-SET_SYS_STATUS_LED = "0x3A 0x39 0x2 0x0 {}"
-SET_LED_MODE_Manual = "0x3a 0x42 0x02 0x00"
-SET_LED_MODE_Auto = "0x3a 0x42 0x02 0x01"
+SET_SYS_STATUS_LED = ["0x3a", "0x39", "0x02", "0x00"]
+SET_LED_MODE_Manual = ["0x3a", "0x42", "0x02", "0x00"]
+SET_LED_MODE_Auto = ["0x3a", "0x42", "0x02", "0x01"]
 REBOOT_CAUSE_PATH = "/sys/devices/platform/cpld_wdt/reason"
 
 class Chassis(PddfChassis):
@@ -47,7 +47,7 @@ class Chassis(PddfChassis):
     @staticmethod
     def _getstatusoutput(cmd):
         try:
-            data = subprocess.check_output(cmd, shell=True,
+            data = subprocess.check_output(cmd, shell=False,
                                            universal_newlines=True, stderr=subprocess.STDOUT)
             status = 0
         except subprocess.CalledProcessError as ex:
@@ -80,7 +80,7 @@ class Chassis(PddfChassis):
             elif color == "amber":
                 color_val = "0x2"
 
-            status, res = self.helper.ipmi_raw(SET_SYS_STATUS_LED.format(color_val))
+            status, res = self.helper.ipmi_raw(SET_SYS_STATUS_LED + [color_val])
             self.helper.ipmi_raw(SET_LED_MODE_Auto)
             return True if status else False
         else:

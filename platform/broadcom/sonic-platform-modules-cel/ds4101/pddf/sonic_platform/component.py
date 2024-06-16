@@ -12,14 +12,14 @@ except ImportError as e:
 
 bcm_exist = helper.APIHelper().get_bmc_status() 
 FPGA_VERSION_PATH = "/sys/bus/platform/devices/fpga_sysfs/version"
-Bios_Version_Cmd = "dmidecode -t bios | grep Version"
+Bios_Version_Cmd = ['dmidecode', '-t', 'bios']
 if bcm_exist:
-    Check_Bios_Boot = "ipmitool raw 0x3a 0x64 0x00 0x01 0x70"
-    Fan_CPLD_Cmd = "ipmitool raw 0x3a 0x64 02 01 00"
-    COME_CPLD_Cmd = "ipmitool raw 0x3a 0x3e 1 0x1a 1 0xe0"
-    Sys_Cpld_Cmd = "ipmitool raw 0x3a 0x64 0x00 0x01 0x00"
-    Main_BMC_Cmd = "0x32 0x8f 0x08 0x01"
-    Backup_BMC_Cmd = "0x32 0x8f 0x08 0x01"
+    Check_Bios_Boot = ["ipmitool", "raw", "0x3a", "0x64", "0x00", "0x01", "0x70"]
+    Fan_CPLD_Cmd = ["ipmitool", "raw", "0x3a", "0x64", "0x02", "0x01", "0x00"]
+    COME_CPLD_Cmd = ["ipmitool", "raw", "0x3a", "0x3e", "0x01", "0x1a", "0x01", "0xe0"]
+    Sys_Cpld_Cmd = ["ipmitool", "raw", "0x3a", "0x64", "0x00", "0x01", "0x00"]
+    Main_BMC_Cmd = ["0x32", "0x8f", "0x08", "0x01"]
+    Backup_BMC_Cmd = ["0x32", "0x8f", "0x08", "0x01"]
     COMPONENT_NAME_LIST = ["FPGA", "COME_CPLD", "FANCPLD", "SYSCPLD",
                            "Main_BMC", "Backup_BMC", "Main_BIOS", "Backup_BIOS"]
     COMPONENT_DES_LIST = ["Used for managering the CPU and expanding I2C channels",
@@ -31,11 +31,10 @@ if bcm_exist:
                                "Main basic Input/Output System",
                                 "Backup basic Input/Output System"]
 else:
-    FPGA_VERSION_PATH = "/sys/bus/platform/devices/fpga_sysfs/version"
-    Check_Bios_Boot = "i2cget -y -f 6 0x0d 0x70"
-    Fan_CPLD_Cmd = "i2cget -y -f 11 0x0d 0x00 | tr a-z A-Z | cut -d 'X' -f 2"
-    COME_CPLD_Cmd = "i2cget -y -f 4 0x0d 0xe0 | tr a-z A-Z | cut -d 'X' -f 2"
-    Sys_Cpld_Cmd = "i2cget -y -f 6 0x0d 0x00 | tr a-z A-Z | cut -d 'X' -f 2"
+    Check_Bios_Boot = ["i2cget", "-y", "-f", "6", "0x0d", "0x70"]
+    Fan_CPLD_Cmd = ["i2cget", "-y", "-f", "11", "0x0d", "0x00"]
+    COME_CPLD_Cmd = ["i2cget", "-y", "-f", "4", "0x0d", "0xe0"]
+    Sys_Cpld_Cmd = ["i2cget", "-y", "-f", "6", "0x0d", "0x00"]
     COMPONENT_NAME_LIST = ["FPGA", "COME_CPLD", "FANCPLD", "SYSCPLD",
                           "Main_BIOS", "Backup_BIOS"]
     COMPONENT_DES_LIST = ["Used for managering the CPU and expanding I2C channels",
@@ -92,12 +91,15 @@ class Component(ComponentBase):
         }
         if self.name in cpld_version_dict.keys():
             version_cmd = cpld_version_dict[self.name]
-            status, ver = self.helper.run_command(version_cmd)
+            status, output = self.helper.run_command(version_cmd)
             if not status:
                 print("Fail! Can't get %s version by command:%s" % (self.name, version_cmd))
                 return version
-            version1 = int(ver.strip()) / 10
-            version2 = int(ver.strip()) % 10
+            if output.startswith('0x') or output.startswith('0X'):
+                output = output[2:]
+            ver = int(output, 16)
+            version1 = ver >> 4
+            version2 = ver & 0b1111
             version = "%d.%d" % (version1, version2)
             return version
 
@@ -105,7 +107,7 @@ class Component(ComponentBase):
         """
         Get fpga version by fpga version bus path.
         """
-        status, fpga_version = self.helper.run_command("cat %s" % FPGA_VERSION_PATH)
+        status, fpga_version = self.helper.run_command(["cat", FPGA_VERSION_PATH])
         if not status:
             return "N/A"
         major_ver = (int(fpga_version, 16) & 0xFFFF0000) >> 16

@@ -298,7 +298,7 @@ static void imc_instantiate_sensors(struct i2c_adapter *adapter, u8 presence)
 {
 	struct i2c_board_info info = {};
 
-	strcpy(info.type, DIMM_SENSOR_DRV);
+	strlcpy(info.type, DIMM_SENSOR_DRV, I2C_NAME_SIZE);
 	info.addr = DIMM_SENSOR_BASE_ADR;
 
 	/*

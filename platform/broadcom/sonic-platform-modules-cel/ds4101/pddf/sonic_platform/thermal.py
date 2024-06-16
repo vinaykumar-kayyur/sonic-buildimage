@@ -17,49 +17,49 @@ bcm_exist = helper.APIHelper().get_bmc_status()
 
 THERMAL_THRESHOLDS = {
     "TEMP_CPU": {
-        "temp_cmd": "r=$(cat /sys/class/thermal/thermal_zone0/temp) && printf '%.1f' $(($r / 1000))",
+        "temp_cmd": ["cat", "/sys/class/thermal/thermal_zone0/temp"],
         "high_threshold": 105,
         "low_threshold": 'N/A',
         "high_crit_threshold": 'N/A'
         },
     "PSU1_TEMP2":{
-        "temp_cmd": "i2cget -y -f 47 0x58 0x8e",
+        "temp_cmd": ["i2cget", "-y", "-f", "47", "0x58", "0x8e"],
         "high_threshold": 79,
         "low_threshold": 'N/A',
         "high_crit_threshold": 'N/A'
         },
     "PSU1_TEMP3":{
-        "temp_cmd": "i2cget -y -f 47 0x58 0x8f",
+        "temp_cmd": ["i2cget", "-y", "-f", "47", "0x58", "0x8f"],
         "high_threshold": 78,
         "low_threshold": 'N/A',
         "high_crit_threshold": 'N/A'
         },
     "PSU2_TEMP2":{
-        "temp_cmd": "i2cget -y -f 48 0x59 0x8e",
+        "temp_cmd": ["i2cget", "-y", "-f", "48", "0x59", "0x8e"],
         "high_threshold": 79,
         "low_threshold": 'N/A',
         "high_crit_threshold": 'N/A'
         },
     "PSU2_TEMP3":{
-        "temp_cmd": "i2cget -y -f 48 0x59 0x8f",
+        "temp_cmd": ["i2cget", "-y", "-f", "48", "0x59", "0x8f"],
         "high_threshold": 78,
         "low_threshold": 'N/A',
         "high_crit_threshold": 'N/A'
         },
     "TEMP_SW_Internal": {
-        "temp_cmd": "r=$(cat /sys/bus/platform/drivers/fpga_sysfs/fpga_sysfs/sw_internal_temp) && printf '%.1f' $(($r / 1000))",
+        "temp_cmd": ["cat", "/sys/bus/platform/drivers/fpga_sysfs/fpga_sysfs/sw_internal_temp"],
         "high_threshold": 105,
         "low_threshold": 'N/A',
         "high_crit_threshold": 110
         },
     "TEMP_DIMMA0": {
-        "temp_cmd": "r=$(cat /sys/bus/i2c/devices/71-001a/hwmon/hwmon*/temp1_input) && printf '%.1f' $(($r / 1000))",
+        "temp_cmd": ["cat", "/sys/bus/i2c/devices/71-001a/hwmon/hwmon48/temp1_input"],
         "high_threshold": 85,
         "low_threshold": 'N/A',
         "high_crit_threshold": 'N/A'
         },
     "TEMP_DIMMB0": {
-        "temp_cmd": "r=$(cat /sys/bus/i2c/devices/71-0018/hwmon/hwmon*/temp1_input) && printf '%.1f' $(($r / 1000))",
+        "temp_cmd": ["cat", "/sys/bus/i2c/devices/71-0018/hwmon/hwmon47/temp1_input"],
         "high_threshold": 85,
         "low_threshold": 'N/A',
         "high_crit_threshold": 'N/A'
@@ -132,13 +132,13 @@ class Thermal(PddfThermal):
                     return float(attr_value / 1000)
             else:
                 if self.thermals_psu_index == 1:
-                    cmd = "ipmitool raw 0x04 0x27 0x29 | cut -d ' ' -f 7"
+                    cmd = ["ipmitool", "raw", "0x04", "0x27", "0x29"]
                 else:
-                    cmd = "ipmitool raw 0x04 0x27 0x33 | cut -d ' ' -f 7"
+                    cmd = ["ipmitool", "raw", "0x04", "0x27", "0x33"]
                 status, result = self.helper.run_command(cmd)
                 if not status or result is None or result == '':
                     return None
-                value = int(result, 16)
+                value = int(result.split()[5], 16)
                 return float(value)
         else:
             thermal_name = self.get_name()
@@ -174,7 +174,10 @@ class ThermalMon(ThermalBase):
             temp = int(data, 16)
             thermal_temp = self.psu_linear_data(temp)
             return float(thermal_temp)
-        return float(data)
+        else:
+            temp = float(data) / 1000.0
+            thermal_temp = "{:.1f}".format(temp)
+            return float(thermal_temp)
 
     def get_high_threshold(self):
         thermal_data = THERMAL_THRESHOLDS.get(self.thermal_name, None)
