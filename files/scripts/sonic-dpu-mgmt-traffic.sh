@@ -45,6 +45,7 @@ control_forwarding(){
 
 ctrl_dpu_forwarding(){
     local op=$1
+    control_forwarding $op
     add_rem_valid_iptable $op nat POSTROUTING -o ${mgmt_iface}  -j MASQUERADE
     add_rem_valid_iptable $op filter FORWARD -i ${mgmt_iface} -o ${midplane_iface} -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
     add_rem_valid_iptable $op filter FORWARD -i ${midplane_iface} -o ${mgmt_iface} -j ACCEPT
