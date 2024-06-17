@@ -41,6 +41,7 @@ COMMANDS_FOR_ACTUAL = {
 }
 
 UNAVAILABLE_PLATFORM_VERSIONS = {
+    "ONIE": "N/A",
     "SSD": "N/A",
     "BIOS": "N/A",
     "CPLD": "N/A"
