@@ -370,7 +370,8 @@
                 "rack_mgmt_map": "dummy_value",
                 "timezone": "Europe/Kiev",
                 "bgp_router_id": "8.8.8.8",
-                "chassis_hostname": "str-sonic-chassis-1"
+                "chassis_hostname": "str-sonic-chassis-1",
+                "slice_type": "AZNG_Production"
             }
         },
         "VLAN": {
@@ -1709,6 +1710,7 @@
         "BGP_DEVICE_GLOBAL": {
             "STATE": {
                 "tsa_enabled": "false",
+                "wcmp_enabled": "false",
                 "idf_isolation_state": "unisolated"
             }
         },
@@ -2332,6 +2334,9 @@
                 "use_well_known_mac": "enabled",
                 "src_mac": "ToRMac",
                 "interval_pck_loss_count_update": "3"
+            },
+            "TIMED_OSCILLATION": {
+                "oscillation_enabled": "false"
             },
             "MUXLOGGER": {
                 "log_verbosity": "debug"
