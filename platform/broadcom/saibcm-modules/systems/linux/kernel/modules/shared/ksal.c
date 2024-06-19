@@ -46,7 +46,7 @@
 #endif
 #include <linux/time.h>
 
-#ifdef MAX_USER_RT_PRIO
+#if defined(MAX_USER_RT_PRIO) || defined(MAX_RT_PRIO)
 /* Assume 2.6 scheduler */
 #define SAL_YIELD(task) \
     yield()
@@ -192,9 +192,9 @@ uint32
 sal_time_usecs(void)
 {
 #if !defined(SAI_FIXUP)
-    struct timeval ltv;
-    do_gettimeofday(&ltv);
-    return (ltv.tv_sec * SECOND_USEC + ltv.tv_usec);
+     struct timeval ltv;
+     do_gettimeofday(&ltv);
+     return (ltv.tv_sec * SECOND_USEC + ltv.tv_usec);
 #else
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4,19,0)
     /* ktime_to_us and ktime_get_real_ns return 64-bit integets, but this */
