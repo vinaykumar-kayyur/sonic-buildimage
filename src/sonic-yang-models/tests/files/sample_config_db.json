@@ -366,7 +366,7 @@
                 "rack_mgmt_map": "dummy_value",
                 "timezone": "Europe/Kiev",
                 "synchronous_mode": "enable",
-                "suppress-fib-pending": "enabled"
+                "suppress-fib-pending": "disabled"
             }
         },
         "VLAN": {
