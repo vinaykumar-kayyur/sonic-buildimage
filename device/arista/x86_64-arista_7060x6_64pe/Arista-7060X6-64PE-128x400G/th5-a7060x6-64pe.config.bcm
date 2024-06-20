@@ -1414,6 +1414,14 @@ device:
         DEVICE_CONFIG:
             AUTOLOAD_BOARD_SETTINGS: 0
 ...
+## Baseline
+---
+device:
+    0:
+        TM_THD_CONFIG:
+            SKIP_BUFFER_RESERVATION: 1
+            THRESHOLD_MODE: LOSSY_AND_LOSSLESS
+...
 ---
 device:
     0:
@@ -1458,4 +1466,43 @@ device:
                 YELLOW_SHARED_RESUME_LIMIT_CELLS: 0
                 RED_SHARED_LIMIT_CELLS: 0
                 RED_SHARED_RESUME_LIMIT_CELLS: 0
+
+        TM_ING_PORT_PRI_GRP:
+            ?
+                PORT_ID: [[1, 4],
+                          [11, 14],
+                          [22, 25],
+                          [33, 36],
+                          [44, 47],
+                          [55, 58],
+                          [66, 69],
+                          [77, 80],
+                          [88, 91],
+                          [99, 102],
+                          [110, 113],
+                          [121, 124],
+                          [132, 135],
+                          [143, 146],
+                          [154, 157],
+                          [165, 168],
+                          [176, 179],
+                          [187, 190],
+                          [198, 201],
+                          [209, 212],
+                          [220, 223],
+                          [231, 234],
+                          [242, 245],
+                          [253, 256],
+                          [264, 267],
+                          [275, 278],
+                          [286, 289],
+                          [297, 300],
+                          [308, 311],
+                          [319, 322],
+                          [330, 333],
+                          [341, 344]]
+                TM_PRI_GRP_ID: 3
+            :
+                PFC: 1
+                LOSSLESS: 1
 ...
