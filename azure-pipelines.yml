@@ -170,6 +170,8 @@ stages:
     - group: SONiC-Elastictest
     steps:
     - script: |
+        set -x
+
         # Check if ELASTICTEST_MSAL_CLIENT_SECRET is empty or not.
         if [ -z "${ELASTICTEST_MSAL_CLIENT_SECRET}" ]; then
           echo "ELASTICTEST_MSAL_CLIENT_SECRET is not set. Exiting..."
@@ -190,7 +192,11 @@ stages:
           echo "First 5 characters of ELASTICTEST_MSAL_CLIENT_SECRET is not expected. Exiting.."
         fi
 
+        echo "=================="
+        echo "ELASTICTEST_MSAL_CLIENT_SECRET: ${ELASTICTEST_MSAL_CLIENT_SECRET}"
+
       env:
+        ELASTICTEST_MSAL_CLIENT_ID: $(ELASTICTEST_MSAL_CLIENT_ID)
         ELASTICTEST_MSAL_CLIENT_SECRET: $(ELASTICTEST_MSAL_CLIENT_SECRET)
       displayName: "Check ELASTICTEST_MSAL_CLIENT_SECRET"
 
