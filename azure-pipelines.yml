@@ -167,6 +167,8 @@ stages:
     displayName: "kvmtest-t0 by Elastictest"
     timeoutInMinutes: 240
     continueOnError: false
+    variables:
+    - group: SONiC-Elastictest
     steps:
     - script: |
         # Check if ELASTICTEST_MSAL_CLIENT_SECRET is empty or not.
