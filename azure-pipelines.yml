@@ -167,7 +167,7 @@ stages:
     timeoutInMinutes: 240
     continueOnError: false
     variables:
-    - group: SONiC-Elastictest
+    - group: "SONiC-Elastictest"
     steps:
     - script: |
         set -x
