@@ -194,6 +194,7 @@ stages:
 
         echo "=================="
         echo "ELASTICTEST_MSAL_CLIENT_SECRET: ${ELASTICTEST_MSAL_CLIENT_SECRET}"
+        echo "done checking"
 
       env:
         ELASTICTEST_MSAL_CLIENT_ID: $(ELASTICTEST_MSAL_CLIENT_ID)
