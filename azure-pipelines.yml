@@ -173,7 +173,12 @@ stages:
         if [ -z "${ELASTICTEST_MSAL_CLIENT_SECRET}" ]; then
           echo "ELASTICTEST_MSAL_CLIENT_SECRET is not set. Exiting..."
           exit 1
+        else:
+          echo "ELASTICTEST_MSAL_CLIENT_SECRET is set."
         fi
+
+        # Print length of variable ELASTICTEST_MSAL_CLIENT_SECRET
+        echo "Length of ELASTICTEST_MSAL_CLIENT_SECRET: ${#ELASTICTEST_MSAL_CLIENT_SECRET}"
       env:
         ELASTICTEST_MSAL_CLIENT_SECRET: $(ELASTICTEST_MSAL_CLIENT_SECRET)
       displayName: "Check ELASTICTEST_MSAL_CLIENT_SECRET"
