@@ -32,7 +32,7 @@ include ${SDK}/make/Make.config
 
 LIBS = $(LIBDIR)/libkern.a
 ifndef DCBDIR
-DCBDIR = ${SDK}/systems/linux/kernel/modules/dcb
+DCBDIR = $(SDK)/systems/linux/kernel/modules/dcb
 # $(error 'The $$DCBDIR variable is not set')
 endif
 ifeq (1,$(NO_PRECOMPILED_MODULE))
@@ -86,6 +86,6 @@ include ${SDK}/make/Make.depend
 clean::
 	$(RM) $(BLDDIR)/version.c $(BLDDIR)/version.o
 	$(RM) $(BOBJS) $(MODULE)
-	$(MAKE) -C $(SDK)/$(DCBDIR)/make BLDDIR=$(LIBDIR) clean
+	$(MAKE) -C $(DCBDIR)/make BLDDIR=$(LIBDIR) clean
 
 .PHONY: build
