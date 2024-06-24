@@ -86,6 +86,6 @@ include ${SDK}/make/Make.depend
 clean::
 	$(RM) $(BLDDIR)/version.c $(BLDDIR)/version.o
 	$(RM) $(BOBJS) $(MODULE)
-	$(MAKE) -C $(DCBDIR)/make BLDDIR=$(LIBDIR) clean
+	$(MAKE) -C $(SDK)/$(DCBDIR)/make BLDDIR=$(LIBDIR) clean
 
 .PHONY: build
