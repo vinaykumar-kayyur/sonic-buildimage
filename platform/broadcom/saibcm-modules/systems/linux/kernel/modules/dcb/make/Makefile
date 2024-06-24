@@ -36,7 +36,7 @@ ARFLAGS = cru
 
 # DCB Directory
 ifndef DCBDIR
-DCBDIR = ..
+DCBDIR = ${SDK}/systems/linux/kernel/modules/dcb
 endif
 
 # Build Directory

@@ -34,7 +34,7 @@ LIBS = $(LIBDIR)/libkern.a
 
 ifeq (1,$(BUILD_DCBLIB))
 ifndef DCBDIR
-DCBDIR = systems/linux/kernel/modules/dcb
+DCBDIR = ${SDK}/systems/linux/kernel/modules/dcb
 # $(error 'The $$DCBDIR variable is not set')
 endif
 ifeq (1,$(NO_PRECOMPILED_MODULE))
