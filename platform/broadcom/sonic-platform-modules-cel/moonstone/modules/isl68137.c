@@ -18,6 +18,8 @@
 
 #include "pmbus.h"
 
+MODULE_IMPORT_NS(PMBUS);
+
 #define ISL68137_VOUT_AVS	0x30
 #define RAA_DMPVR2_READ_VMON	0xc8
 
