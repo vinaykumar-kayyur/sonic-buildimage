@@ -265,8 +265,12 @@ start_peer_and_dependent_services() {
             fi
         done
         for dep in ${DEPENDENT}; do
-            state=$(is_feature_enabled $dep)
-            if [[ $state == "true" ]]; then
+            if [[ $dep == "dhcp_relay" ]]; then
+                state=$(is_feature_enabled $dep)
+                if [[ $state == "true" ]]; then
+                    /bin/systemctl start ${dep}
+                fi
+            else
                 /bin/systemctl start ${dep}
             fi
         done
