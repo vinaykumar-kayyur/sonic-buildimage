@@ -483,6 +483,9 @@ class SFP(NvidiaSFPCommon):
         Returns:
             bool: True if device is present, False if not
         """
+        presence_sysfs = f'/sys/module/sx_core/asic0/module{self.sdk_index}/hw_present' if self.is_sw_control() else f'/sys/module/sx_core/asic0/module{self.sdk_index}/present'
+        if utils.read_int_from_file(presence_sysfs) != 1:
+            return False
         eeprom_raw = self._read_eeprom(0, 1, log_on_error=False)
         return eeprom_raw is not None
 
@@ -1051,6 +1054,11 @@ class SFP(NvidiaSFPCommon):
             list: [False] * channels
         """
         api = self.get_xcvr_api()
+        try:
+            if self.is_sw_control():
+                return api.get_tx_fault() if api else None
+        except Exception as e:
+            print(e)
         return [False] * api.NUM_CHANNELS if api else None
 
     def get_temperature(self):
@@ -1151,7 +1159,6 @@ class SFP(NvidiaSFPCommon):
             self.refresh_xcvr_api()
             if self._xcvr_api is not None:
                 self._xcvr_api.get_rx_los = self.get_rx_los
-                self._xcvr_api.get_tx_fault = self.get_tx_fault
         return self._xcvr_api
 
     def is_sw_control(self):
