@@ -369,7 +369,9 @@
                 "yang_config_validation": "disable",
                 "rack_mgmt_map": "dummy_value",
                 "timezone": "Europe/Kiev",
-                "bgp_router_id": "8.8.8.8"
+                "bgp_router_id": "8.8.8.8",
+                "chassis_hostname": "str-sonic-chassis-1",
+                "slice_type": "AZNG_Production"
             }
         },
         "VLAN": {
@@ -1707,7 +1709,9 @@
         },
         "BGP_DEVICE_GLOBAL": {
             "STATE": {
-                "tsa_enabled": "false"
+                "tsa_enabled": "false",
+                "wcmp_enabled": "false",
+                "idf_isolation_state": "unisolated"
             }
         },
         "BGP_PEER_RANGE": {
@@ -2331,6 +2335,9 @@
                 "src_mac": "ToRMac",
                 "interval_pck_loss_count_update": "3"
             },
+            "TIMED_OSCILLATION": {
+                "oscillation_enabled": "false"
+            },
             "MUXLOGGER": {
                 "log_verbosity": "debug"
             },
@@ -2682,6 +2689,12 @@
         "TACPLUS": {
             "global": {
             }
+        }
+    },
+    "STORMOND_CONFIG": {
+        "INTERVALS": {
+            "daemon_polling_interval" : "3600",
+            "fsstats_sync_interval"   : "86400"
         }
     }
 }
