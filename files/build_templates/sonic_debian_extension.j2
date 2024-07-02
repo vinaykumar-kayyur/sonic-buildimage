@@ -231,6 +231,10 @@ sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/bash_*.deb || \
 sudo cp -f $IMAGE_CONFIGS/bash/bash.bashrc $FILESYSTEM_ROOT/etc/
 sudo cp -f $IMAGE_CONFIGS/bash/bash.bash_logout $FILESYSTEM_ROOT/etc/
 
+# Add wrapper script for logger command
+sudo cp -f $IMAGE_CONFIGS/bash/wrapper_logger.sh $FILESYSTEM_ROOT/usr/local/bin/logger
+sudo chmod 755 $FILESYSTEM_ROOT/usr/local/bin/logger
+
 # Install readline's initialization file
 sudo cp -f $IMAGE_CONFIGS/readline/inputrc $FILESYSTEM_ROOT/etc/
 
