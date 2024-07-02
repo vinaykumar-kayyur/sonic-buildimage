@@ -84,12 +84,14 @@ module sonic-telemetry {
 
                 leaf cert_cname {
                     type string;
+                    mandatory true;
                     description
                         "client cert common name";
                 }
 
                 leaf role {
                     type string;
+                    mandatory true;
                     description
                         "role of client cert common name";
                 }
