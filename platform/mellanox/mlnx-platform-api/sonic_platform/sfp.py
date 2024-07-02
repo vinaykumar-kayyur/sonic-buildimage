@@ -27,6 +27,7 @@ try:
     import subprocess
     import os
     import threading
+    from enum import Enum
     from sonic_py_common.logger import Logger
     from sonic_py_common.general import check_output_pipe
     from . import utils
@@ -132,6 +133,7 @@ SFP_STATUS_INSERTED = '1'
 # SFP constants
 SFP_PAGE_SIZE = 256          # page size of page0h
 SFP_UPPER_PAGE_OFFSET = 128  # page size of other pages
+SFP_MAX_LPL_FIRMWARE_BLOCK_SIZE = 116 # Bytes
 
 # SFP sysfs path constants
 SFP_PAGE0_PATH = '0/i2c-0x50/data'
@@ -291,6 +293,8 @@ class SFP(NvidiaSFPCommon):
     SFP_MLNX_ERROR_BIT_PMD_TYPE_NOT_ENABLED = 0x00040000
     SFP_MLNX_ERROR_BIT_PCIE_POWER_SLOT_EXCEEDED = 0x00080000
     SFP_MLNX_ERROR_BIT_RESERVED = 0x80000000
+
+    FW_DOWNLOAD_STATUS = Enum('FW_DOWNLOAD_STATUS', ['SUCCEED', 'FAILED', 'IN_PROGRESS'])
 
     def __init__(self, sfp_index, sfp_type=None, slot_id=0, linecard_port_count=0, lc_name=None):
         super(SFP, self).__init__(sfp_index)
@@ -989,6 +993,125 @@ class SFP(NvidiaSFPCommon):
         except:
             # just in case control file does not exist
             raise Exception(f'Module {self.sdk_index} is under initialization')
+
+    def get_module_fw_info(self):
+        api = self.get_xcvr_api()
+        return api.get_module_fw_info()
+
+    def get_module_fw_mgmt_data(self):
+        api = self.get_xcvr_api()
+        return api.get_module_fw_mgmt_feature()
+
+    def get_module_active_fw_version(self):
+        # active FW version is located at 8th position
+        # example: 'result': ('46.130.78', 0, 1, 0, '46.130.39', 1, 0, 0, '46.130.39', '46.130.78'
+        fw = self.get_module_fw_info()
+        try:
+            result = fw.get('result')
+            fw_version = result[8]
+        except Exception as err:
+            logger.log_error("Failed to get FW version: {}".format(str(err)))
+            fw_version = 'N/A'
+        return fw_version
+
+    def read_module_fw_file(self, fw_image_path):
+        try:
+            # Open file
+            fd = open(fw_image_path, 'rb')
+            # Set the file position pointer at the end of the file
+            fd.seek(0, os.SEEK_END)
+            # Get file size in bytes
+            file_size = fd.tell()
+            # Set the file position pointer back to the beggining of a file
+            fd.seek(0, os.SEEK_SET)
+        except FileNotFoundError:
+            return None, None
+        return fd, file_size
+
+    def module_cdb_fw_download_start(self, fd, file_size, startLPLsize):
+        api = self.get_xcvr_api()
+        startdata = fd.read(startLPLsize)
+        return api.cdb_start_firmware_download(startLPLsize, startdata, file_size)
+
+    def module_cdb_fw_download(self, fd, file_size, startLPLsize, lplonly_flag,
+                               autopaging_flag, writelength, maxblocksize):
+        """
+        This function performs the download of a firmware image to module EEPROM.
+        This function is implemented according to the "Common Management Interface Specification (CMIS)".
+
+        Args:
+            fd (file descriptor object): file descriptor of FW image file
+            file_size (int): size of FW image file in bytes
+            startLPLsize (int): size of LPL (local payload) FW block
+            maxblocksize (int): max sixe of FW block
+            lplonly_flag (bool): flag to indicate if LPL (local payload) or EPL (extended payload) should be used
+            autopaging_flag (bool): flat to indicate if autopaging is supported
+            writelength (int): maximum number of bytes in write access to EPL/LPL
+
+        Returns:
+            status (enum): status of FW download
+            percentage (str): percentage of progress for FW download process
+
+        """
+        api = self.get_xcvr_api()
+
+        # Calculate FW block size and remaining size of the file that we need to read
+        if lplonly_flag:
+            BLOCK_SIZE = min(SFP_MAX_LPL_FIRMWARE_BLOCK_SIZE, maxblocksize)
+        else:
+            BLOCK_SIZE = maxblocksize
+        remaining = file_size - startLPLsize
+
+        # Start reading file and writing FW to EEPROM until we reach 0 in remaining bytes
+        start = remaining
+        address = 0
+        status = self.FW_DOWNLOAD_STATUS.SUCCEED
+        while remaining > 0:
+            count = BLOCK_SIZE if remaining >= BLOCK_SIZE else remaining
+            data = fd.read(count)
+            if len(data) != count:
+                logger.log_error("Failed to read FW image file")
+                status = self.FW_DOWNLOAD_STATUS.FAILED
+                break
+
+            # Write FW image either to LPL or EPL FW block in the EEPROM
+            if lplonly_flag:
+                status = api.cdb_lpl_block_write(address, data)
+            else:
+                status = api.cdb_epl_block_write(address, data, autopaging_flag, writelength)
+            if status != 1:
+                logger.log_error("CDB: firmware download failed! - status {}".format(status))
+                status = self.FW_DOWNLOAD_STATUS.FAILED
+                break
+
+            address += count
+            remaining -= count
+            # Calculate progress in percentages and return it on each loop iteration
+            percentage = 100 - int(remaining * 100 / start)
+            yield percentage, self.FW_DOWNLOAD_STATUS.IN_PROGRESS
+
+        yield percentage, status
+
+    def module_cdb_fw_download_complete(self):
+        api = self.get_xcvr_api()
+        status = api.cdb_firmware_download_complete()
+        fw_info = self.get_module_fw_info()
+        logger.log_info(f'Module {self.module_id} FW after download: {fw_info}')
+        return status
+
+    def module_fw_run(self):
+        api = self.get_xcvr_api()
+        status = api.cdb_run_firmware(0)
+        fw_info = self.get_module_fw_info()
+        logger.log_info(f'Module {self.module_id} FW after run: {fw_info}')
+        return not status
+
+    def module_fw_commit(self):
+        api = self.get_xcvr_api()
+        status = api.cdb_commit_firmware()
+        fw_info = self.get_module_fw_info()
+        logger.log_info(f'Module {self.module_id} FW after commit: {fw_info}')
+        return status
 
 
 class RJ45Port(NvidiaSFPCommon):
