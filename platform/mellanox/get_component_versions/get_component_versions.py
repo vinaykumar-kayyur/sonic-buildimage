@@ -36,8 +36,7 @@ COMMANDS_FOR_ACTUAL = {
     "SDK": [["docker", "exec", "-it", "syncd", "bash", "-c", 'dpkg -l | grep sdk'], ".*1\\.mlnx\\.([0-9.]*)"],
     "SAI": [["docker", "exec", "-it", "syncd", "bash", "-c", 'dpkg -l | grep mlnx-sai'], ".*1\\.mlnx\\.([A-Za-z0-9.]*)"],
     "FW": [["mlxfwmanager", "--query"], "FW * [0-9]{2}\\.([0-9.]*)"],
-    "KERNEL": [["uname", "-r"], "([0-9][0-9.-]*)-.*"],
-    "SIMX": [["lspci", "-vv"], ["grep", "SimX"], "([0-9]+\\.[0-9]+-[0-9]+)"]
+    "KERNEL": [["uname", "-r"], "([0-9][0-9.-]*)-.*"]
 }
 
 UNAVAILABLE_PLATFORM_VERSIONS = {
@@ -121,10 +120,11 @@ def format_output_table(table):
     return tabulate(table, HEADERS)
 
 
-def is_simx_switch():
-    simx_version = get_current_version("SIMX")
-
-    return simx_version != 'N/A'
+def get_simx_version():
+    "SIMX": [["lspci", "-vv"], ["grep", "SimX"], "([0-9]+\\.[0-9]+-[0-9]+)"]
+    version = check_output_pipe(["lspci", "-vv"], ["grep", "SimX"])
+    parsed_version = re.search("([0-9]+\\.[0-9]+-[0-9]+)", version)
+    return parsed_version.group(1) if parsed_version else "N/A"
 
 
 def main():
@@ -134,21 +134,23 @@ def main():
         return
 
     compiled_versions = parse_compiled_components_file()
+    simx_compiled_ver = compiled_versions.pop("SIMX")
 
-    if is_simx_switch():
-        platform_versions = UNAVAILABLE_PLATFORM_VERSIONS
-    else:  
-        platform_versions = get_platform_component_versions()
-
+    # Add compiled versions to table
     output_table = []
     for comp in compiled_versions.keys():
         actual = get_current_version(comp)
-
-        if comp == "SIMX" and actual == "N/A":
-            continue
-        
         output_table.append([comp, compiled_versions[comp], actual])
 
+    # Handle if SIMX
+    simx_actual_ver = get_simx_version()
+    if simx_actual_ver:
+        output_table.append(["SIMX", simx_compiled_ver, simx_actual_ver])
+        platform_versions = UNAVAILABLE_PLATFORM_VERSIONS
+    else:
+        platform_versions = get_platform_component_versions()
+
+    # Add actual versions to table
     for comp in platform_versions.keys():
         output_table.append([comp, "-", platform_versions[comp]])
 
