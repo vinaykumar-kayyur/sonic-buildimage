@@ -525,7 +525,7 @@ class fancontrol(object):
                     exec_os_cmd(create_judge_file)
                     exec_os_cmd("sync")
                     time.sleep(3)
-                    os.system("/sbin/reboot")
+                    exec_os_cmd("/sbin/reboot")
         except Exception as e:
             fancontrol_error("%%policy: checkCritReboot failed")
             fancontrol_error(str(e))
@@ -577,7 +577,7 @@ class fancontrol(object):
                     exec_os_cmd(create_judge_file)
                     exec_os_cmd("sync")
                     time.sleep(3)
-                    os.system("/sbin/reboot")
+                    exec_os_cmd("/sbin/reboot")
         except Exception as e:
             fancontrol_error("%%policy: checkEmergReboot failed")
             fancontrol_error(str(e))

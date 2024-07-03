@@ -70,7 +70,7 @@ def startAvscontrol():
         cmd = "nohup avscontrol.py start >/dev/null 2>&1 &"
         rets = getPid("avscontrol.py")
         if len(rets) == 0:
-            os.system(cmd)
+            log_os_system(cmd)
 
 
 def startFanctrol():
@@ -78,7 +78,7 @@ def startFanctrol():
         cmd = "nohup fancontrol.py start >/dev/null 2>&1 &"
         rets = getPid("fancontrol.py")
         if len(rets) == 0:
-            os.system(cmd)
+            log_os_system(cmd)
 
 
 def starthal_fanctrl():
@@ -86,7 +86,7 @@ def starthal_fanctrl():
         cmd = "nohup hal_fanctrl.py start >/dev/null 2>&1 &"
         rets = getPid("hal_fanctrl.py")
         if len(rets) == 0:
-            os.system(cmd)
+            log_os_system(cmd)
 
 
 def starthal_ledctrl():
@@ -94,7 +94,7 @@ def starthal_ledctrl():
         cmd = "nohup hal_ledctrl.py start >/dev/null 2>&1 &"
         rets = getPid("hal_ledctrl.py")
         if len(rets) == 0:
-            os.system(cmd)
+            log_os_system(cmd)
 
 
 def startDevmonitor():
@@ -102,7 +102,7 @@ def startDevmonitor():
         cmd = "nohup dev_monitor.py start >/dev/null 2>&1 &"
         rets = getPid("dev_monitor.py")
         if len(rets) == 0:
-            os.system(cmd)
+            log_os_system(cmd)
 
 
 def startSlotmonitor():
@@ -110,7 +110,7 @@ def startSlotmonitor():
         cmd = "nohup slot_monitor.py start >/dev/null 2>&1 &"
         rets = getPid("slot_monitor.py")
         if len(rets) == 0:
-            os.system(cmd)
+            log_os_system(cmd)
 
 
 def startIntelligentmonitor():
@@ -118,7 +118,7 @@ def startIntelligentmonitor():
         cmd = "nohup intelligent_monitor.py >/dev/null 2>&1 &"
         rets = getPid("intelligent_monitor.py")
         if len(rets) == 0:
-            os.system(cmd)
+            log_os_system(cmd)
 
 
 def startSignalmonitor():
@@ -126,7 +126,7 @@ def startSignalmonitor():
         cmd = "nohup signal_monitor.py start >/dev/null 2>&1 &"
         rets = getPid("signal_monitor.py")
         if len(rets) == 0:
-            os.system(cmd)
+            log_os_system(cmd)
 
 
 def startSff_temp_polling():
@@ -134,7 +134,7 @@ def startSff_temp_polling():
         cmd = "nohup sfp_highest_temperatue.py >/dev/null 2>&1 &"
         rets = getPid("sfp_highest_temperatue.py")
         if len(rets) == 0:
-            os.system(cmd)
+            log_os_system(cmd)
 
 
 def startRebootCause():
@@ -142,7 +142,7 @@ def startRebootCause():
         cmd = "nohup reboot_cause.py >/dev/null 2>&1 &"
         rets = getPid("reboot_cause.py")
         if len(rets) == 0:
-            os.system(cmd)
+            log_os_system(cmd)
 
 
 def startPMON_sys():
@@ -150,7 +150,7 @@ def startPMON_sys():
         cmd = "nohup pmon_syslog.py >/dev/null 2>&1 &"
         rets = getPid("pmon_syslog.py")
         if len(rets) == 0:
-            os.system(cmd)
+            log_os_system(cmd)
 
 
 def startSff_polling():
@@ -158,14 +158,14 @@ def startSff_polling():
         cmd = "nohup sff_polling.py start > /dev/null 2>&1 &"
         rets = getPid("sff_polling.py")
         if len(rets) == 0:
-            os.system(cmd)
+            log_os_system(cmd)
 
 
 def generate_air_flow():
     cmd = "nohup generate_airflow.py > /dev/null 2>&1 &"
     rets = getPid("generate_airflow.py")
     if len(rets) == 0:
-        os.system(cmd)
+        log_os_system(cmd)
         time.sleep(1)
 
 
@@ -186,14 +186,14 @@ def start_tty_console():
         cmd = "nohup tty_console.py > /dev/null 2>&1 &"
         rets = getPid("tty_console.py")
         if len(rets) == 0:
-            os.system(cmd)
+            log_os_system(cmd)
 
 def startDrvUpdate():
     if STARTMODULE.get('drv_update', 0) == 1:
         cmd = "nohup drv_update.py >/dev/null 2>&1 &"
         rets = getPid("drv_update.py")
         if len(rets) == 0:
-            os.system(cmd)
+            log_os_system(cmd)
 
 
 def stopAvscontrol():
@@ -201,7 +201,7 @@ def stopAvscontrol():
         rets = getPid("avscontrol.py")
         for ret in rets:
             cmd = "kill " + ret
-            os.system(cmd)
+            log_os_system(cmd)
 
 
 def stopFanctrol():
@@ -209,7 +209,7 @@ def stopFanctrol():
         rets = getPid("fancontrol.py")  #
         for ret in rets:
             cmd = "kill " + ret
-            os.system(cmd)
+            log_os_system(cmd)
 
 
 def stophal_fanctrl():
@@ -217,7 +217,7 @@ def stophal_fanctrl():
         rets = getPid("hal_fanctrl.py")
         for ret in rets:
             cmd = "kill " + ret
-            os.system(cmd)
+            log_os_system(cmd)
 
 
 def stophal_ledctrl():
@@ -225,7 +225,7 @@ def stophal_ledctrl():
         rets = getPid("hal_ledctrl.py")
         for ret in rets:
             cmd = "kill " + ret
-            os.system(cmd)
+            log_os_system(cmd)
 
 
 def stopDevmonitor():
@@ -233,7 +233,7 @@ def stopDevmonitor():
         rets = getPid("dev_monitor.py")  #
         for ret in rets:
             cmd = "kill " + ret
-            os.system(cmd)
+            log_os_system(cmd)
 
 
 def stopSlotmonitor():
@@ -241,7 +241,7 @@ def stopSlotmonitor():
         rets = getPid("slot_monitor.py")  #
         for ret in rets:
             cmd = "kill " + ret
-            os.system(cmd)
+            log_os_system(cmd)
 
 
 def stopIntelligentmonitor():
@@ -249,7 +249,7 @@ def stopIntelligentmonitor():
         rets = getPid("intelligent_monitor.py")
         for ret in rets:
             cmd = "kill " + ret
-            os.system(cmd)
+            log_os_system(cmd)
 
 
 def stopSignalmonitor():
@@ -257,7 +257,7 @@ def stopSignalmonitor():
         rets = getPid("signal_monitor.py")  #
         for ret in rets:
             cmd = "kill " + ret
-            os.system(cmd)
+            log_os_system(cmd)
 
 
 def stopSff_temp_polling():
@@ -265,7 +265,7 @@ def stopSff_temp_polling():
         rets = getPid("sfp_highest_temperatue.py")
         for ret in rets:
             cmd = "kill " + ret
-            os.system(cmd)
+            log_os_system(cmd)
 
 
 def stopPMON_sys():
@@ -273,7 +273,7 @@ def stopPMON_sys():
         rets = getPid("pmon_syslog.py")
         for ret in rets:
             cmd = "kill " + ret
-            os.system(cmd)
+            log_os_system(cmd)
 
 
 def stopRebootCause():
@@ -281,7 +281,7 @@ def stopRebootCause():
         rets = getPid("reboot_cause.py")
         for ret in rets:
             cmd = "kill " + ret
-            os.system(cmd)
+            log_os_system(cmd)
 
 
 def stopSff_polling():
@@ -289,7 +289,7 @@ def stopSff_polling():
         rets = getPid("sff_polling.py")
         for ret in rets:
             cmd = "kill " + ret
-            os.system(cmd)
+            log_os_system(cmd)
 
 
 def stopGenerate_air_flow():
@@ -297,7 +297,7 @@ def stopGenerate_air_flow():
         rets = getPid("generate_airflow.py")
         for ret in rets:
             cmd = "kill " + ret
-            os.system(cmd)
+            log_os_system(cmd)
 
 
 def stop_tty_console():
@@ -305,7 +305,7 @@ def stop_tty_console():
         rets = getPid("tty_console.py")
         for ret in rets:
             cmd = "kill " + ret
-            os.system(cmd)
+            log_os_system(cmd)
 
 
 def otherinit():

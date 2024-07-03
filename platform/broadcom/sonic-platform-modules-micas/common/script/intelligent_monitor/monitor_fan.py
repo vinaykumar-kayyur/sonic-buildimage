@@ -8,6 +8,7 @@ from logging.handlers import RotatingFileHandler
 
 from plat_hal.interface import interface
 from plat_hal.baseutil import baseutil
+from platform_util import exec_os_cmd
 
 
 DEBUG_FILE = "/etc/.monitor_fan_debug_flag"
@@ -19,8 +20,8 @@ E2_NAME = "ONIE_E2"
 
 def _init_logger():
     if not os.path.exists(LOG_FILE):
-        os.system("mkdir -p %s" % os.path.dirname(LOG_FILE))
-        os.system("sync")
+        exec_os_cmd("mkdir -p %s" % os.path.dirname(LOG_FILE))
+        exec_os_cmd("sync")
     handler = RotatingFileHandler(filename=LOG_FILE, maxBytes=5 * 1024 * 1024, backupCount=1)
     formatter = logging.Formatter("%(asctime)s %(levelname)s %(filename)s[%(funcName)s][%(lineno)s]: %(message)s")
     handler.setFormatter(formatter)

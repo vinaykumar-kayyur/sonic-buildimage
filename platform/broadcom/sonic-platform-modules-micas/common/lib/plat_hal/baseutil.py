@@ -9,6 +9,8 @@ import importlib.machinery
 import os
 import syslog
 import json
+import subprocess
+import glob
 from plat_hal.osutil import osutil
 
 SYSLOG_IDENTIFIER = "HAL"
@@ -52,7 +54,7 @@ def getboardairflow():
 def getplatform_config_db():
     if not os.path.isfile(CONFIG_DB_PATH):
         return ""
-    val = os.popen("sonic-cfggen -j %s -v DEVICE_METADATA.localhost.platform" % CONFIG_DB_PATH).read().strip()
+    val = subprocess.check_output(["sonic-cfggen", "-j", CONFIG_DB_PATH, "-v", "DEVICE_METADATA.localhost.platform"]).decode().strip()
     if len(val) <= 0:
         return ""
     return val
@@ -72,10 +74,8 @@ boardairflow = getboardairflow()
 
 
 CONFIG_FILE_PATH_LIST = [
-    "/usr/local/bin/",
     "/usr/lib/python3/dist-packages/",
-    "/usr/local/lib/python3.7/dist-packages/hal-config/",
-    "/usr/local/lib/python3.9/dist-packages/hal-config/"
+    "/usr/local/lib/*/dist-packages/hal-config/"
 ]
 
 
@@ -105,6 +105,11 @@ class baseutil:
     def get_config():
         real_path = None
         for configfile_path in CONFIG_FILE_PATH_LIST:
+            if "/*/" in configfile_path:
+                filepath = glob.glob(configfile_path)
+                if len(filepath) == 0:
+                    continue
+                configfile_path = filepath[0]
             for config_file in DEVICE_CONFIG_FILE_LIST:
                 file = configfile_path + config_file
                 if os.path.exists(file):

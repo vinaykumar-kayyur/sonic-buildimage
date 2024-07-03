@@ -6,7 +6,7 @@ import syslog
 import traceback
 import click
 from platform_config import DEV_MONITOR_PARAM
-from platform_util import io_rd, wbi2cget
+from platform_util import io_rd, wbi2cget, exec_os_cmd
 
 
 CONTEXT_SETTINGS = {"help_option_names": ['-h', '--help']}
@@ -111,7 +111,7 @@ class DevMonitor():
         cmd = "echo  0x%02x > /sys/bus/i2c/devices/i2c-%d/delete_device" % (loc, bus)
         devpath = "/sys/bus/i2c/devices/%d-%04x" % (bus, loc)
         if os.path.exists(devpath):
-            os.system(cmd)
+            exec_os_cmd(cmd)
 
     def addDev(self, name, bus, loc):
         if name == "lm75":
@@ -119,7 +119,7 @@ class DevMonitor():
         cmd = "echo  %s 0x%02x > /sys/bus/i2c/devices/i2c-%d/new_device" % (name, loc, bus)
         devpath = "/sys/bus/i2c/devices/%d-%04x" % (bus, loc)
         if os.path.exists(devpath) is False:
-            os.system(cmd)
+            exec_os_cmd(cmd)
 
     def checkattr(self, bus, loc, attr):
         try:
