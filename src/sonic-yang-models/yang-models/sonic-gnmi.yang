@@ -83,7 +83,6 @@ module sonic-gnmi {
 
                 leaf cert_cname {
                     type string;
-                    mandatory true;
                     description
                         "client cert common name";
                 }
