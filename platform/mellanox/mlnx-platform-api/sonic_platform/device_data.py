@@ -128,7 +128,7 @@ DEVICE_DATA = {
             }
         },
         'sfp': {
-            'fw_control_ports': [64, 65]  # ports that are always under firmware control
+            'fw_control_ports': [64, 65]  # 0 based sfp index list
         }
     },
     'x86_64-nvidia_sn5600-r0': {
@@ -139,7 +139,7 @@ DEVICE_DATA = {
             }
         },
         'sfp': {
-            'fw_control_ports': [64]  # ports that are always under firmware control
+            'fw_control_ports': [64]  # 0 based sfp index list
         }
     },
     'x86_64-nvidia_sn4280_simx-r0': {
