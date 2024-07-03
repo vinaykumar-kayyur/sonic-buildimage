@@ -26,6 +26,7 @@ except Exception:
     PlatformDataProvider = None
 
 from sonic_py_common.general import check_output_pipe
+from sonic_platform.device_data import DeviceDataManager
 from tabulate import tabulate
 
 COMPONENT_VERSIONS_FILE = "/etc/mlnx/component-versions"
@@ -120,13 +121,6 @@ def format_output_table(table):
     return tabulate(table, HEADERS)
 
 
-def get_simx_version():
-    "SIMX": [["lspci", "-vv"], ["grep", "SimX"], "([0-9]+\\.[0-9]+-[0-9]+)"]
-    version = check_output_pipe(["lspci", "-vv"], ["grep", "SimX"])
-    parsed_version = re.search("([0-9]+\\.[0-9]+-[0-9]+)", version)
-    return parsed_version.group(1) if parsed_version else "N/A"
-
-
 def main():
 
     if os.getuid() != 0:
@@ -143,8 +137,8 @@ def main():
         output_table.append([comp, compiled_versions[comp], actual])
 
     # Handle if SIMX
-    simx_actual_ver = get_simx_version()
-    if simx_actual_ver:
+    if DeviceDataManager.is_simx_platform():
+        simx_actual_ver = DeviceDataManager.get_simx_version()
         output_table.append(["SIMX", simx_compiled_ver, simx_actual_ver])
         platform_versions = UNAVAILABLE_PLATFORM_VERSIONS
     else:
