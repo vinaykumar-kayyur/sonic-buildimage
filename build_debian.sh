@@ -430,6 +430,20 @@ sudo LANG=c chroot $FILESYSTEM_ROOT chmod 644 /etc/group
 sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "mkdir -p /etc/initramfs-tools/conf.d"
 sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "echo 'MODULES=most' >> /etc/initramfs-tools/conf.d/driver-policy"
 
+# Ensure the relevant directories exist
+mkdir -p /etc/initramfs-tools/scripts/init-premount
+mkdir -p /etc/initramfs-tools/hooks
+
+# Copy the network setup script
+COPY files/scripts/network_setup.sh /etc/initramfs-tools/scripts/init-premount/network_setup.sh
+
+# Copy the hook file
+COPY files/hooks/network_setup.hook /etc/initramfs-tools/hooks/network_setup.hook
+
+# Make the scripts executable
+RUN chmod +x /etc/initramfs-tools/scripts/init-premount/network_setup.sh
+RUN chmod +x /etc/initramfs-tools/hooks/network_setup.hook
+
 # Copy vmcore-sysctl.conf to add more vmcore dump flags to kernel
 sudo cp files/image_config/kdump/vmcore-sysctl.conf $FILESYSTEM_ROOT/etc/sysctl.d/
 
