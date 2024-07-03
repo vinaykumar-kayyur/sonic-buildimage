@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2021-2024 NVIDIA CORPORATION & AFFILIATES.
+# Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES.
 # Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -47,26 +47,31 @@ class CMISHostMgmtActivator:
         file_path = '{}/{}'.format(path, CMISHostMgmtActivator.PARAMS[param]["file_name"])
         lines = None
 
-        with open(file_path, 'r') as param_file:
-            lines = param_file.read()
+        try:
+            with open(file_path, 'r') as param_file:
+                lines = param_file.read()
 
-        if lines:
-            if action == "disable":
-                lines = re.sub(CMISHostMgmtActivator.PARAMS[param]["enabled_param"],
-                               CMISHostMgmtActivator.PARAMS[param]["disabled_param"],
-                               lines)
-            elif action == "enable":
-                if param == "sai_profile" and not re.search(CMISHostMgmtActivator.PARAMS[param]["disabled_param"], lines):
-                    with open(file_path, 'a') as param_file:
-                        param_file.write(CMISHostMgmtActivator.PARAMS[param]["enabled_param"])
-                    return
+                if lines:
+                    if action == "disable":
+                        lines = re.sub(CMISHostMgmtActivator.PARAMS[param]["enabled_param"],
+                                    CMISHostMgmtActivator.PARAMS[param]["disabled_param"],
+                                    lines)
+                    elif action == "enable":
+                        if param == "sai_profile" and not re.search(CMISHostMgmtActivator.PARAMS[param]["disabled_param"], lines):
+                            if not re.search(CMISHostMgmtActivator.PARAMS[param]["enabled_param"], lines): 
+                                with open(file_path, 'a') as param_file:
+                                    param_file.write(CMISHostMgmtActivator.PARAMS[param]["enabled_param"])
+                                return
 
-                lines = re.sub(CMISHostMgmtActivator.PARAMS[param]["disabled_param"],
-                               CMISHostMgmtActivator.PARAMS[param]["enabled_param"],
-                               lines)
+                        lines = re.sub(CMISHostMgmtActivator.PARAMS[param]["disabled_param"],
+                                    CMISHostMgmtActivator.PARAMS[param]["enabled_param"],
+                                    lines)
 
-        with open(file_path, 'w') as param_file:
-            param_file.write(lines)
+            with open(file_path, 'w') as param_file:
+                param_file.write(lines)
+
+        except FileNotFoundError as e:
+            print('Missing file: {}'.format(e.filename))
 
 
     @staticmethod
@@ -88,44 +93,56 @@ class CMISHostMgmtActivator:
 
 
     @staticmethod
-    def remove_im_file(file_path):
+    def remove_file(file_path):
         if os.path.isfile(file_path):
             os.remove(file_path)
 
 
     @staticmethod
-    def copy_im_file(src_path, dest_path):
+    def copy_file(src_path, dest_path):
         if os.path.isfile(src_path):
             shutil.copy(src_path, dest_path)
 
 
     @staticmethod
-    def disable_im():
+    def is_spc_supported(spc):
+        return int(spc) >= 4000
+
+    @staticmethod
+    def disable():
         platform, sku = CMISHostMgmtActivator.parse_show_platform_summary()
         sku_path = '/usr/share/sonic/device/{0}/{1}'.format(platform, sku)
         platform_path = '/usr/share/sonic/device/{0}'.format(platform)
         CMISHostMgmtActivator.change_param("sai_profile", sku_path, 'disable')
-        CMISHostMgmtActivator.change_param("pmon_daemon_control", platform_path, 'disable')
         
-        CMISHostMgmtActivator.remove_im_file('{0}/{1}'.format(sku_path, 'media_settings.json'))
-        CMISHostMgmtActivator.remove_im_file('{0}/{1}'.format(sku_path,'optics_si_settings.json'))
-        CMISHostMgmtActivator.remove_im_file('{0}/{1}'.format(platform_path, 'media_settings.json'))
-        CMISHostMgmtActivator.remove_im_file('{0}/{1}'.format(platform_path, 'optics_si_settings.json'))
-        CMISHostMgmtActivator.remove_im_file('{0}/{1}'.format(sku_path, 'pmon_daemon_control.json'))
+        if os.path.isfile('{0}/{1}'.format(platform_path, 'pmon_daemon_control.json')):
+            CMISHostMgmtActivator.change_param("pmon_daemon_control", platform_path, 'disable')
+            CMISHostMgmtActivator.remove_file('{0}/{1}'.format(sku_path, 'pmon_daemon_control.json'))
+        else:
+            CMISHostMgmtActivator.change_param("pmon_daemon_control", sku_path, 'disable')
+
+        CMISHostMgmtActivator.remove_file('{0}/{1}'.format(sku_path, 'media_settings.json'))
+        CMISHostMgmtActivator.remove_file('{0}/{1}'.format(sku_path,'optics_si_settings.json'))
+        CMISHostMgmtActivator.remove_file('{0}/{1}'.format(platform_path, 'media_settings.json'))
+        CMISHostMgmtActivator.remove_file('{0}/{1}'.format(platform_path, 'optics_si_settings.json'))
 
 
     @staticmethod
-    def enable_im(args):
+    def enable(args):
         platform, sku = CMISHostMgmtActivator.parse_show_platform_summary()
         sku_path = '/usr/share/sonic/device/{0}/{1}'.format(platform, sku)
         platform_path = '/usr/share/sonic/device/{0}'.format(platform)
 
         sku_num = re.search('[0-9]{4}', sku).group()
+
+        if not CMISHostMgmtActivator.is_spc_supported(sku_num):
+            print("Error: unsupported platform - feature is supported on SPC3 and higher.")
+            
         CMISHostMgmtActivator.PARAMS["sai_xml"]["file_name"] = "sai_{0}.xml".format(sku_num)
 
-        CMISHostMgmtActivator.copy_im_file(args[0], sku_path)
-        CMISHostMgmtActivator.copy_im_file(args[1], sku_path)
-        CMISHostMgmtActivator.copy_im_file('{0}/{1}'.format(platform_path, 'pmon_daemon_control.json'), sku_path)
+        CMISHostMgmtActivator.copy_file(args[0], sku_path)
+        CMISHostMgmtActivator.copy_file(args[1], sku_path)
+        CMISHostMgmtActivator.copy_file('{0}/{1}'.format(platform_path, 'pmon_daemon_control.json'), sku_path)
 
         CMISHostMgmtActivator.change_param("sai_profile", sku_path, 'enable')
         CMISHostMgmtActivator.change_param("pmon_daemon_control", sku_path, 'enable')
@@ -137,15 +154,18 @@ class CMISHostMgmtActivator:
 @click.option('--enable', nargs=2, type=click.Path(), help='Enable CMIS Host Management, receives two arguments: media_settings.json path, and optics_si_settings.json path')
 def main(disable, enable):
 
-    import pdb; pdb.set_trace()
     if disable and enable:
         print("Error: can't use both options, please choose one.")
+        return
 
     if disable:
-        CMISHostMgmtActivator.disable_im()
+        CMISHostMgmtActivator.disable()
 
     elif enable:
-        CMISHostMgmtActivator.enable_im(enable)
+        CMISHostMgmtActivator.enable(enable)
+
+    else:
+        print("Error: no option was provided - nothing to execute.")
 
 if __name__ == '__main__':
     main()
