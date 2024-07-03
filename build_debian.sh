@@ -431,8 +431,8 @@ sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "mkdir -p /etc/initramfs-tools/
 sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "echo 'MODULES=most' >> /etc/initramfs-tools/conf.d/driver-policy"
 
 # Ensure the relevant directories exist
-mkdir -p /etc/initramfs-tools/scripts/init-premount
-mkdir -p /etc/initramfs-tools/hooks
+sudo mkdir -p /etc/initramfs-tools/scripts/init-premount
+sudo mkdir -p /etc/initramfs-tools/hooks
 
 # Copy the network setup scriptgit
 sudo cp files/scripts/network_setup.sh /etc/initramfs-tools/scripts/init-premount/network_setup.sh
