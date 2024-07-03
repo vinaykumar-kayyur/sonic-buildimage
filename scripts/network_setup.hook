@@ -1,5 +1,6 @@
 #!/bin/sh
 PREREQ=""
+
 prereqs() {
     echo "$PREREQ"
 }
@@ -12,6 +13,10 @@ case "$1" in
 esac
 
 . /usr/share/initramfs-tools/hook-functions
+
+# Add dhclient and its dependencies
 copy_exec /sbin/dhclient /sbin
 copy_exec /sbin/dhclient-script /sbin
+
+# Add the necessary network modules
 manual_add_modules e1000e

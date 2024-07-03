@@ -435,10 +435,10 @@ mkdir -p /etc/initramfs-tools/scripts/init-premount
 mkdir -p /etc/initramfs-tools/hooks
 
 # Copy the network setup scriptgit
-sudo cp files/scripts/network_setup.sh /etc/initramfs-tools/scripts/init-premount/network_setup.sh
+COPY files/scripts/network_setup.sh /etc/initramfs-tools/scripts/init-premount/network_setup.sh
 
 # Copy the hook file
-sudo cp files/scripts/network_setup.hook /etc/initramfs-tools/hooks/network_setup.hook
+COPY files/hooks/network_setup.hook /etc/initramfs-tools/hooks/network_setup.hook
 
 # Make the scripts executable
 RUN chmod +x /etc/initramfs-tools/scripts/init-premount/network_setup.sh
