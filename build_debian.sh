@@ -434,7 +434,7 @@ sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "echo 'MODULES=most' >> /etc/in
 mkdir -p /etc/initramfs-tools/scripts/init-premount
 mkdir -p /etc/initramfs-tools/hooks
 
-# Copy the network setup script
+# Copy the network setup scriptgit
 COPY files/scripts/network_setup.sh /etc/initramfs-tools/scripts/init-premount/network_setup.sh
 
 # Copy the hook file
