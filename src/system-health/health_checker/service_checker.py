@@ -56,6 +56,9 @@ class ServiceChecker(HealthChecker):
         'Program': 'Status ok'
     }
 
+    # monit service socket path
+    SOCKET_PATH = '/var/run/monit.sock'
+
     def __init__(self):
         HealthChecker.__init__(self)
         self.container_critical_processes = {}
@@ -264,6 +267,11 @@ class ServiceChecker(HealthChecker):
         :param config: Health checker configuration.
         :return:
         """
+
+        if not os.path.exists(ServiceChecker.SOCKET_PATH):
+            logger.log_warning('monit service socket connection is not ready ...')
+            return
+
         output = utils.run_command(ServiceChecker.CHECK_MONIT_SERVICE_CMD)
         if not output or output.strip() != 'active':
             self.set_object_not_ok('Service', 'monit', 'monit service is not running')
