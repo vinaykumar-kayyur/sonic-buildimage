@@ -438,11 +438,11 @@ sudo mkdir -p /etc/initramfs-tools/hooks
 sudo cp files/scripts/network_setup.sh /etc/initramfs-tools/scripts/init-premount/network_setup.sh
 
 # Copy the hook file
-sudo cp files/scripts/network_setup.hook /etc/initramfs-tools/hooks/network_setup.hook
+sudo cp files/scripts/network_setup /etc/initramfs-tools/hooks/network_setup
 
 # Make the scripts executable
-RUN chmod +x /etc/initramfs-tools/scripts/init-premount/network_setup.sh
-RUN chmod +x /etc/initramfs-tools/hooks/network_setup.hook
+sudo chmod +x /etc/initramfs-tools/scripts/init-premount/network_setup.sh
+sudo chmod +x /etc/initramfs-tools/hooks/network_setup
 
 # Copy vmcore-sysctl.conf to add more vmcore dump flags to kernel
 sudo cp files/image_config/kdump/vmcore-sysctl.conf $FILESYSTEM_ROOT/etc/sysctl.d/
