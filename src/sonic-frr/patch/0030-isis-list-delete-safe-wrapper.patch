@@ -1,0 +1,82 @@
+diff --git a/isisd/isisd.h b/isisd/isisd.h
+old mode 100644
+new mode 100755
+index 7f8474a5f..27f0248a5
+--- a/isisd/isisd.h
++++ b/isisd/isisd.h
+@@ -25,6 +25,7 @@
+ 
+ #include "vty.h"
+ #include "memory.h"
++#include "linklist.h"
+ 
+ #include "isisd/isis_constants.h"
+ #include "isisd/isis_common.h"
+@@ -73,6 +74,9 @@ extern void isis_cli_init(void);
+ 		all_vrf = strmatch(vrf_name, "all");                           \
+ 	}
+ 
++// ISU2024032541096, Use list_delete wrapper func point to list_delete_safe
++#define list_delete(LIST_A) list_delete_safe(LIST_A)
++
+ extern struct zebra_privs_t isisd_privs;
+ 
+ /* uncomment if you are a developer in bug hunt */
+diff --git a/lib/linklist.c b/lib/linklist.c
+old mode 100644
+new mode 100755
+index 8137b68d8..ad8246e73
+--- a/lib/linklist.c
++++ b/lib/linklist.c
+@@ -304,6 +304,33 @@ void *listnode_head(struct list *list)
+ 	return NULL;
+ }
+ 
++// ISU2024032541096, Use list_delete wrapper func point to list_delete_safe
++void list_delete_all_node_safe(struct list *list)
++{
++	struct listnode *node;
++	struct listnode *next;
++
++	assert(list);
++	for (node = list->head; node; node = next) {
++		next = node->next;
++		if (*list->del)
++			(*list->del)(node->data);
++		listnode_free(list, node);
++		list->head = next;
++		list->count--;
++	}
++	list->head = list->tail = NULL;
++	list->count = 0;
++}
++
++void list_delete_safe(struct list **list)
++{
++	assert(*list);
++	list_delete_all_node_safe(*list);
++	list_free_internal(*list);
++	*list = NULL;
++}
++
+ void list_delete_all_node(struct list *list)
+ {
+ 	struct listnode *node;
+diff --git a/lib/linklist.h b/lib/linklist.h
+old mode 100644
+new mode 100755
+index 145214521..0e75e5e83
+--- a/lib/linklist.h
++++ b/lib/linklist.h
+@@ -258,6 +258,11 @@ extern void list_sort(struct list *list,
+  */
+ void **list_to_array(struct list *list, void **arr, size_t arrlen);
+ 
++
++// ISU2024032541096, Use list_delete wrapper func point to list_delete_safe
++extern void list_delete_all_node_safe(struct list *list);
++extern void list_delete_safe(struct list **plist);
++
+ /*
+  * Delete a list and NULL its pointer.
+  *
