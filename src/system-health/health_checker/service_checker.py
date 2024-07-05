@@ -268,13 +268,15 @@ class ServiceChecker(HealthChecker):
         :return:
         """
 
-        if not os.path.exists(ServiceChecker.SOCKET_PATH):
-            logger.log_warning('monit service socket connection is not ready ...')
-            return
-
         output = utils.run_command(ServiceChecker.CHECK_MONIT_SERVICE_CMD)
         if not output or output.strip() != 'active':
             self.set_object_not_ok('Service', 'monit', 'monit service is not running')
+            return
+
+        # Before executing any Monit-related commands, it is necessary to check if the monit socket is ready.
+        # Although it is not possible to completely avoid the scenario where the Monit socket still exists after the check, the probability of this happening is very low.
+        if not os.path.exists(ServiceChecker.SOCKET_PATH):
+            logger.log_warning('monit service socket connection is not ready ...')
             return
 
         output = utils.run_command(ServiceChecker.CHECK_CMD)
