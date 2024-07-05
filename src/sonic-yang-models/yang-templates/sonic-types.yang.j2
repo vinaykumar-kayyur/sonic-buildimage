@@ -385,6 +385,11 @@ module sonic-types {
             enum off;
         }
     }
+    typedef asic_name {
+        type string {
+            pattern '[Aa][Ss][Ii][Cc][0-9]{1,2}';
+        }
+    }
 
     {% if yang_model_type == "cvl" %}
     /* Required for CVL */
