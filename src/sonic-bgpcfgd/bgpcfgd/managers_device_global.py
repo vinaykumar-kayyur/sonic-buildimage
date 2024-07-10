@@ -149,8 +149,8 @@ class DeviceGlobalCfgMgr(Manager):
             log_err("W-ECMP: invalid value({}) is provided".format(status))
             return False
 
-        if status == "cummulative":
-            log_notice("DeviceGlobalCfgMgr:: Enabling W-ECMP with cummulative...")
+        if status == "cumulative":
+            log_notice("DeviceGlobalCfgMgr:: Enabling W-ECMP with cumulative...")
         elif status == "num_multipaths":
             log_notice("DeviceGlobalCfgMgr:: Enabling W-ECMP with num_multipath...")
         elif status.isdigit() and (1 <= int(status) <= 25600):

@@ -228,9 +228,9 @@ def test_tsa_neg(mock_get_chassis_tsa_status, mocked_log_err, value):
 @pytest.mark.parametrize(
     "value,result", [
         pytest.param(
-            "cummulative",
-            get_string_from_file("/wcmp.cummulative.conf", WCMP_BASE_PATH),
-            id="cummulative"
+            "cumulative",
+            get_string_from_file("/wcmp.cumulative.conf", WCMP_BASE_PATH),
+            id="cumulative"
         ),
         pytest.param(
             "num_multipaths",
@@ -255,7 +255,7 @@ def test_wcmp(mocked_log_info, value, result):
     m.cfg_mgr.changes = ""
     if value == "false":
         # By default feature is disabled. Simulate enabled state
-        m.directory.put(m.db_name, m.table_name, "wcmp_enabled", "cummulative")
+        m.directory.put(m.db_name, m.table_name, "wcmp_enabled", "cumulative")
     res = m.set_handler("STATE", {"wcmp_enabled": value})
     assert res, "Expect True return value for set_handler"
     mocked_log_info.assert_called_with("DeviceGlobalCfgMgr::Done")
