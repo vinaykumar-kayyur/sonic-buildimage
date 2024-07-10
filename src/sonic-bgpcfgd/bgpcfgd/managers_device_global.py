@@ -12,6 +12,7 @@ class DeviceGlobalCfgMgr(Manager):
     TSA_DEFAULTS = "false"
     WCMP_DEFAULTS = "false"
     IDF_DEFAULTS = "unisolated"
+    BANDWIDTH_DEFAULTS = "ignore"
 
     def __init__(self, common_objs, db, table):
         """
@@ -47,6 +48,9 @@ class DeviceGlobalCfgMgr(Manager):
         # By default IDF feature is unisolated
         if not self.directory.path_exist(self.db_name, self.table_name, "idf_isolation_state"):
             self.directory.put(self.db_name, self.table_name, "idf_isolation_state", self.IDF_DEFAULTS)
+        # By default bestpath for bandwidth feature is ignore
+        if not self.directory.path_exist(self.db_name, self.table_name, "bestpath_bandwidth"):
+            self.directory.put(self.db_name, self.table_name, "bestpath_bandwidth", self.BANDWIDTH_DEFAULTS)
 
     def on_switch_type_change(self):
         log_debug("DeviceGlobalCfgMgr:: Switch type update handler")
@@ -70,6 +74,8 @@ class DeviceGlobalCfgMgr(Manager):
         self.configure_wcmp(data)
         # IDF configuration
         self.configure_idf(data)
+        # Bandwidth configuration
+        self.configure_bandwidth(data)
 
         return True
 
@@ -82,6 +88,8 @@ class DeviceGlobalCfgMgr(Manager):
         self.configure_wcmp()
         # IDF configuration
         self.configure_idf()
+        # Bandwidth configuration
+        self.configure_bandwidth()
 
         return True
 
@@ -141,7 +149,52 @@ class DeviceGlobalCfgMgr(Manager):
                 self.directory.put(self.db_name, self.table_name, "idf_isolation_state", state)
         else:
             log_notice("DeviceGlobalCfgMgr:: IDF configuration is up-to-date")
-
+    
+    def configure_bandwidth(self, data=None):
+        """Configure bestpath for bandwidth feature"""
+        
+        state = self.BANDWIDTH_DEFAULTS
+        
+        if data is not None:
+            if "bestpath_bandwidth" in data:
+                state = data["bestpath_bandwidth"]
+        
+        if self.is_update_required("bestpath_bandwidth", state):
+            if self.set_bandwidth(state):
+                self.directory.put(self.db_name, self.table_name, "bestpath_bandwidth", state)
+        else:
+            log_notice("DeviceGlobalCfgMgr:: Bestpath for bandwidth configuration is up-to-date")
+            
+    def set_bandwidth(self, status):
+        """API to configure bestpath for bandwidth"""
+        
+        bgp_asn = self.directory.get_slot("CONFIG_DB", swsscommon.CFG_DEVICE_METADATA_TABLE_NAME)["localhost"]["bgp_asn"]
+        cmd_list = []
+        
+        if status not in ["ignore", "active", "skip-missing", "default-weight-for-missing"]:
+            log_err("Bestpath for bandwidth: invalid value({}) is provided".format(status))
+            return False
+        
+        cmd_list.append("router bgp %s" % bgp_asn)
+        
+        if status == "ignore":
+            cmd_list.append(" bgp bestpath bandwidth ignore")
+        elif status == "active":
+            cmd_list.append(" no bgp bestpath bandwidth")
+        elif status == "skip-missing":
+            cmd_list.append(" bgp bestpath bandwidth skip-missing")
+        elif status == "default-weight-for-missing":
+            cmd_list.append(" bgp bestpath bandwidth default-weight-for-missing")
+        else:
+            return False
+        
+        
+        self.cfg_mgr.push_list(cmd_list)
+        
+        log_debug("DeviceGlobalCfgMgr::Done")
+        
+        return True        
+        
     def set_wcmp(self, status):
         """ API to set/unset W-ECMP """
 

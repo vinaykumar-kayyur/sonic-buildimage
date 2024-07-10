@@ -29,7 +29,7 @@ global_constants = {
 # Helpers -------------------------------------------------------------------------------------------------------------
 #
 
-def constructor(check_internal=False):
+def constructor(check_internal=False, bgp_asn=False):
     cfg_mgr = MagicMock()
     def get_text():
         text = []
@@ -46,11 +46,14 @@ def constructor(check_internal=False):
             cfg_mgr.changes = get_string_from_file("/result_all.conf")
     def push(cfg):
         cfg_mgr.changes += cfg + "\n"
+    def push_list(commands):
+        cfg_mgr.changes = commands
     def get_config():
         return cfg_mgr.changes
     cfg_mgr.get_text = get_text
     cfg_mgr.update = update
     cfg_mgr.push = push
+    cfg_mgr.push_list = push_list
     cfg_mgr.get_config = get_config
 
     constants = deepcopy(global_constants)
@@ -61,6 +64,8 @@ def constructor(check_internal=False):
         'constants': constants
     }
     mgr = bgpcfgd.managers_device_global.DeviceGlobalCfgMgr(common_objs, "CONFIG_DB", swsscommon.CFG_BGP_DEVICE_GLOBAL_TABLE_NAME)
+    if bgp_asn:
+        mgr.directory.put("CONFIG_DB", swsscommon.CFG_DEVICE_METADATA_TABLE_NAME, "localhost", {"bgp_asn": "65100"})
     cfg_mgr.update()
     return mgr
 
@@ -312,3 +317,56 @@ def test_idf_neg(mocked_log_err, value):
     res = m.set_handler("STATE", {"idf_isolation_state": value})
     assert res, "Expect True return value for set_handler"
     mocked_log_err.assert_called_with("IDF: invalid value({}) is provided".format(value))
+    
+#
+# Bestpath for Bandwidth -----------------------------------------------------------------------------------------------------------------
+#
+
+@pytest.mark.parametrize(
+    "value,result", [
+        pytest.param(
+            "ignore",
+            ["bgp router 65100", " bgp bestpath bandwidth ignore"],
+            id="ignore"
+        ),
+        pytest.param(
+            "active",
+            ["bgp router 65100", " no bgp bestpath bandwidth"],
+            id="active"
+        ),
+        pytest.param(
+            "skip-missing",
+            ["bgp router 65100", " bgp bestpath bandwidth skip-missing"],
+            id="skip-missing"
+        ),
+        pytest.param(
+            "default-weight-for-missing",
+            ["bgp router 65100", " bgp bestpath bandwidth default-weight-for-missing"],
+            id="default-weight-for-missing"
+        ),
+    ]
+)
+@patch('bgpcfgd.managers_device_global.log_debug')
+def test_bandwidth(mocked_log_info, value, result):
+    m = constructor(bgp_asn=True)
+    m.cfg_mgr.changes = ""
+    if value == "ignore":
+        # By default feature is ignore. Simulate active state
+        m.directory.put(m.db_name, m.table_name, "bestpath_bandwidth", "active")
+        
+    res = m.set_handler("STATE", {"bestpath_bandwidth": value})
+    assert res, "Expect True return value for set_handler"
+    mocked_log_info.assert_called_with("DeviceGlobalCfgMgr::Done")
+    assert m.cfg_mgr.get_config() in result
+
+@pytest.mark.parametrize(
+    "value", [ "invalid_value" ]
+)
+@patch('bgpcfgd.managers_device_global.log_err')
+def test_bandwidth_neg(mocked_log_err, value):
+    m = constructor(bgp_asn=True)
+    m.cfg_mgr.changes = ""
+    res = m.set_handler("STATE", {"bestpath_bandwidth": value})
+    assert res, "Expect True return value for set_handler"
+    mocked_log_err.assert_called_with("Bestpath for bandwidth: invalid value({}) is provided".format(value))
+
