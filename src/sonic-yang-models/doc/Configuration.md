@@ -421,15 +421,15 @@ When **tsa_enabled** is set to true, the device is isolated using traffic-shift-
     }
 }
 ```
-
-When **wcmp_enabled** is set to true, the device is configured to use BGP Link Bandwidth Extended Community.  
+  
 Weighted ECMP load balances traffic between the equal cost paths in proportion to the capacity of the local links.
+The W-ECMP state **wcmp_enabled** could be one of cumulative, num_multipaths, disabled, or [WEIGHT].
 
 ```json
 {
 "BGP_DEVICE_GLOBAL": {
     "STATE": {
-        "wcmp_enabled": "true"
+        "wcmp_enabled": "cumulative"
     }
 }
 ```
