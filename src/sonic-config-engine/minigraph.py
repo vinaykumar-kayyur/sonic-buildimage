@@ -2833,7 +2833,10 @@ def parse_device_desc_xml(filename):
 
     results['LOOPBACK_INTERFACE'] = {('lo', lo_prefix): {}}
     if lo_prefix_v6:
-        results['LOOPBACK_INTERFACE'] = {('lo_v6', lo_prefix_v6): {}}
+        results['LOOPBACK_INTERFACE'] = {
+            ('lo_v6', lo_prefix_v6): {},
+            ('lo_v6'): {}
+        }
 
     results['MGMT_INTERFACE'] = {}
     if mgmt_prefix:
