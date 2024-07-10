@@ -90,10 +90,10 @@
         "desc": "Load bgp device global table with bestpath_bandwidth set to active"
     },
     "BGP_DEVICE_GLOBAL_WITH_BESTPATH_BANDWIDTH_TEST_3": {
-        "desc": "Load bgp device global table with bestpath_bandwidth set to skip-missing"
+        "desc": "Load bgp device global table with bestpath_bandwidth set to skip_missing"
     },
     "BGP_DEVICE_GLOBAL_WITH_BESTPATH_BANDWIDTH_TEST_4": {
-        "desc": "Load bgp device global table with bestpath_bandwidth set to default-weight-for-missing"
+        "desc": "Load bgp device global table with bestpath_bandwidth set to default_weight_for_missing"
     },
     "BGP_DEVICE_GLOBAL_WITH_BESTPATH_BANDWIDTH_INVALID_VALUE": {
         "desc": "Load bgp device global table with bestpath_bandwidth set to invalid value",

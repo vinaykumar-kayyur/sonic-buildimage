@@ -68,10 +68,10 @@ module sonic-bgp-device-global {
                         enum active {
                             description "Allow for normal behavior without bestpath for bandwidth";
                         }
-                        enum skip-missing {
+                        enum skip_missing {
                             description "Ignore paths without link bandwidth for W-ECMP (if other paths have it)";
                         }
-                        enum default-weight-for-missing {
+                        enum default_weight_for_missing {
                             description "Assign a low default weight (value 1) to paths not having link bandwidth";
                         }
                     }

@@ -143,7 +143,7 @@
         "sonic-bgp-device-global:sonic-bgp-device-global": {
             "sonic-bgp-device-global:BGP_DEVICE_GLOBAL": {
                 "STATE":{
-                    "bestpath_bandwidth": "skip-missing"
+                    "bestpath_bandwidth": "skip_missing"
                 }
             }
         }
@@ -152,7 +152,7 @@
         "sonic-bgp-device-global:sonic-bgp-device-global": {
             "sonic-bgp-device-global:BGP_DEVICE_GLOBAL": {
                 "STATE":{
-                    "bestpath_bandwidth": "default-weight-for-missing"
+                    "bestpath_bandwidth": "default_weight_for_missing"
                 }
             }
         }
