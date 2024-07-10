@@ -41,7 +41,7 @@ module sonic-bgp-device-global {
                     description "Configures device W-ECMP state";
                     type union {
                         type enumeration {
-                            enum cummulative {
+                            enum cumulative {
                                 description "Cumulative bandwidth of all multipaths";
                             }
                             enum num_multipaths {

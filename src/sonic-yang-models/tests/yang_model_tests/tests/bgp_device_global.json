@@ -28,8 +28,8 @@
             "value": false
         }
     },
-    "BGP_DEVICE_GLOBAL_WITH_WCMP_CUMMULATIVE": {
-        "desc": "Load bgp device global table with wcmp_enabled set to cummulative"
+    "BGP_DEVICE_GLOBAL_WITH_WCMP_CUMULATIVE": {
+        "desc": "Load bgp device global table with wcmp_enabled set to cumulative"
     },
     "BGP_DEVICE_GLOBAL_WITH_WCMP_MULTIPATH": {
         "desc": "Load bgp device global table with wcmp_enabled set to num_multipaths"
