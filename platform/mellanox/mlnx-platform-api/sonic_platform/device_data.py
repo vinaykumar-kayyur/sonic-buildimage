@@ -21,6 +21,8 @@ import time
 
 from . import utils
 
+DEFAULT_WD_PERIOD = 65535
+
 DEVICE_DATA = {
     'x86_64-mlnx_msn2700-r0': {
         'thermal': {
@@ -54,6 +56,9 @@ DEVICE_DATA = {
                 "cpu_pack": False,
                 "comex_amb": False
             }
+        },
+        'watchdog': {
+            "max_period": 32
         }
     },
     'x86_64-mlnx_msn2410-r0': {
@@ -69,6 +74,9 @@ DEVICE_DATA = {
                 "cpu_pack": False,
                 "comex_amb": False
             }
+        },
+        'watchdog': {
+            "max_period": 32
         }
     },
     'x86_64-mlnx_msn4700_simx-r0': {
@@ -118,6 +126,9 @@ DEVICE_DATA = {
                 "comex_amb": False,
                 "pch_temp": True
             }
+        },
+        'sfp': {
+            'fw_control_ports': [64, 65]  # 0 based sfp index list
         }
     },
     'x86_64-nvidia_sn5600-r0': {
@@ -126,6 +137,9 @@ DEVICE_DATA = {
                 "comex_amb": False,
                 "pch_temp": True
             }
+        },
+        'sfp': {
+            'fw_control_ports': [64]  # 0 based sfp index list
         }
     },
     'x86_64-nvidia_sn4280_simx-r0': {
@@ -259,12 +273,14 @@ class DeviceDataManager:
     @classmethod
     @utils.read_only_cache()
     def is_module_host_management_mode(cls):
-        from sonic_py_common import device_info
-        _, hwsku_dir = device_info.get_paths_to_platform_and_hwsku_dirs()
-        sai_profile_file = os.path.join(hwsku_dir, 'sai.profile')
+        sai_profile_file = '/tmp/sai.profile'
+        if not os.path.exists(sai_profile_file):
+            from sonic_py_common import device_info
+            _, hwsku_dir = device_info.get_paths_to_platform_and_hwsku_dirs()
+            sai_profile_file = os.path.join(hwsku_dir, 'sai.profile')
         data = utils.read_key_value_file(sai_profile_file, delimeter='=')
         return data.get('SAI_INDEPENDENT_MODULE_MODE') == '1'
-    
+
     @classmethod
     def wait_platform_ready(cls):
         """
@@ -284,3 +300,29 @@ class DeviceDataManager:
             for sysfs_node in sysfs_nodes:
                 conditions.append(lambda: os.path.exists(f'/sys/module/sx_core/asic0/module{sfp_index}/{sysfs_node}'))
         return utils.wait_until_conditions(conditions, 300, 1)
+
+    @classmethod
+    @utils.read_only_cache()
+    def get_watchdog_max_period(cls):
+        platform_data = DEVICE_DATA.get(cls.get_platform_name(), None)
+        if not platform_data:
+            return DEFAULT_WD_PERIOD
+
+        watchdog_data = platform_data.get('watchdog', None)
+        if not watchdog_data:
+            return DEFAULT_WD_PERIOD
+
+        return watchdog_data.get('max_period', None)
+    
+    @classmethod
+    @utils.read_only_cache()
+    def get_always_fw_control_ports(cls):
+        platform_data = DEVICE_DATA.get(cls.get_platform_name())
+        if not platform_data:
+            return None
+        
+        sfp_data = platform_data.get('sfp')
+        if not sfp_data:
+            return None
+        
+        return sfp_data.get('fw_control_ports')

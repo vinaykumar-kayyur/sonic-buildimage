@@ -24,9 +24,6 @@ def run_test(name, template_path, json_path, match_path):
     with open(match_path) as result_fp:
         raw_saved_result = result_fp.read()
     canonical_saved_result = ConfigMgr.to_canonical(raw_saved_result)
-    print(canonical_generated_result)
-    print("----")
-    print(canonical_saved_result)
     assert canonical_saved_result == canonical_generated_result, "Test %s" % name
 
 
@@ -65,6 +62,24 @@ def test_bgpd_lo_ipv6_conf_base():
              "bgpd/bgpd.main.conf.j2",
              "bgpd.main.conf.j2/base.json",
              "bgpd.main.conf.j2/base.conf")
+
+def test_idf_isolated_no_export():
+    run_test("IDF isolation with no export",
+             "bgpd/idf_isolate/idf_isolate.conf.j2",
+             "idf_isolate/idf_isolated_no_export.json",
+             "idf_isolate/idf_isolated_no_export.conf")
+
+def test_idf_isolated_withdraw_all():
+    run_test("IDF isolation withdraw all",
+             "bgpd/idf_isolate/idf_isolate.conf.j2",
+             "idf_isolate/idf_isolated_withdraw_all.json",
+             "idf_isolate/idf_isolated_withdraw_all.conf")
+
+def test_idf_unisolated():
+    run_test("IDF unisolated",
+             "bgpd/idf_isolate/idf_unisolate.conf.j2",
+             "idf_isolate/idf_unisolated.json",
+             "idf_isolate/idf_unisolated.conf")
 
 def test_tsa_isolate():
     run_test("tsa/bgpd.tsa.isolate.conf.j2",

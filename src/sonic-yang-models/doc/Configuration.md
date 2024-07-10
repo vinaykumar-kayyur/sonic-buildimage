@@ -384,6 +384,7 @@ The **BGP_BBR** table contains device-level BBR state.
         }
 }
 ```
+
 ### ASIC SDK health event
 
 ASIC/SDK health event related configuration is defined in **SUPPRESS_ASIC_SDK_HEALTH_EVENT** table.
@@ -407,12 +408,12 @@ ASIC/SDK health event related configuration is defined in **SUPPRESS_ASIC_SDK_HE
 
 ### BGP Device Global
 
-The **BGP_DEVICE_GLOBAL** table contains device-level BGP global state.
-It has a STATE object containing device state like **tsa_enabled**
-which is set to true if device is currently isolated using
-traffic-shift-away (TSA) route-maps in BGP
+The **BGP_DEVICE_GLOBAL** table contains device-level BGP global state.  
+It has a STATE object containing device state like **tsa_enabled**, **wcmp_enabled** and **idf_isolation_state**.
 
-```
+When **tsa_enabled** is set to true, the device is isolated using traffic-shift-away (TSA) route-maps in BGP.
+
+```json
 {
 "BGP_DEVICE_GLOBAL": {
     "STATE": {
@@ -420,6 +421,30 @@ traffic-shift-away (TSA) route-maps in BGP
     }
 }
 ```
+
+When **wcmp_enabled** is set to true, the device is configured to use BGP Link Bandwidth Extended Community.  
+Weighted ECMP load balances traffic between the equal cost paths in proportion to the capacity of the local links.
+
+```json
+{
+"BGP_DEVICE_GLOBAL": {
+    "STATE": {
+        "wcmp_enabled": "true"
+    }
+}
+```
+
+The IDF isolation state **idf_isolation_state** could be one of isolated_no_export, isolated_withdraw_all or unisolated.
+
+```json
+{
+"BGP_DEVICE_GLOBAL": {
+    "STATE": {
+        "idf_isolation_state": "isolated_no_export"
+    }
+}
+```
+
 ### BGP Sessions
 
 BGP session configuration is defined in **BGP_NEIGHBOR** table. BGP
@@ -2072,6 +2097,27 @@ key - name
 | collector_port | Destination L4 port of the Sflow collector                                              |             | 6343      |             |
 | collector_vrf  | Specify the Collector VRF. In this revision, it is either default VRF or Management VRF.|             |           |             |
 
+### Storage Monitoring Daemon Interval Configuration
+
+These options are used to configure the daemon polling and sync-to-disk interval
+of the Storage Monitoring Daemon (stormond)
+
+**Config Sample**
+```
+{
+    "STORMOND_CONFIG": {
+        "INTERVALS": {
+            "daemon_polling_interval" : "60",
+            "fsstats_sync_interval"   : "360"
+        }
+    }
+}
+```
+
+*   `daemon_polling_interval` - Determines how often stormond queries the disk for relevant information and posts to STATE_DB
+*   `fsstats_sync_interval`   - Determines how often key information from the STATE_DB is synced to a file on disk
+
+
 ### Syslog Global Configuration
 
 These configuration options are used to configure rsyslog utility and the way
@@ -2487,7 +2533,8 @@ VXLAN_EVPN_NVO holds the VXLAN_TUNNEL object to be used for BGP-EVPN discovered 
 {
 "VXLAN_TUNNEL": {
         "vtep1": {
-            "src_ip": "10.10.10.10"
+            "src_ip": "10.10.10.10",
+            "dst_ip": "12.12.12.12"
         }
   }
 "VXLAN_TUNNEL_MAP" : {
