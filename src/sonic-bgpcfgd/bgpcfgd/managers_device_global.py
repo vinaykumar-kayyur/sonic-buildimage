@@ -145,19 +145,23 @@ class DeviceGlobalCfgMgr(Manager):
     def set_wcmp(self, status):
         """ API to set/unset W-ECMP """
 
-        if status not in ["true", "false"]:
+        if status not in ["cumulative", "num-multipaths", "false"] and (not status.isdigit() or not (1 <= int(status) <= 25600)):
             log_err("W-ECMP: invalid value({}) is provided".format(status))
             return False
 
-        if status == "true":
-            log_notice("DeviceGlobalCfgMgr:: Enabling W-ECMP...")
+        if status == "cummulative":
+            log_notice("DeviceGlobalCfgMgr:: Enabling W-ECMP with cummulative...")
+        elif status == "num-multipaths":
+            log_notice("DeviceGlobalCfgMgr:: Enabling W-ECMP with num-multipath...")
+        elif status.isdigit() and (1 <= int(status) <= 25600):
+            log_notice("DeviceGlobalCfgMgr:: Enabling W-ECMP with weight...")
         else:
             log_notice("DeviceGlobalCfgMgr:: Disabling W-ECMP...")
 
         cmd = "\n"
 
         try:
-            cmd += self.wcmp_template.render(wcmp_enabled=status)
+            cmd += self.wcmp_template.render(wcmp_status=status)
         except jinja2.TemplateError as e:
             msg = "W-ECMP: error in template rendering"
             log_err("%s: %s" % (msg, str(e)))

@@ -2,8 +2,12 @@
 ! template: bgpd/wcmp/bgpd.wcmp.conf.j2
 !
 route-map CHECK_WCMP_ENABLED permit 100
-{%- if wcmp_enabled == 'true' %}
+{%- if wcmp_status == 'cumulative' %}
+  set extcommunity bandwidth cumulative
+{%- elif wcmp_status == 'num-multipaths' %}
   set extcommunity bandwidth num-multipaths
+{%- elif wcmp_status.isdigit() and 1 <= int(wcmp_status) <= 25600 %}
+  set extcommunity bandwidth {{ wcmp_status }}
 {%- else %}
   no set extcommunity bandwidth
 {%- endif %}
