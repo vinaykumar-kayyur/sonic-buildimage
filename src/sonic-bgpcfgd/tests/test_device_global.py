@@ -335,14 +335,14 @@ def test_idf_neg(mocked_log_err, value):
             id="active"
         ),
         pytest.param(
-            "skip-missing",
+            "skip_missing",
             ["bgp router 65100", " bgp bestpath bandwidth skip-missing"],
-            id="skip-missing"
+            id="skip_missing"
         ),
         pytest.param(
-            "default-weight-for-missing",
+            "default_weight_for_missing",
             ["bgp router 65100", " bgp bestpath bandwidth default-weight-for-missing"],
-            id="default-weight-for-missing"
+            id="default_weight_for_missing"
         ),
     ]
 )

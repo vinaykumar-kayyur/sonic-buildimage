@@ -171,7 +171,7 @@ class DeviceGlobalCfgMgr(Manager):
         bgp_asn = self.directory.get_slot("CONFIG_DB", swsscommon.CFG_DEVICE_METADATA_TABLE_NAME)["localhost"]["bgp_asn"]
         cmd_list = []
         
-        if status not in ["ignore", "active", "skip-missing", "default-weight-for-missing"]:
+        if status not in ["ignore", "active", "skip_missing", "default_weight_for_missing"]:
             log_err("Bestpath for bandwidth: invalid value({}) is provided".format(status))
             return False
         
@@ -181,9 +181,9 @@ class DeviceGlobalCfgMgr(Manager):
             cmd_list.append(" bgp bestpath bandwidth ignore")
         elif status == "active":
             cmd_list.append(" no bgp bestpath bandwidth")
-        elif status == "skip-missing":
+        elif status == "skip_missing":
             cmd_list.append(" bgp bestpath bandwidth skip-missing")
-        elif status == "default-weight-for-missing":
+        elif status == "default_weight_for_missing":
             cmd_list.append(" bgp bestpath bandwidth default-weight-for-missing")
         else:
             return False
