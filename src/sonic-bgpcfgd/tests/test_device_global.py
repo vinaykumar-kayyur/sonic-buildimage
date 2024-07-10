@@ -233,7 +233,7 @@ def test_tsa_neg(mock_get_chassis_tsa_status, mocked_log_err, value):
             id="cummulative"
         ),
         pytest.param(
-            "num-multipaths",
+            "num_multipaths",
             get_string_from_file("/wcmp.multipath.conf", WCMP_BASE_PATH),
             id="multipath"
         ),

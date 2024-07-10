@@ -145,14 +145,14 @@ class DeviceGlobalCfgMgr(Manager):
     def set_wcmp(self, status):
         """ API to set/unset W-ECMP """
 
-        if status not in ["cumulative", "num-multipaths", "false"] and (not status.isdigit() or not (1 <= int(status) <= 25600)):
+        if status not in ["cumulative", "num_multipaths", "false"] and (not status.isdigit() or not (1 <= int(status) <= 25600)):
             log_err("W-ECMP: invalid value({}) is provided".format(status))
             return False
 
         if status == "cummulative":
             log_notice("DeviceGlobalCfgMgr:: Enabling W-ECMP with cummulative...")
-        elif status == "num-multipaths":
-            log_notice("DeviceGlobalCfgMgr:: Enabling W-ECMP with num-multipath...")
+        elif status == "num_multipaths":
+            log_notice("DeviceGlobalCfgMgr:: Enabling W-ECMP with num_multipath...")
         elif status.isdigit() and (1 <= int(status) <= 25600):
             log_notice("DeviceGlobalCfgMgr:: Enabling W-ECMP with weight...")
         else:
