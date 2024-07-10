@@ -42,11 +42,29 @@
             }
         }
     },
-    "BGP_DEVICE_GLOBAL_WITH_WCMP_ENABLED": {
+    "BGP_DEVICE_GLOBAL_WITH_WCMP_CUMMULATIVE": {
         "sonic-bgp-device-global:sonic-bgp-device-global": {
             "sonic-bgp-device-global:BGP_DEVICE_GLOBAL": {
                 "STATE": {
-                    "wcmp_enabled": "true"
+                    "wcmp_enabled": "cummulative"
+                }
+            }
+        }
+    },
+    "BGP_DEVICE_GLOBAL_WITH_WCMP_MULTIPATH": {
+        "sonic-bgp-device-global:sonic-bgp-device-global": {
+            "sonic-bgp-device-global:BGP_DEVICE_GLOBAL": {
+                "STATE": {
+                    "wcmp_enabled": "num_multipaths"
+                }
+            }
+        }
+    },
+    "BGP_DEVICE_GLOBAL_WITH_WCMP_WEIGHT": {
+        "sonic-bgp-device-global:sonic-bgp-device-global": {
+            "sonic-bgp-device-global:BGP_DEVICE_GLOBAL": {
+                "STATE": {
+                    "wcmp_enabled": "5"
                 }
             }
         }

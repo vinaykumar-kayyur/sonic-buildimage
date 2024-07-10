@@ -38,8 +38,24 @@ module sonic-bgp-device-global {
                 }
 
                 leaf wcmp_enabled {
-                    description "Enables/Disables Weighted-Equal Cost-Multipath using BGP link bandwidth";
-                    type boolean;
+                    description "Configures device W-ECMP state";
+                    type union {
+                        type enumeration {
+                            enum cummulative {
+                                description "Cumulative bandwidth of all multipaths";
+                            }
+                            enum num_multipaths {
+                                description "Internally computed bandwidth based on number of multipaths";
+                            }
+                            enum false {
+                                description "Disable W-ECMP using BGP link bandwidth";
+                            }
+                        }
+                        type uint16 {
+                            range "1..25600";
+                            description "A value between 1 and 25600 to be advertised through BGP link bandwidth";
+                        }
+                    }
                     default "false";
                 }
 
