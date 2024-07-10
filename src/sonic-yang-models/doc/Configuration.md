@@ -445,6 +445,17 @@ The IDF isolation state **idf_isolation_state** could be one of isolated_no_expo
 }
 ```
 
+The bestpath for bandwidth state **bestpath_bandwidth** could be one of ignore, active, skip-missing, or default-weight-for-missing.
+
+```json
+{
+"BGP_DEVICE_GLOBAL": {
+    "STATE": {
+        "bestpath_bandwidth": "ignore"
+    }
+}
+```
+
 ### BGP Sessions
 
 BGP session configuration is defined in **BGP_NEIGHBOR** table. BGP

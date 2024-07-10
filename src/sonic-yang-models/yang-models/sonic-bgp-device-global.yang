@@ -59,6 +59,25 @@ module sonic-bgp-device-global {
                     default "unisolated";
                 }
 
+                leaf bestpath_bandwidth {
+                    description "Configures device bestpath for bandwidth state";
+                    type enumeration {
+                        enum ignore {
+                            description "Ignore link bandwidth (i.e., do regular ECMP, not weighted)";
+                        }
+                        enum active {
+                            description "Allow for normal behavior without bestpath for bandwidth";
+                        }
+                        enum skip-missing {
+                            description "Ignore paths without link bandwidth for W-ECMP (if other paths have it)";
+                        }
+                        enum default-weight-for-missing {
+                            description "Assign a low default weight (value 1) to paths not having link bandwidth";
+                        }
+                    }
+                    default "ignore";
+                }
+
             }
             /* end of STATE container */
         }
