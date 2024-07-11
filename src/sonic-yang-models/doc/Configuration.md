@@ -445,13 +445,13 @@ The IDF isolation state **idf_isolation_state** could be one of isolated_no_expo
 }
 ```
 
-The bestpath for bandwidth state **bestpath_bandwidth** could be one of ignore, allow, skip_missing, or default_weight_for_missing.
+The bestpath for bandwidth state **received_bandwidth** could be one of ignore, allow, skip_missing, or default_weight_for_missing.
 
 ```json
 {
 "BGP_DEVICE_GLOBAL": {
     "STATE": {
-        "bestpath_bandwidth": "ignore"
+        "received_bandwidth": "ignore"
     }
 }
 ```
