@@ -25,7 +25,7 @@
         "verify": {
             "xpath": "/sonic-bgp-device-global:sonic-bgp-device-global/BGP_DEVICE_GLOBAL/STATE/wcmp_enabled",
             "key": "sonic-bgp-device-global:wcmp_enabled",
-            "value": false
+            "value": "false"
         }
     },
     "BGP_DEVICE_GLOBAL_WITH_WCMP_CUMULATIVE": {
