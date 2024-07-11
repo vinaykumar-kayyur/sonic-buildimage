@@ -326,22 +326,22 @@ def test_idf_neg(mocked_log_err, value):
     "value,result", [
         pytest.param(
             "ignore",
-            ["bgp router 65100", " bgp bestpath bandwidth ignore"],
+            ["router bgp 65100", " bgp bestpath bandwidth ignore"],
             id="ignore"
         ),
         pytest.param(
             "active",
-            ["bgp router 65100", " no bgp bestpath bandwidth"],
+            ["router bgp 65100", " no bgp bestpath bandwidth"],
             id="active"
         ),
         pytest.param(
             "skip_missing",
-            ["bgp router 65100", " bgp bestpath bandwidth skip-missing"],
+            ["router bgp 65100", " bgp bestpath bandwidth skip-missing"],
             id="skip_missing"
         ),
         pytest.param(
             "default_weight_for_missing",
-            ["bgp router 65100", " bgp bestpath bandwidth default-weight-for-missing"],
+            ["router bgp 65100", " bgp bestpath bandwidth default-weight-for-missing"],
             id="default_weight_for_missing"
         ),
     ]
