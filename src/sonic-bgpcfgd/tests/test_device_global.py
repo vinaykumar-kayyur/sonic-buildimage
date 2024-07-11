@@ -357,7 +357,7 @@ def test_bandwidth(mocked_log_info, value, result):
     res = m.set_handler("STATE", {"bestpath_bandwidth": value})
     assert res, "Expect True return value for set_handler"
     mocked_log_info.assert_called_with("DeviceGlobalCfgMgr::Done")
-    assert m.cfg_mgr.get_config() in result
+    assert m.cfg_mgr.get_config() == result
 
 @pytest.mark.parametrize(
     "value", [ "invalid_value" ]
