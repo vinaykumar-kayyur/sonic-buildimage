@@ -1179,7 +1179,7 @@ device:
 
         TM_ING_THD_HEADROOM_POOL:
             ?
-                BUFFER_POOL: 0
+                BUFFER_POOL: [0,1]
                 TM_HEADROOM_POOL_ID: [[0,3]]
             :
                 LIMIT_CELLS: 0
@@ -1258,14 +1258,14 @@ device:
     0:
         TM_ING_THD_HEADROOM_POOL:
             ?
-                BUFFER_POOL: 0
+                BUFFER_POOL: [0,1]
                 TM_HEADROOM_POOL_ID: [[0,3]]
             :
                 LIMIT_CELLS: 0
 
         TM_ING_THD_SERVICE_POOL:
             ?
-                BUFFER_POOL: 0
+                BUFFER_POOL: [0,1]
                 TM_ING_SERVICE_POOL_ID: [[0,3]]
             :
                 SHARED_LIMIT_CELLS: 0
@@ -1274,7 +1274,7 @@ device:
 
         TM_EGR_THD_SERVICE_POOL:
             ?
-                BUFFER_POOL: 0
+                BUFFER_POOL: [0,1]
                 TM_EGR_SERVICE_POOL_ID: [[0,3]]
             :
                 SHARED_LIMIT_CELLS: 0
@@ -1287,7 +1287,7 @@ device:
 
         TM_THD_MC_EGR_SERVICE_POOL:
             ?
-                BUFFER_POOL: 0
+                BUFFER_POOL: [0,1]
                 TM_EGR_SERVICE_POOL_ID: [[0,3]]
             :
                 SHARED_LIMIT_CELLS: 0
@@ -1577,21 +1577,21 @@ device:
     0:
         TM_ING_THD_HEADROOM_POOL:
             ?
-                BUFFER_POOL: 0
+                BUFFER_POOL: [0,1]
                 TM_HEADROOM_POOL_ID: 0
             :
                 LIMIT_CELLS: 45696
 
         TM_ING_THD_SERVICE_POOL:
             ?
-                BUFFER_POOL: 0
+                BUFFER_POOL: [0,1]
                 TM_ING_SERVICE_POOL_ID: 0
             :
                 SHARED_LIMIT_CELLS: 605
                 SHARED_RESUME_OFFSET_CELLS: 74
                 COLOR_SPECIFIC_LIMITS: 0
             ?
-                BUFFER_POOL: 0
+                BUFFER_POOL: [0,1]
                 TM_ING_SERVICE_POOL_ID: 1
             :
                 SHARED_LIMIT_CELLS: 605
@@ -1600,7 +1600,7 @@ device:
 
         TM_EGR_THD_SERVICE_POOL:
             ?
-                BUFFER_POOL: 0
+                BUFFER_POOL: [0,1]
                 TM_EGR_SERVICE_POOL_ID: 0
             :
                 SHARED_LIMIT_CELLS: 605
@@ -1611,7 +1611,7 @@ device:
                 RED_SHARED_LIMIT_CELLS: 48
                 RED_SHARED_RESUME_LIMIT_CELLS: 46
             ?
-                BUFFER_POOL: 0
+                BUFFER_POOL: [0,1]
                 TM_EGR_SERVICE_POOL_ID: 1
             :
                 SHARED_LIMIT_CELLS: 605
@@ -1624,7 +1624,7 @@ device:
 
         TM_THD_MC_EGR_SERVICE_POOL:
             ?
-                BUFFER_POOL: 0
+                BUFFER_POOL: [0,1]
                 TM_EGR_SERVICE_POOL_ID: 0
             :
                 SHARED_LIMIT_CELLS: 605
@@ -1635,7 +1635,7 @@ device:
                 RED_SHARED_LIMIT_CELLS: 46
                 RED_SHARED_RESUME_LIMIT_CELLS: 46
             ?
-                BUFFER_POOL: 0
+                BUFFER_POOL: [0,1]
                 TM_EGR_SERVICE_POOL_ID: 1
             :
                 SHARED_LIMIT_CELLS: 605

@@ -10,13 +10,18 @@
 {%- macro generate_buffer_pool_and_profiles() %}
     "BUFFER_POOL": {
         "ingress_lossless_pool": {
-            "size": "40000000",
+            "size": "37333333",
             "type": "ingress",
             "mode": "dynamic",
             "xoff": "16000000"
         },
+        "egress_lossy_pool": {
+            "size": "24000000",
+            "type": "egress",
+            "mode": "dynamic"
+        },
         "egress_lossless_pool": {
-            "size": "56000000",
+            "size": "31000000",
             "type": "egress",
             "mode": "static"
         }
