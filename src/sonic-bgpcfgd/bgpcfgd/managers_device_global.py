@@ -172,7 +172,7 @@ class DeviceGlobalCfgMgr(Manager):
         cmd_list = []
         
         if status not in ["ignore", "allow", "skip_missing", "default_weight_for_missing"]:
-            log_err("Received bandwidth for W-ECMP: invalid value({}) is provided".format(status))
+            log_err("Received Bandwidth for W-ECMP: invalid value({}) is provided".format(status))
             return False
         
         cmd_list.append("router bgp %s" % bgp_asn)
