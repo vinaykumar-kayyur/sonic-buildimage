@@ -74,30 +74,30 @@
         "eStrKey": "InvalidValue",
         "eStr": ["idf_isolation_state"]
     },
-    "BGP_DEVICE_GLOBAL_WITH_BESTPATH_BANDWIDTH_DEFAULT_VALUE": {
-        "desc": "Load bgp device global table with bestpath_bandwidth set to default value",
+    "BGP_DEVICE_GLOBAL_WITH_RECEIVED_BANDWIDTH_DEFAULT_VALUE": {
+        "desc": "Load bgp device global table with received_bandwidth set to default value",
         "eStrKey": "Verify",
         "verify": {
-            "xpath": "/sonic-bgp-device-global:sonic-bgp-device-global/BGP_DEVICE_GLOBAL/STATE/bestpath_bandwidth",
-            "key": "sonic-bgp-device-global:bestpath_bandwidth",
+            "xpath": "/sonic-bgp-device-global:sonic-bgp-device-global/BGP_DEVICE_GLOBAL/STATE/received_bandwidth",
+            "key": "sonic-bgp-device-global:received_bandwidth",
             "value": "ignore"
         }
     },
-    "BGP_DEVICE_GLOBAL_WITH_BESTPATH_BANDWIDTH_TEST_1": {
-        "desc": "Load bgp device global table with bestpath_bandwidth set to ignore"
+    "BGP_DEVICE_GLOBAL_WITH_RECEIVED_BANDWIDTH_TEST_1": {
+        "desc": "Load bgp device global table with received_bandwidth set to ignore"
     },
-    "BGP_DEVICE_GLOBAL_WITH_BESTPATH_BANDWIDTH_TEST_2": {
-        "desc": "Load bgp device global table with bestpath_bandwidth set to allow"
+    "BGP_DEVICE_GLOBAL_WITH_RECEIVED_BANDWIDTH_TEST_2": {
+        "desc": "Load bgp device global table with received_bandwidth set to allow"
     },
-    "BGP_DEVICE_GLOBAL_WITH_BESTPATH_BANDWIDTH_TEST_3": {
-        "desc": "Load bgp device global table with bestpath_bandwidth set to skip_missing"
+    "BGP_DEVICE_GLOBAL_WITH_RECEIVED_BANDWIDTH_TEST_3": {
+        "desc": "Load bgp device global table with received_bandwidth set to skip_missing"
     },
-    "BGP_DEVICE_GLOBAL_WITH_BESTPATH_BANDWIDTH_TEST_4": {
-        "desc": "Load bgp device global table with bestpath_bandwidth set to default_weight_for_missing"
+    "BGP_DEVICE_GLOBAL_WITH_RECEIVED_BANDWIDTH_TEST_4": {
+        "desc": "Load bgp device global table with received_bandwidth set to default_weight_for_missing"
     },
-    "BGP_DEVICE_GLOBAL_WITH_BESTPATH_BANDWIDTH_INVALID_VALUE": {
-        "desc": "Load bgp device global table with bestpath_bandwidth set to invalid value",
+    "BGP_DEVICE_GLOBAL_WITH_RECEIVED_BANDWIDTH_INVALID_VALUE": {
+        "desc": "Load bgp device global table with received_bandwidth set to invalid value",
         "eStrKey": "InvalidValue",
-        "eStr": ["bestpath_bandwidth"]
+        "eStr": ["received_bandwidth"]
     }
 }
