@@ -137,7 +137,8 @@ class TestVoqChassisSingleAsic(TestChassis):
             'sub_role': 'FrontEnd',
             'switch_type': 'voq',
             'switch_id': 20,
-            'max_cores': 64})
+            'max_cores': 64,
+            'slice_type': 'AZNG_Production'})
 
     def test_port(self):
         argument = ['-m', self.sample_graph, '-p',
@@ -432,7 +433,6 @@ class TestVoqChassisMultiAsic(TestChassis):
         output = json.loads(self.run_script(argument))
         print(output['localhost'])
         self.assertDictEqual(output['localhost'], {
-            'bgp_asn': None,
             'region': 'test',
             'cloudtype': 'Public',
             'docker_routing_config_mode': 'separated',
@@ -909,7 +909,6 @@ class TestVoqChassisSup(TestChassis):
         print(output['localhost'])
         self.assertDictEqual(output['localhost'], 
             {
-                "bgp_asn": None,
                 "region": "test",
                 "cloudtype": "Public",
                 "docker_routing_config_mode": "separated",
@@ -937,7 +936,6 @@ class TestVoqChassisSup(TestChassis):
         print(output['localhost'])
         self.assertDictEqual(output['localhost'], 
             {
-                "bgp_asn": None,
                 "region": "test",
                 "cloudtype": None,
                 "docker_routing_config_mode": "separated",
@@ -1045,7 +1043,6 @@ class TestPacketChassisSup(TestChassis):
         print(output['localhost'])
         self.assertDictEqual(output['localhost'], 
             {
-                "bgp_asn": None,
                 "region": "test",
                 "cloudtype": "Public",
                 "docker_routing_config_mode": "separated",
@@ -1073,7 +1070,6 @@ class TestPacketChassisSup(TestChassis):
         print(output['localhost'])
         self.assertDictEqual(output['localhost'], 
             {
-                "bgp_asn": None,
                 "region": "test",
                 "cloudtype": None,
                 "docker_routing_config_mode": "separated",
