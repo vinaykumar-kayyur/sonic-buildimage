@@ -149,6 +149,7 @@ class DeviceGlobalCfgMgr(Manager):
             log_err("W-ECMP: invalid value({}) is provided".format(status))
             return False
 
+        log_debug("DeviceGlobalCfgMgr::After if statement")
         if status == "cumulative":
             log_notice("DeviceGlobalCfgMgr:: Enabling W-ECMP with cumulative...")
         elif status == "num_multipaths":
@@ -161,6 +162,7 @@ class DeviceGlobalCfgMgr(Manager):
         cmd = "\n"
 
         try:
+            log_debug("DeviceGlobalCfgMgr::Before template")
             cmd += self.wcmp_template.render(wcmp_status=status)
         except jinja2.TemplateError as e:
             msg = "W-ECMP: error in template rendering"
