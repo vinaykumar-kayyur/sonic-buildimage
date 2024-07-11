@@ -409,7 +409,7 @@ ASIC/SDK health event related configuration is defined in **SUPPRESS_ASIC_SDK_HE
 ### BGP Device Global
 
 The **BGP_DEVICE_GLOBAL** table contains device-level BGP global state.  
-It has a STATE object containing device state like **tsa_enabled**, **wcmp_enabled** and **idf_isolation_state**.
+It has a STATE object containing device state like **tsa_enabled**, **originate_bandwidth** and **idf_isolation_state**.
 
 When **tsa_enabled** is set to true, the device is isolated using traffic-shift-away (TSA) route-maps in BGP.
 
@@ -423,13 +423,13 @@ When **tsa_enabled** is set to true, the device is isolated using traffic-shift-
 ```
   
 Weighted ECMP load balances traffic between the equal cost paths in proportion to the capacity of the local links.
-The W-ECMP state **wcmp_enabled** could be one of cumulative, num_multipaths, disabled, or [WEIGHT].
+The W-ECMP state for originating bandwidth **originate_bandwidth** could be one of cumulative, num_multipaths, disabled, or [WEIGHT].
 
 ```json
 {
 "BGP_DEVICE_GLOBAL": {
     "STATE": {
-        "wcmp_enabled": "cumulative"
+        "originate_bandwidth": "cumulative"
     }
 }
 ```
