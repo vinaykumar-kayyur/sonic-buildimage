@@ -65,7 +65,7 @@ module sonic-bgp-device-global {
                         enum ignore {
                             description "Ignore link bandwidth (i.e., do regular ECMP, not weighted)";
                         }
-                        enum active {
+                        enum allow {
                             description "Allow for normal behavior without bestpath for bandwidth";
                         }
                         enum skip_missing {

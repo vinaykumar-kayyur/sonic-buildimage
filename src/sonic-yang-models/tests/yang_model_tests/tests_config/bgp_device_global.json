@@ -134,7 +134,7 @@
         "sonic-bgp-device-global:sonic-bgp-device-global": {
             "sonic-bgp-device-global:BGP_DEVICE_GLOBAL": {
                 "STATE":{
-                    "bestpath_bandwidth": "active"
+                    "bestpath_bandwidth": "allow"
                 }
             }
         }
