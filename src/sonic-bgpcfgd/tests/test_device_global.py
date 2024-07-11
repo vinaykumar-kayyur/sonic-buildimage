@@ -347,7 +347,7 @@ def test_idf_neg(mocked_log_err, value):
     ]
 )
 @patch('bgpcfgd.managers_device_global.log_debug')
-def test_bandwidth(mocked_log_info, value, result):
+def test_received_bandwidth(mocked_log_info, value, result):
     m = constructor(bgp_asn=True)
     m.cfg_mgr.changes = ""
     if value == "ignore":
@@ -363,7 +363,7 @@ def test_bandwidth(mocked_log_info, value, result):
     "value", [ "invalid_value" ]
 )
 @patch('bgpcfgd.managers_device_global.log_err')
-def test_bandwidth_neg(mocked_log_err, value):
+def test_received_bandwidth_neg(mocked_log_err, value):
     m = constructor(bgp_asn=True)
     m.cfg_mgr.changes = ""
     res = m.set_handler("STATE", {"received_bandwidth": value})

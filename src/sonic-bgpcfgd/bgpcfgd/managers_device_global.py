@@ -12,7 +12,7 @@ class DeviceGlobalCfgMgr(Manager):
     TSA_DEFAULTS = "false"
     WCMP_DEFAULTS = "false"
     IDF_DEFAULTS = "unisolated"
-    BANDWIDTH_DEFAULTS = "ignore"
+    RECEIVED_DEFAULTS = "ignore"
 
     def __init__(self, common_objs, db, table):
         """
@@ -50,7 +50,7 @@ class DeviceGlobalCfgMgr(Manager):
             self.directory.put(self.db_name, self.table_name, "idf_isolation_state", self.IDF_DEFAULTS)
         # By default received bandwidth for W-ECMP feature is ignore
         if not self.directory.path_exist(self.db_name, self.table_name, "received_bandwidth"):
-            self.directory.put(self.db_name, self.table_name, "received_bandwidth", self.BANDWIDTH_DEFAULTS)
+            self.directory.put(self.db_name, self.table_name, "received_bandwidth", self.RECEIVED_DEFAULTS)
 
     def on_switch_type_change(self):
         log_debug("DeviceGlobalCfgMgr:: Switch type update handler")
@@ -74,8 +74,8 @@ class DeviceGlobalCfgMgr(Manager):
         self.configure_wcmp(data)
         # IDF configuration
         self.configure_idf(data)
-        # Bandwidth configuration
-        self.configure_bandwidth(data)
+        # Received Bandwidth configuration
+        self.configure_received_bandwidth(data)
 
         return True
 
@@ -88,8 +88,8 @@ class DeviceGlobalCfgMgr(Manager):
         self.configure_wcmp()
         # IDF configuration
         self.configure_idf()
-        # Bandwidth configuration
-        self.configure_bandwidth()
+        # Reveived Bandwidth configuration
+        self.configure_received_bandwidth()
 
         return True
 
@@ -150,22 +150,22 @@ class DeviceGlobalCfgMgr(Manager):
         else:
             log_notice("DeviceGlobalCfgMgr:: IDF configuration is up-to-date")
     
-    def configure_bandwidth(self, data=None):
+    def configure_received_bandwidth(self, data=None):
         """Configure received bandwidth for W-ECMP feature"""
         
-        state = self.BANDWIDTH_DEFAULTS
+        state = self.RECEIVED_DEFAULTS
         
         if data is not None:
             if "received_bandwidth" in data:
                 state = data["received_bandwidth"]
         
         if self.is_update_required("received_bandwidth", state):
-            if self.set_bandwidth(state):
+            if self.set_received_bandwidth(state):
                 self.directory.put(self.db_name, self.table_name, "received_bandwidth", state)
         else:
             log_notice("DeviceGlobalCfgMgr:: received bandwidth for W-ECMP configuration is up-to-date")
             
-    def set_bandwidth(self, status):
+    def set_received_bandwidth(self, status):
         """API to configure received bandwidth for W-ECMP"""
         
         bgp_asn = self.directory.get_slot("CONFIG_DB", swsscommon.CFG_DEVICE_METADATA_TABLE_NAME)["localhost"]["bgp_asn"]
