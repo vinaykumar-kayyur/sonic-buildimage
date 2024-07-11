@@ -21,6 +21,7 @@ class DeviceGlobalCfgMgr(Manager):
         :param table: name of the table in the db
         """
         self.switch_type = ""
+        self.role = ""
         self.chassis_tsa = ""
         self.directory = common_objs['directory']
         self.cfg_mgr = common_objs['cfg_mgr']
@@ -31,6 +32,7 @@ class DeviceGlobalCfgMgr(Manager):
         self.idf_isolate_template = common_objs['tf'].from_file("bgpd/idf_isolate/idf_isolate.conf.j2")
         self.idf_unisolate_template = common_objs['tf'].from_file("bgpd/idf_isolate/idf_unisolate.conf.j2")
         self.directory.subscribe([("CONFIG_DB", swsscommon.CFG_DEVICE_METADATA_TABLE_NAME, "localhost/switch_type"),], self.on_switch_type_change)
+        self.directory.subscribe([("CONFIG_DB", swsscommon.CFG_DEVICE_METADATA_TABLE_NAME, "localhost/type"),], self.handle_type_update)
         super(DeviceGlobalCfgMgr, self).__init__(
             common_objs,
             [],
@@ -53,6 +55,12 @@ class DeviceGlobalCfgMgr(Manager):
         if self.directory.path_exist("CONFIG_DB", swsscommon.CFG_DEVICE_METADATA_TABLE_NAME, "localhost/switch_type"):
             self.switch_type = self.directory.get_slot("CONFIG_DB", swsscommon.CFG_DEVICE_METADATA_TABLE_NAME)["localhost"]["switch_type"]
         log_debug("DeviceGlobalCfgMgr:: Switch type: %s" % self.switch_type)
+
+    def handle_type_update(self):
+        log_debug("DeviceGlobalCfgMgr:: Localhost type update handler")
+        if self.directory.path_exist("CONFIG_DB", swsscommon.CFG_DEVICE_METADATA_TABLE_NAME, "localhost/type"):
+            self.role = self.directory.get_slot("CONFIG_DB", swsscommon.CFG_DEVICE_METADATA_TABLE_NAME)["localhost"]["type"]
+        log_debug("DeviceGlobalCfgMgr:: Router role: %s" % self.type)
 
     def set_handler(self, key, data):
         """ Handle device TSA/W-ECMP state change """
@@ -259,8 +267,8 @@ class DeviceGlobalCfgMgr(Manager):
             log_err("IDF: invalid value({}) is provided".format(idf_isolation_state))
             return False
 
-        if self.switch_type and self.switch_type != "SpineRouter":
-            log_debug("DeviceGlobalCfgMgr:: Skipping IDF isolation configuration on Switch type: %s" % self.switch_type)
+        if self.role and self.role != "SpineRouter":
+            log_debug("DeviceGlobalCfgMgr:: Skipping IDF isolation configuration on %s" % self.role)
             return True
 
         cmd = "\n"
