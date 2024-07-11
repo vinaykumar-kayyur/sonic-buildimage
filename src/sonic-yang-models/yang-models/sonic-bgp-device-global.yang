@@ -55,7 +55,7 @@ module sonic-bgp-device-global {
                             range "1..25600";
                         }
                     }
-                    default "false";
+                    default false;
                 }
 
                 leaf idf_isolation_state {
