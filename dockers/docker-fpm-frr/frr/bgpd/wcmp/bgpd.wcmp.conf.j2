@@ -6,10 +6,10 @@ route-map CHECK_WCMP_ENABLED permit 100
   set extcommunity bandwidth cumulative
 {%- elif wcmp_status == 'num_multipaths' %}
   set extcommunity bandwidth num-multipaths
-{%- elif wcmp_status.isdigit() and 1 <= int(wcmp_status) <= 25600 %}
-  set extcommunity bandwidth {{ wcmp_status }}
-{%- else %}
+{%- elif wcmp_status == 'false' %}
   no set extcommunity bandwidth
+{%- else %}
+  set extcommunity bandwidth {{ wcmp_status }}
 {%- endif %}
 exit
 !
