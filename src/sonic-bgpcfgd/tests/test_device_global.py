@@ -319,7 +319,7 @@ def test_idf_neg(mocked_log_err, value):
     mocked_log_err.assert_called_with("IDF: invalid value({}) is provided".format(value))
     
 #
-# Bestpath for Bandwidth -----------------------------------------------------------------------------------------------------------------
+# Received Bandwidth for W-ECMP -----------------------------------------------------------------------------------------------------------------
 #
 
 @pytest.mark.parametrize(
@@ -330,9 +330,9 @@ def test_idf_neg(mocked_log_err, value):
             id="ignore"
         ),
         pytest.param(
-            "active",
+            "allow",
             ["router bgp 65100", " no bgp bestpath bandwidth"],
-            id="active"
+            id="allow"
         ),
         pytest.param(
             "skip_missing",
@@ -351,10 +351,10 @@ def test_bandwidth(mocked_log_info, value, result):
     m = constructor(bgp_asn=True)
     m.cfg_mgr.changes = ""
     if value == "ignore":
-        # By default feature is ignore. Simulate active state
-        m.directory.put(m.db_name, m.table_name, "bestpath_bandwidth", "active")
+        # By default feature is ignore. Simulate allow state
+        m.directory.put(m.db_name, m.table_name, "received_bandwidth", "allow")
         
-    res = m.set_handler("STATE", {"bestpath_bandwidth": value})
+    res = m.set_handler("STATE", {"received_bandwidth": value})
     assert res, "Expect True return value for set_handler"
     mocked_log_info.assert_called_with("DeviceGlobalCfgMgr::Done")
     assert m.cfg_mgr.get_config() == result
@@ -366,7 +366,7 @@ def test_bandwidth(mocked_log_info, value, result):
 def test_bandwidth_neg(mocked_log_err, value):
     m = constructor(bgp_asn=True)
     m.cfg_mgr.changes = ""
-    res = m.set_handler("STATE", {"bestpath_bandwidth": value})
+    res = m.set_handler("STATE", {"received_bandwidth": value})
     assert res, "Expect True return value for set_handler"
-    mocked_log_err.assert_called_with("Bestpath for bandwidth: invalid value({}) is provided".format(value))
+    mocked_log_err.assert_called_with("Received Bandwidth for W-ECMP: invalid value({}) is provided".format(value))
 
