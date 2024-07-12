@@ -75,7 +75,7 @@ module sonic-bgp-device-global {
                             description "Assign a low default weight (value 1) to paths not having link bandwidth";
                         }
                     }
-                    default "ignore";
+                    default "active";
                 }
 
             }
