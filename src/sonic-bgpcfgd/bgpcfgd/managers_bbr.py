@@ -48,17 +48,20 @@ class BBRMgr(Manager):
         if self.directory.path_exist("CONFIG_DB", "BGP_BBR", "all/status"):
             config_db_bbr = self.directory.get_slot("CONFIG_DB", "BGP_BBR")
             log_info("BBRMgr::Initialize from CONFIG_DB")
-            self.bbr_enabled_pgs = self.__read_pgs()
-            if self.bbr_enabled_pgs:
-                self.enabled = True
-                self.default_state = config_db_bbr["all"]["status"]
-                log_info("BBRMgr::Initialized from CONFIG_DB and Enabled. Default state: '%s'" % self.default_state)
+            if 'bgp' in self.constants:
+                self.bbr_enabled_pgs = self.__read_pgs()
+                if self.bbr_enabled_pgs:
+                    self.enabled = True
+                    self.default_state = config_db_bbr["all"]["status"]
+                    log_info("BBRMgr::Initialized and Enabled. Default state: '%s'" % self.default_state)
+                else:
+                    log_info("BBRMgr::Initialized and Disabled: no BBR enabled peers in constants")
             else:
-                log_info("BBRMgr::Initialized from CONFIG_DB and Disabled: no BBR enabled peers")
+                log_info("BBRMgr::Initialized and Disabled: 'bgp' key is not found in constants")
         else:
             log_info("BBRMgr::Initialize from constants")
             if not 'bgp' in self.constants:
-                log_err("BBRMgr::Initialized from constants and Disabled: 'bgp' key is not found in constants")
+                log_err("BBRMgr::Initialized and Disabled: 'bgp' key is not found in constants")
             elif 'bbr' in self.constants['bgp'] \
                     and 'enabled' in self.constants['bgp']['bbr'] \
                     and self.constants['bgp']['bbr']['enabled']:
@@ -72,11 +75,11 @@ class BBRMgr(Manager):
                         self.default_state = "enabled"
                     else:
                         self.default_state = "disabled"
-                    log_info("BBRMgr::Initialized from constants and Enabled. Default state: '%s'" % self.default_state)
+                    log_info("BBRMgr::Initialized and Enabled. Default state: '%s'" % self.default_state)
                 else:
-                    log_info("BBRMgr::Initialized from constants and Disabled: no BBR enabled peers")
+                    log_info("BBRMgr::Initialized nd Disabled: no BBR enabled peers in constants")
             else:
-                log_info("BBRMgr::Initialized from constants and Disabled: no bgp.bbr.enabled in the constants")
+                log_info("BBRMgr::Initialized and Disabled: no bgp.bbr.enabled in the constants")
         self.directory.put(self.db_name, self.table_name, "all", {"status": self.default_state})
 
     def __read_pgs(self):

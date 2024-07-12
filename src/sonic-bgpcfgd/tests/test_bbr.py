@@ -124,26 +124,26 @@ def __init_common(constants,
         mocked_log_info.assert_called_with(expected_log_info)
 
 def test___init_1():
-    __init_common({}, None, "BBRMgr::Initialized from constants and Disabled: 'bgp' key is not found in constants", {}, "disabled")
+    __init_common({}, None, "BBRMgr::Initialized and Disabled: 'bgp' key is not found in constants", {}, "disabled")
 
 def test___init_2():
     constants = deepcopy(global_constants)
-    __init_common(constants, "BBRMgr::Initialized from constants and Disabled: no bgp.bbr.enabled in the constants", None, {}, "disabled")
+    __init_common(constants, "BBRMgr::Initialized and Disabled: no bgp.bbr.enabled in the constants", None, {}, "disabled")
 
 def test___init_3():
     constants = deepcopy(global_constants)
     constants["bgp"]["bbr"] = { "123" : False }
-    __init_common(constants, "BBRMgr::Initialized from constants and Disabled: no bgp.bbr.enabled in the constants", None, {}, "disabled")
+    __init_common(constants, "BBRMgr::Initialized and Disabled: no bgp.bbr.enabled in the constants", None, {}, "disabled")
 
 def test___init_4():
     constants = deepcopy(global_constants)
     constants["bgp"]["bbr"] = { "enabled" : False }
-    __init_common(constants, "BBRMgr::Initialized from constants and Disabled: no bgp.bbr.enabled in the constants", None, {}, "disabled")
+    __init_common(constants, "BBRMgr::Initialized and Disabled: no bgp.bbr.enabled in the constants", None, {}, "disabled")
 
 def test___init_5():
     constants = deepcopy(global_constants)
     constants["bgp"]["bbr"] = { "enabled" : True }
-    __init_common(constants, "BBRMgr::Initialized from constants and Disabled: no BBR enabled peers", None, {}, "disabled")
+    __init_common(constants, "BBRMgr::Initialized and Disabled: no BBR enabled peers", None, {}, "disabled")
 
 def test___init_6():
     expected_bbr_entries = {
@@ -157,7 +157,7 @@ def test___init_6():
             "bbr": expected_bbr_entries,
         }
     }
-    __init_common(constants, "BBRMgr::Initialized from constants and Enabled. Default state: 'disabled'", None, expected_bbr_entries, "disabled")
+    __init_common(constants, "BBRMgr::Initialized and Enabled. Default state: 'disabled'", None, expected_bbr_entries, "disabled")
 
 def test___init_7():
     expected_bbr_entries = {
@@ -171,7 +171,7 @@ def test___init_7():
             "bbr": expected_bbr_entries,
         }
     }
-    __init_common(constants, "BBRMgr::Initialized from constants and Enabled. Default state: 'disabled'", None, expected_bbr_entries, "disabled")
+    __init_common(constants, "BBRMgr::Initialized and Enabled. Default state: 'disabled'", None, expected_bbr_entries, "disabled")
 
 def test___init_8():
     expected_bbr_entries = {
@@ -185,7 +185,7 @@ def test___init_8():
             "bbr": expected_bbr_entries,
         }
     }
-    __init_common(constants, "BBRMgr::Initialized from constants and Enabled. Default state: 'enabled'", None, expected_bbr_entries, "enabled")
+    __init_common(constants, "BBRMgr::Initialized and Enabled. Default state: 'enabled'", None, expected_bbr_entries, "enabled")
 
 @patch('bgpcfgd.managers_bbr.log_info')
 def read_pgs_common(constants, expected_log_info, expected_bbr_enabled_pgs, mocked_log_info):
