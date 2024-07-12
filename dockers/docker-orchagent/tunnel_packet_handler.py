@@ -29,6 +29,9 @@ logger = log.Logger()
 
 STATE_DB = 'STATE_DB'
 APPL_DB = 'APPL_DB'
+COUNTERS_DB = 'COUNTERS_DB'
+TUNNEL_PKT_COUNTER_TEMPLATE = 'COUNTERS{}IPINIP_TUNNEL'
+COUNTER_KEY = 'RX_COUNT'
 PORTCHANNEL_INTERFACE_TABLE = 'PORTCHANNEL_INTERFACE'
 TUNNEL_TABLE = 'TUNNEL'
 PEER_SWITCH_TABLE = 'PEER_SWITCH'
@@ -69,6 +72,10 @@ class TunnelPacketHandler(object):
         self.config_db.connect()
         self.state_db = SonicV2Connector()
         self.state_db.connect(STATE_DB)
+        self.counters_db = SonicV2Connector()
+        self.counters_db.connect(COUNTERS_DB)
+        counters_db_separator = self.counters_db.get_db_separator()
+        self.tunnel_counter_table = TUNNEL_PKT_COUNTER_TEMPLATE.format(counters_db_separator)
         self._portchannel_intfs = None
         self.up_portchannels = None
         self.netlink_api = IPRoute()
@@ -304,6 +311,14 @@ class TunnelPacketHandler(object):
         while not hasattr(self.sniffer, 'stop_cb'):
             time.sleep(0.1)
 
+    def incr_tunnel_counter(self):
+        curr_count = self.counters_db.get('COUNTERS_DB', self.tunnel_counter_table, COUNTER_KEY)
+        if not curr_count:
+            new_count = 1
+        else:
+            new_count = curr_count + 1
+        self.counters_db.set('COUNTERS_DB', self.tunnel_counter_table, COUNTER_KEY, new_count)
+
     def ping_inner_dst(self, packet):
         """
         Pings the inner destination IP for an encapsulated packet
@@ -313,6 +328,7 @@ class TunnelPacketHandler(object):
         """
         inner_packet_type = self.get_inner_pkt_type(packet)
         if inner_packet_type and packet[IP].dst == self.self_ip:
+            self.incr_tunnel_counter()
             cmds = ['timeout', '0.2', 'ping', '-c1',
                     '-W1', '-i0', '-n', '-q']
             if inner_packet_type == IPv6:
