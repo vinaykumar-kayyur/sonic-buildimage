@@ -80,7 +80,7 @@
         "verify": {
             "xpath": "/sonic-bgp-device-global:sonic-bgp-device-global/BGP_DEVICE_GLOBAL/STATE/received_bandwidth",
             "key": "sonic-bgp-device-global:received_bandwidth",
-            "value": "active"
+            "value": "allow"
         }
     },
     "BGP_DEVICE_GLOBAL_WITH_RECEIVED_BANDWIDTH_TEST_1": {
