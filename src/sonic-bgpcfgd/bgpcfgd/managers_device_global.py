@@ -12,7 +12,7 @@ class DeviceGlobalCfgMgr(Manager):
     TSA_DEFAULTS = "false"
     WCMP_DEFAULTS = "false"
     IDF_DEFAULTS = "unisolated"
-    RECEIVED_DEFAULTS = "ignore"
+    RECEIVED_DEFAULTS = "allow"
 
     def __init__(self, common_objs, db, table):
         """
@@ -48,7 +48,7 @@ class DeviceGlobalCfgMgr(Manager):
         # By default IDF feature is unisolated
         if not self.directory.path_exist(self.db_name, self.table_name, "idf_isolation_state"):
             self.directory.put(self.db_name, self.table_name, "idf_isolation_state", self.IDF_DEFAULTS)
-        # By default received bandwidth for W-ECMP feature is ignore
+        # By default received bandwidth for W-ECMP feature is allow
         if not self.directory.path_exist(self.db_name, self.table_name, "received_bandwidth"):
             self.directory.put(self.db_name, self.table_name, "received_bandwidth", self.RECEIVED_DEFAULTS)
 
