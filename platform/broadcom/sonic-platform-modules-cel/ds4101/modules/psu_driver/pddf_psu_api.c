@@ -438,9 +438,9 @@ int sonic_i2c_get_psu_block_default(void *client, PSU_DATA_ATTR *adata, void *da
     }
 
     if (strncmp(adata->devtype, "pmbus", strlen("pmbus")) == 0)
-        strlcpy(padata->val.strval, buf+1, data_len-1);
+        strlcpy(padata->val.strval, buf+1, STR_ATTR_SIZE);
     else
-        strlcpy(padata->val.strval, buf, data_len);
+        strlcpy(padata->val.strval, buf, STR_ATTR_SIZE);
 
     psu_dbg(KERN_ERR "%s: status = %d, buf block: %s\n", __FUNCTION__, status, padata->val.strval);
     return 0;
