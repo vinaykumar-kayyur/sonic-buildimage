@@ -15,15 +15,15 @@
 #}
 {% set default_cable = '5m' %}
 {%- if ((SYSTEM_DEFAULTS is defined) and ('tunnel_qos_remap' in SYSTEM_DEFAULTS) and (SYSTEM_DEFAULTS['tunnel_qos_remap']['status'] == 'enabled')) -%}
-{% set ingress_lossless_pool_size =  '49577984' %}
-{% set ingress_lossless_pool_xoff  =  '3407872' %}
+{% set ingress_lossless_pool_size =  '49651712' %}
+{% set ingress_lossless_pool_xoff  =  '3375104' %}
 {% set egress_lossless_pool_size =  '60817408' %}
-{% set egress_lossy_pool_size =  '49577984' %}
+{% set egress_lossy_pool_size =  '49651712' %}
 {%- else -%}
-{% set ingress_lossless_pool_size =  '51036160' %}
-{% set ingress_lossless_pool_xoff  =  '2572288' %}
+{% set ingress_lossless_pool_size =  '51052544' %}
+{% set ingress_lossless_pool_xoff  =  '2555904' %}
 {% set egress_lossless_pool_size =  '60817408' %}
-{% set egress_lossy_pool_size =  '51036160' %}
+{% set egress_lossy_pool_size =  '51052544' %}
 {%- endif -%}
 
 {% import 'buffers_defaults_objects.j2' as defs with context %}
