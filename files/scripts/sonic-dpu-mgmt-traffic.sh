@@ -59,6 +59,12 @@ ctrl_dpu_forwarding(){
 mgmt_iface=eth0
 midplane_iface=bridge-midplane
 
+if [ "$EUID" -ne 0 ]
+    then
+    echo "Permission denied: Please run the script with elevated privileges using sudo"
+    exit 1
+fi
+
 if ! ifconfig "$midplane_iface" > /dev/null 2>&1; then
     echo "$midplane_iface doesn't exist! Please run on smart switch system"
     exit 1
