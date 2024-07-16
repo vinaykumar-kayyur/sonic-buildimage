@@ -157,7 +157,7 @@ def test___init_6():
             "bbr": expected_bbr_entries,
         }
     }
-    __init_common(constants, "BBRMgr::Initialized and enabled. Default state: 'disabled'", None, expected_bbr_entries, "disabled")
+    __init_common(constants, "BBRMgr::Initialized and enabled from constants. Default state: 'disabled'", None, expected_bbr_entries, "disabled")
 
 def test___init_7():
     expected_bbr_entries = {
