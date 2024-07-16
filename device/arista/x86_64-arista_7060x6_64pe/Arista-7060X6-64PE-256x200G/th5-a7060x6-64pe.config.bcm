@@ -39,7 +39,7 @@ bcm_device:
             l3_intf_vlan_split_egress : 1
             pfc_deadlock_seq_control : 1
             sai_tunnel_support: 2
-            mmu_init_config: "\"TH5-MSFT-LAB\""
+            mmu_init_config: "\"TH5-MSFT-PROD\""
             bcm_tunnel_term_compatible_mode: 1
             l3_ecmp_member_first_lkup_mem_size: 12288
 ---
@@ -1926,8 +1926,6 @@ device:
         DEVICE_CONFIG:
             AUTOLOAD_BOARD_SETTINGS: 0
 ...
-# DO NOT MODIFY THIS FILE!  It was auto generated from lossy_lossless_template.yml
-
 ### Baseline
 # Skipping buffer reservation. This means that don't use SDK default setings.
 ---
@@ -2125,7 +2123,7 @@ device:
         TM_THD_UC_Q:
             ?
                 PORT_ID: [[1,8], [11,18], [21,29], [33,40], [43,51], [55,62], [65,73], [76,84], [87,95], [99,106], [109,117], [121,128], [131,139], [143,150], [153,161], [165,172], [175,183], [187,194], [197,205], [209,216], [219,227], [231,238], [241,249], [253,260], [263,271], [274,282], [285,293], [297,304], [307,315], [319,326], [329,337], [341,348], 351]
-                TM_UC_Q_ID: [[0,9]]
+                TM_UC_Q_ID: [[0,7]]
             :
                 MIN_GUARANTEE_CELLS: 0
                 SHARED_LIMITS: 1
@@ -2248,7 +2246,7 @@ device:
                 BUFFER_POOL: [0,1]
                 TM_ING_SERVICE_POOL_ID: 0
             :
-                SHARED_LIMIT_CELLS: 248023
+                SHARED_LIMIT_CELLS: 240087
                 SHARED_RESUME_OFFSET_CELLS: 74
                 COLOR_SPECIFIC_LIMITS: 0
             ?
@@ -2266,7 +2264,7 @@ device:
                 BUFFER_POOL: [0,1]
                 TM_HEADROOM_POOL_ID: 0
             :
-                LIMIT_CELLS: 50176
+                LIMIT_CELLS: 58112
         
 ...
 ---
@@ -2467,7 +2465,7 @@ device:
                 RESUME_OFFSET_CELLS: 14
                 RESUME_FLOOR_CELLS: 0
                 HEADROOM_LIMIT_AUTO: 0
-                HEADROOM_LIMIT_CELLS: 1007
+                HEADROOM_LIMIT_CELLS: 1185
             ?
                 PORT_ID: [[176,183], [187,194], [198,205], [209,216], [220,227], [231,238], [242,249], [253,260], [264,271], [275,282], [286,293], [297,304], [308,315], [319,326], [330,337], [341,348]]
                 TM_PRI_GRP_ID: [3,4]
@@ -2478,7 +2476,7 @@ device:
                 RESUME_OFFSET_CELLS: 14
                 RESUME_FLOOR_CELLS: 0
                 HEADROOM_LIMIT_AUTO: 0
-                HEADROOM_LIMIT_CELLS: 1007
+                HEADROOM_LIMIT_CELLS: 1185
             ?
                 PORT_ID: [76, 274]
                 TM_PRI_GRP_ID: [3,4]
@@ -2524,13 +2522,13 @@ device:
                 BUFFER_POOL: [0,1]
                 TM_EGR_SERVICE_POOL_ID: 0
             :
-                SHARED_LIMIT_CELLS: 248023
-                SHARED_RESUME_LIMIT_CELLS: 30993
+                SHARED_LIMIT_CELLS: 240087
+                SHARED_RESUME_LIMIT_CELLS: 30001
                 COLOR_SPECIFIC_LIMITS: 0
-                YELLOW_SHARED_LIMIT_CELLS: 23253
-                YELLOW_SHARED_RESUME_LIMIT_CELLS: 23243
-                RED_SHARED_LIMIT_CELLS: 19377
-                RED_SHARED_RESUME_LIMIT_CELLS: 17367
+                YELLOW_SHARED_LIMIT_CELLS: 22509
+                YELLOW_SHARED_RESUME_LIMIT_CELLS: 22499
+                RED_SHARED_LIMIT_CELLS: 18757
+                RED_SHARED_RESUME_LIMIT_CELLS: 18747
             ?
                 BUFFER_POOL: [0,1]
                 TM_EGR_SERVICE_POOL_ID: 1
@@ -2547,7 +2545,6 @@ device:
 device:
     0:
 # Multicast Egress Service Pool Limits, CQEs
-# Assign shared limit first in this block to bypass INCORRECT STATE check in SDKLT
         TM_THD_MC_EGR_SERVICE_POOL:
             ?
                 BUFFER_POOL: [0,1]
@@ -2564,7 +2561,6 @@ device:
 device:
     0:
 # Multicast Egress Service Pool Limits, CQEs
-# Now assign resume limits.
         TM_THD_MC_EGR_SERVICE_POOL:
             ?
                 BUFFER_POOL: [0,1]
@@ -2789,12 +2785,12 @@ device:
                 TM_EGR_SERVICE_POOL_ID: 0
             :
                 COLOR_SPECIFIC_LIMITS: 0
-                RED_SHARED_LIMIT_CELLS: 19376
-                YELLOW_SHARED_LIMIT_CELLS: 23252
-                SHARED_LIMIT_CELLS: 248023
-                RED_SHARED_RESUME_LIMIT_CELLS: 19374
-                YELLOW_SHARED_RESUME_LIMIT_CELLS: 23250
-                SHARED_RESUME_LIMIT_CELLS: 31001
+                RED_SHARED_LIMIT_CELLS: 18756
+                YELLOW_SHARED_LIMIT_CELLS: 22508
+                SHARED_LIMIT_CELLS: 240087
+                RED_SHARED_RESUME_LIMIT_CELLS: 18754
+                YELLOW_SHARED_RESUME_LIMIT_CELLS: 22506
+                SHARED_RESUME_LIMIT_CELLS: 30009
             ?
                 PORT_ID: [[1,8], [11,18], [21,29], [33,40], [43,51], [55,62], [65,73], [76,84], [87,95], [99,106], [109,117], [121,128], [131,139], [143,150], [153,161], [165,172], [175,183], [187,194], [197,205], [209,216], [219,227], [231,238], [241,249], [253,260], [263,271], [274,282], [285,293], [297,304], [307,315], [319,326], [329,337], [341,348], 351]
                 TM_EGR_SERVICE_POOL_ID: 1
