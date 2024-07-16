@@ -1,4 +1,3 @@
-# DO NOT MODIFY THIS FILE!  It was auto generated from lossy_lossless_template.yml
 #
 # $Copyright: (c) 2022 Broadcom.
 # Broadcom Proprietary and Confidential. All rights reserved.$
@@ -20,7 +19,6 @@
 #                   ...
 #                   <data_fld_n>: <value>
 #
-
 ---
 bcm_device:
     0:
@@ -41,6 +39,7 @@ bcm_device:
             l3_intf_vlan_split_egress : 1
             pfc_deadlock_seq_control : 1
             sai_tunnel_support: 2
+            mmu_init_config: "\"TH5-MSFT-LAB\""
             bcm_tunnel_term_compatible_mode: 1
             l3_ecmp_member_first_lkup_mem_size: 12288
 ---
@@ -1927,6 +1926,8 @@ device:
         DEVICE_CONFIG:
             AUTOLOAD_BOARD_SETTINGS: 0
 ...
+# DO NOT MODIFY THIS FILE!  It was auto generated from lossy_lossless_template.yml
+
 ### Baseline
 # Skipping buffer reservation. This means that don't use SDK default setings.
 ---
@@ -2124,7 +2125,7 @@ device:
         TM_THD_UC_Q:
             ?
                 PORT_ID: [[1,8], [11,18], [21,29], [33,40], [43,51], [55,62], [65,73], [76,84], [87,95], [99,106], [109,117], [121,128], [131,139], [143,150], [153,161], [165,172], [175,183], [187,194], [197,205], [209,216], [219,227], [231,238], [241,249], [253,260], [263,271], [274,282], [285,293], [297,304], [307,315], [319,326], [329,337], [341,348], 351]
-                TM_UC_Q_ID: [[0,7]]
+                TM_UC_Q_ID: [[0,9]]
             :
                 MIN_GUARANTEE_CELLS: 0
                 SHARED_LIMITS: 1
@@ -2228,7 +2229,7 @@ device:
                 RED_SHARED_RESUME_LIMIT_CELLS: 0
                 SHARED_LIMIT_PKTS: 0
                 SHARED_RESUME_LIMIT_PKTS: 0
-                COLOR_SPECIFIC_LIMITS: 1
+                COLOR_SPECIFIC_LIMITS: 0
                 YELLOW_SHARED_LIMIT_PKTS: 0
                 YELLOW_SHARED_RESUME_LIMIT_PKTS: 0
                 RED_SHARED_LIMIT_PKTS: 0
@@ -2247,7 +2248,7 @@ device:
                 BUFFER_POOL: [0,1]
                 TM_ING_SERVICE_POOL_ID: 0
             :
-                SHARED_LIMIT_CELLS: 240087
+                SHARED_LIMIT_CELLS: 248023
                 SHARED_RESUME_OFFSET_CELLS: 74
                 COLOR_SPECIFIC_LIMITS: 0
             ?
@@ -2265,7 +2266,7 @@ device:
                 BUFFER_POOL: [0,1]
                 TM_HEADROOM_POOL_ID: 0
             :
-                LIMIT_CELLS: 58112
+                LIMIT_CELLS: 50176
         
 ...
 ---
@@ -2466,7 +2467,7 @@ device:
                 RESUME_OFFSET_CELLS: 14
                 RESUME_FLOOR_CELLS: 0
                 HEADROOM_LIMIT_AUTO: 0
-                HEADROOM_LIMIT_CELLS: 1185
+                HEADROOM_LIMIT_CELLS: 1007
             ?
                 PORT_ID: [[176,183], [187,194], [198,205], [209,216], [220,227], [231,238], [242,249], [253,260], [264,271], [275,282], [286,293], [297,304], [308,315], [319,326], [330,337], [341,348]]
                 TM_PRI_GRP_ID: [3,4]
@@ -2477,7 +2478,7 @@ device:
                 RESUME_OFFSET_CELLS: 14
                 RESUME_FLOOR_CELLS: 0
                 HEADROOM_LIMIT_AUTO: 0
-                HEADROOM_LIMIT_CELLS: 1185
+                HEADROOM_LIMIT_CELLS: 1007
             ?
                 PORT_ID: [76, 274]
                 TM_PRI_GRP_ID: [3,4]
@@ -2523,13 +2524,13 @@ device:
                 BUFFER_POOL: [0,1]
                 TM_EGR_SERVICE_POOL_ID: 0
             :
-                SHARED_LIMIT_CELLS: 240087
-                SHARED_RESUME_LIMIT_CELLS: 30001
+                SHARED_LIMIT_CELLS: 248023
+                SHARED_RESUME_LIMIT_CELLS: 30993
                 COLOR_SPECIFIC_LIMITS: 0
-                YELLOW_SHARED_LIMIT_CELLS: 22509
-                YELLOW_SHARED_RESUME_LIMIT_CELLS: 22499
-                RED_SHARED_LIMIT_CELLS: 18757
-                RED_SHARED_RESUME_LIMIT_CELLS: 18747
+                YELLOW_SHARED_LIMIT_CELLS: 23253
+                YELLOW_SHARED_RESUME_LIMIT_CELLS: 23243
+                RED_SHARED_LIMIT_CELLS: 19377
+                RED_SHARED_RESUME_LIMIT_CELLS: 17367
             ?
                 BUFFER_POOL: [0,1]
                 TM_EGR_SERVICE_POOL_ID: 1
@@ -2541,14 +2542,34 @@ device:
                 YELLOW_SHARED_RESUME_LIMIT_CELLS: 55
                 RED_SHARED_LIMIT_CELLS: 48
                 RED_SHARED_RESUME_LIMIT_CELLS: 46
-        
+...
+---
+device:
+    0:
 # Multicast Egress Service Pool Limits, CQEs
+# Assign shared limit first in this block to bypass INCORRECT STATE check in SDKLT
         TM_THD_MC_EGR_SERVICE_POOL:
             ?
                 BUFFER_POOL: [0,1]
                 TM_EGR_SERVICE_POOL_ID: 0
             :
                 SHARED_LIMIT_CELLS: 19538
+            ?
+                BUFFER_POOL: [0,1]
+                TM_EGR_SERVICE_POOL_ID: 1
+            :
+                SHARED_LIMIT_CELLS: 605
+...
+---
+device:
+    0:
+# Multicast Egress Service Pool Limits, CQEs
+# Now assign resume limits.
+        TM_THD_MC_EGR_SERVICE_POOL:
+            ?
+                BUFFER_POOL: [0,1]
+                TM_EGR_SERVICE_POOL_ID: 0
+            :
                 SHARED_RESUME_LIMIT_CELLS: 2432
                 COLOR_SPECIFIC_LIMITS: 0
                 YELLOW_SHARED_LIMIT_CELLS: 1832
@@ -2559,7 +2580,6 @@ device:
                 BUFFER_POOL: [0,1]
                 TM_EGR_SERVICE_POOL_ID: 1
             :
-                SHARED_LIMIT_CELLS: 605
                 SHARED_RESUME_LIMIT_CELLS: 73
                 COLOR_SPECIFIC_LIMITS: 0
                 YELLOW_SHARED_LIMIT_CELLS: 57
@@ -2633,8 +2653,8 @@ device:
     0:
         TM_THD_UC_Q:
             ?
-                PORT_ID: [[1,8], [11,18], [21,29], [33,40], [43,51], [55,62], [65,73], [76,84], [87,95], [99,106], [109,117], [121,128], [131,139], [143,150], [153,161], [165,172], [175,183], [187,194], [197,205], [209,216], [219,227], [231,238], [241,249], [253,260], [263,271], [274,282], [285,293], [297,304], [307,315], [319,326], [329,337], [341,348], 351]
-                TM_UC_Q_ID: [0, 1, 2, 5, 6, 7,8,9]
+                PORT_ID: [[1,8], [11,18], [22,29], [33,40], [44,51], [55,62], [66,73], [77,84], [88,95], [99,106], [110,117], [121,128], [132,139], [143,150], [154,161], [165,172]]
+                TM_UC_Q_ID: [0, 1, 2, 5, 6, 7]
             :
                 MIN_GUARANTEE_CELLS: 7
                 SHARED_LIMITS: 1
@@ -2643,14 +2663,79 @@ device:
                 SHARED_LIMIT_DYNAMIC: ALPHA_1
                 DYNAMIC_GROUP: MID_PRI_GROUP
                 RESUME_OFFSET_CELLS: 2
-                COLOR_SPECIFIC_LIMITS: 1
-                COLOR_SPECIFIC_DYNAMIC_LIMITS: 1
+                COLOR_SPECIFIC_LIMITS: 0
+                COLOR_SPECIFIC_DYNAMIC_LIMITS: 0
                 YELLOW_LIMIT_CELLS_STATIC: 0
                 YELLOW_LIMIT_DYNAMIC: PERCENTAGE_750
                 RED_LIMIT_CELLS_STATIC: 0
                 RED_LIMIT_DYNAMIC: PERCENTAGE_625
             ?
-                PORT_ID: [[1,8], [11,18], [21,29], [33,40], [43,51], [55,62], [65,73], [76,84], [87,95], [99,106], [109,117], [121,128], [131,139], [143,150], [153,161], [165,172], [175,183], [187,194], [197,205], [209,216], [219,227], [231,238], [241,249], [253,260], [263,271], [274,282], [285,293], [297,304], [307,315], [319,326], [329,337], [341,348], 351]
+                PORT_ID: [[1,8], [11,18], [22,29], [33,40], [44,51], [55,62], [66,73], [77,84], [88,95], [99,106], [110,117], [121,128], [132,139], [143,150], [154,161], [165,172]]
+                TM_UC_Q_ID: [8,9]
+            :
+                MIN_GUARANTEE_CELLS: 0
+                SHARED_LIMITS: 1
+                DYNAMIC_SHARED_LIMITS: 1
+                SHARED_LIMIT_CELLS_STATIC: 0
+                SHARED_LIMIT_DYNAMIC: ALPHA_1
+                DYNAMIC_GROUP: MID_PRI_GROUP
+                RESUME_OFFSET_CELLS: 2
+                COLOR_SPECIFIC_LIMITS: 0
+                COLOR_SPECIFIC_DYNAMIC_LIMITS: 0
+                YELLOW_LIMIT_CELLS_STATIC: 0
+                YELLOW_LIMIT_DYNAMIC: PERCENTAGE_750
+                RED_LIMIT_CELLS_STATIC: 0
+                RED_LIMIT_DYNAMIC: PERCENTAGE_625
+            ?
+                PORT_ID: [[1,8], [11,18], [22,29], [33,40], [44,51], [55,62], [66,73], [77,84], [88,95], [99,106], [110,117], [121,128], [132,139], [143,150], [154,161], [165,172]]
+                TM_UC_Q_ID: [3,4]
+            :
+                MIN_GUARANTEE_CELLS: 0
+                SHARED_LIMITS: 0
+                DYNAMIC_SHARED_LIMITS: 0
+                SHARED_LIMIT_CELLS_STATIC: 329816
+                DYNAMIC_GROUP: MID_PRI_GROUP
+                RESUME_OFFSET_CELLS: 2
+                COLOR_SPECIFIC_LIMITS: 0
+                COLOR_SPECIFIC_DYNAMIC_LIMITS: 0
+                YELLOW_LIMIT_CELLS_STATIC: 0
+                RED_LIMIT_CELLS_STATIC: 0
+            ?
+                PORT_ID: [[176,183], [187,194], [198,205], [209,216], [220,227], [231,238], [242,249], [253,260], [264,271], [275,282], [286,293], [297,304], [308,315], [319,326], [330,337], [341,348]]
+                TM_UC_Q_ID: [0, 1, 2, 5, 6, 7]
+            :
+                MIN_GUARANTEE_CELLS: 7
+                SHARED_LIMITS: 1
+                DYNAMIC_SHARED_LIMITS: 1
+                SHARED_LIMIT_CELLS_STATIC: 0
+                SHARED_LIMIT_DYNAMIC: ALPHA_1
+                DYNAMIC_GROUP: MID_PRI_GROUP
+                RESUME_OFFSET_CELLS: 2
+                COLOR_SPECIFIC_LIMITS: 0
+                COLOR_SPECIFIC_DYNAMIC_LIMITS: 0
+                YELLOW_LIMIT_CELLS_STATIC: 0
+                YELLOW_LIMIT_DYNAMIC: PERCENTAGE_750
+                RED_LIMIT_CELLS_STATIC: 0
+                RED_LIMIT_DYNAMIC: PERCENTAGE_625
+            ?
+                PORT_ID: [[176,183], [187,194], [198,205], [209,216], [220,227], [231,238], [242,249], [253,260], [264,271], [275,282], [286,293], [297,304], [308,315], [319,326], [330,337], [341,348]]
+                TM_UC_Q_ID: [8,9]
+            :
+                MIN_GUARANTEE_CELLS: 0
+                SHARED_LIMITS: 1
+                DYNAMIC_SHARED_LIMITS: 1
+                SHARED_LIMIT_CELLS_STATIC: 0
+                SHARED_LIMIT_DYNAMIC: ALPHA_1
+                DYNAMIC_GROUP: MID_PRI_GROUP
+                RESUME_OFFSET_CELLS: 2
+                COLOR_SPECIFIC_LIMITS: 0
+                COLOR_SPECIFIC_DYNAMIC_LIMITS: 0
+                YELLOW_LIMIT_CELLS_STATIC: 0
+                YELLOW_LIMIT_DYNAMIC: PERCENTAGE_750
+                RED_LIMIT_CELLS_STATIC: 0
+                RED_LIMIT_DYNAMIC: PERCENTAGE_625
+            ?
+                PORT_ID: [[176,183], [187,194], [198,205], [209,216], [220,227], [231,238], [242,249], [253,260], [264,271], [275,282], [286,293], [297,304], [308,315], [319,326], [330,337], [341,348]]
                 TM_UC_Q_ID: [3,4]
             :
                 MIN_GUARANTEE_CELLS: 0
@@ -2668,14 +2753,15 @@ device:
             ?
                 PORT_ID: [[1,8], [11,18], [21,29], [33,40], [43,51], [55,62], [65,73], [76,84], [87,95], [99,106], [109,117], [121,128], [131,139], [143,150], [153,161], [165,172], [175,183], [187,194], [197,205], [209,216], [219,227], [231,238], [241,249], [253,260], [263,271], [274,282], [285,293], [297,304], [307,315], [319,326], [329,337], [341,348], 351]
             :
-                UC_Q_GRP_MIN_GUARANTEE_CELLS: 14
-                MC_Q_GRP_MIN_GUARANTEE_CELLS: 14
+                UC_Q_GRP_MIN_GUARANTEE_CELLS: 0
+                MC_Q_GRP_MIN_GUARANTEE_CELLS: 0
         
         TM_THD_MC_Q:
             ?
                 PORT_ID: [0]
                 TM_MC_Q_ID: [[0,47]]
             :
+                MIN_GUARANTEE_CELLS: 7
                 DYNAMIC_SHARED_LIMITS: 1
                 SHARED_LIMIT_DYNAMIC: ALPHA_1_4
                 COLOR_SPECIFIC_LIMITS: 0
@@ -2683,17 +2769,6 @@ device:
                 YELLOW_LIMIT_DYNAMIC: PERCENTAGE_750
                 RED_LIMIT_DYNAMIC: PERCENTAGE_625
                 RESUME_OFFSET_CELLS: 2
-            ?
-                PORT_ID: [0]
-                TM_MC_Q_ID: [0,19]
-            :
-                MIN_GUARANTEE_CELLS: 7
-            ?
-                PORT_ID: [0]
-                TM_MC_Q_ID: [20,42]
-            :
-                MIN_GUARANTEE_CELLS: 37
-                SHARED_LIMIT_DYNAMIC: ALPHA_1_4
             ?
                 PORT_ID: [[1,8], [11,18], [21,29], [33,40], [43,51], [55,62], [65,73], [76,84], [87,95], [99,106], [109,117], [121,128], [131,139], [143,150], [153,161], [165,172], [175,183], [187,194], [197,205], [209,216], [219,227], [231,238], [241,249], [253,260], [263,271], [274,282], [285,293], [297,304], [307,315], [319,326], [329,337], [341,348], 351]
                 TM_MC_Q_ID: [0,1]
@@ -2714,12 +2789,12 @@ device:
                 TM_EGR_SERVICE_POOL_ID: 0
             :
                 COLOR_SPECIFIC_LIMITS: 0
-                RED_SHARED_LIMIT_CELLS: 18756
-                YELLOW_SHARED_LIMIT_CELLS: 22508
-                SHARED_LIMIT_CELLS: 240087
-                RED_SHARED_RESUME_LIMIT_CELLS: 18754
-                YELLOW_SHARED_RESUME_LIMIT_CELLS: 22506
-                SHARED_RESUME_LIMIT_CELLS: 30009
+                RED_SHARED_LIMIT_CELLS: 19376
+                YELLOW_SHARED_LIMIT_CELLS: 23252
+                SHARED_LIMIT_CELLS: 248023
+                RED_SHARED_RESUME_LIMIT_CELLS: 19374
+                YELLOW_SHARED_RESUME_LIMIT_CELLS: 23250
+                SHARED_RESUME_LIMIT_CELLS: 31001
             ?
                 PORT_ID: [[1,8], [11,18], [21,29], [33,40], [43,51], [55,62], [65,73], [76,84], [87,95], [99,106], [109,117], [121,128], [131,139], [143,150], [153,161], [165,172], [175,183], [187,194], [197,205], [209,216], [219,227], [231,238], [241,249], [253,260], [263,271], [274,282], [285,293], [297,304], [307,315], [319,326], [329,337], [341,348], 351]
                 TM_EGR_SERVICE_POOL_ID: 1
@@ -2821,7 +2896,7 @@ device:
 device:
     0:
         TM_MIRROR_ON_DROP_CONTROL:
-            RESERVED_LIMIT_CELLS: 3306
+            RESERVED_LIMIT_CELLS: 0
         
         TM_MIRROR_ON_DROP_PROFILE:
             ?
