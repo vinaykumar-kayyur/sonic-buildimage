@@ -171,7 +171,7 @@ def test___init_7():
             "bbr": expected_bbr_entries,
         }
     }
-    __init_common(constants, "BBRMgr::Initialized and enabled. Default state: 'disabled'", None, expected_bbr_entries, "disabled")
+    __init_common(constants, "BBRMgr::Initialized and from constants. Default state: 'disabled'", None, expected_bbr_entries, "disabled")
 
 def test___init_8():
     expected_bbr_entries = {
@@ -185,7 +185,7 @@ def test___init_8():
             "bbr": expected_bbr_entries,
         }
     }
-    __init_common(constants, "BBRMgr::Initialized and enabled. Default state: 'enabled'", None, expected_bbr_entries, "enabled")
+    __init_common(constants, "BBRMgr::Initialized and enabled from constants. Default state: 'enabled'", None, expected_bbr_entries, "enabled")
 
 @patch('bgpcfgd.managers_bbr.log_info')
 def read_pgs_common(constants, expected_log_info, expected_bbr_enabled_pgs, mocked_log_info):
