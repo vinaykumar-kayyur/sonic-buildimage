@@ -192,7 +192,7 @@ def test___init_8():
 def test___init_with_config_db(mock_db_connector, mock_table):
     mock_table_instance = MagicMock()
     mock_table.return_value = mock_table_instance
-    mock_table_instance.get.return_value = (True, {'status': 'enabled'})
+    mock_table_instance.get.return_value = (True, {'all': 'enabled'})
 
     expected_bbr_entries = {
         "PEER_V4": ["ipv4"],
