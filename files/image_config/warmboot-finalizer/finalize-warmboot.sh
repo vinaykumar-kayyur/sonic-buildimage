@@ -102,15 +102,15 @@ function check_list()
 }
 
 function set_cpufreq_governor() {
-    governor="$1"
-    echo "$governor" | tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor \
+    local -r governor="$1"
+    echo "$governor" | tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor 1> /dev/null \
         && debug "Set CPUFreq scaling governor to $governor" \
         || debug "Failed to set CPUFreq scaling governor to $governor"
 }
 
 function finalize_common() {
     # Read default governor from kernel config
-    default_governor=$(cat "/boot/config-$(uname -r)" | grep -E 'CONFIG_CPU_FREQ_DEFAULT_GOV_.*=y' | sed -E 's/CONFIG_CPU_FREQ_DEFAULT_GOV_(.*)=y/\1/')
+    local -r default_governor=$(cat "/boot/config-$(uname -r)" | grep -o 'CONFIG_CPU_FREQ_DEFAULT_GOV_[^=]*=y')
     set_cpufreq_governor "$default_governor"
 }
 
