@@ -187,6 +187,40 @@ def test___init_8():
     }
     __init_common(constants, "BBRMgr::Initialized and enabled from constants. Default state: 'enabled'", None, expected_bbr_entries, "enabled")
 
+@patch('bgpcfgd.managers_bbr.swsscommon.DBConnector')
+@patch('bgpcfgd.managers_bbr.swsscommon.Table')
+def test___init_with_config_db(mock_db_connector, mock_table):
+    mock_table_instance = MagicMock()
+    mock_table.return_value = mock_table_instance
+    mock_table_instance.get.return_value = (True, {'status': 'enabled'})
+
+    expected_bbr_entries = {
+        "PEER_V4": ["ipv4"],
+        "PEER_V6": ["ipv6"],
+    }
+    constants = deepcopy(global_constants)
+    constants["bgp"]["bbr"] = {"enabled": True, "default_state": "disabled"}
+    constants["bgp"]["peers"] = {
+        "general": {
+            "bbr": expected_bbr_entries,
+        }
+    }
+    cfg_mgr = MagicMock()
+    common_objs = {
+        'directory': Directory(),
+        'cfg_mgr': cfg_mgr,
+        'tf': TemplateFabric(),
+        'constants': constants,
+    }
+    m = BBRMgr(common_objs, "CONFIG_DB", "BGP_BBR")
+    m._BBRMgr__init()
+
+    # BBR status from config_db should be prioritized over constants
+    assert m.enabled
+    assert m.directory.get("CONFIG_DB", "BGP_BBR", "status") == "enabled"
+    assert m.bbr_enabled_pgs == expected_bbr_entries
+
+
 @patch('bgpcfgd.managers_bbr.log_info')
 def read_pgs_common(constants, expected_log_info, expected_bbr_enabled_pgs, mocked_log_info):
     cfg_mgr = MagicMock()

@@ -78,7 +78,6 @@ class BBRMgr(Manager):
             else:
                 log_info("BBRMgr::Disabled: no BBR enabled peers")
 
-
     def __read_pgs(self):
         """
         Read peer-group bbr settings from constants file
@@ -95,7 +94,6 @@ class BBRMgr(Manager):
                 res[pg_name] = pg_afs
         return res
 
-
     def _get_bbr_status_from_config_db(self):
         """
         Read BBR status from CONFIG_DB
@@ -109,7 +107,6 @@ class BBRMgr(Manager):
         if bbr_table_data and 'all' in bbr_table_data:
             return bbr_table_data["all"]
         return None
-
 
     def __set_validation(self, key, data):
         """ Validate set-command arguments
