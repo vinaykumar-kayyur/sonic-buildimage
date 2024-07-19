@@ -102,7 +102,8 @@ def test_del_handler(mocked_log_err):
 
 @patch('bgpcfgd.managers_bbr.log_info')
 @patch('bgpcfgd.managers_bbr.log_err')
-def __init_common(constants,
+@patch('bgpcfgd.managers_bbr.BBRMgr.get_bbr_status_from_config_db')
+def __init_common(constants, mocked_get_bbr_status_from_config_db,
                   expected_log_info, expected_log_err, expected_bbr_enabled_pgs, expected_status,
                   mocked_log_err, mocked_log_info):
     cfg_mgr = MagicMock()
@@ -112,6 +113,8 @@ def __init_common(constants,
         'tf':        TemplateFabric(),
         'constants': constants,
     }
+    mocked_get_bbr_status_from_config_db.return_value = None
+
     m = BBRMgr(common_objs, "CONFIG_DB", "BGP_BBR")
     m._BBRMgr__init()
     assert m.bbr_enabled_pgs == expected_bbr_enabled_pgs
@@ -187,13 +190,8 @@ def test___init_8():
     }
     __init_common(constants, "BBRMgr::Initialized and enabled from constants. Default state: 'enabled'", None, expected_bbr_entries, "enabled")
 
-@patch('bgpcfgd.managers_bbr.swsscommon.DBConnector')
-@patch('bgpcfgd.managers_bbr.swsscommon.Table')
-def test___init_with_config_db(mock_db_connector, mock_table):
-    mock_table_instance = MagicMock()
-    mock_table.return_value = mock_table_instance
-    mock_table_instance.get.return_value = (True, {'all': 'enabled'})
-
+@patch('bgpcfgd.managers_bbr.BBRMgr.get_bbr_status_from_config_db', return_value={'all': {'status': 'enabled'}})
+def test___init_with_config_db(mocked_get_bbr_status_from_config_db):
     expected_bbr_entries = {
         "PEER_V4": ["ipv4"],
         "PEER_V6": ["ipv6"],

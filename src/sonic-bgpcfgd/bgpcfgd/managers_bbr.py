@@ -46,7 +46,7 @@ class BBRMgr(Manager):
     def __init(self):
         """ Initialize BBRMgr. Extracted from constructor """
         # Check BGP_BBR table from config_db first
-        bbr_status_from_config_db = self._get_bbr_status_from_config_db()
+        bbr_status_from_config_db = self.get_bbr_status_from_config_db()
 
         if bbr_status_from_config_db is None:
             if not 'bgp' in self.constants:
@@ -94,7 +94,7 @@ class BBRMgr(Manager):
                 res[pg_name] = pg_afs
         return res
 
-    def _get_bbr_status_from_config_db(self):
+    def get_bbr_status_from_config_db(self):
         """
         Read BBR status from CONFIG_DB
         :return: BBR status from CONFIG_DB or None if not found
@@ -104,8 +104,8 @@ class BBRMgr(Manager):
             return None
         config_db.connect()
         bbr_table_data = config_db.get_table(self.table_name)
-        if bbr_table_data and 'all' in bbr_table_data:
-            return bbr_table_data["all"]
+        if bbr_table_data and 'all' in bbr_table_data and 'status' in bbr_table_data["all"]:
+            return bbr_table_data["all"]["status"]
         return None
 
     def __set_validation(self, key, data):
