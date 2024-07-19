@@ -481,6 +481,11 @@ sudo tee $FILESYSTEM_ROOT_ETC/systemd/bootchart.conf > /dev/null <<EOF
 Samples=4500
 Frequency=25
 EOF
+
+sudo cp $IMAGE_CONFIGS/kdump-feature/kdump-service.service $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM
+sudo cp $IMAGE_CONFIGS/kdump-feature/kdump-service.py $FILESYSTEM_ROOT/usr/bin/
+echo "kdump-service.service" | sudo tee -a $GENERATED_SERVICE_FILE
+
 {% if enable_bootchart == 'y' %}
 sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable systemd-bootchart
 {% endif %}

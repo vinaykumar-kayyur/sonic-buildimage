@@ -1,0 +1,84 @@
+#!/usr/bin/env python3
+
+import re
+import os
+import subprocess
+import time
+from sonic_py_common.logger import Logger
+from swsscommon.swsscommon import ConfigDBConnector
+
+SYSLOG_IDENTIFIER = os.path.basename(__file__)
+
+# Global logger instance
+logger = Logger(SYSLOG_IDENTIFIER)
+logger.log_info("Starting kdump config monitor...")
+
+# Connect to config db
+config_db = ConfigDBConnector()
+config_db.connect()
+
+# Path to the kdump-tools file
+kdump_tools_file = '/etc/default/kdump-tools'
+
+def read_kdump_config():
+    """
+    Read the kdump configuration from config_db.
+    """
+    kdump_config = config_db.get_table('KDUMP')
+    return kdump_config
+
+def update_kdump_tools_file(ssh_string, ssh_path):
+    """
+    Update the /etc/default/kdump-tools file with new ssh_string and ssh_path values.
+    """
+    # Read the contents of the file
+    with open(kdump_tools_file, 'r') as file:
+        lines = file.readlines()
+
+    # Modify the desired lines
+    for i, line in enumerate(lines):
+        if line.startswith('#SSH='):
+            lines[i] = f'SSH="{ssh_string}"\n'
+        elif line.startswith('#SSH_KEY'):
+            lines[i] = f'SSH_KEY="{ssh_path}"\n'
+
+    # Write the modified contents back to the file
+    with open(kdump_tools_file, 'w') as file:
+        file.writelines(lines)
+
+# Main handler function
+def handler():
+    """
+    Continuously monitors the kdump_table for changes and updates the kdump-tools file.
+    """
+    previous_config = read_kdump_config()
+
+    while True:
+        current_config = read_kdump_config()
+
+        ssh_string = current_config.get('ssh_string', None)
+        ssh_path = current_config.get('ssh_path', None)
+
+        # Check if the configuration has changed
+        if current_config != previous_config:
+            logger.log_info("Detected change in kdump configuration")
+
+            # Update the kdump-tools file if the relevant keys are present
+            if ssh_string and ssh_path:
+                update_kdump_tools_file(ssh_string, ssh_path)
+                logger.log_info(f"Updated kdump-tools file with SSH: {ssh_string} and SSH_KEY: {ssh_path}")
+
+            # Update the previous configuration
+            previous_config = current_config
+
+        time.sleep(10)
+
+# Entry point function
+def main():
+    """
+    Entry point for the daemon.
+    """
+    handler()
+
+if __name__ == "__main__":
+    main()
