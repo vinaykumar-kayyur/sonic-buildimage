@@ -32,6 +32,9 @@ $(addprefix $(DEST)/, $(MLNX_RSHIM)): $(DEST)/% :
 
 	pushd rshim_src
 
+	# disable default systemd service
+	sed -i 's/	dh_auto_configure/	dh_auto_configure -- --with-systemdsystemunitdir=no/' debian/rules
+
 	# Build the package
 	DEB_BUILD_OPTIONS=nocheck dpkg-buildpackage -rfakeroot -us -uc -b -j$(SONIC_CONFIG_MAKE_JOBS) --admindir $(SONIC_DPKG_ADMINDIR)
 
