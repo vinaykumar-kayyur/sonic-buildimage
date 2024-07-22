@@ -29,6 +29,7 @@ class TestJ2Files(TestCase):
         self.t0_port_config = os.path.join(self.test_dir, 't0-sample-port-config.ini')
         self.t0_port_config_tiny = os.path.join(self.test_dir, 't0-sample-port-config-tiny.ini')
         self.t1_ss_port_config = os.path.join(self.test_dir, 't1-ss-sample-port-config.ini')
+        self.t1_ss_dpu_port_config = os.path.join(self.test_dir, 't1-ss-dpu-sample-port-config.ini')
         self.l1_l3_port_config = os.path.join(self.test_dir, 'l1-l3-sample-port-config.ini')
         self.t0_7050cx3_port_config = os.path.join(self.test_dir, 't0_7050cx3_d48c8_port_config.ini')
         self.t1_mlnx_minigraph = os.path.join(self.test_dir, 't1-sample-graph-mlnx.xml')
@@ -318,6 +319,17 @@ class TestJ2Files(TestCase):
         output_json = json.loads(output)
 
         sample_output_file = os.path.join(self.test_dir, 'sample_output', 't1-smartswitch.json')
+        with open(sample_output_file) as sample_output_fd:
+            sample_output_json = json.load(sample_output_fd)
+
+        self.assertTrue(json.dumps(sample_output_json, sort_keys=True) == json.dumps(output_json, sort_keys=True))
+
+    def test_t1_smartswitch_dpu_template(self):
+        argument = ['-k', 'SS-DPU-1x400Gb', '--preset', 't1-smartswitch', '-p', self.t1_ss_dpu_port_config]
+        output = self.run_script(argument)
+        output_json = json.loads(output)
+
+        sample_output_file = os.path.join(self.test_dir, 'sample_output', 't1-smartswitch-dpu.json')
         with open(sample_output_file) as sample_output_fd:
             sample_output_json = json.load(sample_output_fd)
 
@@ -759,9 +771,10 @@ class TestJ2Files(TestCase):
             # Skip on python2 as the change will not be backported to previous version
             return
 
-        conf_template = os.path.join(self.test_dir, '..', '..', '..', 'files', 'image_config', 'rsyslog', 'rsyslog.conf.j2')
+        conf_template = os.path.join(self.test_dir, '..', '..', '..', 'files', 'image_config', 'rsyslog',
+                                     'rsyslog.conf.j2')
         config_db_json = os.path.join(self.test_dir, "data", "rsyslog", "config_db.json")
-        additional_data = "{\"udp_server_ip\": \"10.150.22.222\", \"hostname\": \"kvm-host\"}"
+        additional_data = "{\"udp_server_ip\": \"1.1.1.1\", \"hostname\": \"kvm-host\"}"
 
         argument = ['-j', config_db_json, '-t', conf_template, '-a', additional_data]
         self.run_script(argument, output_file=self.output_file)
@@ -769,6 +782,24 @@ class TestJ2Files(TestCase):
             pattern = r'^action.*Device="eth0".*'
             for line in file:
                 assert not bool(re.match(pattern, line.strip())), "eth0 is not allowed in Mgfx device"
+        self.assertTrue(utils.cmp(os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, 'rsyslog.conf'),
+                                  self.output_file))
+
+    def test_rsyslog_conf_docker0_ip(self):
+        if utils.PYvX_DIR != 'py3':
+            # Skip on python2 as the change will not be backported to previous version
+            return
+
+        conf_template = os.path.join(self.test_dir, '..', '..', '..', 'files', 'image_config', 'rsyslog',
+                                     'rsyslog.conf.j2')
+        config_db_json = os.path.join(self.test_dir, "data", "rsyslog", "config_db.json")
+        additional_data = "{\"udp_server_ip\": \"1.1.1.1\", \"hostname\": \"kvm-host\", " + \
+                          "\"docker0_ip\": \"2.2.2.2\"}"
+
+        argument = ['-j', config_db_json, '-t', conf_template, '-a', additional_data]
+        self.run_script(argument, output_file=self.output_file)
+        self.assertTrue(utils.cmp(os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR,
+                                               'rsyslog_with_docker0.conf'), self.output_file))
 
     def tearDown(self):
         os.environ["CFGGEN_UNIT_TESTING"] = ""
