@@ -25,7 +25,7 @@
         "verify": {
             "xpath": "/sonic-bgp-device-global:sonic-bgp-device-global/BGP_DEVICE_GLOBAL/STATE/originate_bandwidth",
             "key": "sonic-bgp-device-global:originate_bandwidth",
-            "value": "false"
+            "value": "disabled"
         }
     },
     "BGP_DEVICE_GLOBAL_WITH_ORIGINATE_BANDWIDTH_CUMULATIVE": {
@@ -38,7 +38,7 @@
         "desc": "Load bgp device global table with originate_bandwidth set to a weight of 5"
     },
     "BGP_DEVICE_GLOBAL_WITH_ORIGINATE_BANDWIDTH_DISABLED": {
-        "desc": "Load bgp device global table with originate_bandwidth set to false"
+        "desc": "Load bgp device global table with originate_bandwidth set to disabled"
     },
     "BGP_DEVICE_GLOBAL_WITH_ORIGINATE_BANDWIDTH_INVALID_VALUE": {
         "desc": "Configure invalid originate_bandwidth in BGP_DEVICE_GLOBAL.",

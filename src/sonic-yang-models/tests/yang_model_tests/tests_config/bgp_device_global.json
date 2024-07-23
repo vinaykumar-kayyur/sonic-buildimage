@@ -73,7 +73,7 @@
         "sonic-bgp-device-global:sonic-bgp-device-global": {
             "sonic-bgp-device-global:BGP_DEVICE_GLOBAL": {
                 "STATE": {
-                    "originate_bandwidth": "false"
+                    "originate_bandwidth": "disabled"
                 }
             }
         }

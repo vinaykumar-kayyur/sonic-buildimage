@@ -1710,7 +1710,7 @@
         "BGP_DEVICE_GLOBAL": {
             "STATE": {
                 "tsa_enabled": "false",
-                "originate_bandwidth": "false",
+                "originate_bandwidth": "disabled",
                 "idf_isolation_state": "unisolated"
             }
         },

@@ -47,7 +47,7 @@ module sonic-bgp-device-global {
                             enum num_multipaths {
                                 description "Internally computed bandwidth based on number of multipaths";
                             }
-                            enum false {
+                            enum disabled {
                                 description "Disable W-ECMP using BGP link bandwidth";
                             }
                         }
@@ -55,7 +55,7 @@ module sonic-bgp-device-global {
                             range "1..25600";
                         }
                     }
-                    default "false";
+                    default "disabled";
                 }
 
                 leaf idf_isolation_state {
