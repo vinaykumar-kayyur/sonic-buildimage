@@ -9,8 +9,8 @@
 	url = https://github.com/sonic-net/sonic-sairedis
 [submodule "sonic-swss"]
 	path = src/sonic-swss
-	url = https://github.com/ridahanif96/sonic-swss.git
-	branch = dhcp_dos
+	url = https://github.com/asraza07/sonic-swss.git
+	branch = dhcp_dos_mitigation_swss
 [submodule "src/p4c-bm/p4c-bm"]
 	path = platform/p4/p4c-bm/p4c-bm
 	url = https://github.com/krambn/p4c-bm
