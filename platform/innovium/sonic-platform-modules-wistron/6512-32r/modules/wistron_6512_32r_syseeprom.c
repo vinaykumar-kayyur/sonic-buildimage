@@ -43,8 +43,8 @@ static ssize_t set_syseeprom(struct device *dev, struct device_attribute *da, co
 	unsigned int val;
 
 	mutex_lock(&data->lock);
-	memset(data->eeprom, 0xFF, EEPROM_DATA_SIZE);
-	memset(str, 0x0, 3);
+	memzero_explicit(data->eeprom, EEPROM_DATA_SIZE);
+	memzero_explicit(str, sizeof(str));
 
 	if (strlen(buf) >= EEPROM_DATA_SIZE) {
 		for (i = 0; i < strlen(buf) ; i++) {
@@ -97,7 +97,7 @@ static int wistron_syseeprom_probe(struct i2c_client *client, const struct i2c_d
 	if (status)
 		goto exit_free;
 
-	data->hwmon_dev = hwmon_device_register_with_info(&client->dev, "wistron_syseeprom", NULL, NULL, NULL);
+	data->hwmon_dev = hwmon_device_register_with_groups(&client->dev, "wistron_syseeprom", NULL, NULL);
 	if (IS_ERR(data->hwmon_dev)) {
 		status = PTR_ERR(data->hwmon_dev);
 		goto exit_remove;
@@ -115,15 +115,13 @@ exit_free:
 	return status;
 }
 
-static int wistron_syseeprom_remove(struct i2c_client *client)
+static void wistron_syseeprom_remove(struct i2c_client *client)
 {
 	struct wistron_syseeprom_data *data = i2c_get_clientdata(client);
 
 	hwmon_device_unregister(data->hwmon_dev);
 	sysfs_remove_group(&client->dev.kobj, &wistron_syseeprom_group);
 	kfree(data);
-
-	return 0;
 }
 
 static const struct i2c_device_id wistron_syseeprom_id[] = {
