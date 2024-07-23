@@ -342,25 +342,25 @@ static ssize_t set_value
         }
         case PSU_MFR_ID:
         {
-            memset(&data->mfr_id, 0x0, sizeof(data->mfr_id));
+            memzero_explicit(&data->mfr_id, sizeof(data->mfr_id));
             strncpy(data->mfr_id, buf, sizeof(data->mfr_id)-1);
             break;
         }
         case PSU_MFR_MODEL:
         {
-            memset(&data->mfr_model, 0x0, sizeof(data->mfr_model));
+            memzero_explicit(&data->mfr_model, sizeof(data->mfr_model));
             strncpy(data->mfr_model, buf, sizeof(data->mfr_model)-1);
             break;
         }
         case PSU_MFR_REVISION:
         {
-            memset(&data->mfr_revsion, 0x0, sizeof(data->mfr_revsion));
+            memzero_explicit(&data->mfr_revsion, sizeof(data->mfr_revsion));
             strncpy(data->mfr_revsion, buf, sizeof(data->mfr_revsion)-1);
             break;
         }
         case PSU_MFR_SERIAL:
         {
-            memset(&data->mfr_serial, 0x0, sizeof(data->mfr_serial));
+            memzero_explicit(&data->mfr_serial, sizeof(data->mfr_serial));
             strncpy(data->mfr_serial, buf, sizeof(data->mfr_serial)-1);
             break;
         }
@@ -403,7 +403,7 @@ static int wistron_i2c_psu_probe(struct i2c_client *client, const struct i2c_dev
         goto exit_free;
     }
 
-    data->hwmon_dev = hwmon_device_register(&client->dev);
+	data->hwmon_dev = hwmon_device_register_with_groups(&client->dev, "wistron_i2c_psu", NULL, NULL);
     if (IS_ERR(data->hwmon_dev))
     {
         status = PTR_ERR(data->hwmon_dev);
@@ -422,14 +422,13 @@ exit:
     return status;
 }
 
-static int wistron_i2c_psu_remove(struct i2c_client *client)
+static void wistron_i2c_psu_remove(struct i2c_client *client)
 {
     struct wistron_i2c_psu_data *data = i2c_get_clientdata(client);
 
     hwmon_device_unregister(data->hwmon_dev);
     sysfs_remove_group(&client->dev.kobj, &wistron_i2c_psu_group);
     kfree(data);
-    return 0;
 }
 
 /* Support psu moduel

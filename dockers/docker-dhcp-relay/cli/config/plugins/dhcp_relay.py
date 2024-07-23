@@ -22,11 +22,13 @@ def validate_ips(ctx, ips, ip_version):
             ctx.fail("{} is not IPv{} address".format(ip, ip_version))
 
 
-def get_dhcp_servers(db, vlan_name, ctx, table_name, dhcp_servers_str):
-    table = db.cfgdb.get_entry(table_name, vlan_name)
-    if len(table.keys()) == 0:
-        ctx.fail("{} doesn't exist".format(vlan_name))
+def get_dhcp_servers(db, vlan_name, ctx, table_name, dhcp_servers_str, check_is_exist=True):
+    if check_is_exist:
+        keys = db.cfgdb.get_keys(table_name)
+        if vlan_name not in keys:
+            ctx.fail("{} doesn't exist".format(vlan_name))
 
+    table = db.cfgdb.get_entry(table_name, vlan_name)
     dhcp_servers = table.get(dhcp_servers_str, [])
 
     return dhcp_servers, table
@@ -37,9 +39,9 @@ def restart_dhcp_relay_service():
     Restart dhcp_relay service
     """
     click.echo("Restarting DHCP relay service...")
-    clicommon.run_command("systemctl stop dhcp_relay", display_cmd=False)
-    clicommon.run_command("systemctl reset-failed dhcp_relay", display_cmd=False)
-    clicommon.run_command("systemctl start dhcp_relay", display_cmd=False)
+    clicommon.run_command(['systemctl', 'stop', 'dhcp_relay'], display_cmd=False)
+    clicommon.run_command(['systemctl', 'reset-failed', 'dhcp_relay'], display_cmd=False)
+    clicommon.run_command(['systemctl', 'start', 'dhcp_relay'], display_cmd=False)
 
 
 def add_dhcp_relay(vid, dhcp_relay_ips, db, ip_version):
@@ -49,7 +51,10 @@ def add_dhcp_relay(vid, dhcp_relay_ips, db, ip_version):
     ctx = click.get_current_context()
     # Verify ip addresses are valid
     validate_ips(ctx, dhcp_relay_ips, ip_version)
-    dhcp_servers, table = get_dhcp_servers(db, vlan_name, ctx, table_name, dhcp_servers_str)
+
+    # It's unnecessary for DHCPv6 Relay to verify entry exist
+    check_config_exist = True if ip_version == 4 else False
+    dhcp_servers, table = get_dhcp_servers(db, vlan_name, ctx, table_name, dhcp_servers_str, check_config_exist)
     added_ips = []
 
     for dhcp_relay_ip in dhcp_relay_ips:
@@ -100,12 +105,20 @@ def del_dhcp_relay(vid, dhcp_relay_ips, db, ip_version):
     else:
         table[dhcp_servers_str] = dhcp_servers
 
+    if ip_version == 6 and len(table.keys()) == 0:
+        table = None
+
     db.cfgdb.set_entry(table_name, vlan_name, table)
     click.echo("Removed DHCP relay address [{}] from {}".format(",".join(dhcp_relay_ips), vlan_name))
     try:
         restart_dhcp_relay_service()
     except SystemExit as e:
         ctx.fail("Restart service dhcp_relay failed with error {}".format(e))
+
+
+def is_dhcp_server_enabled(db):
+    dhcp_server_feature_entry = db.cfgdb.get_entry("FEATURE", "dhcp_server")
+    return "state" in dhcp_server_feature_entry and dhcp_server_feature_entry["state"] == "enabled"
 
 
 @click.group(cls=clicommon.AbbreviationGroup, name="dhcp_relay")
@@ -155,6 +168,9 @@ def dhcp_relay_ipv4_helper():
 @click.argument("dhcp_relay_helpers", nargs=-1, required=True)
 @clicommon.pass_db
 def add_dhcp_relay_ipv4_helper(db, vid, dhcp_relay_helpers):
+    if is_dhcp_server_enabled(db):
+        click.echo("Cannot change ipv4 dhcp_relay configuration when dhcp_server feature is enabled")
+        return
     add_dhcp_relay(vid, dhcp_relay_helpers, db, IPV4)
 
 
@@ -163,6 +179,9 @@ def add_dhcp_relay_ipv4_helper(db, vid, dhcp_relay_helpers):
 @click.argument("dhcp_relay_helpers", nargs=-1, required=True)
 @clicommon.pass_db
 def del_dhcp_relay_ipv4_helper(db, vid, dhcp_relay_helpers):
+    if is_dhcp_server_enabled(db):
+        click.echo("Cannot change ipv4 dhcp_relay configuration when dhcp_server feature is enabled")
+        return
     del_dhcp_relay(vid, dhcp_relay_helpers, db, IPV4)
 
 
@@ -199,6 +218,9 @@ def add_vlan_dhcp_relay_destination(db, vid, dhcp_relay_destination_ips):
                 click.echo("{} is already a DHCP relay destination for {}".format(ip_addr, vlan_name))
                 continue
             if clicommon.ipaddress_type(ip_addr) == 4:
+                if is_dhcp_server_enabled(db):
+                    click.echo("Cannot change dhcp_relay configuration when dhcp_server feature is enabled")
+                    return
                 dhcp_servers.append(ip_addr)
             else:
                 dhcpv6_servers.append(ip_addr)
@@ -245,6 +267,9 @@ def del_vlan_dhcp_relay_destination(db, vid, dhcp_relay_destination_ips):
         if (ip_addr not in dhcp_servers) and (ip_addr not in dhcpv6_servers):
             ctx.fail("{} is not a DHCP relay destination for {}".format(ip_addr, vlan_name))
         if clicommon.ipaddress_type(ip_addr) == 4:
+            if is_dhcp_server_enabled(db):
+                click.echo("Cannot change dhcp_relay configuration when dhcp_server feature is enabled")
+                return
             dhcp_servers.remove(ip_addr)
         else:
             dhcpv6_servers.remove(ip_addr)
