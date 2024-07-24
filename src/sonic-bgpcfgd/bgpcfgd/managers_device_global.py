@@ -155,7 +155,7 @@ class DeviceGlobalCfgMgr(Manager):
         elif status == "num_multipaths":
             log_notice("DeviceGlobalCfgMgr:: Enabling originate_bandwidth with num_multipath...")
         elif status.isdigit() and (1 <= int(status) <= 25600):
-            log_notice("DeviceGlobalCfgMgr:: Enabling originate_bandwidth with weight...")
+            log_notice("DeviceGlobalCfgMgr:: Enabling originate_bandwidth with bandwidth (Mbps) value...")
         else:
             log_notice("DeviceGlobalCfgMgr:: Disabling originate_bandwidth...")
 
