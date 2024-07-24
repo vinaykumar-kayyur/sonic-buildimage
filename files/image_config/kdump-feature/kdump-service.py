@@ -30,6 +30,7 @@ def read_kdump_config():
 def update_kdump_tools_file(ssh_string, ssh_path):
     """
     Update the /etc/default/kdump-tools file with new ssh_string and ssh_path values.
+    If the values are empty, comment out the respective lines.
     """
     # Read the contents of the file
     with open(kdump_tools_file, 'r') as file:
@@ -37,10 +38,17 @@ def update_kdump_tools_file(ssh_string, ssh_path):
 
     # Modify the desired lines
     for i, line in enumerate(lines):
-        if line.startswith('#SSH='):
-            lines[i] = f'SSH="{ssh_string}"\n'
-        elif line.startswith('#SSH_KEY'):
-            lines[i] = f'SSH_KEY="{ssh_path}"\n'
+        if line.startswith('#SSH=') or line.startswith('SSH='):
+            if ssh_string:
+                lines[i] = f'SSH="{ssh_string}"\n'
+            else:
+                lines[i] = f'#SSH={line.split("=", 1)[1]}'
+
+        elif line.startswith('#SSH_KEY') or line.startswith('SSH_KEY'):
+            if ssh_path:
+                lines[i] = f'SSH_KEY="{ssh_path}"\n'
+            else:
+                lines[i] = f'#SSH_KEY={line.split("=", 1)[1]}'
 
     # Write the modified contents back to the file
     with open(kdump_tools_file, 'w') as file:
@@ -63,10 +71,9 @@ def handler():
         if current_config != previous_config:
             logger.log_info("Detected change in kdump configuration")
 
-            # Update the kdump-tools file if the relevant keys are present
-            if ssh_string and ssh_path:
-                update_kdump_tools_file(ssh_string, ssh_path)
-                logger.log_info(f"Updated kdump-tools file with SSH: {ssh_string} and SSH_KEY: {ssh_path}")
+            # Update the kdump-tools file
+            update_kdump_tools_file(ssh_string, ssh_path)
+            logger.log_info(f"Updated kdump-tools file with SSH: {ssh_string} and SSH_KEY: {ssh_path}")
 
             # Update the previous configuration
             previous_config = current_config
