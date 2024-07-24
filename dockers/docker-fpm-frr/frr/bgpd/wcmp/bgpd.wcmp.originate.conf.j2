@@ -6,7 +6,7 @@ route-map CHECK_ORIGINATE_BANDWIDTH_ENABLED permit 100
   set extcommunity bandwidth cumulative
 {%- elif originate_status == 'num_multipaths' %}
   set extcommunity bandwidth num-multipaths
-{%- elif originate_status == 'false' %}
+{%- elif originate_status == 'disabled' %}
   no set extcommunity bandwidth
 {%- else %}
   set extcommunity bandwidth {{ originate_status }}

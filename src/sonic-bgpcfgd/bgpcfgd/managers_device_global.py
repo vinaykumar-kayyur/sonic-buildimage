@@ -145,7 +145,7 @@ class DeviceGlobalCfgMgr(Manager):
     def set_originate_bandwidth(self, status):
         """ API to set/unset originate_bandwidth state """
 
-        if status not in ["cumulative", "num_multipaths", "false"] and (not status.isdigit() or not (1 <= int(status) <= 25600)):
+        if status not in ["cumulative", "num_multipaths", "disabled"] and (not status.isdigit() or not (1 <= int(status) <= 25600)):
             log_err("originate_bandwidth: invalid value({}) is provided".format(status))
             return False
 
