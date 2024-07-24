@@ -30,25 +30,35 @@ def read_kdump_config():
 def update_kdump_tools_file(ssh_string, ssh_path):
     """
     Update the /etc/default/kdump-tools file with new ssh_string and ssh_path values.
-    If the values are empty, comment out the respective lines.
+    If ssh_string or ssh_path is None, replace the value with the initial value obtained from the file.
     """
-    # Read the contents of the file
+    initial_ssh_value = None
+    initial_ssh_key_value = None
+
+    # Read the contents of the file and store initial values
     with open(kdump_tools_file, 'r') as file:
         lines = file.readlines()
+        for line in lines:
+            if line.startswith('#SSH='):
+                initial_ssh_value = line.split('=', 1)[1].strip().strip('"')
+            elif line.startswith('#SSH_KEY='):
+                initial_ssh_key_value = line.split('=', 1)[1].strip().strip('"')
 
     # Modify the desired lines
     for i, line in enumerate(lines):
-        if line.startswith('#SSH=') or line.startswith('SSH='):
+        if line.startswith('SSH=') or line.startswith('#SSH='):
             if ssh_string:
                 lines[i] = f'SSH="{ssh_string}"\n'
             else:
-                lines[i] = f'#SSH={line.split("=", 1)[1]}'
+                if initial_ssh_value:
+                    lines[i] = f'SSH="{initial_ssh_value}"\n'
 
-        elif line.startswith('#SSH_KEY') or line.startswith('SSH_KEY'):
+        elif line.startswith('SSH_KEY=') or line.startswith('#SSH_KEY='):
             if ssh_path:
                 lines[i] = f'SSH_KEY="{ssh_path}"\n'
             else:
-                lines[i] = f'#SSH_KEY={line.split("=", 1)[1]}'
+                if initial_ssh_key_value:
+                    lines[i] = f'SSH_KEY="{initial_ssh_key_value}"\n'
 
     # Write the modified contents back to the file
     with open(kdump_tools_file, 'w') as file:
