@@ -60,7 +60,7 @@ module sonic-bgp-device-global {
                 }
 
                 leaf received_bandwidth {
-                    description "Configures device received-bandwidth state";
+                    description "Configures how device handles the received link-bandwidth extended community";
                     type enumeration {
                         enum ignore {
                             description "Ignore link bandwidth (i.e., do regular ECMP, not weighted)";
