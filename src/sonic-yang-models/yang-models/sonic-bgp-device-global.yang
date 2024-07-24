@@ -52,7 +52,9 @@ module sonic-bgp-device-global {
                             }
                         }
                         type uint16 {
-                            range "1..25600";
+                            range "1..25600" {
+                                description "A value between 1 and 25600 (Mbps) to be advertised through BGP link bandwidth";
+                            }
                         }
                     }
                     default "disabled";
