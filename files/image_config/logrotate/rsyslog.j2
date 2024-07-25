@@ -85,8 +85,7 @@
             if [ $USED_KB -lt $THRESHOLD_KB ]; then
                 break
             else
-                SORTED_ARCHIVE_FILES=$(find /var/log -type f -printf '%T+ %p\n' | grep -E '.+\.[0-9]+(\.gz)?$' | sort )
-                OLDEST_ARCHIVE_FILE=$(echo "${SORTED_ARCHIVE_FILES}" | awk 'NR == 1 {print $2}')
+                OLDEST_ARCHIVE_FILE=$(find /var/log -type f -printf '%T+ %p\n' | grep -E '.+\.[0-9]+(\.gz)?$' | sort  | awk 'NR == 1 {print $2}')
 
                 if [ -z "$OLDEST_ARCHIVE_FILE" ]; then
                     logger -p syslog.err -t "logrotate" "No archive file to delete -- potential for filling up /var/log partition!"
