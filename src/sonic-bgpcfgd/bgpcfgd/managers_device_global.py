@@ -143,10 +143,10 @@ class DeviceGlobalCfgMgr(Manager):
             log_notice("DeviceGlobalCfgMgr:: IDF configuration is up-to-date")
 
     def set_originate_bandwidth(self, status):
-        """ API to set/unset originate_bandwidth state """
+        """ API to set/unset W-ECMP originate_bandwidth state """
 
         if status not in ["cumulative", "num_multipaths", "disabled"] and (not status.isdigit() or not (1 <= int(status) <= 25600)):
-            log_err("originate_bandwidth: invalid value({}) is provided".format(status))
+            log_err("W-ECMP originate_bandwidth: invalid value({}) is provided".format(status))
             return False
 
         if status == "cumulative":
@@ -164,7 +164,7 @@ class DeviceGlobalCfgMgr(Manager):
             log_debug("DeviceGlobalCfgMgr::Before template")
             cmd += self.originate_template.render(originate_status=status)
         except jinja2.TemplateError as e:
-            msg = "originate_bandwidth: error in template rendering"
+            msg = "W-ECMP originate_bandwidth: error in template rendering"
             log_err("%s: %s" % (msg, str(e)))
             return False
 
