@@ -39,26 +39,26 @@ def update_kdump_tools_file(ssh_string, ssh_path):
     with open(kdump_tools_file, 'r') as file:
         lines = file.readlines()
         for line in lines:
-            if line.startswith('#SSH='):
+            if line.startswith('SSH='):
                 initial_ssh_value = line.split('=', 1)[1].strip().strip('"')
-            elif line.startswith('#SSH_KEY='):
+            elif line.startswith('SSH_KEY='):
                 initial_ssh_key_value = line.split('=', 1)[1].strip().strip('"')
 
     # Modify the desired lines
     for i, line in enumerate(lines):
-        if line.startswith('SSH=') or line.startswith('#SSH='):
+        
+        if line.startswith('SSH='):
             if ssh_string:
                 lines[i] = f'SSH="{ssh_string}"\n'
             else:
-                if initial_ssh_value:
-                    lines[i] = f'SSH="{initial_ssh_value}"\n'
+                lines[i] = f'SSH=""\n'
 
-        elif line.startswith('SSH_KEY=') or line.startswith('#SSH_KEY='):
+        elif line.startswith('SSH_KEY='):
+
             if ssh_path:
                 lines[i] = f'SSH_KEY="{ssh_path}"\n'
             else:
-                if initial_ssh_key_value:
-                    lines[i] = f'SSH_KEY="{initial_ssh_key_value}"\n'
+                lines[i] = f'SSH_KEY=""\n'
 
     # Write the modified contents back to the file
     with open(kdump_tools_file, 'w') as file:
