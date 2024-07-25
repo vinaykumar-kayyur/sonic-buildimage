@@ -149,15 +149,14 @@ class DeviceGlobalCfgMgr(Manager):
             log_err("originate_bandwidth: invalid value({}) is provided".format(status))
             return False
 
-        log_debug("DeviceGlobalCfgMgr::After if statement")
         if status == "cumulative":
-            log_notice("DeviceGlobalCfgMgr:: Enabling originate_bandwidth with cumulative...")
+            log_notice("DeviceGlobalCfgMgr:: Enabling W-ECMP originate_bandwidth with cumulative...")
         elif status == "num_multipaths":
-            log_notice("DeviceGlobalCfgMgr:: Enabling originate_bandwidth with num_multipath...")
+            log_notice("DeviceGlobalCfgMgr:: Enabling W-ECMP originate_bandwidth with num_multipath...")
         elif status.isdigit() and (1 <= int(status) <= 25600):
-            log_notice("DeviceGlobalCfgMgr:: Enabling originate_bandwidth with bandwidth (Mbps) value...")
+            log_notice("DeviceGlobalCfgMgr:: Enabling W-ECMP originate_bandwidth with bandwidth (Mbps) value...")
         else:
-            log_notice("DeviceGlobalCfgMgr:: Disabling originate_bandwidth...")
+            log_notice("DeviceGlobalCfgMgr:: Disabling W-ECMP originate_bandwidth...")
 
         cmd = "\n"
 
