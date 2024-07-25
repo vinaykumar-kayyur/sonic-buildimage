@@ -126,7 +126,7 @@ class DeviceGlobalCfgMgr(Manager):
                 self.directory.put(self.db_name, self.table_name, "originate_bandwidth", state)
         else:
             log_notice("DeviceGlobalCfgMgr:: Originate bandwidth for W-ECMP configuration is up-to-date")
-            
+
     def configure_idf(self, data=None):
         """ Configure IDF feature"""
 
