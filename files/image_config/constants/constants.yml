@@ -33,7 +33,7 @@ constants:
           - "deny 0::/0 le 59"
           - "deny 0::/0 ge 65"
     bbr:
-      enabled: true
+      enabled: false
       default_state: "disabled"
     peers:
       general: # peer_type
