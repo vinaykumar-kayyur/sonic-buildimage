@@ -173,7 +173,7 @@ class DeviceGlobalCfgMgr(Manager):
         log_debug("DeviceGlobalCfgMgr::Done")
 
         return True
-    
+
     def check_state_and_get_tsa_routemaps(self, cfg):
         """ API to get TSA route-maps if device is isolated"""
         cmd = ""
