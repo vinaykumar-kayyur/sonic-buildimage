@@ -178,16 +178,16 @@ class DeviceGlobalCfgMgr(Manager):
         cmd_list.append("router bgp %s" % bgp_asn)
         
         if status == "ignore":
-            log_notice("DeviceGlobalCfgMgr:: Ignoring received_bandwdith...")
+            log_notice("DeviceGlobalCfgMgr:: Ignoring W-ECMP received_bandwdith...")
             cmd_list.append(" bgp bestpath bandwidth ignore")
         elif status == "allow":
-            log_notice("DeviceGlobalCfgMgr:: Enabling received_bandwdith with allow...")
+            log_notice("DeviceGlobalCfgMgr:: Enabling W-ECMP received_bandwdith with allow...")
             cmd_list.append(" no bgp bestpath bandwidth")
         elif status == "skip_missing":
-            log_notice("DeviceGlobalCfgMgr:: Enabling received_bandwdith with skip_missing...")
+            log_notice("DeviceGlobalCfgMgr:: Enabling W-ECMP received_bandwdith with skip_missing...")
             cmd_list.append(" bgp bestpath bandwidth skip-missing")
         elif status == "default_weight_for_missing":
-            log_notice("DeviceGlobalCfgMgr:: Enabling received_bandwdith with default_weight_for_missing...")
+            log_notice("DeviceGlobalCfgMgr:: Enabling W-ECMP received_bandwdith with default_weight_for_missing...")
             cmd_list.append(" bgp bestpath bandwidth default-weight-for-missing")
         else:
             return False
