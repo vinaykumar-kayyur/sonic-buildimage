@@ -32,18 +32,9 @@ def update_kdump_tools_file(ssh_string, ssh_path):
     Update the /etc/default/kdump-tools file with new ssh_string and ssh_path values.
     If ssh_string or ssh_path is None, replace the value with the initial value obtained from the file.
     """
-    initial_ssh_value = None
-    initial_ssh_key_value = None
-
     # Read the contents of the file and store initial values
     with open(kdump_tools_file, 'r') as file:
         lines = file.readlines()
-        for line in lines:
-            if line.startswith('SSH='):
-                initial_ssh_value = line.split('=', 1)[1].strip().strip('"')
-            elif line.startswith('SSH_KEY='):
-                initial_ssh_key_value = line.split('=', 1)[1].strip().strip('"')
-
     # Modify the desired lines
     for i, line in enumerate(lines):
         
