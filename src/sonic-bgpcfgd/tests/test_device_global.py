@@ -270,7 +270,7 @@ def test_originate_bandwidth_neg(mocked_log_err, value):
     m.cfg_mgr.changes = ""
     res = m.set_handler("STATE", {"originate_bandwidth": value})
     assert res, "Expect True return value for set_handler"
-    mocked_log_err.assert_called_with("originate_bandwidth: invalid value({}) is provided".format(value))
+    mocked_log_err.assert_called_with("W-ECMP originate_bandwidth: invalid value({}) is provided".format(value))
 
 
 #
