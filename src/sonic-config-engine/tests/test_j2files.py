@@ -2,6 +2,7 @@ import json
 import os
 import shutil
 import subprocess
+import re
 
 from unittest import TestCase
 import tests.common_utils as utils
@@ -28,6 +29,7 @@ class TestJ2Files(TestCase):
         self.t0_port_config = os.path.join(self.test_dir, 't0-sample-port-config.ini')
         self.t0_port_config_tiny = os.path.join(self.test_dir, 't0-sample-port-config-tiny.ini')
         self.t1_ss_port_config = os.path.join(self.test_dir, 't1-ss-sample-port-config.ini')
+        self.t1_ss_dpu_port_config = os.path.join(self.test_dir, 't1-ss-dpu-sample-port-config.ini')
         self.l1_l3_port_config = os.path.join(self.test_dir, 'l1-l3-sample-port-config.ini')
         self.t0_7050cx3_port_config = os.path.join(self.test_dir, 't0_7050cx3_d48c8_port_config.ini')
         self.t1_mlnx_minigraph = os.path.join(self.test_dir, 't1-sample-graph-mlnx.xml')
@@ -222,6 +224,15 @@ class TestJ2Files(TestCase):
         sample_output_file = os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, 'ipinip.json')
         assert utils.cmp(sample_output_file, self.output_file), self.run_diff(sample_output_file, self.output_file)
 
+    def test_ipinip_subnet_decap_enable(self):
+        ipinip_file = os.path.join(self.test_dir, '..', '..', '..', 'dockers', 'docker-orchagent', 'ipinip.json.j2')
+        extra_data = {"SUBNET_DECAP": {"AZURE": {"status": "enable"}}}
+        argument = ['-m', self.t0_minigraph, '-p', self.t0_port_config, '-a', json.dumps(extra_data), '-t', ipinip_file]
+        self.run_script(argument, output_file=self.output_file)
+
+        sample_output_file = os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, 'ipinip_subnet_decap_enable.json')
+        assert utils.cmp(sample_output_file, self.output_file), self.run_diff(sample_output_file, self.output_file)
+
     def test_l2switch_template(self):
         argument = ['-k', 'Mellanox-SN2700', '--preset', 'l2', '-p', self.t0_port_config]
         output = self.run_script(argument)
@@ -308,6 +319,17 @@ class TestJ2Files(TestCase):
         output_json = json.loads(output)
 
         sample_output_file = os.path.join(self.test_dir, 'sample_output', 't1-smartswitch.json')
+        with open(sample_output_file) as sample_output_fd:
+            sample_output_json = json.load(sample_output_fd)
+
+        self.assertTrue(json.dumps(sample_output_json, sort_keys=True) == json.dumps(output_json, sort_keys=True))
+
+    def test_t1_smartswitch_dpu_template(self):
+        argument = ['-k', 'SS-DPU-1x400Gb', '--preset', 't1-smartswitch', '-p', self.t1_ss_dpu_port_config]
+        output = self.run_script(argument)
+        output_json = json.loads(output)
+
+        sample_output_file = os.path.join(self.test_dir, 'sample_output', 't1-smartswitch-dpu.json')
         with open(sample_output_file) as sample_output_fd:
             sample_output_json = json.load(sample_output_fd)
 
@@ -744,6 +766,40 @@ class TestJ2Files(TestCase):
     def test_buffers_edgezone_aggregator_render_template(self):
         self._test_buffers_render_template('arista', 'x86_64-arista_7060_cx32s', 'Arista-7060CX-32S-D48C8', 'sample-arista-7060-t0-minigraph.xml', 'buffers.json.j2', 'buffer-arista7060-t0.json')
 
+    def test_rsyslog_conf(self):
+        if utils.PYvX_DIR != 'py3':
+            # Skip on python2 as the change will not be backported to previous version
+            return
+
+        conf_template = os.path.join(self.test_dir, '..', '..', '..', 'files', 'image_config', 'rsyslog',
+                                     'rsyslog.conf.j2')
+        config_db_json = os.path.join(self.test_dir, "data", "rsyslog", "config_db.json")
+        additional_data = "{\"udp_server_ip\": \"1.1.1.1\", \"hostname\": \"kvm-host\"}"
+
+        argument = ['-j', config_db_json, '-t', conf_template, '-a', additional_data]
+        self.run_script(argument, output_file=self.output_file)
+        with open(self.output_file) as file:
+            pattern = r'^action.*Device="eth0".*'
+            for line in file:
+                assert not bool(re.match(pattern, line.strip())), "eth0 is not allowed in Mgfx device"
+        self.assertTrue(utils.cmp(os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR, 'rsyslog.conf'),
+                                  self.output_file))
+
+    def test_rsyslog_conf_docker0_ip(self):
+        if utils.PYvX_DIR != 'py3':
+            # Skip on python2 as the change will not be backported to previous version
+            return
+
+        conf_template = os.path.join(self.test_dir, '..', '..', '..', 'files', 'image_config', 'rsyslog',
+                                     'rsyslog.conf.j2')
+        config_db_json = os.path.join(self.test_dir, "data", "rsyslog", "config_db.json")
+        additional_data = "{\"udp_server_ip\": \"1.1.1.1\", \"hostname\": \"kvm-host\", " + \
+                          "\"docker0_ip\": \"2.2.2.2\"}"
+
+        argument = ['-j', config_db_json, '-t', conf_template, '-a', additional_data]
+        self.run_script(argument, output_file=self.output_file)
+        self.assertTrue(utils.cmp(os.path.join(self.test_dir, 'sample_output', utils.PYvX_DIR,
+                                               'rsyslog_with_docker0.conf'), self.output_file))
 
     def tearDown(self):
         os.environ["CFGGEN_UNIT_TESTING"] = ""
