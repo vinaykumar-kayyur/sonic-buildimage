@@ -189,6 +189,27 @@
             }
         }
     },
+    "BUFFER_POOL_CORRECT_LARGE_PERCENTAGE_VALUE": {
+        "sonic-device_metadata:sonic-device_metadata": {
+            "sonic-device_metadata:DEVICE_METADATA": {
+                "localhost":{
+                        "buffer_model": "dynamic"
+                }
+            }
+        },
+        "sonic-buffer-pool:sonic-buffer-pool": {
+            "sonic-buffer-pool:BUFFER_POOL": {
+                "BUFFER_POOL_LIST": [
+                {
+                    "name": "ingress_lossless_pool",
+                    "mode": "dynamic",
+                    "percentage": "200",
+                    "type": "ingress"
+                }
+                ]
+            }
+        }
+    },
     "BUFFER_POOL_WRONG_PERCENTAGE_NEGATIVE_VALUE": {
         "sonic-buffer-pool:sonic-buffer-pool": {
             "sonic-buffer-pool:BUFFER_POOL": {

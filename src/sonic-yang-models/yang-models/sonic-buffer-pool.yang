@@ -64,7 +64,10 @@ module sonic-buffer-pool {
 
                 leaf percentage {
                     type uint8;
-                    description "Buffer Pool percentage";
+                    description "
+                        Buffer Pool percentage.
+                        The buffer pool size will be available_buffer * percentage / 100 if percentage is provided.
+                        It is valid in dynamic buffer model only.";
                     must "(not(current()/../size))" {
                         error-message "Percentage should not be configured along with size";
                     }

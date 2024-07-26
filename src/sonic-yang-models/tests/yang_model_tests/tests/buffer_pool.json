@@ -43,6 +43,9 @@
     "BUFFER_POOL_CORRECT_PERCENTAGE_VALUE": {
         "desc": "BUFFER_POOL_CORRECT_PERCENTAGE_VALUE no failure."
     },
+    "BUFFER_POOL_CORRECT_LARGE_PERCENTAGE_VALUE": {
+        "desc": "BUFFER_POOL_CORRECT_PERCENTAGE_VALUE no failure."
+    },
     "BUFFER_POOL_WRONG_PERCENTAGE_NEGATIVE_VALUE": {
         "desc": "BUFFER_POOL_WRONG_PERCENTAGE_NEGATIVE_VALUE pattern failure.",
         "eStr": "Invalid value"
