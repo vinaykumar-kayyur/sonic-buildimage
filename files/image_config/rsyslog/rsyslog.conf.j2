@@ -31,7 +31,10 @@ module(load="imklog")   # provides kernel logging support
 
 # provides RELP syslog reception
 module(load="imrelp")
-input(type="imrelp" port="2514")
+input(type="imrelp" address="{{udp_server_ip}}" port="2514")
+{% if docker0_ip and docker0_ip != "" %}
+input(type="imrelp" address="{{docker0_ip}}" port="2514")
+{% endif%}
 
 
 ###########################
