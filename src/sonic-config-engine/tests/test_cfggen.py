@@ -696,7 +696,7 @@ class TestCfgGen(TestCase):
     def test_metadata_ntp(self):
         argument = ['-m', self.sample_graph_metadata, '-p', self.port_config, '-v', "NTP_SERVER"]
         output = self.run_script(argument)
-        self.assertEqual(utils.to_dict(output.strip()), utils.to_dict("{'10.0.10.1': {}, '10.0.10.2': {}}"))
+        self.assertEqual(utils.to_dict(output.strip()), utils.to_dict("{'10.0.10.1': {'iburst': 'on'}, '10.0.10.2': {'iburst': 'on'}}"))
 
     def test_dns_nameserver(self):
         argument = ['-m', self.sample_graph_metadata, '-p', self.port_config, '-v', "DNS_NAMESERVER"]
@@ -720,7 +720,7 @@ class TestCfgGen(TestCase):
         output = self.run_script(argument)
         self.assertEqual(
             utils.to_dict(output.strip()),
-            utils.to_dict("{'10.20.30.40': {'rrclient': 0, 'name': 'BGPMonitor', 'local_addr': '10.1.0.32', 'nhopself': 0, 'holdtime': '10', 'asn': '1', 'keepalive': '3'}}")
+            utils.to_dict("{'10.20.30.40': {'rrclient': 0, 'name': 'BGPMonitor', 'local_addr': '10.1.0.32', 'nhopself': 0, 'holdtime': '10', 'asn': '0', 'keepalive': '3'}}")
         )
 
     def test_minigraph_bgp_voq_chassis_peer(self):
@@ -1145,4 +1145,9 @@ class TestCfgGen(TestCase):
             )
         )
 
-
+    def testsnmp_agent_address_config(self):
+        argument = ['-m', self.sample_graph, '-p', self.port_config, '-v', 'SNMP_AGENT_ADDRESS_CONFIG.keys()|list']
+        output = self.run_script(argument)
+        self.assertEqual(
+            utils.liststr_to_dict(output.strip()),
+            utils.liststr_to_dict("['192.168.200.15|161|', '100.0.0.6|161|', '100.0.0.7|161|', 'fe80::1%Management0|161|']"))

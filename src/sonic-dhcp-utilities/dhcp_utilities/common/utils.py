@@ -160,6 +160,20 @@ def get_target_process_cmds(process_name):
     """
     res = []
     for proc in psutil.process_iter():
-        if proc.name() == process_name:
-            res.append(proc.cmdline())
+        try:
+            if proc.name() == process_name:
+                res.append(proc.cmdline())
+        except psutil.NoSuchProcess:
+            continue
     return res
+
+
+def is_smart_switch(device_metadata):
+    """
+    Check in device metadata whether subtype is smartswitch
+    Args:
+        device_metadata: DEVICE_METADATA table
+    Returns:
+        If subtype is "SmartSwitch", return True. Else, return False
+    """
+    return device_metadata.get("localhost", {}).get("subtype", "") == "SmartSwitch"
