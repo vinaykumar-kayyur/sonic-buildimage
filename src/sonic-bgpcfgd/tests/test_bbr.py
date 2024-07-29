@@ -189,7 +189,7 @@ def test___init_8():
     __init_common(constants, "BBRMgr::Initialized and enabled from constants. Default state: 'enabled'", None, expected_bbr_entries, "enabled")
 
 @patch('bgpcfgd.managers_bbr.BBRMgr.get_bbr_status_from_config_db', return_value='enabled')
-def test___init_with_config_db(mocked_get_bbr_status_from_config_db):
+def test___init_with_config_db_1(mocked_get_bbr_status_from_config_db):
     expected_bbr_entries = {
         "PEER_V4": ["ipv4"],
         "PEER_V6": ["ipv6"],
@@ -216,6 +216,13 @@ def test___init_with_config_db(mocked_get_bbr_status_from_config_db):
     assert m.directory.get("CONFIG_DB", "BGP_BBR", "status") == "enabled"
     assert m.bbr_enabled_pgs == expected_bbr_entries
 
+@patch('bgpcfgd.managers_bbr.BBRMgr.get_bbr_status_from_config_db', return_value='enabled')
+def test___init_with_config_db_2(mocked_get_bbr_status_from_config_db):
+
+    constants = deepcopy(global_constants)
+    constants["bgp"]["bbr"] = {"enabled": True}
+
+    __init_common(constants, "BBRMgr::Disabled: no BBR enabled peers", None, {}, "disabled")
 
 @patch('bgpcfgd.managers_bbr.log_info')
 def read_pgs_common(constants, expected_log_info, expected_bbr_enabled_pgs, mocked_log_info):
