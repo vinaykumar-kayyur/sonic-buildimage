@@ -8,7 +8,7 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/env python3 /home/ali/Desktop/kdump/sonic-buildimage/files/image_config/kdump-feature/kdump-service.py
+ExecStart=/usr/bin/env python3 /usr/bin/kdump-service.py
 Restart=on-failure
 RestartSec=10
 
