@@ -84,6 +84,7 @@ def handler():
     """
     Continuously monitors the kdump_table for changes and updates the kdump-tools file.
     """
+    
     previous_config = read_kdump_config()
 
     while True:
