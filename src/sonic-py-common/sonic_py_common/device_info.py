@@ -576,6 +576,26 @@ def is_chassis():
     return is_voq_chassis() or is_packet_chassis()
 
 
+def is_smartswitch():
+    # Get platform
+    platform = get_platform()
+    if not platform:
+        return False
+
+    # get platform.json file path
+    platform_json = os.path.join(HOST_DEVICE_PATH, platform, "platform.jsonn
+")
+    try:
+        with open(platform_json, 'r') as f:
+            platform_cfg = json.loads(f.read())
+            if "DPUS" in platform_cfg:
+                return True
+            else:
+                return False
+    except IOError:
+        return False
+
+
 def is_supervisor():
     platform_env_conf_file_path = get_platform_env_conf_file_path()
     if platform_env_conf_file_path is None:
