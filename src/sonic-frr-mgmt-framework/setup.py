@@ -36,6 +36,8 @@ setuptools.setup(
                                      'templates/bgpd/bgpd.conf.db.addr_family.j2',
                                      'templates/bgpd/bgpd.conf.db.addr_family.evpn.j2',
                                      'templates/bfdd/bfdd.conf.j2',
+                                     'templates/zebra/zebra.conf.j2',
+                                     'templates/zebra/zebra.conf.db.interface.j2',
                                      'templates/ospfd/ospfd.conf.j2',
                                      'templates/ospfd/ospfd.conf.db.area.j2',
                                      'templates/ospfd/ospfd.conf.db.comm_list.j2',

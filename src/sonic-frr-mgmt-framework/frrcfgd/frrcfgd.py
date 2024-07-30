@@ -118,6 +118,8 @@ class BgpdClientMgr(threading.Thread):
             'PIM_INTERFACE': ['pimd'],
             'IGMP_INTERFACE': ['pimd'],
             'IGMP_INTERFACE_QUERY': ['pimd'],
+            'EVPN_MH_GLOBAL': ['zebra'],
+            'EVPN_ETHERNET_SEGMENT': ['zebra'],
     }
     VTYSH_CMD_DAEMON = [(r'show (ip|ipv6) route($|\s+\S+)', ['zebra']),
                         (r'show ip mroute($|\s+\S+)', ['pimd']),
@@ -1730,6 +1732,7 @@ class BGPConfigDaemon:
                       ('rr_cluster_id',                                 '{no:no-prefix}bgp cluster-id {}'),
                       ('rr_allow_out_policy',                           '{no:no-prefix}bgp route-reflector allow-outbound-policy', ['true', 'false']),
                       ('disable_ebgp_connected_rt_check',               '{no:no-prefix}bgp disable-ebgp-connected-route-check', ['true', 'false']),
+                      ('ebgp_requires_policy',                          '{no:no-prefix}bgp ebgp-requires-policy', ['true', 'false', True]),
                       ('fast_external_failover',                        '{no:no-prefix}bgp fast-external-failover', ['true', 'false', True]),
                       ('network_import_check',                          '{no:no-prefix}bgp network import-check', ['true', 'false']),
                       ('graceful_shutdown',                             '{no:no-prefix}bgp graceful-shutdown', ['true', 'false']),
@@ -2025,6 +2028,16 @@ class BGPConfigDaemon:
                              ('icmo_ttl', 'ttl {}', handle_ip_sla_common),
                              ('icmp_tos', 'tos {}', handle_ip_sla_common),
                            ]
+    evpn_ethernet_segment_key_map = [
+                             ('df-preference',             '{no:no-prefix}evpn mh es-df-pref {}'),
+                             ('type3_local_discriminator', '{no:no-prefix}evpn mh es-id {}'),
+                             ('type0_operator_config',     '{no:no-prefix}evpn mh es-id {}'),
+                             ('type3_system_mac',          '{no:no-prefix}evpn mh es-sys-mac {}'),
+                             ('mh-uplink',                 '{no:no-prefix}evpn mh uplink', ['true', 'false'])
+                           ]
+    evpn_mh_global_key_map = [('startup_delay',  '{no:no-prefix}evpn mh startup-delay {}'),
+                              ('mac_holdtime',   '{no:no-prefix}evpn mh mac-holdtime {}'),
+                              ('neigh_holdtime', '{no:no-prefix}evpn mh neigh-holdtime {}')]
 
 
     tbl_to_key_map = {'BGP_GLOBALS':                    global_key_map,
@@ -2054,7 +2067,9 @@ class BGPConfigDaemon:
                       'PIM_GLOBALS':                    pim_global_key_map,
                       'PIM_INTERFACE':                  pim_interface_key_map,
                       'IGMP_INTERFACE':                 igmp_mcast_grp_key_map,
-                      'IGMP_INTERFACE_QUERY':           igmp_interface_config_key_map
+                      'IGMP_INTERFACE_QUERY':           igmp_interface_config_key_map,
+                      'EVPN_MH_GLOBAL':                 evpn_mh_global_key_map,
+                      'EVPN_ETHERNET_SEGMENT':          evpn_ethernet_segment_key_map
     }
 
     vrf_tables = {'BGP_GLOBALS', 'BGP_GLOBALS_AF',
@@ -2251,7 +2266,9 @@ class BGPConfigDaemon:
             ('PIM_GLOBALS', self.bgp_table_handler_common),
             ('PIM_INTERFACE', self.bgp_table_handler_common),
             ('IGMP_INTERFACE', self.bgp_table_handler_common),
-            ('IGMP_INTERFACE_QUERY', self.bgp_table_handler_common)
+            ('IGMP_INTERFACE_QUERY', self.bgp_table_handler_common),
+            ('EVPN_MH_GLOBAL', self.bgp_table_handler_common),
+            ('EVPN_ETHERNET_SEGMENT', self.bgp_table_handler_common)
         ]
         self.bgp_message = queue.Queue(0)
         self.table_data_cache = self.config_db.get_table_data([tbl for tbl, _ in self.table_handler_list])
@@ -3687,6 +3704,30 @@ class BGPConfigDaemon:
                 if not key_map.run_command(self, table, data, cmd_prefix):
                     syslog.syslog(syslog.LOG_ERR, 'failed running ip igmp interface config command')
                     continue
+
+            elif table == 'EVPN_MH_GLOBAL':
+                ifname = prefix
+
+                syslog.syslog(syslog.LOG_INFO, 'Ethernet Segment Interface {} Config prefix {}'.format(ifname, key))
+
+                cmd_prefix = ['configure terminal']
+
+                if not key_map.run_command(self, table, data, cmd_prefix):
+                    syslog.syslog(syslog.LOG_ERR, 'failed running evpn mh config command')
+                    continue
+
+            elif table == 'EVPN_ETHERNET_SEGMENT':
+                ifname = prefix
+
+                syslog.syslog(syslog.LOG_INFO, 'Ethernet Segment Interface {} Config prefix {}'.format(ifname, key))
+
+                cmd_prefix = ['configure terminal',
+                          'interface {}'.format(ifname)]
+
+                if not key_map.run_command(self, table, data, cmd_prefix):
+                    syslog.syslog(syslog.LOG_ERR, 'failed running evpn mh config command')
+                    continue
+
 
 
     def __add_op_to_data(self, table_key, data, comb_attr_list):

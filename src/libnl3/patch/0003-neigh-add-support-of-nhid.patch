@@ -1,0 +1,140 @@
+neigh: add support of NHID attribute
+
+From: Stanislav Zaikin <zstaseg@gmail.com>
+
+
+---
+ include/netlink-private/types.h   |    1 +
+ include/netlink/route/neighbour.h |    3 +++
+ lib/route/neigh.c                 |   29 +++++++++++++++++++++++++++++
+ libnl-route-3.sym                 |    2 ++
+ 4 files changed, 35 insertions(+)
+
+diff --git a/include/netlink-private/types.h b/include/netlink-private/types.h
+index 97af3e51..6ca185b3 100644
+--- a/include/netlink-private/types.h
++++ b/include/netlink-private/types.h
+@@ -257,6 +257,7 @@ struct rtnl_neigh
+ 	uint8_t		n_type;
+ 	struct nl_addr *n_lladdr;
+ 	struct nl_addr *n_dst;
++	uint32_t	n_nhid;
+ 	uint32_t	n_probes;
+ 	struct rtnl_ncacheinfo n_cacheinfo;
+ 	uint32_t                n_state_mask;
+diff --git a/include/netlink/route/neighbour.h b/include/netlink/route/neighbour.h
+index 0f17b66e..3143061c 100644
+--- a/include/netlink/route/neighbour.h
++++ b/include/netlink/route/neighbour.h
+@@ -85,6 +85,9 @@ extern int			rtnl_neigh_get_vlan(struct rtnl_neigh *);
+ extern void			rtnl_neigh_set_master(struct rtnl_neigh *, int);
+ extern int			rtnl_neigh_get_master(struct rtnl_neigh *);
+ 
++extern void			rtnl_neigh_set_nhid(struct rtnl_neigh *, uint32_t);
++extern int			rtnl_neigh_get_nhid(struct rtnl_neigh *, uint32_t *);
++
+ #ifdef __cplusplus
+ }
+ #endif
+diff --git a/lib/route/neigh.c b/lib/route/neigh.c
+index ca4f2b66..8aa41bf8 100644
+--- a/lib/route/neigh.c
++++ b/lib/route/neigh.c
+@@ -171,6 +171,7 @@
+ #define NEIGH_ATTR_PROBES       0x100
+ #define NEIGH_ATTR_MASTER       0x200
+ #define NEIGH_ATTR_VLAN         0x400
++#define NEIGH_ATTR_NHID         0x800
+ 
+ static struct nl_cache_ops rtnl_neigh_ops;
+ static struct nl_object_ops neigh_obj_ops;
+@@ -278,6 +279,7 @@ static uint64_t neigh_compare(struct nl_object *_a, struct nl_object *_b,
+ 	diff |= NEIGH_DIFF(DST,		nl_addr_cmp(a->n_dst, b->n_dst));
+ 	diff |= NEIGH_DIFF(MASTER,	a->n_master != b->n_master);
+ 	diff |= NEIGH_DIFF(VLAN,	a->n_vlan != b->n_vlan);
++	diff |= NEIGH_DIFF(NHID,	a->n_nhid != b->n_nhid);
+ 
+ 	if (flags & LOOSE_COMPARISON) {
+ 		diff |= NEIGH_DIFF(STATE,
+@@ -306,6 +308,7 @@ static const struct trans_tbl neigh_attrs[] = {
+ 	__ADD(NEIGH_ATTR_PROBES, probes),
+ 	__ADD(NEIGH_ATTR_MASTER, master),
+ 	__ADD(NEIGH_ATTR_VLAN, vlan),
++	__ADD(NEIGH_ATTR_NHID, nhid),
+ };
+ 
+ static char *neigh_attrs2str(int attrs, char *buf, size_t len)
+@@ -322,6 +325,7 @@ static uint32_t neigh_id_attrs_get(struct nl_object *obj)
+ 		if (neigh->n_flags & NTF_SELF)
+ 			return (NEIGH_ATTR_LLADDR | NEIGH_ATTR_FAMILY | NEIGH_ATTR_IFINDEX |
+ 				       ((neigh->ce_mask & NEIGH_ATTR_DST) ? NEIGH_ATTR_DST: 0) |
++				       ((neigh->ce_mask & NEIGH_ATTR_NHID) ? NEIGH_ATTR_NHID: 0) |
+ 				       ((neigh->ce_mask & NEIGH_ATTR_VLAN) ? NEIGH_ATTR_VLAN : 0));
+ 		else
+ 			return (NEIGH_ATTR_LLADDR | NEIGH_ATTR_FAMILY | NEIGH_ATTR_MASTER | NEIGH_ATTR_VLAN);
+@@ -423,6 +427,11 @@ int rtnl_neigh_parse(struct nlmsghdr *n, struct rtnl_neigh **result)
+ 		neigh->ce_mask |= NEIGH_ATTR_VLAN;
+ 	}
+ 
++	if (tb[NDA_NH_ID]) {
++		neigh->n_nhid = nla_get_u32(tb[NDA_NH_ID]);
++		neigh->ce_mask |= NEIGH_ATTR_NHID;
++	}
++
+ 	/*
+ 	 * Get the bridge index for AF_BRIDGE family entries
+ 	 */
+@@ -515,6 +524,9 @@ static void neigh_dump_line(struct nl_object *a, struct nl_dump_params *p)
+ 	if (n->ce_mask & NEIGH_ATTR_VLAN)
+ 		nl_dump(p, "vlan %d ", n->n_vlan);
+ 
++	if (n->ce_mask & NEIGH_ATTR_NHID)
++		nl_dump(p, "nhid %u ", n->n_nhid);
++
+ 	if (n->ce_mask & NEIGH_ATTR_MASTER) {
+ 		if (link_cache)
+ 			nl_dump(p, "%s ", rtnl_link_i2name(link_cache, n->n_master,
+@@ -725,6 +737,9 @@ static int build_neigh_msg(struct rtnl_neigh *tmpl, int cmd, int flags,
+ 	if (tmpl->ce_mask & NEIGH_ATTR_VLAN)
+ 		NLA_PUT_U16(msg, NDA_VLAN, tmpl->n_vlan);
+ 
++	if (tmpl->ce_mask & NEIGH_ATTR_NHID)
++		NLA_PUT_U32(msg, NDA_NH_ID, tmpl->n_nhid);
++
+ 	*result = msg;
+ 	return 0;
+ 
+@@ -1070,6 +1085,20 @@ int rtnl_neigh_get_master(struct rtnl_neigh *neigh) {
+ 	return neigh->n_master;
+ }
+ 
++void rtnl_neigh_set_nhid(struct rtnl_neigh *neigh, uint32_t nhid)
++{
++	neigh->n_nhid = nhid;
++	neigh->ce_mask |= NEIGH_ATTR_NHID;
++}
++
++int rtnl_neigh_get_nhid(struct rtnl_neigh *neigh, uint32_t *out_val) {
++	if (!(neigh->ce_mask & NEIGH_ATTR_NHID))
++		return -NLE_NOATTR;
++
++	*out_val = neigh->n_nhid;
++	return NLE_SUCCESS;
++}
++
+ /** @} */
+ 
+ static struct nl_object_ops neigh_obj_ops = {
+diff --git a/libnl-route-3.sym b/libnl-route-3.sym
+index ce6d7148..698fa909 100644
+--- a/libnl-route-3.sym
++++ b/libnl-route-3.sym
+@@ -1110,6 +1110,8 @@ global:
+ 	rtnl_neigh_get_by_vlan;
+ 	rtnl_neigh_get_master;
+ 	rtnl_neigh_set_master;
++	rtnl_neigh_get_nhid;
++	rtnl_neigh_set_nhid;
+ 	rtnl_netem_set_delay_distribution_data;
+ 	rtnl_qdisc_mqprio_get_hw_offload;
+ 	rtnl_qdisc_mqprio_get_max_rate;

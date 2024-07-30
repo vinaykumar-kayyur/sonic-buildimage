@@ -1,0 +1,123 @@
+Adding shf/df fpm in zebra
+
+From: oleksii.kolevatov <oleksii.kolevatov@globallogic.com>
+
+
+---
+ zebra/dplane_fpm_nl.c |   11 ++++++++-
+ zebra/rt_netlink.c    |   59 +++++++++++++++++++++++++++++++++++++++++++++++++
+ zebra/rt_netlink.h    |    2 ++
+ 3 files changed, 71 insertions(+), 1 deletion(-)
+
+diff --git a/zebra/dplane_fpm_nl.c b/zebra/dplane_fpm_nl.c
+index caa2f988e..f6c06db0f 100644
+--- a/zebra/dplane_fpm_nl.c
++++ b/zebra/dplane_fpm_nl.c
+@@ -910,6 +910,16 @@ static int fpm_nl_enqueue(struct fpm_nl_ctx *fnc, struct zebra_dplane_ctx *ctx)
+ 
+ 		nl_buf_len += (size_t)rv;
+ 		break;
++	case DPLANE_OP_BR_PORT_UPDATE:
++		rv = netlink_bridge_port_msg_encode(ctx, nl_buf, sizeof(nl_buf));
++		if (rv <= 0) {
++			zlog_err("%s: netlink_bridge_port_msg_encode failed", 
++				 __func__);
++			return 0;
++		}
++
++		nl_buf_len = (size_t)rv;
++		break;
+ 
+ 	/* Un-handled by FPM at this time. */
+ 	case DPLANE_OP_PW_INSTALL:
+@@ -929,7 +939,6 @@ static int fpm_nl_enqueue(struct fpm_nl_ctx *fnc, struct zebra_dplane_ctx *ctx)
+ 	case DPLANE_OP_RULE_DELETE:
+ 	case DPLANE_OP_RULE_UPDATE:
+ 	case DPLANE_OP_NEIGH_DISCOVER:
+-	case DPLANE_OP_BR_PORT_UPDATE:
+ 	case DPLANE_OP_IPTABLE_ADD:
+ 	case DPLANE_OP_IPTABLE_DELETE:
+ 	case DPLANE_OP_IPSET_ADD:
+diff --git a/zebra/rt_netlink.c b/zebra/rt_netlink.c
+index fc9e8c457..3f7d86be4 100644
+--- a/zebra/rt_netlink.c
++++ b/zebra/rt_netlink.c
+@@ -2519,6 +2519,65 @@ static bool _netlink_nexthop_build_group(struct nlmsghdr *n, size_t req_size,
+ 	return true;
+ }
+ 
++
++ssize_t netlink_bridge_port_msg_encode(const struct zebra_dplane_ctx *ctx, 
++										void *buf, size_t buflen)
++{
++	enum {
++		BRPORT_NON_DF,
++		BRPORT_SPH_FILTER_CNT,
++		BRPORT_SPH_FILTERS,
++		BRPORT_MAX
++	};
++
++	struct {
++		struct nlmsghdr n;
++		struct tcmsg tcm;
++		char buf[];
++	} *req = buf;
++
++	struct nlsock *nl = kernel_netlink_nlsock_lookup(dplane_ctx_get_ns_sock(ctx));
++	if (buflen < sizeof(*req))
++		return 0;
++
++	memset(req, 0, sizeof(*req));
++	req->n.nlmsg_type = RTM_NEWTFILTER;
++	req->n.nlmsg_len = NLMSG_LENGTH(sizeof(struct tcmsg));
++	req->n.nlmsg_flags = NLM_F_CREATE | NLM_F_REQUEST;
++	req->n.nlmsg_pid = nl->snl.nl_pid;
++	req->tcm.tcm_family = AF_BRIDGE;
++	req->tcm.tcm_ifindex = dplane_ctx_get_ifindex(ctx);
++
++	uint32_t flags = dplane_ctx_get_br_port_flags(ctx);
++	if (flags & DPLANE_BR_PORT_NON_DF) {
++		if (!nl_attr_put8(&req->n, buflen, BRPORT_NON_DF, true))
++			return 0;
++	} else {
++		if (!nl_attr_put8(&req->n, buflen, BRPORT_NON_DF, false))
++			return 0;
++	}
++
++	uint32_t sph_filter_cnt = dplane_ctx_get_br_port_sph_filter_cnt(ctx);
++	if (!nl_attr_put32(&req->n, buflen, 
++						BRPORT_SPH_FILTER_CNT, 
++						sph_filter_cnt))
++		return 0;
++
++	if (sph_filter_cnt == 0) {
++		req->n.nlmsg_type = RTM_DELTFILTER;
++	} else {
++		const struct in_addr *sph_filters = dplane_ctx_get_br_port_sph_filters(ctx);
++		if (!nl_attr_put(&req->n, buflen, 
++						BRPORT_SPH_FILTERS, sph_filters, 
++						sph_filter_cnt * sizeof(struct in_addr)))
++			return 0;
++	}
++
++	return NLMSG_ALIGN(req->n.nlmsg_len);
++}
++
++
++
+ /**
+  * Next hop packet encoding helper function.
+  *
+diff --git a/zebra/rt_netlink.h b/zebra/rt_netlink.h
+index 364aac0f6..0f6403e36 100644
+--- a/zebra/rt_netlink.h
++++ b/zebra/rt_netlink.h
+@@ -81,6 +81,8 @@ extern int netlink_route_read(struct zebra_ns *zns);
+ extern int netlink_nexthop_change(struct nlmsghdr *h, ns_id_t ns_id,
+ 				  int startup);
+ extern int netlink_nexthop_read(struct zebra_ns *zns);
++extern ssize_t netlink_bridge_port_msg_encode(const struct zebra_dplane_ctx *ctx, 
++										void *buf, size_t buflen);
+ extern ssize_t netlink_nexthop_msg_encode(uint16_t cmd,
+ 					  const struct zebra_dplane_ctx *ctx,
+ 					  void *buf, size_t buflen, bool fpm);

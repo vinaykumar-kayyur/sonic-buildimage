@@ -1,0 +1,56 @@
+!
+{% block vrf %}
+{%  if VNET is defined %}
+{%   for vnet_name, vnet_metadata in VNET.items() %}
+vrf {{ vnet_name }}
+vni {{ vnet_metadata['vni'] }}
+!
+{%   endfor %}
+{%  endif %}
+{% endblock vrf %}
+!
+{% block interfaces %}
+! Enable nht through default route
+ip nht resolve-via-default
+ipv6 nht resolve-via-default
+! Enable link-detect (default disabled)
+{% for (name, prefix) in INTERFACE|pfx_filter %}
+interface {{ name }}
+  link-detect
+{%  if EVPN_ETHERNET_SEGMENT is defined and name in EVPN_ETHERNET_SEGMENT %}
+! EVPN MH config
+{%   if 'mh-uplink' in EVPN_ETHERNET_SEGMENT[name] and EVPN_ETHERNET_SEGMENT[name]['mh-uplink'] == 'true' %}
+  evpn mh uplink
+{%   endif %}
+{%  endif %}
+!
+{% endfor %}
+{% for pc in PORTCHANNEL %}
+interface {{ pc }}
+  link-detect
+{%  if EVPN_ETHERNET_SEGMENT is defined and pc in EVPN_ETHERNET_SEGMENT %}
+! EVPN MH config
+{%   if 'df-preference' in EVPN_ETHERNET_SEGMENT[pc] %}
+  evpn mh es-df-pref {{EVPN_ETHERNET_SEGMENT[pc]['df-preference']}}
+{%   endif %}
+{%   if 'type3_local_discriminator' in EVPN_ETHERNET_SEGMENT[pc] %}
+  evpn mh es-id {{EVPN_ETHERNET_SEGMENT[pc]['type3_local_discriminator']}}
+{%   endif %}
+{%   if 'type0_operator_config' in EVPN_ETHERNET_SEGMENT[pc] %}
+  evpn mh es-id {{EVPN_ETHERNET_SEGMENT[pc]['type0_operator_config']}}
+{%   endif %}
+{%   if 'type3_system_mac' in EVPN_ETHERNET_SEGMENT[pc] %}
+  evpn mh es-sys-mac {{EVPN_ETHERNET_SEGMENT[pc]['type3_system_mac']}}
+{%   endif %}
+{%  endif %}
+!
+{% endfor %}
+{% if (DEVICE_METADATA is defined) and ('localhost' in DEVICE_METADATA) and ('subtype' in DEVICE_METADATA['localhost']) and (DEVICE_METADATA['localhost']['subtype'].lower() == 'dualtor') %}
+! Disable link-detect on VLAN interfaces for dualtor
+{% for (name, prefix) in VLAN_INTERFACE|pfx_filter|unique(attribute=0) %}
+interface {{ name }}
+  no link-detect
+{% endfor %}
+{% endif %}
+{% endblock interfaces %}
+!

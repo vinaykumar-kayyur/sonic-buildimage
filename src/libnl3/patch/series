@@ -1,2 +1,7 @@
+# This series applies on GIT commit 7b167ef85f6eb4d7faca349302478b2dc121e309
 0001-mpls-encap-accessors.patch
 0002-mpls-remove-nl_addr_valid.patch
+0003-neigh-add-support-of-nhid.patch
+0004-include-import-kernel-headers.patch
+0005-lib-add-include-netlink.patch
+0006-route-add-nh-type.patch
