@@ -105,7 +105,10 @@ class BBRMgr(Manager):
         config_db.connect()
         bbr_table_data = config_db.get_table(self.table_name)
         if bbr_table_data and 'all' in bbr_table_data and 'status' in bbr_table_data["all"]:
-            return bbr_table_data["all"]["status"]
+            if bbr_table_data["all"]["status"] == "enabled":
+                return "enabled"
+            else:
+                return "disabled"
         return None
 
     def __set_validation(self, key, data):

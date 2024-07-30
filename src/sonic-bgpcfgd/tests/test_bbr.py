@@ -189,7 +189,7 @@ def test___init_8():
     __init_common(constants, "BBRMgr::Initialized and enabled from constants. Default state: 'enabled'", None, expected_bbr_entries, "enabled")
 
 @patch('bgpcfgd.managers_bbr.BBRMgr.get_bbr_status_from_config_db', return_value='disabled')
-def test___init_with_config_db_1(mocked_get_bbr_status_from_config_db):
+def test___init_with_config_db_overwirte_constants(mocked_get_bbr_status_from_config_db):
     expected_bbr_entries = {
         "PEER_V4": ["ipv4"],
         "PEER_V6": ["ipv6"],
@@ -206,7 +206,7 @@ def test___init_with_config_db_1(mocked_get_bbr_status_from_config_db):
     __init_common(constants, "BBRMgr::Initialized and enabled from config_db. Default state: 'disabled'", None, expected_bbr_entries, "disabled")
 
 @patch('bgpcfgd.managers_bbr.BBRMgr.get_bbr_status_from_config_db', return_value='enabled')
-def test___init_with_config_db_2(mocked_get_bbr_status_from_config_db):
+def test___init_with_config_db_no_peers(mocked_get_bbr_status_from_config_db):
 
     constants = deepcopy(global_constants)
     constants["bgp"]["bbr"] = {"enabled": True}
