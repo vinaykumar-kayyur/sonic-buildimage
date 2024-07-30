@@ -30,7 +30,7 @@ module sonic-feature{
     }
 
     typedef feature-delay-status {
-        description "configuration to set the feature has delay scope as true/false";
+        description "configuration to set the feature has delay scope as True/False";
         type string;
     }
 
