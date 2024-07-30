@@ -74,7 +74,7 @@ class BBRMgr(Manager):
             if self.bbr_enabled_pgs:
                 self.enabled = True
                 self.directory.put(self.db_name, self.table_name, 'status', bbr_status_from_config_db)
-                log_info("BBRMgr::Initialized and enabled from config_db. Default status: '%s'" % bbr_status_from_config_db)
+                log_info("BBRMgr::Initialized and enabled from config_db. Default state: '%s'" % bbr_status_from_config_db)
             else:
                 log_info("BBRMgr::Disabled: no BBR enabled peers")
 
