@@ -52,7 +52,6 @@ backend_device_types = ['BackEndToRRouter', 'BackEndLeafRouter']
 console_device_types = ['MgmtTsToR']
 dhcp_server_enabled_device_types = ['BmcMgmtToRRouter']
 mgmt_device_types = ['BmcMgmtToRRouter', 'MgmtToRRouter', 'MgmtTsToR']
-leafrouter_device_types = ['LeafRouter']
 
 # Counters disabled on management devices
 mgmt_disabled_counters = ["BUFFER_POOL_WATERMARK", "PFCWD", "PG_DROP", "PG_WATERMARK", "PORT_BUFFER_DROP", "QUEUE", "QUEUE_WATERMARK"]
@@ -470,6 +469,7 @@ def parse_device(device):
     deployment_id = None
     cluster = None
     d_subtype = None
+    slice_type = None
 
     for node in device:
         if node.tag == str(QName(ns, "Address")):
@@ -492,11 +492,13 @@ def parse_device(device):
             cluster = node.text
         elif node.tag == str(QName(ns, "SubType")):
             d_subtype = node.text
+        elif node.tag == str(QName(ns, "AssociatedSliceStr")) and node.text and "AZNG_Production" in node.text:
+            slice_type = "AZNG_Production"
 
     if d_type is None and str(QName(ns3, "type")) in device.attrib:
         d_type = device.attrib[str(QName(ns3, "type"))]
 
-    return (lo_prefix, lo_prefix_v6, mgmt_prefix, mgmt_prefix_v6, name, hwsku, d_type, deployment_id, cluster, d_subtype)
+    return (lo_prefix, lo_prefix_v6, mgmt_prefix, mgmt_prefix_v6, name, hwsku, d_type, deployment_id, cluster, d_subtype, slice_type)
 
 
 def calculate_lcm_for_ecmp (nhdevices_bank_map, nhip_bank_map):
@@ -634,7 +636,8 @@ def parse_png(png, hname, dpg_ecmp_content = None):
 
         if child.tag == str(QName(ns, "Devices")):
             for device in child.findall(str(QName(ns, "Device"))):
-                (lo_prefix, lo_prefix_v6, mgmt_prefix, mgmt_prefix_v6, name, hwsku, d_type, deployment_id, cluster, d_subtype) = parse_device(device)
+                (lo_prefix, lo_prefix_v6, mgmt_prefix, mgmt_prefix_v6, name, hwsku, d_type, deployment_id, cluster, d_subtype, slice_type) = \
+                                        parse_device(device)
                 device_data = {}
                 if hwsku != None:
                     device_data['hwsku'] = hwsku
@@ -654,6 +657,8 @@ def parse_png(png, hname, dpg_ecmp_content = None):
                     device_data['type'] = d_type
                 if d_subtype != None:
                     device_data['subtype'] = d_subtype
+                if slice_type != None:
+                    device_data['slice_type'] = slice_type
                 devices[name] = device_data
 
         if child.tag == str(QName(ns, "DeviceInterfaceLinks")):
@@ -775,7 +780,7 @@ def parse_asic_png(png, asic_name, hostname):
 
         if child.tag == str(QName(ns, "Devices")):
             for device in child.findall(str(QName(ns, "Device"))):
-                (lo_prefix, lo_prefix_v6, mgmt_prefix, mgmt_prefix_v6, name, hwsku, d_type, deployment_id, cluster, _) = parse_device(device)
+                (lo_prefix, lo_prefix_v6, mgmt_prefix, mgmt_prefix_v6, name, hwsku, d_type, deployment_id, cluster, _, slice_type) = parse_device(device)
                 device_data = {}
                 if hwsku != None:
                     device_data['hwsku'] = hwsku
@@ -793,6 +798,8 @@ def parse_asic_png(png, asic_name, hostname):
                     device_data['mgmt_addr_v6'] = mgmt_prefix_v6
                 if d_type != None:
                     device_data['type'] = d_type
+                if slice_type != None:
+                    device_data['slice_type'] = slice_type
                 devices[name] = device_data
 
     return (neighbors, devices, port_speeds)
@@ -2101,7 +2108,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         current_device = [devices[key] for key in devices if key.lower() == hostname.lower()][0]
     else:
         try:
-            current_device = [devices[key] for key in devices if key.lower() == asic_name.lower()][0]
+            current_device = [devices[key] for key in devices if key.lower() == asic_hostname.lower()][0]
         except:
             current_device = {}
 
@@ -2112,7 +2119,6 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         
     results = {}
     results['DEVICE_METADATA'] = {'localhost': {
-        'bgp_asn': bgp_asn,
         'region': region,
         'cloudtype': cloudtype,
         'docker_routing_config_mode': docker_routing_config_mode,
@@ -2123,6 +2129,9 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         'yang_config_validation': 'disable'
         }
     }
+
+    if bgp_asn:
+        results['DEVICE_METADATA']['localhost']['bgp_asn'] = bgp_asn
 
     if chassis_hostname:
         results['DEVICE_METADATA']['localhost']['chassis_hostname'] = chassis_hostname
@@ -2136,6 +2145,10 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     cluster = [devices[key] for key in devices if key.lower() == hostname.lower()][0].get('cluster', "")
     if cluster:
         results['DEVICE_METADATA']['localhost']['cluster'] = cluster
+
+    # Update Slice Type for T2/Chassis Role
+    if current_device and 'slice_type' in current_device and current_device['slice_type'] and chassis_hostname:
+        results['DEVICE_METADATA']['localhost']['slice_type'] = current_device['slice_type']
 
     if kube_data:
         results['KUBERNETES_MASTER'] = {
@@ -2598,7 +2611,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         results['SYSLOG_SERVER'] = dict((item, {}) for item in syslog_servers)
         results['DHCP_SERVER'] = dict((item, {}) for item in dhcp_servers)
         results['DHCP_RELAY'] = dhcp_relay_table
-        results['NTP_SERVER'] = dict((item, {}) for item in ntp_servers)
+        results['NTP_SERVER'] = dict((item, {'iburst': 'on'}) for item in ntp_servers)
         # Set default DNS nameserver from dns.j2
         results['DNS_NAMESERVER'] = {}
         if os.environ.get("CFGGEN_UNIT_TESTING", "0") == "2":
@@ -2693,10 +2706,6 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
     # Disable unsupported counters on management devices
     if current_device and current_device['type'] in mgmt_device_types:
         results["FLEX_COUNTER_TABLE"] = {counter: {"FLEX_COUNTER_STATUS": "disable"} for counter in mgmt_disabled_counters}
-
-    # Enable bgp-suppress-fib by default for leafrouter
-    if current_device and current_device['type'] in leafrouter_device_types:
-        results['DEVICE_METADATA']['localhost']['suppress-fib-pending'] = 'enabled'
 
     return results
 
@@ -2809,7 +2818,7 @@ def get_mux_cable_entries(ports, mux_cable_ports, active_active_ports, neighbors
 
 def parse_device_desc_xml(filename):
     root = ET.parse(filename).getroot()
-    (lo_prefix, lo_prefix_v6, mgmt_prefix, mgmt_prefix_v6, hostname, hwsku, d_type, _, _, _) = parse_device(root)
+    (lo_prefix, lo_prefix_v6, mgmt_prefix, mgmt_prefix_v6, hostname, hwsku, d_type, _, _, _, _) = parse_device(root)
 
     results = {}
     results['DEVICE_METADATA'] = {'localhost': {
@@ -2817,9 +2826,9 @@ def parse_device_desc_xml(filename):
         'hwsku': hwsku,
         }}
 
-    results['LOOPBACK_INTERFACE'] = {('lo', lo_prefix): {}}
+    results['LOOPBACK_INTERFACE'] = {'lo': {}, ('lo', lo_prefix): {}}
     if lo_prefix_v6:
-        results['LOOPBACK_INTERFACE'] = {('lo_v6', lo_prefix_v6): {}}
+        results['LOOPBACK_INTERFACE'] = {'lo_v6': {}, ('lo_v6', lo_prefix_v6): {}}
 
     results['MGMT_INTERFACE'] = {}
     if mgmt_prefix:

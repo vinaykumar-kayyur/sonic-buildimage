@@ -384,6 +384,7 @@ The **BGP_BBR** table contains device-level BBR state.
         }
 }
 ```
+
 ### ASIC SDK health event
 
 ASIC/SDK health event related configuration is defined in **SUPPRESS_ASIC_SDK_HEALTH_EVENT** table.
@@ -407,21 +408,43 @@ ASIC/SDK health event related configuration is defined in **SUPPRESS_ASIC_SDK_HE
 
 ### BGP Device Global
 
-The **BGP_DEVICE_GLOBAL** table contains device-level BGP global state. 
-It has a STATE object containing device state like **tsa_enabled** 
-which is set to true if device is currently isolated using 
-traffic-shift-away (TSA) route-maps in BGP. It also holds IDF isolation state
-which could be one of isolated_no_export, isolated_withdraw_all or unisolated
+The **BGP_DEVICE_GLOBAL** table contains device-level BGP global state.  
+It has a STATE object containing device state like **tsa_enabled**, **wcmp_enabled** and **idf_isolation_state**.
 
-```
+When **tsa_enabled** is set to true, the device is isolated using traffic-shift-away (TSA) route-maps in BGP.
+
+```json
 {
 "BGP_DEVICE_GLOBAL": {
     "STATE": {
-        "tsa_enabled": "true",
+        "tsa_enabled": "true"
+    }
+}
+```
+
+When **wcmp_enabled** is set to true, the device is configured to use BGP Link Bandwidth Extended Community.  
+Weighted ECMP load balances traffic between the equal cost paths in proportion to the capacity of the local links.
+
+```json
+{
+"BGP_DEVICE_GLOBAL": {
+    "STATE": {
+        "wcmp_enabled": "true"
+    }
+}
+```
+
+The IDF isolation state **idf_isolation_state** could be one of isolated_no_export, isolated_withdraw_all or unisolated.
+
+```json
+{
+"BGP_DEVICE_GLOBAL": {
+    "STATE": {
         "idf_isolation_state": "isolated_no_export"
     }
 }
 ```
+
 ### BGP Sessions
 
 BGP session configuration is defined in **BGP_NEIGHBOR** table. BGP
@@ -550,6 +573,7 @@ When the system is running in traditional buffer model, the size of all of the b
 ```
 
 When the system is running in dynamic buffer model, the size of some of the buffer pools can be omitted and will be dynamically calculated.
+In this case, A percentage can be configured on a pool, representing how many the available buffer can be allloced to the pool.
 
 ```
 {
@@ -561,11 +585,12 @@ When the system is running in dynamic buffer model, the size of some of the buff
     },
     "egress_lossy_pool": {
         "type": "egress",
-        "mode": "dynamic",
+        "mode": "dynamic"
     },
     "ingress_lossless_pool": {
         "type": "ingress",
         "mode": "dynamic",
+        "percentage": "80"
     }
   }
 }
@@ -2309,7 +2334,8 @@ and is listed in this table.
         "gnmi": {
             "client_auth": "true",
             "log_level": "2",
-            "port": "50051"
+            "port": "50051",
+            "save_on_set": "false"
         }
     }
 }
