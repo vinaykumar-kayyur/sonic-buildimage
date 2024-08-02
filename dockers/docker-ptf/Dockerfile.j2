@@ -108,7 +108,9 @@ RUN git clone http://git.sv.gnu.org/r/autoconf.git \
     && ./bootstrap \
     && ./configure \
     && make \
-    && make install
+    && make install \
+    && cd .. \
+    && rm -rf autoconf
 
 # Install all python modules from pypi. python-scapy is exception, ptf debian package requires python-scapy
 # TODO: Clean up this step
