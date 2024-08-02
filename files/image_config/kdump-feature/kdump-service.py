@@ -34,7 +34,6 @@ def update_kdump_tools_file(ssh_string, ssh_path):
     Update the /etc/default/kdump-tools file with new ssh_string and ssh_path values.
     If ssh_string or ssh_path is None, replace the value with the initial value obtained from the file.
     """
-<<<<<<< HEAD
     # Read the contents of the file and store initial values
     with open(kdump_tools_file, 'r') as file:
         lines = file.readlines()
@@ -53,7 +52,6 @@ def update_kdump_tools_file(ssh_string, ssh_path):
                 lines[i] = f'SSH_KEY="{ssh_path}"\n'
             else:
                 lines[i] = f'SSH_KEY=""\n'
-=======
     try:
         with open(kdump_tools_file, 'r') as file:
             lines = file.readlines()
@@ -76,7 +74,7 @@ def update_kdump_tools_file(ssh_string, ssh_path):
 
     except Exception as e:
         logger.log_error(f"Error updating kdump-tools file: {e}")
->>>>>>> e18cf09ab (daemon path setting and added some logs why service is not updating in kdump-tools file)
+          (daemon path setting and added some logs why service is not updating in kdump-tools file)
 
 
 # Main handler function
