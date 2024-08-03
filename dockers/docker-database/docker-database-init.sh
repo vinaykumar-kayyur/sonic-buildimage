@@ -28,6 +28,18 @@ if [[ $DATABASE_TYPE == "dpudb" ]]; then
     redis_port=`expr 6381 + $DPU_ID`
 fi
 
+if [[ $IS_DPU_DEVICE == "true" ]]
+then
+    midplane_ip=$( ip -4 -o addr show eth0-midplane | awk '{print $4}' | cut -d'/' -f1  )
+    if [[ $midplane_ip != "" ]]
+    then
+        export DATABASE_TYPE="dpudb"
+        export REMOTE_DB_IP="169.254.200.254"
+        # Determine the DB PORT from midplane IP
+        IFS=. read -r a b c d <<< $midplane_ip
+        export REMOTE_DB_PORT=$((6380 + $d))
+    fi
+fi
 
 REDIS_DIR=/var/run/redis$NAMESPACE_ID
 mkdir -p $REDIS_DIR/sonic-db
@@ -63,6 +75,8 @@ if [[ $DATABASE_TYPE == "chassisdb" ]]; then
     REDIS_CHASSIS_LIB_DIR=/var/lib/redis_chassis
     # Docker init for database-chassis
     echo "Init docker-database-chassis..."
+    VAR_LIB_REDIS_CHASSIS_DIR="/var/lib/redis_chassis"
+    mkdir -p $VAR_LIB_REDIS_CHASSIS_DIR   
     update_chassisdb_config -j $db_cfg_file_tmp -k -p $chassis_db_port
     # generate all redis server supervisord configuration file
     sonic-cfggen -j $db_cfg_file_tmp \
@@ -72,6 +86,8 @@ if [[ $DATABASE_TYPE == "chassisdb" ]]; then
     mkdir -p $REDIS_CHASSIS_DIR/sonic-db $REDIS_CHASSIS_LIB_DIR
     chown -R redis:redis $REDIS_CHASSIS_DIR $REDIS_CHASSIS_LIB_DIR
     rm $db_cfg_file_tmp
+    chown -R redis:redis $VAR_LIB_REDIS_CHASSIS_DIR
+    chown -R redis:redis $REDIS_DIR
     exec /usr/local/bin/supervisord
     exit 0
 fi
