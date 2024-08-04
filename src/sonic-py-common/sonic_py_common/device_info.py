@@ -583,8 +583,7 @@ def is_smartswitch():
         return False
 
     # get platform.json file path
-    platform_json = os.path.join(HOST_DEVICE_PATH, platform, "platform.jsonn
-")
+    platform_json = os.path.join(HOST_DEVICE_PATH, platform, "platform.json")
     try:
         with open(platform_json, 'r') as f:
             platform_cfg = json.loads(f.read())
