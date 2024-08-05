@@ -286,6 +286,13 @@ debs/{{ deb }}{{' '}}
 # is same across python 2 and python 3 envs.
 # Not venv for which ptf is under /root/env-python3/bin.
 RUN ln -s /usr/local/bin/ptf /usr/bin/ptf
+# TODO clean-up when all branches only use Python 3 PTF image
+# Not nice but this prevents scripts from invoking python3 in
+# virtual-env and py3 only environments to use the same path
+RUN mkdir -p /root/env-python3/bin
+RUN ln -s /usr/bin/python /root/env-python3/bin/python3
+RUN ln -s /usr/bin/python /root/env-python3/bin/python
+RUN ln -s /usr/local/bin/ptf /root/env-python3/bin/ptf
 {% endif %}
 
 COPY ["*.ini", "/etc/ptf/"]
