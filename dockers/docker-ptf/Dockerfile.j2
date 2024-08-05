@@ -137,6 +137,9 @@ RUN rm -rf /debs \
 {% endif %}
     && git clone https://github.com/sflow/sflowtool \
     && cd sflowtool \
+{% if PTF_ENV_PY_VER == "mixed" %}
+    && git checkout v6.04 \
+{% endif %}
     && ./boot.sh \
     && ./configure \
     && make \
