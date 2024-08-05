@@ -2,7 +2,10 @@
     "MGMT_VRF_TEST": {
         "desc": "LOAD MGMT VRF TABLE WITH mgmtVrfEnabled SET TO TRUE SUCCESSFULLY."
     },
+    "MGMT_VRF_IN_BAND_MGMT_TEST": {
+        "desc": "LOAD MGMT VRF TABLE WITH both mgmtVrfEnabled and in_band_mgmt_enabled SET TO TRUE SUCCESSFULLY."
+    },
     "MGMT_VRF_TEST_WITH_DEFAULT_VALUE": {
-	"desc": "LOAD MGMT VRF TABLE WITH DEFAULT mgmtVrfEnabled SUCCESSFULLY."
+        "desc": "LOAD MGMT VRF TABLE WITH DEFAULT mgmtVrfEnabled SUCCESSFULLY."
     }
 }
