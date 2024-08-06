@@ -96,22 +96,6 @@ RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 1 \
     && update-alternatives --install /usr/bin/pygettext pygettext /usr/bin/pygettext3 1
 {% endif %}
 
-# sflow requires autoconf 2.71; This step builds autoconf from source
-RUN apt-get update \
-    && apt-get install -y \
-        m4 \
-        texinfo \
-        help2man
-# get autoconf, build and install
-RUN git clone http://git.sv.gnu.org/r/autoconf.git \
-    && cd autoconf \
-    && ./bootstrap \
-    && ./configure \
-    && make \
-    && make install \
-    && cd .. \
-    && rm -rf autoconf
-
 # Install all python modules from pypi. python-scapy is exception, ptf debian package requires python-scapy
 # TODO: Clean up this step
 RUN rm -rf /debs \
@@ -137,9 +121,7 @@ RUN rm -rf /debs \
 {% endif %}
     && git clone https://github.com/sflow/sflowtool \
     && cd sflowtool \
-{% if PTF_ENV_PY_VER == "mixed" %}
     && git checkout v6.04 \
-{% endif %}
     && ./boot.sh \
     && ./configure \
     && make \
