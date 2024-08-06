@@ -381,7 +381,7 @@ bcmgenl_psample_filter_cb(struct sk_buff *skb, ngknet_filter_t **filt)
         /* setup skb to point to pkt */
         memcpy(skb_psample->data, pkt_ptr, meta.trunc_size);
         skb_put(skb_psample, meta.trunc_size);
-        skb_psample->len = meta.trunc_size;
+        skb_psample->len = pkt_len;
         psample_pkt->skb = skb_psample;
 
         spin_lock_irqsave(&g_bcmgenl_psample_work.lock, flags);
