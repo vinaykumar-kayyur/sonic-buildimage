@@ -8,7 +8,17 @@
             }
         }
     },
-    "MGMT_VRF_IN_BAND_MGMT_TEST": {
+    "MGMT_VRF_TEST_WITH_IN_BAND_MGMT_DISABLED": {
+        "sonic-mgmt_vrf:sonic-mgmt_vrf": {
+            "sonic-mgmt_vrf:MGMT_VRF_CONFIG": {
+                "sonic-mgmt_vrf:vrf_global": {
+                    "mgmtVrfEnabled": true,
+                    "in_band_mgmt_enabled": false
+                }
+            }
+        }
+    },
+    "MGMT_VRF_TEST_WITH_IN_BAND_MGMT_ENABLED": {
         "sonic-mgmt_vrf:sonic-mgmt_vrf": {
             "sonic-mgmt_vrf:MGMT_VRF_CONFIG": {
                 "sonic-mgmt_vrf:vrf_global": {
