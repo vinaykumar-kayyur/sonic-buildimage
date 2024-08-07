@@ -71,7 +71,7 @@ def sonic_services_ctl(start, verbose):
     if start:
         services = services[1:] + services[:1]
 
-    print('# ' 'Starting' if start else 'Stopping', ', '.join(services))
+    print('#', 'Starting' if start else 'Stopping', ', '.join(services))
 
     ops = systemctlops_start if start else systemctlops_stop
     for op in ops:
@@ -148,7 +148,7 @@ def run_container(image):
         'auto_remove': True
     }
 
-    container = client.containers.run(**config)
+    container = client.containers.run(**config) # nosemgrep: python.docker.security.audit.docker-arbitrary-container-run.docker-arbitrary-container-run
     print(f'Container name: {container.name}')
 
 
