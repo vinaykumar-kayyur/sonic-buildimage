@@ -41,7 +41,7 @@ function wait_iface_ready
         ((ITERATION++))
     done
 
-    logger -p error "[bgpd] Error: Interface ${IFACE_NAME} not ready."
+    logger -p warning "[bgpd] warning: Interface ${IFACE_NAME} not ready."
     return 1
 }
 
