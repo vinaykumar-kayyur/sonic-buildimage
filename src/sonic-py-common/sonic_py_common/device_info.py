@@ -587,10 +587,7 @@ def is_smartswitch():
     try:
         with open(platform_json, 'r') as f:
             platform_cfg = json.loads(f.read())
-            if "DPUS" in platform_cfg:
-                return True
-            else:
-                return False
+            return "DPUS" in platform_cfg
     except IOError:
         return False
 
