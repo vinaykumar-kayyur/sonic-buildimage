@@ -5,7 +5,7 @@ from platform_common import *
 STARTMODULE = {
     "hal_fanctrl": 1,
     "hal_ledctrl": 1,
-    "avscontrol": 1,
+    "avscontrol": 0,
     "dev_monitor": 1,
     "pmon_syslog": 1,
     "tty_console": 1,
@@ -709,10 +709,6 @@ MAC_DEFAULT_PARAM = [
     }
 ]
 
-BLACKLIST_DRIVERS = [
-    {"name": "i2c_i801", "delay": 0},
-]
-
 DRIVERLISTS = [
     {"name": "i2c_i801", "delay": 0},
     {"name": "wb_gpio_d1500", "delay": 0},
@@ -886,9 +882,10 @@ DEV_MONITOR_PARAM = {
 }
 
 INIT_PARAM_PRE = [
-    {"loc": "7-0064/hwmon/hwmon*/avs0_vout_max", "value": "900000"},
-    {"loc": "7-0064/hwmon/hwmon*/avs0_vout_min", "value": "750000"},
+    #{"loc": "7-0064/hwmon/hwmon*/avs0_vout_max", "value": "900000"},
+    #{"loc": "7-0064/hwmon/hwmon*/avs0_vout_min", "value": "750000"},
 ]
+
 INIT_COMMAND_PRE = [
     "i2cset -y -f 6 0x0d 0x91 0x48",
     "i2cset -y -f 6 0x0d 0x92 0x01",  # MAC_PWR_EN
