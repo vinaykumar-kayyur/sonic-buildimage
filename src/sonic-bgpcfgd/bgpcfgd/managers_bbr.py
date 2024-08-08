@@ -99,17 +99,29 @@ class BBRMgr(Manager):
         Read BBR status from CONFIG_DB
         :return: BBR status from CONFIG_DB or None if not found
         """
-        config_db = swsscommon.ConfigDBConnector()
-        if config_db is None:
+        try:
+            config_db = swsscommon.ConfigDBConnector()
+            if config_db is None:
+                log_info("BBRMgr::Failed to connect to CONFIG_DB, get BBR default state from constants.yml")
+                return None
+            config_db.connect()
+        except Exception as e:
+            log_info("BBRMgr::Failed to connect to CONFIG_DB with exception %s, get BBR default state from constants.yml" % str(e))
             return None
-        config_db.connect()
-        bbr_table_data = config_db.get_table(self.table_name)
-        if bbr_table_data and 'all' in bbr_table_data and 'status' in bbr_table_data["all"]:
-            if bbr_table_data["all"]["status"] == "enabled":
-                return "enabled"
+
+        try:
+            bbr_table_data = config_db.get_table(self.table_name)
+            if bbr_table_data and 'all' in bbr_table_data and 'status' in bbr_table_data["all"]:
+                if bbr_table_data["all"]["status"] == "enabled":
+                    return "enabled"
+                else:
+                    return "disabled"
             else:
-                return "disabled"
-        return None
+                log_info("BBRMgr::BBR status is not found in CONFIG_DB, get BBR default state from constants.yml")
+                return None
+        except Exception as e:
+            log_info("BBRMgr::Failed to read BBR status from CONFIG_DB with exception %s, get BBR default state from constants.yml" % str(e))
+            return None
 
     def __set_validation(self, key, data):
         """ Validate set-command arguments
