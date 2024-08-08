@@ -78,7 +78,8 @@ def get_container_id(container_name):
     """
     container_id = ""
 
-    get_container_info_cmd = "docker ps --no-trunc"
+    get_container_info_cmd = "docker ps --no-trunc --filter name={}".format(container_name)
+
     command_stdout = get_command_result(get_container_info_cmd)
 
     for line in command_stdout.splitlines():
@@ -108,9 +109,10 @@ def get_memory_usage(container_id):
         syslog.syslog(syslog.LOG_ERR, ERROR_CGROUP_MEMORY_USAGE_NOT_FOUND.format(docker_memory_usage_file_path, container_id))
         sys.exit(5)
 
-    get_memory_usage_cmd = "sudo cat {}".format(docker_memory_usage_file_path)
-    memory_usage_in_bytes = get_command_result(get_memory_usage_cmd)
-    if not memory_usage_in_bytes:
+    try:
+        with open(docker_memory_usage_file_path, 'r') as file:
+            memory_usage_in_bytes = file.read().strip()
+    except IOError as err:
         syslog.syslog(syslog.LOG_ERR, ERROR_CONTAINER_MEMORY_USAGE_NOT_FOUND.format(container_id))
         sys.exit(6)
 
@@ -131,15 +133,13 @@ def get_inactive_cache_usage(container_id):
         syslog.syslog(syslog.LOG_ERR, ERROR_CGROUP_MEMORY_STATS_NOT_FOUND.format(docker_memory_stat_file_path, container_id))
         sys.exit(7)
 
-    get_inactive_cache_usage_cmd = "sudo cat {}".format(docker_memory_stat_file_path)
-    command_stdout = get_command_result(get_inactive_cache_usage_cmd)
-
-    for line in command_stdout.splitlines():
-        if "total_inactive_file" in line:
-            cache_usage_in_bytes = line.split()[1].strip()
-            break
-
-    if not cache_usage_in_bytes:
+    try:
+        with open(docker_memory_stat_file_path, 'r') as file:
+            for line in file:
+                if "total_inactive_file" in line:
+                    cache_usage_in_bytes = line.split()[1].strip()
+                    break
+    except IOError as err:
         syslog.syslog(syslog.LOG_ERR, ERROR_CONTAINER_CACHE_USAGE_NOT_FOUND.format(container_id))
         sys.exit(8)
 
@@ -166,6 +166,10 @@ def check_memory_usage(container_name, threshold_value):
     Returns:
         None.
     """
+    if not isinstance(threshold_value, int) or threshold_value <= 0:
+        syslog.syslog(syslog.LOG_ERR, "[memory_checker] Invalid threshold value! Threshold value should be a positive integer.")
+        sys.exit(9)
+
     container_id = get_container_id(container_name)
     syslog.syslog(syslog.LOG_INFO, "[memory_checker] Container ID of '{}' is: '{}'."
                   .format(container_name, container_id))
