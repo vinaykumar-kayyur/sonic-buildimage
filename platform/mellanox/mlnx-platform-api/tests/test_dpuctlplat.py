@@ -71,7 +71,6 @@ class TestDpuClass:
             written_data.append({"file": file_name,
                                  "data": content_towrite})
             return True
-        print(f"THis is the value {BootProgEnum.OS_RUN.value}")
         with patch.object(dpuctl_obj, 'write_file', wraps=mock_write_file), \
              patch.object(dpuctl_obj, 'read_boot_prog', MagicMock(return_value=BootProgEnum.OS_RUN.value)):
             assert dpuctl_obj.dpu_power_off(True)
@@ -169,7 +168,6 @@ class TestDpuClass:
             written_data = []
             mock_add_watch.return_value = None
             assert not dpuctl_obj.dpu_power_on(False)
-            print(written_data)
             assert len(written_data) == 19
             assert written_data[0]["file"].endswith(f"{dpuctl_obj.get_hwmgmt_name()}_pwr")
             assert "1" == written_data[0]["data"]
@@ -222,7 +220,6 @@ class TestDpuClass:
             mock_add_watch.return_value = None
             written_data = []
             assert not dpuctl_obj.dpu_reboot()
-            print(written_data)
             assert len(written_data) == 22
             assert written_data[0]["file"].endswith(f"{dpu_map.get(dpuctl_obj.get_hwmgmt_name()).get('pci_id')}/remove")
             assert "1" == written_data[0]["data"]
@@ -274,7 +271,6 @@ class TestDpuClass:
             mock_add_watch.return_value = None
             written_data = []
             assert not dpuctl_obj.dpu_reboot(True)
-            print(written_data)
             assert len(written_data) == 18
             assert written_data[0]["file"].endswith(f"{dpu_map.get(dpuctl_obj.get_hwmgmt_name()).get('pci_id')}/remove")
             assert "1" == written_data[0]["data"]

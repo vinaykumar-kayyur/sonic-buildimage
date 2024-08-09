@@ -61,7 +61,6 @@ def dpuctl_command_exec(exec_cmd, command_name):
     assertion_checks = test_data_checks['AssertionError']
     for args in assertion_checks['arg_list']:
         result = runner.invoke(exec_cmd, args, catch_exceptions=False, obj=obj)
-        print(result.output)
         assert "AssertionError" in result.output
 
     result_checks = test_data_checks['Returncheck']
@@ -73,7 +72,6 @@ def dpuctl_command_exec(exec_cmd, command_name):
         return_message = return_message.replace('"', "'").lower()
         result = runner.invoke(exec_cmd, args, catch_exceptions=False, obj=obj)
         assert result.exit_code == return_code
-        print(result.output)
         assert return_message == result.output.replace('"', "'").lower()
 
 
@@ -132,7 +130,6 @@ class Testdpuctl:
             assert result.output == status_output[4]
             mock_return_value = [1, 0, 0]
             result = runner.invoke(cmd, catch_exceptions=False, obj=obj)
-            print(result.output)
             assert result.output == status_output[5]
             header = ["DPU", "dpu ready", "dpu shutdown ready", "boot progress"]
             boot_prog_map = {
@@ -169,7 +166,6 @@ class Testdpuctl:
         with open(example_platform) as json_file:
             read_data = json.load(json_file)
         read_data = read_data["DPUS"]
-        print(read_data)
         with patch("sonic_platform.utils.read_int_from_file") as mock_read:
             mock_read.return_value = 0
             cmd = dpuctl
