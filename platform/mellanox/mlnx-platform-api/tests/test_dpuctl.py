@@ -160,8 +160,6 @@ class Testdpuctl:
             expected_res = tabulate(expected_data, header)
             assert result.output == expected_res + "\n"
 
-    @patch('os.path.join', MagicMock(return_value=True))
-    @patch('sonic_py_common.device_info.get_path_to_platform_dir', MagicMock(return_value=True))
     def test_dpuctl_platform(self):
         with open(example_platform) as json_file:
             read_data = json.load(json_file)
