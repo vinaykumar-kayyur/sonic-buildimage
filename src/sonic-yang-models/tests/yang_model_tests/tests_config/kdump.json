@@ -8,7 +8,7 @@
                     "memory": "0M-2G:256M,2G-4G:256M,4G-8G:384M,8G-:448M",
                     "remote": "true",
                     "ssh_enabled" : "user@remotehost",
-                    "ssh_path":  "ssh-path" 
+                    "ssh_path":  "ssh_path" 
                 }
             }
         }
@@ -22,7 +22,7 @@
                     "memory": "512M",
                     "remote": "true",
                     "ssh_enabled" : "user@remotehost",
-                    "ssh_path":  "ssh-path" 
+                    "ssh_path":  "ssh_path" 
                 }
             }
         }
@@ -36,7 +36,7 @@
                     "memory": "512M",
                     "remote": "true",
                     "ssh_enabled" : "user@remotehost",
-                    "ssh_path":  "ssh-path" 
+                    "ssh_path":  "ssh_path" 
                 }
             }
         }
@@ -50,7 +50,7 @@
                     "memory": "0M-2G:256M,2G-4G:256M,4G-8G:384M,8G-:448M",
                     "remote": "true",
                     "ssh_enabled" : "user@remotehost",
-                    "ssh_path":  "ssh-path" 
+                    "ssh_path":  "ssh_path" 
                 }
             }
         }
@@ -64,7 +64,7 @@
                     "memory": "666",
                     "remote": "true",
                     "ssh_enabled" : "user@remotehost",
-                    "ssh_path":  "ssh-path" 
+                    "ssh_path":  "ssh_path" 
                 }
             }
         }
@@ -79,7 +79,7 @@
                     "memory": "0M-2G:256M,2G-4G:256M,4G-8G:384M,8G-:448M",
                     "remote": "true",
                     "ssh_enabled" : "user@remotehost",
-                    "ssh_path":  "ssh-path" 
+                    "ssh_path":  "ssh_path" 
                 }
             }
         }
