@@ -1,11 +1,10 @@
 {% from "logrotate-common.j2" import postrotate with context %}
 {% from "logrotate-common.j2"
     import disk_percentage_treshold_rotation with context -%}
-{% from "defaults.j2" import def_logging -%}
 
 {% set syslog = (LOGGING | d({})).get('syslog', {}) -%}
-{% set frequency = syslog.frequency | d(def_logging.common.frequency) -%}
-{% set max_number = syslog.max_number | d(def_logging.syslog.max_number) -%}
+{% set frequency = syslog.frequency | 'daily' -%}
+{% set max_number = syslog.max_number | 5000 -%}
 
 {% if syslog.disk_percentage and not syslog.size -%}
     {% set size_mb = (max_logs_size_kb | int) * 

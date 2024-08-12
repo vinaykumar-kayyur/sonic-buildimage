@@ -1,5 +1,3 @@
-{% from "defaults.j2" import def_logging %}
-
 {% macro postrotate_action() -%}
     /bin/kill -HUP $(cat /var/run/rsyslogd.pid)
 {%- endmacro -%}

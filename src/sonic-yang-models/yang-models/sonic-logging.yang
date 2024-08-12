@@ -22,12 +22,14 @@ module sonic-logging {
                 key "name";
 
                 leaf name {
+                    description "Name of the file to configure log rotation";
                     type string {
                         length 1..255;
                     }
                 }
 
                 leaf disk_percentage {
+                    description "Define rotation size as disk percentage";
                     type decimal64 {
                         fraction-digits 3;
                         range 0.001..100;
@@ -35,18 +37,21 @@ module sonic-logging {
                 }
 
                 leaf frequency {
+                    description "Log file rotation frequency";
                     type string {
                         pattern "daily|weekly|monthly|yearly";
                     }
                 }
 
                 leaf max_number {
+                    description "Max number of rotated files to keep";
                     type int32 {
                         range "0..999999";
                     }
                 }
 
                 leaf size {
+                    description "Log files are rotated only if they grow bigger then size MiB";
                     type decimal64 {
                         fraction-digits 3;
                         range 0.001..3500.0;

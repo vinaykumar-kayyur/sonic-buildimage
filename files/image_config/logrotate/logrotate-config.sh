@@ -4,7 +4,7 @@ VAR_LOG_SIZE=$(df -k /var/log | sed -n 2p | awk '{ print $2 }')
 
 # Adjust NUM_LOGS_TO_ROTATE to reflect number of common log files (auth, cron,
 # teamd, telemetry, etc.) to rotate.
-NUM_LOGS_TO_ROTATE=10
+NUM_LOGS_TO_ROTATE=8
 
 # Detect common log files (auth, cron, teamd, telemetry, etc.) size. 720M is
 # required to hold extra space to rotate all files (16M each) two times.
