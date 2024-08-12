@@ -132,6 +132,9 @@ sudo rm -rf $FILESYSTEM_ROOT/$REDIS_DUMP_LOAD_PY3_WHEEL_NAME
 # Install Python module for psutil
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install psutil
 
+# Install Python module for blkinfo
+sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install blkinfo
+
 # Install Python module for ipaddr
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install ipaddr
 
@@ -699,7 +702,7 @@ sudo LANG=C chroot $FILESYSTEM_ROOT systemctl disable midplane-network-dpu.servi
 # According to the issue: https://github.com/systemd/systemd/issues/19106, To disable ManageForeignRoutingPolicyRules to avoid the ip rules being deleted by systemd-networkd
 sudo sed -i 's/#ManageForeignRoutingPolicyRules=yes/ManageForeignRoutingPolicyRules=no/g' $FILESYSTEM_ROOT/etc/systemd/networkd.conf
 
-sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable systemd-networkd
+sudo ln -s /dev/null $FILESYSTEM_ROOT/etc/systemd/system/systemd-networkd.service
 sudo LANG=C chroot $FILESYSTEM_ROOT systemctl disable systemd-networkd-wait-online.service
 
 # Copy backend-acl script and service file
@@ -1003,6 +1006,7 @@ sudo LANG=C cp $SCRIPTS_DIR/mgmt-framework.sh $FILESYSTEM_ROOT/usr/local/bin/mgm
 sudo LANG=C cp $SCRIPTS_DIR/asic_status.sh $FILESYSTEM_ROOT/usr/local/bin/asic_status.sh
 sudo LANG=C cp $SCRIPTS_DIR/asic_status.py $FILESYSTEM_ROOT/usr/local/bin/asic_status.py
 sudo LANG=C cp $SCRIPTS_DIR/startup_tsa_tsb.py $FILESYSTEM_ROOT/usr/local/bin/startup_tsa_tsb.py
+sudo LANG=C cp $SCRIPTS_DIR/sonic-dpu-mgmt-traffic.sh $FILESYSTEM_ROOT/usr/local/bin/sonic-dpu-mgmt-traffic.sh
 
 # Copy sonic-netns-exec script
 sudo LANG=C cp $SCRIPTS_DIR/sonic-netns-exec $FILESYSTEM_ROOT/usr/bin/sonic-netns-exec
@@ -1060,6 +1064,8 @@ for MLNX_CPLD_ARCHIVE in $MLNX_CPLD_ARCHIVES; do
 done
 sudo cp platform/mellanox/get_component_versions/get_component_versions.py $FILESYSTEM_ROOT/usr/bin/get_component_versions.py
 sudo chmod 755 $FILESYSTEM_ROOT/usr/bin/get_component_versions.py
+sudo cp platform/mellanox/cmis_host_mgmt/cmis_host_mgmt.py $FILESYSTEM_ROOT/usr/bin/cmis_host_mgmt.py
+sudo chmod 755 $FILESYSTEM_ROOT/usr/bin/cmis_host_mgmt.py
 j2 platform/mellanox/mlnx-fw-upgrade.j2 | sudo tee $FILESYSTEM_ROOT/usr/bin/mlnx-fw-upgrade.sh
 sudo chmod 755 $FILESYSTEM_ROOT/usr/bin/mlnx-fw-upgrade.sh
 
