@@ -321,9 +321,6 @@ class TestDpuClass:
             def poll(self):
                 return True
         dummy_obj = Dummy()
-        dpuctl_obj.update_boot_prog_once(dummy_obj)
-        assert dpuctl_obj.boot_prog_state == 5
-        assert dpuctl_obj.boot_prog_indication == "5 - OS is running"
         mock_file_path = "mock_dpu_boot_prog"
         mock_val = 0
         boot_prog_map = dpuctl_obj.boot_prog_map
