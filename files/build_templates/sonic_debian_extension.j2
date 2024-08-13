@@ -540,9 +540,6 @@ sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable systemd-bootchart
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install azure-storage==0.36.0
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT pip3 install watchdog==0.10.3
 
-# Copy defaults template
-sudo cp $BUILD_TEMPLATES/defaults.j2 $FILESYSTEM_ROOT_USR_SHARE_SONIC_TEMPLATES/
-
 {% if include_kubernetes == "y" %}
 # Point to kubelet to /etc/resolv.conf
 #
