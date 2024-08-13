@@ -31,4 +31,13 @@ get_database_reboot_type
 echo "Disabling NTP long jump for reboot type ${reboot_type} ..."
 modify_ntp_default "s/NTPD_OPTS=\"-g -N\"/NTPD_OPTS=\"-x -N\"/"
 
-systemctl --no-block restart ntp
+#Check for NTP_KEYS or NTP_SERVERS in CONFIG_DB 
+ntp_config=$(redis-cli -n 4 keys *NTP_*)
+if [ -n "$ntp_config" ]; then
+    echo "Server information present in CONFIG_DB, NTP is restarted"
+    systemctl --no-block restart ntp
+else
+    echo "No server information present in CONFIG_DB, NTP is not restarted"
+fi
+    
+
