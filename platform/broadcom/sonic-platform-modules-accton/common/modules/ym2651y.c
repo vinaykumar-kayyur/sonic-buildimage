@@ -32,6 +32,9 @@
 #include <linux/sysfs.h>
 #include <linux/slab.h>
 
+#define __STDC_WANT_LIB_EXT1__ 1
+#include <linux/string.h>
+
 #define MAX_FAN_DUTY_CYCLE 100
 
 /* Addresses scanned
@@ -514,7 +517,6 @@ static void ym2651y_remove(struct i2c_client *client)
     hwmon_device_unregister(data->hwmon_dev);
     sysfs_remove_group(&client->dev.kobj, &ym2651y_group);
     kfree(data);
-
 }
 
 static const struct i2c_device_id ym2651y_id[] = {
@@ -672,7 +674,11 @@ static struct ym2651y_data *ym2651y_update_device(struct device *dev)
             goto exit;
         }
 
+        #ifdef __STDC_LIB_EXT1__
+        strncpy_s(data->fan_dir, sizeof(data->fan_dir), fan_dir + 1, ARRAY_SIZE(data->fan_dir) - 1);
+        else
         strncpy(data->fan_dir, fan_dir+1, ARRAY_SIZE(data->fan_dir)-1);
+        #endif
         data->fan_dir[ARRAY_SIZE(data->fan_dir)-1] = '\0';
 
         /* Read mfr_id */
@@ -769,5 +775,3 @@ module_i2c_driver(ym2651y_driver);
 MODULE_AUTHOR("Brandon Chuang <brandon_chuang@accton.com.tw>");
 MODULE_DESCRIPTION("3Y Power YM-2651Y driver");
 MODULE_LICENSE("GPL");
-
-

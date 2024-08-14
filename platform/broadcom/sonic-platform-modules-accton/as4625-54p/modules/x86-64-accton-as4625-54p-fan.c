@@ -146,7 +146,7 @@ DECLARE_FAN_TARGET_RPM_SENSOR_DEV_ATTR(1);
 DECLARE_FAN_TARGET_RPM_SENSOR_DEV_ATTR(2);
 DECLARE_FAN_TARGET_RPM_SENSOR_DEV_ATTR(3);
 
-static struct attribute *as4625_fan_attributes[] = {
+static struct attribute *as4625_fan_attrs[] = {
     /* fan related attributes */
     DECLARE_FAN_FAULT_ATTR(1),
     DECLARE_FAN_FAULT_ATTR(2),
@@ -165,6 +165,8 @@ static struct attribute *as4625_fan_attributes[] = {
     DECLARE_FAN_TARGET_RPM_ATTR(3),
     NULL
 };
+
+ATTRIBUTE_GROUPS(as4625_fan);
 
 #define FAN_DUTY_CYCLE_REG_MASK         0x0F
 #define FAN_MAX_DUTY_CYCLE              100
@@ -292,10 +294,6 @@ static ssize_t fan_show_value(struct device *dev, struct device_attribute *da,
     return ret;
 }
 
-static const struct attribute_group as4625_fan_group = {
-    .attrs = as4625_fan_attributes,
-};
-
 static struct as4625_fan_data *as4625_fan_update_device(struct device *dev)
 {
     if (time_after(jiffies, data->last_updated + HZ + HZ / 2) ||
@@ -332,30 +330,19 @@ static int as4625_fan_probe(struct platform_device *pdev)
 {
 	int status;
 
-	data->hwmon_dev = hwmon_device_register_with_info(&pdev->dev,
-											DRVNAME, NULL, NULL, NULL);
+	data->hwmon_dev = devm_hwmon_device_register_with_groups(&pdev->dev,
+											DRVNAME, data, as4625_fan_groups);
 	if (IS_ERR(data->hwmon_dev)) {
 		status = PTR_ERR(data->hwmon_dev);
 		return status;
 	}
 
-	/* Register sysfs hooks */
-	status = sysfs_create_group(&data->hwmon_dev->kobj, &as4625_fan_group);
-	if (status)
-		goto exit_remove;
-
 	dev_info(&pdev->dev, "device created\n");
     return 0;
-
-exit_remove:
-	hwmon_device_unregister(data->hwmon_dev);
-	return status;
 }
 
 static int as4625_fan_remove(struct platform_device *pdev)
 {
-	sysfs_remove_group(&data->hwmon_dev->kobj, &as4625_fan_group);
-	hwmon_device_unregister(data->hwmon_dev);
     return 0;
 }
 
