@@ -92,6 +92,16 @@
             }
         }
     },
+    "DEVICE_METADATA_TYPE_SONIC_HOST_PATTERN": {
+        "sonic-device_metadata:sonic-device_metadata": {
+            "sonic-device_metadata:DEVICE_METADATA": {
+                "sonic-device_metadata:localhost": {
+                    "bgp_asn": "65002",
+                    "type": "SonicHost"
+                }
+            }
+        }
+    },
     "DEVICE_METADATA_TYPE_NOT_PROVISIONED_PATTERN": {
         "sonic-device_metadata:sonic-device_metadata": {
             "sonic-device_metadata:DEVICE_METADATA": {
@@ -361,36 +371,6 @@
             }
         }
     },
-    "DEVICE_METADATA_SUPPRESS_PENDING_FIB_ENABLED": {
-        "sonic-device_metadata:sonic-device_metadata": {
-            "sonic-device_metadata:DEVICE_METADATA": {
-                "sonic-device_metadata:localhost": {
-                    "synchronous_mode": "enable",
-                    "suppress-fib-pending": "enabled"
-                }
-            }
-        }
-    },
-    "DEVICE_METADATA_SUPPRESS_PENDING_FIB_DISABLED": {
-        "sonic-device_metadata:sonic-device_metadata": {
-            "sonic-device_metadata:DEVICE_METADATA": {
-                "sonic-device_metadata:localhost": {
-                    "synchronous_mode": "disable",
-                    "suppress-fib-pending": "disabled"
-                }
-            }
-        }
-    },
-    "DEVICE_METADATA_SUPPRESS_PENDING_FIB_ENABLED_SYNCHRONOUS_MODE_DISABLED": {
-        "sonic-device_metadata:sonic-device_metadata": {
-            "sonic-device_metadata:DEVICE_METADATA": {
-                "sonic-device_metadata:localhost": {
-                    "synchronous_mode": "disable",
-                    "suppress-fib-pending": "enabled"
-                }
-            }
-        }
-    },
     "DEVICE_METADATA_VALID_RACK_MGMT_MAP": {
         "sonic-device_metadata:sonic-device_metadata": {
             "sonic-device_metadata:DEVICE_METADATA": {
@@ -459,6 +439,24 @@
             "sonic-device_metadata:DEVICE_METADATA": {
                 "sonic-device_metadata:localhost": {
                     "bgp_router_id": "8.8.8.300"
+                }
+            }
+        }
+    },
+    "DEVICE_METADATA_VALID_CHASSIS_HOSTNAME": {
+        "sonic-device_metadata:sonic-device_metadata": {
+            "sonic-device_metadata:DEVICE_METADATA": {
+                "sonic-device_metadata:localhost": {
+                    "chassis_hostname": "sonic-chassis-1"
+                }
+            }
+        }
+    },
+    "DEVICE_METADATA_VALID_SLICE_TYPE": {
+        "sonic-device_metadata:sonic-device_metadata": {
+            "sonic-device_metadata:DEVICE_METADATA": {
+                "sonic-device_metadata:localhost": {
+                    "slice_type": "AZNG_Production"
                 }
             }
         }

@@ -339,20 +339,23 @@ class Sysmonitor(ProcessTaskBase):
 
         while max_retry > 0:
             success = True
-            feature_table = self.config_db.get_table("FEATURE")
-            device_config = {}
-            device_config['DEVICE_METADATA'] = self.config_db.get_table('DEVICE_METADATA')
-            device_config.update(device_info.get_device_runtime_metadata())
-            for srv, fields in feature_table.items():
-                if 'state' not in fields:
-                    success = False
-                    logger.log_warning("FEATURE table is not fully ready: {}, retrying".format(feature_table))
-                    break
-                state = self.get_render_value_for_field(fields["state"], device_config, ['enabled', 'disabled', 'always_enabled', 'always_disabled'])
-                if state not in ["disabled", "always_disabled"]:
-                    if fields.get('irrel_for_sysready', '').lower() != 'true':
-                        if srv not in srvs_list:
-                            srvs_list.append(srv)
+            try:
+                feature_table = self.config_db.get_table("FEATURE")
+                device_config = {}
+                device_config['DEVICE_METADATA'] = self.config_db.get_table('DEVICE_METADATA')
+                device_config.update(device_info.get_device_runtime_metadata())
+                for srv, fields in feature_table.items():
+                    if 'state' not in fields:
+                        success = False
+                        logger.log_warning("FEATURE table is not fully ready: {}, retrying".format(feature_table))
+                        break
+                    state = self.get_render_value_for_field(fields["state"], device_config, ['enabled', 'disabled', 'always_enabled', 'always_disabled'])
+                    if state not in ["disabled", "always_disabled"]:
+                        if fields.get('irrel_for_sysready', '').lower() != 'true':
+                            if srv not in srvs_list:
+                                srvs_list.append(srv)
+            except:
+                success = False
             if not success:
                 max_retry -= 1
                 time.sleep(retry_delay)
