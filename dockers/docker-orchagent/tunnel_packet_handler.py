@@ -74,7 +74,7 @@ class TunnelPacketHandler(object):
         self.state_db.connect(STATE_DB)
         self.counters_db = SonicV2Connector()
         self.counters_db.connect(COUNTERS_DB)
-        counters_db_separator = self.counters_db.get_db_separator()
+        counters_db_separator = self.counters_db.get_db_separator(COUNTERS_DB)
         self.tunnel_counter_table = TUNNEL_PKT_COUNTER_TEMPLATE.format(counters_db_separator)
         self._portchannel_intfs = None
         self.up_portchannels = None
@@ -312,12 +312,11 @@ class TunnelPacketHandler(object):
             time.sleep(0.1)
 
     def incr_tunnel_counter(self):
-        curr_count = self.counters_db.get('COUNTERS_DB', self.tunnel_counter_table, COUNTER_KEY)
-        if not curr_count:
-            new_count = 1
-        else:
-            new_count = curr_count + 1
-        self.counters_db.set('COUNTERS_DB', self.tunnel_counter_table, COUNTER_KEY, new_count)
+        try:
+            curr_count = int(self.counters_db.get(COUNTERS_DB, self.tunnel_counter_table, COUNTER_KEY))
+        except TypeError:
+            curr_count = 0
+        self.counters_db.set(COUNTERS_DB, self.tunnel_counter_table, COUNTER_KEY, str(curr_count + 1))
 
     def ping_inner_dst(self, packet):
         """
@@ -355,7 +354,7 @@ class TunnelPacketHandler(object):
         logger.log_notice('Starting tunnel packet handler for {}'
                           .format(self.packet_filter))
 
-
+        
         app_db = DBConnector(APPL_DB, 0)
         lag_table = SubscriberStateTable(app_db, LAG_TABLE)
         sel = Select()
