@@ -17,7 +17,7 @@ from swsscommon.swsscommon import ConfigDBConnector, DBConnector, Table
 from swsscommon import swsscommon
 
 CFG_DB = "CONFIG_DB"
-BMP_STATE_DB = "STATE_DB"
+BMP_STATE_DB = "BMP_STATE_DB"
 REDIS_HOSTIP = "127.0.0.1"
 
 def is_true(val):
