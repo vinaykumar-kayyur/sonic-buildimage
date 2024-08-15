@@ -104,8 +104,6 @@ def test_set_del_com_sdn_apl():
 
 def test_set_del_com_sdn_apl_and_slb():
     mgr = constructor()
-    import pdb
-    pdb.set_trace()
     set_del_test(
         mgr,
         "SET",
