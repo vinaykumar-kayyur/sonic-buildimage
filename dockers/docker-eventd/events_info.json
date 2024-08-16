@@ -1,0 +1,24 @@
+{
+    "events_list": [
+        {
+            "regex_file": "host_regex.json",
+            "yang_module": "sonic-events-host"
+        },
+        {
+            "regex_file": "bgp_regex.json",
+            "yang_module": "sonic-events-bgp"
+        },
+        {
+            "regex_file": "dhcp_relay_regex.json",
+            "yang_module": "sonic-events-dhcp-relay"
+        },
+        {
+            "regex_file": "swss_regex.json",
+            "yang_module": "sonic-events-swss"
+        },
+        {
+            "regex_file": "syncd_regex.json",
+            "yang_module": "sonic-events-syncd"
+        }
+    ]
+}
