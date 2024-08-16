@@ -327,6 +327,8 @@ function postStartAction()
             docker cp $PSENSOR pmon:/usr/bin/
         fi
     fi
+[%- elif docker_container_name == "eventd" %}
+    s
 {%- else %}
     : # nothing
 {%- endif %}
