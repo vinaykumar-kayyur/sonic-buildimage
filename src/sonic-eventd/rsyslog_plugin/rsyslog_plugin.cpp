@@ -15,9 +15,9 @@ bool RsyslogPlugin::onMessage(string msg, lua_State* luaState) {
     string tag;
     event_params_t paramDict;
 
-    for (const auto& [regexStr, eventParserPair] : m_event_buckets) {
+    for(const auto& [regexStr, eventParserPair] : m_event_buckets) {
         regex regexPattern(regexStr);
-        if (regex_search(msg, regexPattern)) { # Correct bucket
+        if(regex_search(msg, regexPattern)) { # Correct bucket
             auto& [eventHandle, parser] = eventParserPair;
             if(!parser->parseMessage(msg, tag, paramDict, luaState)) {
                 SWSS_LOG_DEBUG("%s was not able to be parsed into a structured event\n", msg.c_str());
@@ -57,13 +57,13 @@ bool RsyslogPlugin::createRegexList(vector<RegexStruct>& regexList, string regex
     fstream regexFile;
     json jsonList = json::array();
     regexFile.open(regexPath, ios::in);
-    if (!regexFile) {
+    if(!regexFile) {
         SWSS_LOG_ERROR("No such path exists: %s for source %s\n", regexPath.c_str(), moduleName.c_str());
         return false;
     }
     try {
         regexFile >> jsonList;
-    } catch (nlohmann::detail::parse_error& iaException) {
+    } catch(nlohmann::detail::parse_error& iaException) {
         SWSS_LOG_ERROR("Invalid JSON file: %s, throws exception: %s\n", regexPath.c_str(), iaException.what());
         regexFile.close();
         return false;
@@ -115,25 +115,25 @@ bool RsyslogPlugin::createEventBuckets() {
     fstream regexFile;
     json jsonList = json::array();
     regexFile.open(m_regexPath, ios::in);
-    if (!regexFile) {
+    if(!regexFile) {
         SWSS_LOG_ERROR("No such path exists: %s\n", m_regexPath.c_str());
         return false;
     }
     try {
         regexFile >> jsonList;
-    } catch (nlohmann::detail::parse_error& iaException) {
+    } catch(nlohmann::detail::parse_error& iaException) {
         SWSS_LOG_ERROR("Invalid JSON file: %s, throws exception: %s\n", m_regexPath.c_str(), iaException.what());
         regexFile.close();
         return false;
     }
 
-    if (!jsonList.contains("events_list") || !jsonList["events_list"].is_array()) {
+    if(!jsonList.contains("events_list") || !jsonList["events_list"].is_array()) {
         SWSS_LOG_ERROR("Invalid JSON format for file: %s, 'events_list' is missing or not an array.\n", m_regexPath.c_str());
         regexFile.close();
         return false;
     }
 
-    for (const auto& eventEntry : jsonList["events_list"]) {
+    for(const auto& eventEntry : jsonList["events_list"]) {
         string regex, regexFilePath, yangModule;
         vector<RegexStruct> regexList;
         try {
@@ -145,7 +145,7 @@ bool RsyslogPlugin::createEventBuckets() {
             regexFile.close();
             return false;
         }
-        if (!createRegexList(regexList, regexFilePath, yangModule)) {
+        if(!createRegexList(regexList, regexFilePath, yangModule)) {
             regexFile.close();
             return false;
         }

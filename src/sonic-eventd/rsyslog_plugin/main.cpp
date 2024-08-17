@@ -37,12 +37,8 @@ int main(int argc, char** argv) {
         return MISSING_ARGS_ERROR_CODE;
     }
 
-    // TODO: Expand onInit to use regex file to create buckets and for each bucket a regex list
-    // TODO: Expand onMessage to first determine which bucket to use (bucket regex)
-    // 5 buckets, 0 bgp, 1 swss, 2 dhcp_relay, 3 syncd, 4 host
     unique_ptr<RsyslogPlugin> plugin(new RsyslogPlugin(regexPath));
     int returnCode = plugin->onInit();
-    // TODO: Might have to update this return code part too
     if(returnCode == INVALID_REGEX_ERROR_CODE) {
         SWSS_LOG_ERROR("Rsyslog plugin was not able to be initialized due to invalid regex file provided.\n");
         return returnCode;
