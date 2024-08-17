@@ -20,9 +20,6 @@ import sys
 
 TIMEOUT=5.0
 
-# Set up logging to syslog
-syslog.openlog(ident='arp_update_checker', logoption=syslog.LOG_PID, facility=syslog.LOG_DAEMON)
-
 def log_info(message):
     syslog.syslog(syslog.LOG_INFO, message)
 
