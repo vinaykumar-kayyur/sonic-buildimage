@@ -26,7 +26,7 @@
 #include <sal/sal_types.h>
 
 /* System MUST supply stdarg.h */
-#include <linux/stdarg.h>
+#include <stdarg.h>
 
 /*!
  * \cond SAL_STDC
