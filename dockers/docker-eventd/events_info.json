@@ -1,22 +1,27 @@
 {
     "events_list": [
         {
+            "regex": "monit|systemd|kernel|dockerd|arista|python3",
             "regex_file": "host_regex.json",
             "yang_module": "sonic-events-host"
         },
         {
+            "regex": "bgp*",
             "regex_file": "bgp_regex.json",
             "yang_module": "sonic-events-bgp"
         },
         {
+            "regex": "dhc*",
             "regex_file": "dhcp_relay_regex.json",
             "yang_module": "sonic-events-dhcp-relay"
         },
         {
+            "regex": "swss*",
             "regex_file": "swss_regex.json",
             "yang_module": "sonic-events-swss"
         },
         {
+            "regex": "syncd*",
             "regex_file": "syncd_regex.json",
             "yang_module": "sonic-events-syncd"
         }

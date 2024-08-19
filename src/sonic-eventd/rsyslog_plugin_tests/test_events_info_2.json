@@ -1,0 +1,9 @@
+{
+    "events_list": [
+        {
+            "regex": "bgp*",
+            "regex_file": "test_regex_2.rc.json",
+            "yang_module": "sonic-events-bgp"
+        }
+    ]
+}

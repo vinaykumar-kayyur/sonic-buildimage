@@ -1,0 +1,9 @@
+{
+    "events_list": [
+        {
+            "regex": "sonic-events-test-3*",
+            "regex_file": "test_regex_3.rc.json",
+            "yang_module": "sonic-events-test-3"
+        }
+    ]
+}

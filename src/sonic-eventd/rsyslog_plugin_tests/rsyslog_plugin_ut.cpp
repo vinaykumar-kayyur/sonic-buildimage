@@ -209,23 +209,23 @@ TEST(syslog_parser, lua_code_valid_2) {
     lua_close(luaState);
 }
 
-TEST(rsyslog_plugin, onInit_emptyJSON) {
-    unique_ptr<RsyslogPlugin> plugin(new RsyslogPlugin("test_mod_name", "./rsyslog_plugin_tests/test_regex_1.rc.json"));
+TEST(rsyslog_plugin, onInit_emptyRegex) {
+    unique_ptr<RsyslogPlugin> plugin(new RsyslogPlugin("./rsyslog_plugin_tests/test_events_info_1.json"));
     EXPECT_NE(0, plugin->onInit());
 }
 
 TEST(rsyslog_plugin, onInit_missingRegex) {
-    unique_ptr<RsyslogPlugin> plugin(new RsyslogPlugin("test_mod_name", "./rsyslog_plugin_tests/test_regex_3.rc.json"));
+    unique_ptr<RsyslogPlugin> plugin(new RsyslogPlugin("./rsyslog_plugin_tests/test_events_info_3.json"));
     EXPECT_NE(0, plugin->onInit());
 }
 
 TEST(rsyslog_plugin, onInit_invalidRegex) {
-    unique_ptr<RsyslogPlugin> plugin(new RsyslogPlugin("test_mod_name", "./rsyslog_plugin_tests/test_regex_4.rc.json"));
+    unique_ptr<RsyslogPlugin> plugin(new RsyslogPlugin("./rsyslog_plugin_tests/test_events_info_4.json"));
     EXPECT_NE(0, plugin->onInit());
 }
 
 TEST(rsyslog_plugin, onMessage) {
-    unique_ptr<RsyslogPlugin> plugin(new RsyslogPlugin("test_mod_name", "./rsyslog_plugin_tests/test_regex_2.rc.json"));
+    unique_ptr<RsyslogPlugin> plugin(new RsyslogPlugin("./rsyslog_plugin_tests/test_events_info_2.json"));
     EXPECT_EQ(0, plugin->onInit());
     ifstream infile("./rsyslog_plugin_tests/test_syslogs.txt");
     string logMessage;
@@ -240,7 +240,7 @@ TEST(rsyslog_plugin, onMessage) {
 }
 
 TEST(rsyslog_plugin, onMessage_noParams) {
-    unique_ptr<RsyslogPlugin> plugin(new RsyslogPlugin("test_mod_name", "./rsyslog_plugin_tests/test_regex_5.rc.json"));
+    unique_ptr<RsyslogPlugin> plugin(new RsyslogPlugin("./rsyslog_plugin_tests/test_events_info_5.json"));
     EXPECT_EQ(0, plugin->onInit());
     ifstream infile("./rsyslog_plugin_tests/test_syslogs_2.txt");
     string logMessage;
@@ -254,8 +254,23 @@ TEST(rsyslog_plugin, onMessage_noParams) {
     infile.close();
 }
 
+TEST(rsyslog_plugin, onInit_emptyJSON) {
+    unique_ptr<RsyslogPlugin> plugin(new RsyslogPlugin("./rsyslog_plugin_tests/test_events_info_6.json"));
+    EXPECT_NE(0, plugin->onInit());
+}
+
+TEST(rsyslog_plugin, onInit_missingField) {
+    unique_ptr<RsyslogPlugin> plugin(new RsyslogPlugin("./rsyslog_plugin_tests/test_events_info_7.json"));
+    EXPECT_NE(0, plugin->onInit());
+}
+
+TEST(rsyslog_plugin, onInit_missingFile) {
+    unique_ptr<RsyslogPlugin> plugin(new RsyslogPlugin("./rsyslog_plugin_tests/test_events_info_8.json"));
+    EXPECT_NE(0, plugin->onInit());
+}
+
 TEST(rsyslog_plugin, run) {
-    unique_ptr<RsyslogPlugin> plugin(new RsyslogPlugin("test_mod_name", "./rsyslog_plugin_tests/test_regex_5.rc.json"));
+    unique_ptr<RsyslogPlugin> plugin(new RsyslogPlugin("./rsyslog_plugin_tests/test_events_info_5.json"));
     EXPECT_EQ(0, plugin->onInit());
     istringstream ss("");
     streambuf* cinbuf = cin.rdbuf();
@@ -265,7 +280,7 @@ TEST(rsyslog_plugin, run) {
 }
 
 TEST(rsyslog_plugin, run_SIGTERM) {
-    unique_ptr<RsyslogPlugin> plugin(new RsyslogPlugin("test_mod_name", "./rsyslog_plugin_tests/test_regex_5.rc.json"));
+    unique_ptr<RsyslogPlugin> plugin(new RsyslogPlugin("./rsyslog_plugin_tests/test_events_info_5.json"));
     EXPECT_EQ(0, plugin->onInit());
     EXPECT_TRUE(RsyslogPlugin::g_running);
     thread pluginThread([&]() {

@@ -177,7 +177,7 @@ void RsyslogPlugin::run() {
 }
 
 int RsyslogPlugin::onInit() {
-    bool success = createParsers();
+    bool success = createEventBuckets();
     if(!success) {
         return 1; // invalid regex error code
     } else if(m_eventHandle == NULL) {
