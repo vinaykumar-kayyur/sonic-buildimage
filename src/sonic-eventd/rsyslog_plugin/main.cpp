@@ -37,7 +37,7 @@ int main(int argc, char** argv) {
         return MISSING_ARGS_ERROR_CODE;
     }
 
-    unique_ptr<RsyslogPlugin> plugin(new RsyslogPlugin(regexPath));
+    unique_ptr<RsyslogPlugin> plugin(new RsyslogPlugin(regexFilePath));
     int returnCode = plugin->onInit();
     if(returnCode == INVALID_REGEX_ERROR_CODE) {
         SWSS_LOG_ERROR("Rsyslog plugin was not able to be initialized due to invalid regex file provided.\n");

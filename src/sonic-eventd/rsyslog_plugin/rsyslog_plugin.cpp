@@ -17,7 +17,7 @@ bool RsyslogPlugin::onMessage(string msg, lua_State* luaState) {
 
     for(const auto& [regexStr, eventParserPair] : m_event_buckets) {
         regex regexPattern(regexStr);
-        if(regex_search(msg, regexPattern)) { # Correct bucket
+        if(regex_search(msg, regexPattern)) { // Correct bucket
             auto& [eventHandle, parser] = eventParserPair;
             if(!parser->parseMessage(msg, tag, paramDict, luaState)) {
                 SWSS_LOG_DEBUG("%s was not able to be parsed into a structured event\n", msg.c_str());
@@ -28,8 +28,12 @@ bool RsyslogPlugin::onMessage(string msg, lua_State* luaState) {
                     SWSS_LOG_ERROR("rsyslog_plugin was not able to publish event for %s.\n", tag.c_str());
                     return false;
                 }
-        return true;
+                return true;
+            }
+        }
     }
+    SWSS_LOG_ERROR("Log cannot be matched to any sonic-events module: %s\n", msg.c_str());
+    return false;
 }
 
 void parseParams(vector<string> params, vector<EventParam>& eventParams) {
@@ -53,7 +57,7 @@ void parseParams(vector<string> params, vector<EventParam>& eventParams) {
     }
 }
 
-bool RsyslogPlugin::createRegexList(vector<RegexStruct>& regexList, string regexPath, string moduleName) {
+bool createRegexList(vector<RegexStruct>& regexList, string regexPath, string moduleName) {
     fstream regexFile;
     json jsonList = json::array();
     regexFile.open(regexPath, ios::in);
@@ -111,43 +115,48 @@ bool RsyslogPlugin::createRegexList(vector<RegexStruct>& regexList, string regex
     return true;
 }
 
-bool RsyslogPlugin::createEventBuckets() {
+int RsyslogPlugin::createEventBuckets() {
     fstream regexFile;
     json jsonList = json::array();
     regexFile.open(m_regexPath, ios::in);
     if(!regexFile) {
         SWSS_LOG_ERROR("No such path exists: %s\n", m_regexPath.c_str());
-        return false;
+        return 1; // invalid regex or file error code
     }
     try {
         regexFile >> jsonList;
     } catch(nlohmann::detail::parse_error& iaException) {
         SWSS_LOG_ERROR("Invalid JSON file: %s, throws exception: %s\n", m_regexPath.c_str(), iaException.what());
         regexFile.close();
-        return false;
+        return 1;
     }
 
     if(!jsonList.contains("events_list") || !jsonList["events_list"].is_array()) {
         SWSS_LOG_ERROR("Invalid JSON format for file: %s, 'events_list' is missing or not an array.\n", m_regexPath.c_str());
         regexFile.close();
-        return false;
+        return 1;
     }
 
     for(const auto& eventEntry : jsonList["events_list"]) {
         string regex, regexFilePath, yangModule;
         vector<RegexStruct> regexList;
         try {
+            if(!eventEntry.contains("regex") || !eventEntry.contains("regex_file") || !eventEntry.contains("yang_module")) {
+                SWSS_LOG_ERROR("Missing required key regex, regex_file, or yang_module");
+                regexFile.close();
+                return 1;
+            }
             regex = eventEntry["regex"];
             regexFilePath = eventEntry["regex_file"];
             yangModule = eventEntry["yang_module"];
         } catch (nlohmann::detail::type_error& deException) {
             SWSS_LOG_ERROR("Missing required key, throws exception: %s\n", deException.what());
             regexFile.close();
-            return false;
+            return 1;
         }
         if(!createRegexList(regexList, regexFilePath, yangModule)) {
             regexFile.close();
-            return false;
+            return 1;
         }
 
         unique_ptr<SyslogParser> parser = make_unique<SyslogParser>();
@@ -155,11 +164,16 @@ bool RsyslogPlugin::createEventBuckets() {
 
         event_handle_t eventHandle = events_init_publisher(yangModule);
 
-        m_event_buckets[regex] = make_pair(eventHandle, parser);
+        if(eventHandle == NULL) {
+            SWSS_LOG_ERROR("Failed to init event publisher");
+            return 2; // event init publish error code
+	}
+
+        m_event_buckets[regex] = pair<event_handle_t, unique_ptr<SyslogParser>>(eventHandle, move(parser));
     }
 
     regexFile.close();
-    return true;
+    return 0;
 }
 
 void RsyslogPlugin::run() {
@@ -177,13 +191,7 @@ void RsyslogPlugin::run() {
 }
 
 int RsyslogPlugin::onInit() {
-    bool success = createEventBuckets();
-    if(!success) {
-        return 1; // invalid regex error code
-    } else if(m_eventHandle == NULL) {
-        return 2; // event init publish error code
-    }
-    return 0;
+    return createEventBuckets();
 }
 
 RsyslogPlugin::RsyslogPlugin(string regexPath) {

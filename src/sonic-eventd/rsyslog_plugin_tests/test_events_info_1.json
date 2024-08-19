@@ -2,7 +2,7 @@
     "events_list": [
         {
             "regex": "sonic-events-test-1*",
-            "regex_file": "test_regex_1.rc.json",
+            "regex_file": "./rsyslog_plugin_tests/test_regex_1.rc.json",
             "yang_module": "sonic-events-test-1"
         }
     ]

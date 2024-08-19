@@ -40,7 +40,7 @@ public:
 private:
     unordered_map<string, pair<event_handle_t, unique_ptr<SyslogParser>>> m_event_buckets;
     string m_regexPath;
-    bool createEventBuckets();
+    int createEventBuckets();
 };
 
 #endif
