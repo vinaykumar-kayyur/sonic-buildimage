@@ -92,6 +92,7 @@ iface {{ name }} {{ 'inet' if prefix | ipv4 else 'inet6' }} static
     # IPV6 default table not add to lookup by default, management server need this to access IPV6 address when BGP shutdown
     up ip -6 rule add pref {{ force_mgmt_route_priority + 3 }} lookup {{ vrf_table }}
 {% endif %}
+    post-up mgmt-unsolicited.sh {{ 'ipv4' if prefix | ipv4 else 'ipv6' }} {{ name }} {{ ip_addr }}
     # management port down rules
     pre-down ip {{ '-4' if prefix | ipv4 else '-6' }} route delete default via {{ MGMT_INTERFACE[(name, prefix)]['gwaddr'] }} dev {{ name }} table {{ vrf_table }}
     pre-down ip {{ '-4' if prefix | ipv4 else '-6' }} route delete {{ prefix | network }}/{{ prefix | prefixlen }} dev {{ name }} table {{ vrf_table }}

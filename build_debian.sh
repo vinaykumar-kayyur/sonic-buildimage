@@ -574,7 +574,10 @@ if [ -f files/image_config/ntp/ntp-systemd-wrapper ]; then
     sudo cp ./files/image_config/ntp/ntp-systemd-wrapper $FILESYSTEM_ROOT/usr/libexec/ntpsec/
 fi
 
-## Version file part 1
+# Unsolicited mgmt advertisement
+sudo cp files/image_config/mgmt-unsolicited/mgmt-unsolicited.sh $FILESYSTEM_ROOT/usr/bin/
+
+## Version file
 sudo mkdir -p $FILESYSTEM_ROOT/etc/sonic
 if [ -f files/image_config/sonic_release ]; then
     sudo cp files/image_config/sonic_release $FILESYSTEM_ROOT/etc/sonic/
