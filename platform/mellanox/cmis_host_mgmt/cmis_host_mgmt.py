@@ -22,6 +22,7 @@ import re
 import os
 import subprocess
 import glob
+from pathlib import Path
 
 
 class CMISHostMgmtActivator:
@@ -139,11 +140,15 @@ class CMISHostMgmtActivator:
         if not CMISHostMgmtActivator.is_spc_supported(sku_num):
             print("Error: unsupported platform - feature is supported on SPC3 and higher.")
 
-        # Find sai_*.xml, assume there can only be one in the directory
-        sai_xml_list = glob.glob(os.path.join(sku_path + "/sai*.xml"))
-        sai_xml_name = sai_xml_list[0]
-        if sai_xml_name:
-            sai_xml_name = sai_xml_name.split('/')[-1]
+        sai_profile_file = '{}/{}'.format(sku_path, CMISHostMgmtActivator.PARAMS["sai_profile"]["file_name"])
+        lines = None
+        with open(sai_profile_file, 'r') as saiprofile:
+            lines = saiprofile.read()
+        
+        sai_xml_path = re.search("SAI_INIT_CONFIG_FILE.*", lines).group()
+
+        if sai_xml_path:
+            sai_xml_name = Path(sai_xml_path).name
             CMISHostMgmtActivator.PARAMS["sai_xml"]["file_name"] = sai_xml_name
         else:
             print("Error: no sai_*.xml file present")
