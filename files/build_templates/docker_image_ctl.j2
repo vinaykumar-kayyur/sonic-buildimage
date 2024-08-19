@@ -327,8 +327,9 @@ function postStartAction()
             docker cp $PSENSOR pmon:/usr/bin/
         fi
     fi
+
 [%- elif docker_container_name == "eventd" %}
-    # Wait until swss container state is Running
+    # Wait until eventd container state is Running
     until [[ ($(docker inspect -f {{"'{{.State.Running}}'"}} eventd) == "true") ]]; do
         sleep 0.1
     done

@@ -35,6 +35,6 @@ COPY ["critical_processes", "/etc/supervisor"]
 
 # Copy rsyslog plugin configuration file and regexes to docker
 COPY ["*.conf", "/etc/rsyslog.d/"]
-COPY ["*.json", "/etc/rsyslog,d/"]
+COPY ["*.json", "/etc/rsyslog.d/"]
 
 ENTRYPOINT ["/usr/local/bin/supervisord"]
