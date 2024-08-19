@@ -51,8 +51,8 @@ RUN wget https://github.com/nanomsg/nanomsg/archive/1.0.0.tar.gz \
 
 COPY ["ptf_nn_agent.conf", "/etc/supervisor/conf.d/"]
 
-ENTRYPOINT ["/usr/local/bin/supervisord"]
-
 FROM $BASE
 
 COPY --from=base / /
+
+ENTRYPOINT ["/usr/local/bin/supervisord"]
