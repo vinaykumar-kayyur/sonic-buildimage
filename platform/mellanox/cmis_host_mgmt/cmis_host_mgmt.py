@@ -21,6 +21,7 @@ import click
 import re
 import os
 import subprocess
+import glob
 
 
 class CMISHostMgmtActivator:
@@ -137,8 +138,15 @@ class CMISHostMgmtActivator:
 
         if not CMISHostMgmtActivator.is_spc_supported(sku_num):
             print("Error: unsupported platform - feature is supported on SPC3 and higher.")
-            
-        CMISHostMgmtActivator.PARAMS["sai_xml"]["file_name"] = "sai_{0}.xml".format(sku_num)
+
+        # Find sai_*.xml, assume there can only be one in the directory
+        sai_xml_list = glob.glob(os.path.join(sku_path + "/sai*.xml"))
+        sai_xml_name = sai_xml_list[0]
+        if sai_xml_name:
+            sai_xml_name = sai_xml_name.split('/')[-1]
+            CMISHostMgmtActivator.PARAMS["sai_xml"]["file_name"] = sai_xml_name
+        else:
+            print("Error: no sai_*.xml file present")
 
         CMISHostMgmtActivator.copy_file(args[0], sku_path)
         CMISHostMgmtActivator.copy_file(args[1], sku_path)
