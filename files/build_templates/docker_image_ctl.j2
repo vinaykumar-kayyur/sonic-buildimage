@@ -328,7 +328,24 @@ function postStartAction()
         fi
     fi
 [%- elif docker_container_name == "eventd" %}
-    s
+    # Wait until swss container state is Running
+    until [[ ($(docker inspect -f {{"'{{.State.Running}}'"}} eventd) == "true") ]]; do
+        sleep 0.1
+    done
+    echo "eventd container is up and running"
+
+    # Copy all rsyslog plugin configuration files and regexes to host from docker container
+
+    docker cp eventd:/etc/rsyslog.d/00-rsyslog_plugin.conf /etc/rsyslog.d/
+    docker cp eventd:/etc/rsyslog.d/events_info.json /etc/rsyslog.d/
+    docker cp eventd:/etc/rsyslog.d/bgp_regex.json /etc/rsyslog.d/
+    docker cp eventd:/etc/rsyslog.d/dhcp_relay_regex.json /etc/rsyslog.d/
+    docker cp eventd:/etc/rsyslog.d/host_regex.json /etc/rsyslog.d/
+    docker cp eventd:/etc/rsyslog.d/swss_regex.json /etc/rsyslog.d/
+    docker cp eventd:/etc/rsyslog.d/syncd_regex.json /etc/rsyslog.d/
+
+    # Restart rsyslog service
+    systemctl restart rsyslog
 {%- else %}
     : # nothing
 {%- endif %}
