@@ -167,7 +167,7 @@ int RsyslogPlugin::createEventBuckets() {
         if(eventHandle == NULL) {
             SWSS_LOG_ERROR("Failed to init event publisher");
             return 2; // event init publish error code
-	}
+        }
 
         m_event_buckets[regex] = pair<event_handle_t, unique_ptr<SyslogParser>>(eventHandle, move(parser));
     }
