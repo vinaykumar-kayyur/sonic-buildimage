@@ -11,6 +11,7 @@ extern "C"
 #include <memory>
 #include <csignal>
 #include <unordered_map>
+#include <tuple>
 #include "syslog_parser.h"
 #include "events.h"
 #include "logger.h"
@@ -31,6 +32,14 @@ public:
     bool onMessage(string msg, lua_State* luaState);
     void run();
     RsyslogPlugin(string regexPath);
+    ~RsyslogPlugin() {
+        for (const auto& [regexStr, eventParserPair] : m_event_buckets) {
+            auto& [eventHandle, ignore] = eventParserPair;
+            if (eventHandle != NULL) {
+                events_deinit_publisher(eventHandle);
+            }
+        }
+    }
     static void signalHandler(int signum) {
         if (signum == SIGTERM) {
             SWSS_LOG_INFO("Rsyslog plugin received SIGTERM, shutting down");
