@@ -61,7 +61,7 @@ class CMISHostMgmtActivator:
                         if param == "sai_profile" and not re.search(CMISHostMgmtActivator.PARAMS[param]["disabled_param"], lines):
                             if not re.search(CMISHostMgmtActivator.PARAMS[param]["enabled_param"], lines): 
                                 with open(file_path, 'a') as param_file:
-                                    param_file.write(CMISHostMgmtActivator.PARAMS[param]["enabled_param"])
+                                    param_file.write(CMISHostMgmtActivator.PARAMS[param]["enabled_param"] + '\n')
                                 return
 
                         lines = re.sub(CMISHostMgmtActivator.PARAMS[param]["disabled_param"],
