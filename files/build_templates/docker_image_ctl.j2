@@ -334,8 +334,10 @@ function postStartAction()
     done
     echo "eventd container is up and running"
 
-    # Copy all rsyslog plugin configuration files and regexes to host from docker container
-
+    # Copy all rsyslog plugin binaries, configuration files, and regexes to host from docker container
+    docker cp eventd:/usr/bin/rsyslog_plugin /usr/bin/
+    docker cp eventd:/usr/bin/events_monit_test.py /usr/bin/
+    docker cp eventd:/etc/monit/conf.d/monit_events /etc/monit/conf.d/
     docker cp eventd:/etc/rsyslog.d/00-rsyslog_plugin.conf /etc/rsyslog.d/
     docker cp eventd:/etc/rsyslog.d/events_info.json /etc/rsyslog.d/
     docker cp eventd:/etc/rsyslog.d/bgp_regex.json /etc/rsyslog.d/
