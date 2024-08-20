@@ -132,7 +132,7 @@ function clean_up_chassis_db_tables()
         return
     fi
 
-    until [[ $($SONIC_DB_CLI CHASSIS_APP_DB PING | grep -c True) -gt 0 ]]; do
+    until [[ $(sonic-db-cli CHASSIS_APP_DB PING | grep -c True) -gt 0 ]]; do
         sleep 1
     done
 
@@ -151,7 +151,7 @@ function clean_up_chassis_db_tables()
     debug "Chassis db clean up for ${SERVICE}$DEV. asic=$asic"
 
     # First, delete SYSTEM_NEIGH entries
-    num_neigh=`$SONIC_DB_CLI CHASSIS_APP_DB EVAL "
+    num_neigh=`sonic-db-cli CHASSIS_APP_DB EVAL "
     local nn = 0
     local host = string.gsub(ARGV[1], '%-', '%%-')
     local dev = ARGV[2]
@@ -178,7 +178,7 @@ function clean_up_chassis_db_tables()
     fi
 
     # Next, delete SYSTEM_INTERFACE entries
-    num_sys_intf=`$SONIC_DB_CLI CHASSIS_APP_DB EVAL "
+    num_sys_intf=`sonic-db-cli CHASSIS_APP_DB EVAL "
     local nsi = 0
     local host = string.gsub(ARGV[1], '%-', '%%-')
     local dev = ARGV[2]
@@ -195,7 +195,7 @@ function clean_up_chassis_db_tables()
     debug "Chassis db clean up for ${SERVICE}$DEV. Number of SYSTEM_INTERFACE entries deleted: $num_sys_intf"
 
     # Next, delete SYSTEM_LAG_MEMBER_TABLE entries
-    num_lag_mem=`$SONIC_DB_CLI CHASSIS_APP_DB EVAL "
+    num_lag_mem=`sonic-db-cli CHASSIS_APP_DB EVAL "
     local nlm = 0
     local host = string.gsub(ARGV[1], '%-', '%%-')
     local dev = ARGV[2]
@@ -220,7 +220,7 @@ function clean_up_chassis_db_tables()
     fi
 
     # Finally, delete SYSTEM_LAG_TABLE entries and deallot LAG IDs
-    num_sys_lag=`$SONIC_DB_CLI CHASSIS_APP_DB EVAL "
+    num_sys_lag=`sonic-db-cli CHASSIS_APP_DB EVAL "
     local nsl = 0
     local host = string.gsub(ARGV[1], '%-', '%%-')
     local dev = ARGV[2]
