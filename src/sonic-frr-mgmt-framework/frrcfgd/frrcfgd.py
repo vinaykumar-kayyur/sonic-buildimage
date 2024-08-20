@@ -2269,7 +2269,7 @@ class BGPConfigDaemon:
         syslog.syslog(syslog.LOG_DEBUG, 'Init Cached DB data')
         for key, entry in self.table_data_cache.items():
             syslog.syslog(syslog.LOG_DEBUG, '  %-20s : %s' % (key, entry))
-        if self.config_mode == "unified" or self.config_mode == "separated":
+        if self.config_mode == "unified":
             for table, _ in self.table_handler_list:
                 table_list = self.config_db.get_table(table)
                 for key, data in table_list.items():
