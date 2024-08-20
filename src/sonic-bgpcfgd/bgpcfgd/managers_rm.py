@@ -2,7 +2,7 @@ from .manager import Manager
 from swsscommon import swsscommon
 from .log import log_err, log_debug
 
-ROUTE_MAPS = ["FROM_SDN_SLB_ROUTES", "FROM_COM_SDN_APPLIENCE_ROUTES"]
+ROUTE_MAPS = ["FROM_SDN_SLB_ROUTES", "FROM_SDN_APPLIANCE_ROUTES"]
 FROM_SDN_SLB_DEPLOYMENT_ID = '2'
 
 class RouteMapMgr(Manager):

@@ -80,12 +80,12 @@ def test_set_del_com_sdn_apl():
     set_del_test(
         mgr,
         "SET",
-        [("FROM_COM_SDN_APPLIENCE_ROUTES", {
+        [("FROM_SDN_APPLIANCE_ROUTES", {
             "community_id": "1235:1235"
         })],
         True,
         [
-            ["route-map FROM_COM_SDN_APPLIENCE_ROUTES_RM permit 100",
+            ["route-map FROM_SDN_APPLIANCE_ROUTES_RM permit 100",
              " set as-path prepend 12346 12346",
              " set community 1235:1235",
              " set origin incomplete"]
@@ -95,10 +95,10 @@ def test_set_del_com_sdn_apl():
     set_del_test(
         mgr,
         "DEL",
-        ("FROM_COM_SDN_APPLIENCE_ROUTES",),
+        ("FROM_SDN_APPLIANCE_ROUTES",),
         True,
         [
-            ["no route-map FROM_COM_SDN_APPLIENCE_ROUTES_RM permit 100"]
+            ["no route-map FROM_SDN_APPLIANCE_ROUTES_RM permit 100"]
         ]
     )
 
@@ -107,7 +107,7 @@ def test_set_del_com_sdn_apl_and_slb():
     set_del_test(
         mgr,
         "SET",
-        [("FROM_COM_SDN_APPLIENCE_ROUTES", {
+        [("FROM_SDN_APPLIANCE_ROUTES", {
             "community_id": "1235:1235"
         }),
         ("FROM_SDN_SLB_ROUTES", {
@@ -116,7 +116,7 @@ def test_set_del_com_sdn_apl_and_slb():
         )],
         True,
         [
-            ["route-map FROM_COM_SDN_APPLIENCE_ROUTES_RM permit 100",
+            ["route-map FROM_SDN_APPLIANCE_ROUTES_RM permit 100",
              " set as-path prepend 12346 12346",
              " set community 1235:1235",
              " set origin incomplete"],
@@ -131,11 +131,11 @@ def test_set_del_com_sdn_apl_and_slb():
     set_del_test(
         mgr,
         "DEL",
-        ("FROM_COM_SDN_APPLIENCE_ROUTES", "FROM_SDN_SLB_ROUTES",),
+        ("FROM_SDN_APPLIANCE_ROUTES", "FROM_SDN_SLB_ROUTES",),
         True,
         [
-            ["no route-map FROM_COM_SDN_APPLIENCE_ROUTES_RM permit 100"],
+            ["no route-map FROM_SDN_APPLIANCE_ROUTES_RM permit 100"],
             ["no route-map FROM_SDN_SLB_ROUTES_RM permit 100"]
-        ]
+        ] 
     )
 
