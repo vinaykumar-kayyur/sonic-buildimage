@@ -3,8 +3,8 @@
     import disk_percentage_treshold_rotation with context -%}
 
 {% set syslog = (LOGGING | d({})).get('syslog', {}) -%}
-{% set frequency = syslog.frequency | 'daily' -%}
-{% set max_number = syslog.max_number | 5000 -%}
+{% set frequency = syslog.frequency | d('daily') -%}
+{% set max_number = syslog.max_number | d(5000) -%}
 
 {% if syslog.disk_percentage and not syslog.size -%}
     {% set size_mb = (max_logs_size_kb | int) * 
