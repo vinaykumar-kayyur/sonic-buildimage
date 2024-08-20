@@ -328,7 +328,7 @@ function postStartAction()
         fi
     fi
 
-[%- elif docker_container_name == "eventd" %}
+{%- elif docker_container_name == "eventd" %}
     # Wait until eventd container state is Running
     until [[ ($(docker inspect -f {{"'{{.State.Running}}'"}} eventd) == "true") ]]; do
         sleep 0.1
