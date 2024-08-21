@@ -86,7 +86,6 @@ elif [ "$CONFIG_TYPE" == "split-unified" ]; then
     rm -f /etc/frr/bgpd.conf /etc/frr/zebra.conf /etc/frr/staticd.conf
     write_default_zebra_config /etc/frr/frr.conf
 elif [ "$CONFIG_TYPE" == "unified" ]; then
-    echo "" >  /etc/frr/frr.conf
     CFGGEN_PARAMS=" \
         -d \
         -y /etc/sonic/constants.yml \
@@ -94,7 +93,6 @@ elif [ "$CONFIG_TYPE" == "unified" ]; then
     "
     sonic-cfggen $CFGGEN_PARAMS
     echo "service integrated-vtysh-config" > /etc/frr/vtysh.conf
-    echo "fpm address 127.0.0.1" >>  /etc/frr/frr.conf
     rm -f /etc/frr/bgpd.conf /etc/frr/zebra.conf /etc/frr/staticd.conf \
           /etc/frr/bfdd.conf /etc/frr/ospfd.conf /etc/frr/pimd.conf
 fi
