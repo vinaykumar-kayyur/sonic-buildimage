@@ -1,4 +1,3 @@
-0053-bgpd-Set-md5-TCP-socket-option-for-outgoing-connections-on-listener.patch
 0001-Reduce-severity-of-Vty-connected-from-message.patch
 0002-Allow-BGP-attr-NEXT_HOP-to-be-0.0.0.0-due-to-allevia.patch
 0003-nexthops-compare-vrf-only-if-ip-type.patch
