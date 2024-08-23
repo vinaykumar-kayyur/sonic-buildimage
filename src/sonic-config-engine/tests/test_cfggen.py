@@ -696,7 +696,7 @@ class TestCfgGen(TestCase):
     def test_metadata_ntp(self):
         argument = ['-m', self.sample_graph_metadata, '-p', self.port_config, '-v', "NTP_SERVER"]
         output = self.run_script(argument)
-        self.assertEqual(utils.to_dict(output.strip()), utils.to_dict("{'10.0.10.1': {}, '10.0.10.2': {}}"))
+        self.assertEqual(utils.to_dict(output.strip()), utils.to_dict("{'10.0.10.1': {'iburst': 'on'}, '10.0.10.2': {'iburst': 'on'}}"))
 
     def test_dns_nameserver(self):
         argument = ['-m', self.sample_graph_metadata, '-p', self.port_config, '-v', "DNS_NAMESERVER"]
@@ -1150,4 +1150,4 @@ class TestCfgGen(TestCase):
         output = self.run_script(argument)
         self.assertEqual(
             utils.liststr_to_dict(output.strip()),
-            utils.liststr_to_dict("['192.168.200.15|161|', '100.0.0.6|161|', '100.0.0.7|161|']"))
+            utils.liststr_to_dict("['192.168.200.15|161|', '100.0.0.6|161|', '100.0.0.7|161|', 'fe80::1%Management0|161|']"))

@@ -36,6 +36,11 @@
                 "size": "12766208",
                 "type": "egress",
                 "mode": "dynamic"
+            },
+            "ingress_percentage_pool": {
+                "type": "ingress",
+                "mode": "dynamic",
+                "percentage": "90"
             }
         },
         "BUFFER_PROFILE": {
@@ -351,6 +356,7 @@
         },
         "DEVICE_METADATA": {
             "localhost": {
+                "buffer_model": "dynamic",
                 "type": "ToRRouter",
                 "asic_id": "06:00.0",
                 "mac": "00:11:22:33:dd:5a",
@@ -362,7 +368,6 @@
                 "region": "usfoo",
                 "asic_name": "Asic0",
                 "switch_id": "2",
-                "switch_type": "voq",
                 "max_cores": "8",
                 "sub_role": "FrontEnd",
                 "dhcp_server": "disabled",
@@ -370,7 +375,9 @@
                 "yang_config_validation": "disable",
                 "rack_mgmt_map": "dummy_value",
                 "timezone": "Europe/Kiev",
-                "bgp_router_id": "8.8.8.8"
+                "bgp_router_id": "8.8.8.8",
+                "chassis_hostname": "str-sonic-chassis-1",
+                "slice_type": "AZNG_Production"
             }
         },
         "VLAN": {
@@ -1198,10 +1205,7 @@
             "Vlan111|Ethernet0": {
                 "tagging_mode": "untagged"
             },
-            "Vlan111|Ethernet1": {
-                "tagging_mode": "untagged"
-            },
-            "Vlan111|Ethernet2": {
+            "Vlan111|PortChannel0004": {
                 "tagging_mode": "untagged"
             },
             "Vlan111|Ethernet3": {
@@ -1323,6 +1327,14 @@
                 "client_auth": "true",
                 "log_level": "2",
                 "port": "50052"
+            }
+        },
+        "GNMI_CLIENT_CERT": {
+            "testcert1": {
+                "role": "RW"
+            },
+            "testcert2": {
+                "role": "RO"
             }
         },
         "TUNNEL": {
@@ -1711,7 +1723,9 @@
         },
         "BGP_DEVICE_GLOBAL": {
             "STATE": {
-                "tsa_enabled": "false"
+                "tsa_enabled": "false",
+                "wcmp_enabled": "false",
+                "idf_isolation_state": "unisolated"
             }
         },
         "BGP_PEER_RANGE": {
@@ -2298,7 +2312,7 @@
             "span": {
                 "direction": "RX",
                 "type": "SPAN",
-                "dst_port": "Ethernet2",
+                "dst_port": "Ethernet7",
                 "src_port": "Ethernet3,Ethernet4"
             }
         },
@@ -2334,6 +2348,9 @@
                 "use_well_known_mac": "enabled",
                 "src_mac": "ToRMac",
                 "interval_pck_loss_count_update": "3"
+            },
+            "TIMED_OSCILLATION": {
+                "oscillation_enabled": "false"
             },
             "MUXLOGGER": {
                 "log_verbosity": "debug"
@@ -2686,6 +2703,12 @@
         "TACPLUS": {
             "global": {
             }
+        }
+    },
+    "STORMOND_CONFIG": {
+        "INTERVALS": {
+            "daemon_polling_interval" : "3600",
+            "fsstats_sync_interval"   : "86400"
         }
     }
 }
