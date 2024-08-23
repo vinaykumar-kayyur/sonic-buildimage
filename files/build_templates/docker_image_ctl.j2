@@ -286,7 +286,6 @@ function postStartAction()
 
         # Add redis UDS to the redis group and give read/write access to the group
         REDIS_SOCK="/var/run/redis${DEV}/redis.sock"
-        REDIS_BMP_SOCK="/var/run/redis${DEV}/redis_bmp.sock"
     else
         until [[ ($(docker exec -i ${DOCKERNAME} pgrep -x -c supervisord) -gt 0) &&
                  ($(docker exec -i ${DOCKERNAME} $SONIC_DB_CLI CHASSIS_APP_DB PING | grep -c True) -gt 0) ]]; do
@@ -297,6 +296,7 @@ function postStartAction()
         fi
         REDIS_SOCK="/var/run/redis-chassis/redis_chassis.sock"
     fi
+    REDIS_BMP_SOCK="/var/run/redis${DEV}/redis_bmp.sock"
     chgrp -f redis $REDIS_SOCK && chmod -f 0760 $REDIS_SOCK
     chgrp -f redis $REDIS_BMP_SOCK && chmod -f 0760 $REDIS_BMP_SOCK
 {%- elif docker_container_name == "swss" %}
