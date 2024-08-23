@@ -67,6 +67,7 @@ endif
 IMAGE_DISTRO := bookworm
 IMAGE_DISTRO_DEBS_PATH = $(TARGET_PATH)/debs/$(IMAGE_DISTRO)
 IMAGE_DISTRO_FILES_PATH = $(TARGET_PATH)/files/$(IMAGE_DISTRO)
+PLATFORM_RULES_PATH = $(PLATFORM_PATH)/rules
 
 # Python 2 packages will not be available in Bullseye and newer
 ifneq ($(filter bullseye bookworm,$(BLDENV)),)
@@ -145,7 +146,7 @@ list :
 
 include $(RULES_PATH)/config
 -include $(RULES_PATH)/config.user
-
+-include $(PLATFORM_RULES_PATH)/config
 
 ###############################################################################
 ## Version control related exports
