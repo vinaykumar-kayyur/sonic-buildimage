@@ -1365,8 +1365,7 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
                 $(BASH_TACPLUS) \
                 $(AUDISP_TACPLUS)) \
                 $(AUDISP_TACPLUS) \
-                $(SEDUTIL) \
-                $(LIBNDP_TOOLS)) \
+                $(SEDUTIL)) \
         $$(addprefix $(TARGET_PATH)/,$$($$*_DOCKERS)) \
         $$(addprefix $(TARGET_PATH)/,$$(SONIC_PACKAGES_LOCAL)) \
         $$(addprefix $(FILES_PATH)/,$$($$*_FILES)) \

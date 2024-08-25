@@ -4,7 +4,7 @@ SHELL = /bin/bash
 export USE_SSL=1
 
 MAIN_TARGET = $(LIBNDP_TOOLS)
-DERIVED_TARGETS =
+DERIVED_TARGETS = $(LIBNDP0)
 
 $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
 	# Remove any stale files

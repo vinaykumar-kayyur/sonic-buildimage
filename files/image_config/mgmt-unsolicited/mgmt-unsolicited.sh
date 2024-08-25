@@ -23,13 +23,13 @@ function wait_networking_service_done() {
         sleep "${_TIMEOUT}"
     done
 
-    return 1
+    return 0
 }
 
 # Exit if feature is disabled
-FEATURE_STATE=${FEATURE_STATE:-`sonic-cfggen -H -v MGMT_UNSOLICITED.general.state`}
+FEATURE_STATE=$(sonic-db-cli CONFIG_DB hget 'DEVICE_METADATA|localhost' mgmt_unsolicited_state)
 if [[ $FEATURE_STATE == disabled ]]; then
-    echo "mgmt-unsolicited - Feature is disabled"
+    logger -t "mgmt-unsolicited" "Feature is disabled"
     exit 0
 fi
 
@@ -44,16 +44,17 @@ elif [[ $PROTOCOL == ipv6 ]]; then
     # Need version 1.8>= of libndp-tools for '-T' flag
     CMD="ndptool -t na -U -i $INTERFACE -T $ADDRESS send"
 else
-    echo "mgmt-unsolicited - Protocl isn't ipv4 or ipv6"
-    echo "mgmt-unsolicited - Protocl: $PROTOCOL"
+    logger -t "mgmt-unsolicited" "Protocl isn't ipv4 or ipv6"
+    logger -t "mgmt-unsolicited" "Protocl: $PROTOCOL"
     exit 1
 fi
 
 wait_networking_service_done
 RET_VAL=$?
 if [ $RET_VAL -ne 0 ]; then
-    echo "mgmt-unsolicited: Networking service has not configured the mgmt interfaces properly"
+    logger -t "mgmt-unsolicited" -p "Warning" "Networking service has not configured the mgmt interfaces properly"
     exit $RET_VAL
 fi
 
+logger -t "mgmt-unsolicited" "Executing command: $CMD"
 sudo $CMD
