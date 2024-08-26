@@ -71,22 +71,13 @@ class TestSysLogger:
         mock_db = mock.MagicMock()
         mock_db.get = mock.MagicMock(return_value='DEBUG')
         mock_connector.return_value = mock_db
-        log1 = syslogger.SysLogger(log_identifier='log1', enable_runtime_config=True, log_level=logging.INFO)
-        assert 'log1' in syslogger.SysLogger.log_registry
-        assert log1.logger.level == logging.DEBUG
-
-        mock_db.get.return_value = None
-        mock_db.hmset = mock.MagicMock()
-        log2 = syslogger.SysLogger(log_identifier='log2', enable_runtime_config=True, log_level=logging.INFO)
-        assert 'log2' in syslogger.SysLogger.log_registry
-        mock_db.hmset.assert_called_once()
+        log = syslogger.SysLogger(log_identifier='log1', enable_runtime_config=True, log_level=logging.INFO)
+        assert log.logger.level == logging.DEBUG
 
         mock_db.get.return_value = 'ERROR'
-        ret, msg = syslogger.SysLogger.update_log_level()
+        ret, msg = log.update_log_level()
         assert ret
         assert not msg
-        assert log1.logger.level == logging.ERROR
-        assert log2.logger.level == logging.ERROR
 
     @mock.patch('swsscommon.swsscommon.SonicV2Connector')
     def test_runtime_config_negative(self, mock_connector):
@@ -94,7 +85,6 @@ class TestSysLogger:
         mock_db.get = mock.MagicMock(side_effect=Exception(''))
         mock_connector.return_value = mock_db
         syslogger.SysLogger(log_identifier='log', enable_runtime_config=True)
-        assert 'log' in syslogger.SysLogger.log_registry
 
         ret, msg = syslogger.SysLogger.update_log_level()
         assert not ret
