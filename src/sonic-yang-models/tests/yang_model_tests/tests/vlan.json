@@ -13,7 +13,7 @@
     },
     "INVALID_LONG_VLAN_NAME": {
         "desc": "INVALID VLAN_NAME FIELD IN VLAN TABLE.",
-        "eStrKey" : "InvalidValue"
+        "eStr" : "Invalid interface name length, it must not exceed 16 characters."
     },
     "WRONG_FAMILY_WITH_IP_PREFIX": {
         "desc": "Configure Wrong family with ip-prefix for VLAN_Interface Table",
