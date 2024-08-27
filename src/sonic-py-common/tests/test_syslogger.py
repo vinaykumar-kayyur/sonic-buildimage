@@ -84,8 +84,8 @@ class TestSysLogger:
         mock_db = mock.MagicMock()
         mock_db.get = mock.MagicMock(side_effect=Exception(''))
         mock_connector.return_value = mock_db
-        syslogger.SysLogger(log_identifier='log', enable_runtime_config=True)
+        log = syslogger.SysLogger(log_identifier='log', enable_runtime_config=True)
 
-        ret, msg = syslogger.SysLogger.update_log_level()
+        ret, msg = log.update_log_level()
         assert not ret
         assert msg
