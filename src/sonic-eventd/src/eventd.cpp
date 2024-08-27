@@ -419,7 +419,7 @@ capture_service::do_capture()
             zmq_msg_close(&msg);
         } else if (rc > 1) { // If there are events already published to XSUB when XSUB connects to XPUB, we can receive events before subscription message
             string event_source((const char*)zmq_msg_data(&msg), zmq_msg_size(&msg));
-            SWSS_LOG_INFO("Receiving event from source: %s, will read second part of event", event_source.c_str());
+            SWSS_LOG_DEBUG("Receiving event from source: %s, will read second part of event", event_source.c_str());
             zmq_msg_close(&msg);
             int more = 0;
             size_t more_size = sizeof(more);
@@ -431,7 +431,7 @@ capture_service::do_capture()
                 rc = zmq_msg_recv(&msg_part, cap_sub_sock, 0);
                 if(rc > 0) {
                     string event_data((const char*)zmq_msg_data(&msg_part),zmq_msg_size(&msg_part));
-                    SWSS_LOG_INFO("Received second part of event: %s", event_data.c_str());
+                    SWSS_LOG_DEBUG("Received second part of event: %s", event_data.c_str());
                     zmq_msg_close(&msg_part);
                     internal_event_t event;
                     if(deserialize(event_data, event) == 0) {
@@ -442,25 +442,18 @@ capture_service::do_capture()
                             m_pre_exist_id[rid] = seq;
                             m_events.push_back(event_data);
                         }
-                        rc = 1;
                     } else {
-                        SWSS_LOG_ERROR("Unable to deserialize first event");
-                        rc = -1;
+                        SWSS_LOG_DEBUG("Unable to deserialize first event");
                     }
                 } else {
-                    SWSS_LOG_ERROR("Unable to read second part of first event, rc=%d", rc);
+                    SWSS_LOG_DEBUG("Unable to read second part of first event, rc=%d", rc);
                     zmq_msg_close(&msg_part);
-                    rc = -1;
                 }
-            } else { // No second part to read
-                rc = 1;
             }
         } else {
             zmq_msg_close(&msg);
             SWSS_LOG_ERROR("Error reading from ZMQ socket, rc=%d", rc);
         }
-
-        RET_ON_ERR(rc == 1, "Failed to read subscription message when XSUB connects to XPUB");
         init_done = true;
     }
 
