@@ -2,19 +2,28 @@
     "INSTANCES": {
         "redis":{
             "hostname" : "127.0.0.1",
-            "port" : 6379,
-            "unix_socket_path" : "/var/run/redis/redis.sock"
+            "port": 6379,
+            "unix_socket_path": "/var/run/redis/redis.sock"
         },
-
-        "redis_chassis":{
-            "hostname" : "redis_chassis.server",
-            "port": 6380,
-            "unix_socket_path": "/var/run/redis/redis_chassis.sock"
-        }
-        ,"redis_bmp":{
+        "redis1":{
             "hostname" : "127.0.0.1",
-            "port" : 6400,
-            "unix_socket_path" : "/var/run/redis/redis_bmp.sock"
+            "port": 6380,
+            "unix_socket_path": "/var/run/redis/redis1.sock"
+        },
+        "redis2":{
+            "hostname" : "127.0.0.1",
+            "port": 6381,
+            "unix_socket_path": "/var/run/redis/redis2.sock"
+        },
+        "redis3":{
+            "hostname" : "127.0.0.1",
+            "port": 6382,
+            "unix_socket_path": "/var/run/redis/redis3.sock"
+        },
+        "redis4":{
+            "hostname" : "127.0.0.1",
+            "port": 6383,
+            "unix_socket_path": "/var/run/redis/redis4.sock"
         }
     },
     "DATABASES" : {
@@ -58,36 +67,41 @@
             "separator": "|",
             "instance" : "redis"
         },
-        "GB_ASIC_DB" : {
-            "id" : 9,
-            "separator": ":",
-            "instance" : "redis"
-        },
-        "GB_COUNTERS_DB" : {
-            "id" : 10,
-            "separator": ":",
-            "instance" : "redis"
-        },
-        "GB_FLEX_COUNTER_DB" : {
-            "id" : 11,
-            "separator": ":",
-            "instance" : "redis"
-        },
-        "CHASSIS_APP_DB" : {
-            "id" : 12,
+        "RESTAPI_DB": {
+            "id": 8,
             "separator": "|",
-            "instance" : "redis_chassis"
+            "instance": "redis"
+        },
+        "GB_ASIC_DB": {
+            "id": 9,
+            "separator": ":",
+            "instance": "redis"
+        },
+        "GB_COUNTERS_DB": {
+            "id": 10,
+            "separator": ":",
+            "instance": "redis"
+        },
+        "GB_FLEX_COUNTER_DB": {
+            "id": 11,
+            "separator": ":",
+            "instance": "redis"
+        },
+        "STATE_DB2" : {
+            "id" : 13,
+            "separator": "|",
+            "instance" : "redis"
         },
         "APPL_STATE_DB" : {
             "id" : 14,
             "separator": ":",
             "instance" : "redis"
         },
-        "BMP_STATE_DB" : {
-            "id" : 20,
-            "separator": "|",
-            "instance" : "redis_bmp"
-        }
+        "EVENT_DB" : {
+            "id" : 15,
+            "separator": ":",
+            "instance" : "redis"
+        }   
     },
     "VERSION" : "1.0"
 }

@@ -27,7 +27,7 @@
         ,"redis_bmp":{
             "hostname" : "{{HOST_IP}}",
             "port" : {{BMP_DB_PORT}},
-            "unix_socket_path" : "/var/run/redis{{DEV}}/redis_bmp.sock",
+            "unix_socket_path" : "/var/run/redis/redis_bmp.sock",
             "persistence_for_warm_boot" : "yes"
         }
     },
@@ -137,7 +137,13 @@
         }
 {% endif %}
         ,
-        "BMP_STATE_DB" : {
+        "EVENT_DB" : {
+            "id" : 19,
+            "separator": "|",
+            "instance" : "redis"
+        }
+        ,
+         "BMP_STATE_DB" : {
             "id" : 20,
             "separator": "|",
             "instance" : "redis_bmp"
