@@ -33,7 +33,7 @@ endif
 -include rsyslog_plugin/subdir.mk
 -include rsyslog_plugin_tests/subdir.mk
 
-all: sonic-eventd eventd-tests eventd-tool rsyslog-plugin rsyslog-plugin-tests
+all: sonic-eventd eventd-tests eventd-tool rsyslog-plugin rsyslog-plugin-tests eventdb-tests
 
 sonic-eventd: $(OBJS) $(EVENTDB_OBJS)
 	@echo 'Building target: $@'
@@ -57,14 +57,21 @@ rsyslog-plugin: $(RSYSLOG-PLUGIN_OBJS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
-eventd-tests: $(TEST_OBJS) $(EVENTDB_TEST_OBJS)
+eventdb-tests: $(EVENTDB_TEST_OBJS)
+	@echo 'Building target: $@'
+	@echo 'Invoking: G++ Linker'
+	$(CC) $(LDFLAGS) -o $(EVENTDB_TEST) $(EVENTDB_TEST_OBJS) $(LIBS) $(TEST_LIBS)
+	@echo 'Finished building target: $@'	
+	$(EVENTDB_TEST)
+	@echo 'Finished running tests'
+	@echo ' '
+
+eventd-tests: $(TEST_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: G++ Linker'
 	$(CC) $(LDFLAGS) -o $(EVENTD_TEST) $(TEST_OBJS) $(LIBS) $(TEST_LIBS)
-	$(CC) $(LDFLAGS) -o $(EVENTDB_TEST) $(EVENTDB_TEST_OBJS) $(LIBS) $(TEST_LIBS)
 	@echo 'Finished building target: $@'
 	$(EVENTD_TEST)
-	$(EVENTDB_TEST)
 	@echo 'Finished running tests'
 	@echo ' '
 

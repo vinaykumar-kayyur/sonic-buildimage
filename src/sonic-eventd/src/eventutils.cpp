@@ -1,6 +1,3 @@
-#include "eventutils.h"
-#include <swss/logger.h>
-#include <swss/table.h>
 #include <string.h>
 #include <cstdlib>
 #include <iostream>
@@ -9,7 +6,9 @@
 #include <vector>
 #include <unistd.h>
 #include <nlohmann/json.hpp>
-
+#include "eventutils.h"
+#include "logger.h"
+#include "table.h"
 
 using namespace swss;
 using json = nlohmann::json;
