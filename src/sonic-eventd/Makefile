@@ -33,15 +33,22 @@ endif
 -include rsyslog_plugin/subdir.mk
 -include rsyslog_plugin_tests/subdir.mk
 
-all: sonic-eventd eventd-tests eventd-tool rsyslog-plugin rsyslog-plugin-tests eventdb-tests
+all: sonic-eventd eventd-tests eventd-tool rsyslog-plugin rsyslog-plugin-tests sonic-eventdb eventdb-tests
 
-sonic-eventd: $(OBJS) $(EVENTDB_OBJS)
+sonic-eventd: $(OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: G++ Linker'
 	$(CC) $(LDFLAGS) -o $(EVENTD_TARGET) $(OBJS) $(LIBS)
+	@echo 'Finished building target: $@'
+	@echo ' '
+
+sonic-eventdb: $(EVENTDB_OBJS)
+	@echo 'Building target: $@'
+	@echo 'Invoking: G++ Linker'
 	$(CC) $(LDFLAGS) -o $(EVENTDB_TARGET) $(EVENTDB_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
+
 
 eventd-tool: $(TOOL_OBJS)
 	@echo 'Building target: $@'
