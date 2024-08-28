@@ -10470,7 +10470,7 @@ bkn_knet_dev_init(int d)
     }
 
     if (use_napi) {
-        bkn_netif_napi_add(dev, &sinfo->napi, bkn_poll, napi_weight);
+        netif_napi_add(dev, &sinfo->napi, bkn_poll);
     }
     return 0;
 }
