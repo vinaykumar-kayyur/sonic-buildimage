@@ -428,7 +428,7 @@ bcmgenl_psample_filter_cb(struct sk_buff *skb, ngknet_filter_t **filt)
             memcpy(skb_psample->data, pkt, meta.trunc_size);
         }
         skb_put(skb_psample, meta.trunc_size);
-        skb_psample->len = meta.trunc_size;
+        skb_psample->len = pkt_len;
         psample_pkt->skb = skb_psample;
         if (debug & GENL_DBG_LVL_PDMP) {
             dump_skb(skb_psample);
