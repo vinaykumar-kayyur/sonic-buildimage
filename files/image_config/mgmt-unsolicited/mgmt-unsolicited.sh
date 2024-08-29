@@ -3,20 +3,22 @@
 # When static IP is configured, or an interface with static IP has a link up event -
 # send GARP/unsolicited NA with the new IPv4/IPv6 address
 
-function wait_networking_service_done() {
+function wait_interface_status_up() {
     # Make sure the networking service is running
+    INTERFACE=$1
+    if [ ! -e /sys/class/net/$INTERFACE/operstate ]; then
+        return 1
+    fi
     local -i _COUNTER="1"
     local -ir _MAX_WAITING_DURATION="30"
 
     local -r _TIMEOUT="1s"
 
     while [[ "${_COUNTER}" -le "${_MAX_WAITING_DURATION}" ]]; do
-        NETWORKING_STATUS="$(systemctl is-active networking 2>&1)"
+        INTERFACE_STATUS="$(cat /sys/class/net/$INTERFACE/operstate)"
 
-        if [[ "${NETWORKING_STATUS}" == active || "${NETWORKING_STATUS}" == inactive ]] ; then
+        if [[ "${INTERFACE_STATUS}" == up ]] ; then
             return 0
-        elif [[ "${NETWORKING_STATUS}" == failed ]] ; then
-            return 1
         fi
 
         let "_COUNTER++"
@@ -49,7 +51,7 @@ else
     exit 1
 fi
 
-wait_networking_service_done
+wait_interface_status_up $INTERFACE
 RET_VAL=$?
 if [ $RET_VAL -ne 0 ]; then
     logger -t "mgmt-unsolicited" -p "Warning" "Networking service has not configured the mgmt interfaces properly"
@@ -57,4 +59,11 @@ if [ $RET_VAL -ne 0 ]; then
 fi
 
 logger -t "mgmt-unsolicited" "Executing command: $CMD"
-sudo $CMD
+RESPONSE="$(sudo $CMD 2>&1)"
+RET_VAL=$?
+
+if [ $RET_VAL -ne 0 ]; then
+    if [[ $PROTOCOL == ipv6 ]] || echo $RESPONSE | grep -q -v "Timeout"; then
+        logger -t "mgmt-unsolicited" -p "Warning" "$RESPONSE"
+    fi
+fi
