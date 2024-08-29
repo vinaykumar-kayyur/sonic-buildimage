@@ -65,8 +65,8 @@ class BootProgEnum(Enum):
 
 # The rshim services are in a different order as compared to the DPU names
 dpu_map = {
-    "dpu1": {"pci_id": "0000:06:00.0", "rshim": "rshim@0"},
-    "dpu2": {"pci_id": "0000:05:00.0", "rshim": "rshim@1"},
+    "dpu1": {"pci_id": "0000:08:00.0", "rshim": "rshim@0"},
+    "dpu2": {"pci_id": "0000:07:00.0", "rshim": "rshim@1"},
     "dpu3": {"pci_id": "0000:01:00.0", "rshim": "rshim@2"},
     "dpu4": {"pci_id": "0000:02:00.0", "rshim": "rshim@3"},
 }
