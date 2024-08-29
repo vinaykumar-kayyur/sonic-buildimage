@@ -15,19 +15,19 @@ from sonic_py_common import device_info
 from sonic_py_common.general import check_output_pipe
 from swsscommon.swsscommon import ConfigDBConnector, DBConnector, Table
 from swsscommon import swsscommon
+from sonic_py_common.daemon_base import DaemonBase
 
 CFG_DB = "CONFIG_DB"
 BMP_STATE_DB = "BMP_STATE_DB"
 REDIS_HOSTIP = "127.0.0.1"
+BMP_TABLE = "BMP"
 
 def is_true(val):
-    if val == 'True' or val == 'true':
-        return True
-    elif val == 'False' or val == 'false':
-        return False
+    return str(val).lower() == 'true'
 
-class BMPCfg(object):
+class BMPCfg(DaemonBase):
     def __init__(self, state_db_conn):
+        DaemonBase.__init__(self, SYSLOG_IDENTIFIER)
         self.bgp_neighbor_table  = False
         self.bgp_rib_in_table  = False
         self.bgp_rib_out_table  = False
@@ -40,7 +40,7 @@ class BMPCfg(object):
         self.bgp_neighbor_table = is_true(common_config.get('bgp_neighbor_table', 'false'))
         self.bgp_rib_in_table = is_true(common_config.get('bgp_rib_in_table', 'false'))
         self.bgp_rib_out_table = is_true(common_config.get('bgp_rib_out_table', 'false'))
-        syslog.syslog(syslog.LOG_INFO, f'BMPCfg: update : {self.bgp_neighbor_table}, {self.bgp_rib_in_table}, {self.bgp_rib_out_table}')
+        self.log_info(f'BMPCfg: update : {self.bgp_neighbor_table}, {self.bgp_rib_in_table}, {self.bgp_rib_out_table}')
 
         # reset bmp table state once config is changed.
         self.stop_bmp()
@@ -53,51 +53,57 @@ class BMPCfg(object):
 
 
     def stop_bmp(self):
-        syslog.syslog(syslog.LOG_INFO, 'BMPCfg: stop bmp daemon')
+        self.log_info('BMPCfg: stop bmp daemon')
         subprocess.call(["service", "openbmpd", "stop"])
 
 
     def reset_bmp_table(self):
-        syslog.syslog(syslog.LOG_INFO, 'BMPCfg: Reset bmp table from state_db')
+        self.log_info('BMPCfg: Reset bmp table from state_db')
         self.state_db_conn.delete_all_by_pattern(BMP_STATE_DB, 'BGP_NEIGHBOR*')
         self.state_db_conn.delete_all_by_pattern(BMP_STATE_DB, 'BGP_RIB_IN_TABLE*')
         self.state_db_conn.delete_all_by_pattern(BMP_STATE_DB, 'BGP_RIB_OUT_TABLE*')
 
 
     def start_bmp(self):
-        syslog.syslog(syslog.LOG_INFO, 'BMPCfg: start bmp daemon')
+        self.log_info('BMPCfg: start bmp daemon')
         subprocess.call(["service", "openbmpd", "start"])
 
 
 class BMPCfgDaemon:
     def __init__(self):
-        self.state_db_conn = swsscommon.SonicV2Connector(host=REDIS_HOSTIP)
-        self.state_db_conn.connect(BMP_STATE_DB)
-        self.config_db = ConfigDBConnector()
-        self.config_db.connect(wait_for_init=True, retry_on=True)
-        self.bmpcfg = BMPCfg(self.state_db_conn)
-
+        try:
+            self.state_db_conn = swsscommon.SonicV2Connector(host=REDIS_HOSTIP)
+            self.state_db_conn.connect(BMP_STATE_DB)
+            self.config_db = ConfigDBConnector()
+            self.config_db.connect(wait_for_init=True, retry_on=True)
+            self.bmpcfg = BMPCfg(self.state_db_conn)
+        except KeyError as error:
+            self.log_error(
+                'BMPCfgd initialize bmp related database failed, '
+                'exception info {}'
+                .format(error)
+            )
 
     def bmp_handler(self, key, op, data):
-        data = self.config_db.get_table("BMP")
+        data = self.config_db.get_table(BMP_TABLE)
         self.bmpcfg.cfg_handler(data)
 
     def register_callbacks(self):
-        self.config_db.subscribe('BMP',
+        self.config_db.subscribe(BMP_TABLE,
                                  lambda table, key, data:
                                      self.bmp_handler(key, op, data))
 
 def signal_handler(sig, frame):
     if sig == signal.SIGHUP:
-        syslog.syslog(syslog.LOG_INFO, "bmpcfgd: signal 'SIGHUP' is caught and ignoring..")
+        self.log_info("bmpcfgd: signal 'SIGHUP' is caught and ignoring..")
     elif sig == signal.SIGINT:
-        syslog.syslog(syslog.LOG_INFO, "bmpcfgd: signal 'SIGINT' is caught and exiting...")
+        self.log_info("bmpcfgd: signal 'SIGINT' is caught and exiting...")
         sys.exit(128 + sig)
     elif sig == signal.SIGTERM:
-        syslog.syslog(syslog.LOG_INFO, "bmpcfgd: signal 'SIGTERM' is caught and exiting...")
+        self.log_info("bmpcfgd: signal 'SIGTERM' is caught and exiting...")
         sys.exit(128 + sig)
     else:
-        syslog.syslog(syslog.LOG_INFO, "bmpcfgd: invalid signal - ignoring..")
+        self.log_info("bmpcfgd: invalid signal - ignoring..")
 
 
 def main():
