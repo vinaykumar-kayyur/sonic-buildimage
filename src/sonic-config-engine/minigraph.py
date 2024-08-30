@@ -2399,6 +2399,8 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
             port['fec'] = 'none'
         elif not port.get('fec') and port.get('speed') == '100000':
             port['fec'] = 'rs'
+        elif not port.get('fec') and (port.get('speed') == '200000' or port.get('speed') == '400000'):
+            port['fec'] = 'rs'
 
         # If AutoNegotiation is available in the minigraph, we override any value we may have received from port_config.ini
         autoneg = linkmetas.get(alias, {}).get('AutoNegotiation')
