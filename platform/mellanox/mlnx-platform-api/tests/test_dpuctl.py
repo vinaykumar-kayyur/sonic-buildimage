@@ -159,37 +159,3 @@ class Testdpuctl:
             result = runner.invoke(cmd, ['dpu1'], catch_exceptions=False, obj=obj)
             expected_res = tabulate(expected_data, header)
             assert result.output == expected_res + "\n"
-
-    def test_dpuctl_platform(self):
-        with open(example_platform) as json_file:
-            read_data = json.load(json_file)
-        read_data = read_data["DPUS"]
-        with patch("sonic_platform.utils.read_int_from_file") as mock_read:
-            mock_read.return_value = 0
-            cmd = dpuctl
-            runner = CliRunner()
-            with patch("sonic_platform.device_data.DeviceDataManager.get_platform_dpus_data", return_value=read_data):
-                dpu_l = ['dpu4', 'dpu1,dpu2,dpu3,dpu4', 'dpu5']
-                for dpu_name in dpu_l:
-                    result = runner.invoke(cmd, ['dpu-status', dpu_name], catch_exceptions=False, obj=None)
-                    # All are valid arguments since these dpus are present in the list
-                    assert "Invalid Arguments provided!" in result.output
-                dpu_l = ['dpu1', 'dpu2', 'dpu3', 'dpu0', 'dpu1,dpu2,dpu3,dpu0']
-                for dpu_name in dpu_l:
-                    result = runner.invoke(cmd, ['dpu-status', dpu_name], catch_exceptions=False, obj=None)
-                    # All are valid arguments since these dpus are present in the list
-                    assert "An error occurred" not in result.output
-                dpu_l = ['dpu4', 'dpu5', 'dpuA', 'dpu32']
-                for dpu_name in dpu_l:
-                    result = runner.invoke(cmd, ['dpu-status', dpu_name], catch_exceptions=False, obj=None)
-                    assert "Invalid Arguments provided!" in result.output
-            with patch("sonic_platform.device_data.DeviceDataManager.get_platform_dpus_data", return_value=None):
-                dpu_l = ['dpu1', 'dpu2', 'dpu3', 'dpu4', 'dpu1,dpu2,dpu3,dpu4']
-                for dpu_name in dpu_l:
-                    result = runner.invoke(cmd, ['dpu-status', dpu_name], catch_exceptions=False, obj=None)
-                    # All are invalid arguments since these dpus are present in the list
-                    assert "No DPUs found! Please execute on smartswitch!" in result.output
-            read_data = {"dpuA": "None"}
-            with patch("sonic_platform.device_data.DeviceDataManager.get_platform_dpus_data", return_value=read_data):
-                result = runner.invoke(cmd, ['dpu-status', 'dpu1'], catch_exceptions=False, obj=None)
-                assert "ValueError - invalid literal for int() with base 10: 'A'" in result.output

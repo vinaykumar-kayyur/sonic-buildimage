@@ -114,12 +114,7 @@ def dpuctl(ctx=None):
         Smart Switch DPU reset flow commands"""
     # Hardcoded HW-mgmt names
     try:
-        from sonic_platform.device_data import DeviceDataManager
-        dpu_data = DeviceDataManager.get_platform_dpus_data()
-        if not dpu_data:
-            click.echo('No DPUs found! Please execute on smartswitch!')
-            ctx.exit()
-        existing_dpu_list = dpu_data.keys()
+        existing_dpu_list=['dpu0', 'dpu1', 'dpu2', 'dpu3']
         # dpu0 in Platform.json = dpu1 in HW-mgmt
         dpuctl_dict = {}
         for dpu_name in existing_dpu_list:
