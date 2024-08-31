@@ -130,5 +130,6 @@ rm -rf /etc/localtime
 ln -sf /usr/share/zoneinfo/$TZ /etc/localtime
 
 chown -R redis:redis $REDIS_DIR
+chown -R redis:redis /var/lib
 
 exec /usr/local/bin/supervisord
