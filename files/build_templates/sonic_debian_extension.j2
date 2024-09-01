@@ -313,6 +313,15 @@ for kernel_release in $(ls $FILESYSTEM_ROOT/lib/modules/); do
 done
 fi
 
+# Install ifplugd for mgmt-unsolicited feature
+sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get update
+sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install ifplugd
+# Update ifplugd configuration to monitor mgmt interfaces on cable reconnection
+sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "sudo sed -i 's/INTERFACES=""/INTERFACES="auto"/g' /etc/default/ifplugd"
+sudo LANG=C chroot $FILESYSTEM_ROOT /bin/bash -c "sudo sed -i 's/HOTPLUG_INTERFACES=""/HOTPLUG_INTERFACES="all"/g' /etc/default/ifplugd"
+# Update ifplugd action on mgmt interface linkup event
+sudo cp files/image_config/mgmt-unsolicited/ifupdown-ifplugd $FILESYSTEM_ROOT/etc/ifplugd/action.d/ifupdown
+
 # Install python-swss-common package and all its dependent packages
 {% if python_swss_debs.strip() -%}
 {% for deb in python_swss_debs.strip().split(' ') -%}

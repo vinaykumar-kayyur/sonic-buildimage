@@ -575,7 +575,7 @@ if [ -f files/image_config/ntp/ntp-systemd-wrapper ]; then
 fi
 
 # Unsolicited mgmt advertisement
-sudo cp files/image_config/mgmt-unsolicited/mgmt-unsolicited.sh $FILESYSTEM_ROOT/usr/bin/
+sudo cp files/image_config/mgmt-unsolicited/mgmt-unsolicited.sh $FILESYSTEM_ROOT/usr/bin/mgmt-unsolicited
 
 ## Version file
 sudo mkdir -p $FILESYSTEM_ROOT/etc/sonic
