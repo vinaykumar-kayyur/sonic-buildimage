@@ -3,6 +3,6 @@ set -e
 
 case "$2" in
 up)
-        /usr/bin/mgmt-unsolicited.sh $1
+        /usr/bin/mgmt-unsolicited $1
         ;;
 esac
