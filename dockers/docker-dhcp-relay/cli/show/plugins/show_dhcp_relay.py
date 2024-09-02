@@ -49,9 +49,8 @@ class DHCPv6_Counter(object):
     def get_interface(self):
         """ Get all names of all interfaces in DHCPv6_COUNTER_TABLE """
         vlans = []
-        for key in self.db.keys(self.db.STATE_DB):
-            if DHCPv6_COUNTER_TABLE in key:
-                vlans.append(key[21:])
+        for key in self.db.keys(self.db.STATE_DB, DHCPv6_COUNTER_TABLE + "|*"):
+            vlans.append(key[21:])
         return vlans
 
     def get_dhcp6relay_msg_count(self, interface, msg):
