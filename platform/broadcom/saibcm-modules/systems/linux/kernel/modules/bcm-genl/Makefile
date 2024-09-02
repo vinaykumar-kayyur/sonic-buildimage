@@ -1,6 +1,6 @@
 # -*- Makefile -*-
 # $Id: Makefile,v 1.3 Broadcom SDK $
-# $Copyright: 2007-2023 Broadcom Inc. All rights reserved.
+# $Copyright: 2017-2024 Broadcom Inc. All rights reserved.
 # 
 # Permission is granted to use, copy, modify and/or distribute this
 # software under either one of the licenses below.
@@ -25,15 +25,16 @@
 # This software is governed by the Broadcom Open Network Switch APIs license:
 # https://www.broadcom.com/products/ethernet-connectivity/software/opennsa $
 # 
+# 
 #
 LOCALDIR = systems/linux/kernel/modules/bcm-genl
 
 include ${SDK}/make/Make.config
 
 LIBS = $(LIBDIR)/libkern.a
+
 ifndef DCBDIR
-DCBDIR = $(SDK)/systems/linux/kernel/modules/dcb
-# $(error 'The $$DCBDIR variable is not set')
+$(error 'The $$DCBDIR variable is not set')
 endif
 ifeq (1,$(NO_PRECOMPILED_MODULE))
 $(error 'DCB_LIB build is not supported if NO_PRECOMPILED_MODULE=1')
