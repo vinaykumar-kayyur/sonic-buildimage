@@ -1,5 +1,5 @@
 /*
- * $Copyright: 2007-2023 Broadcom Inc. All rights reserved.
+ * $Copyright: 2017-2024 Broadcom Inc. All rights reserved.
  * 
  * Permission is granted to use, copy, modify and/or distribute this
  * software under either one of the licenses below.
@@ -23,6 +23,7 @@
  * 
  * This software is governed by the Broadcom Open Network Switch APIs license:
  * https://www.broadcom.com/products/ethernet-connectivity/software/opennsa $
+ * 
  * 
  */
 
@@ -326,12 +327,12 @@ psample_task(struct work_struct *work)
                     pkt->meta.dst_ifindex, pkt->meta.sample_rate);
 #if ((IS_ENABLED(CONFIG_PSAMPLE) && LINUX_VERSION_CODE >= KERNEL_VERSION(5,13,0)) || \
      (defined PSAMPLE_MD_EXTENDED_ATTR && PSAMPLE_MD_EXTENDED_ATTR))
-            psample_sample_packet(pkt->group, 
+            psample_sample_packet(pkt->group,
                                   pkt->skb,
                                   pkt->meta.sample_rate,
                                   &md);
 #else
-            psample_sample_packet(pkt->group, 
+            psample_sample_packet(pkt->group,
                                   pkt->skb, 
                                   pkt->meta.trunc_size,
                                   pkt->meta.src_ifindex,
@@ -421,7 +422,7 @@ psample_filter_cb(uint8_t *pkt, int size, int dev_no, void *pkt_meta,
         /* setup skb to point to pkt */
         memcpy(skb->data, pkt, meta.trunc_size);
         skb_put(skb, meta.trunc_size);
-        skb->len = size;
+        skb->len = meta.trunc_size;
         psample_pkt->skb = skb;
 
         spin_lock_irqsave(&g_psample_work.lock, flags);
