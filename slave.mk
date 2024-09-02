@@ -249,6 +249,10 @@ ifeq ($(SONIC_ENABLE_BOOTCHART),y)
 ENABLE_BOOTCHART = y
 endif
 
+ifeq ($(SONIC_INCLUDE_STP),y)
+INCLUDE_STP = y
+endif
+
 ifeq ($(ENABLE_ASAN),y)
 ifneq ($(CONFIGURED_ARCH),amd64)
 $(Q)echo "Disabling SWSS address sanitizer due to incompatible CPU architecture: $(CONFIGURED_ARCH)"
@@ -450,6 +454,7 @@ $(info "INCLUDE_P4RT"                    : "$(INCLUDE_P4RT)")
 $(info "INCLUDE_KUBERNETES"              : "$(INCLUDE_KUBERNETES)")
 $(info "INCLUDE_KUBERNETES_MASTER"       : "$(INCLUDE_KUBERNETES_MASTER)")
 $(info "INCLUDE_MACSEC"                  : "$(INCLUDE_MACSEC)")
+$(info "INCLUDE_STP"                     : "$(INCLUDE_STP)")
 $(info "INCLUDE_MUX"                     : "$(INCLUDE_MUX)")
 $(info "INCLUDE_TEAMD"                   : "$(INCLUDE_TEAMD)")
 $(info "INCLUDE_ROUTER_ADVERTISER"       : "$(INCLUDE_ROUTER_ADVERTISER)")
@@ -867,7 +872,7 @@ $(SONIC_INSTALL_DEBS) : $(DEBS_PATH)/%-install : .platform $$(addsuffix -install
 		# put a lock here because dpkg does not allow installing packages in parallel
 		if mkdir $(DEBS_PATH)/dpkg_lock &> /dev/null; then
 ifneq ($(CROSS_BUILD_ENVIRON),y)
-			{ sudo DEBIAN_FRONTEND=noninteractive dpkg -i $(DEBS_PATH)/$* $(LOG) && rm -d $(DEBS_PATH)/dpkg_lock && break; } || { set +e; rm -d $(DEBS_PATH)/dpkg_lock; sudo lsof /var/lib/dpkg/lock-frontend; ps aux; exit 1 ; }
+			{ sudo DEBIAN_FRONTEND=noninteractive dpkg -i $($*_DPKGFLAGS) $(DEBS_PATH)/$* $(LOG) && rm -d $(DEBS_PATH)/dpkg_lock && break; } || { set +e; rm -d $(DEBS_PATH)/dpkg_lock; sudo lsof /var/lib/dpkg/lock-frontend; ps aux; exit 1 ; }
 else
 			# Relocate debian packages python libraries to the cross python virtual env location
 			{ sudo DEBIAN_FRONTEND=noninteractive dpkg -i $(if $(findstring $(LINUX_HEADERS),$*),--force-depends) $(DEBS_PATH)/$* $(LOG) && \
@@ -1442,6 +1447,7 @@ $(addprefix $(TARGET_PATH)/, $(SONIC_INSTALLERS)) : $(TARGET_PATH)/% : \
 	export enable_auto_tech_support="$(ENABLE_AUTO_TECH_SUPPORT)"
 	export enable_asan="$(ENABLE_ASAN)"
 	export include_macsec="$(INCLUDE_MACSEC)"
+	export include_stp="$(INCLUDE_STP)"
 	export include_dhcp_server="$(INCLUDE_DHCP_SERVER)"
 	export include_mgmt_framework="$(INCLUDE_MGMT_FRAMEWORK)"
 	export include_iccpd="$(INCLUDE_ICCPD)"
