@@ -18,7 +18,13 @@ module sonic-fabric-monitor{
             description "FABRIC_MONITOR part of config_db.json";
 
             container FABRIC_MONITOR_DATA {
-
+            
+                leaf monCapacityThreshWarn {
+                    type uint32;
+                    default 85;
+                    description "The monCapacityThreshWarn.";
+                }
+                
                 leaf monErrThreshCrcCells {
                     type uint32;
                     default 1;
@@ -41,6 +47,12 @@ module sonic-fabric-monitor{
                     type uint32;
                     default 8;
                     description "Consecutive polls with lesser error rate for inclusion.";
+                }
+                
+                leaf monState {
+                    description "monState";
+                    type string;
+                    default "disable";
                 }
 
             } /* end of container FABRIC_MONITOR_DATA */
