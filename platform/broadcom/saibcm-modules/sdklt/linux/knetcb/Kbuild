@@ -27,6 +27,7 @@ ccflags-y := $(KNETCB_CPPFLAGS) $(LKM_CFLAGS) \
              $(SDK_PMD_KFLAGS) \
              -I$(SDK)/shr/include \
              -I$(SDK)/bcmdrd/include \
+             -I$(SDK)/bcmcnet/include \
              -I$(SDK)/bcmltd/include \
              -I$(SDK)/bcmlrd/include \
              -I$(SDK)/linux/include \
