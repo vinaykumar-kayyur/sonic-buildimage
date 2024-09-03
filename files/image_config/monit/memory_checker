@@ -42,6 +42,7 @@ ERROR_CGROUP_MEMORY_USAGE_NOT_FOUND = "[memory_checker] cgroup memory usage file
 ERROR_CONTAINER_MEMORY_USAGE_NOT_FOUND = "[memory_checker] Failed to get the memory usage of container '{}'! Exiting ..."
 ERROR_CONTAINER_CACHE_USAGE_NOT_FOUND = "[memory_checker] Failed to get the cache usage of container '{}'! Exiting ..."
 ERROR_CGROUP_MEMORY_STATS_NOT_FOUND = "[memory_checker] cgroup memory statistics file '{}' of container '{}' does not exist on device! Exiting ..."
+ERROR_CGROUP_MEMORY_STATS_LINE_FORMAT = "[memory_checker] cgroup memory statistics file '{}' of container '{}' has invalid line format! Exiting ..."
 
 # Define common exit codes
 CONTAINER_NOT_RUNNING = 0
@@ -154,7 +155,12 @@ def get_inactive_cache_usage(container_id):
         with open(docker_memory_stat_file_path, 'r') as file:
             for line in file:
                 if "total_inactive_file" in line:
-                    cache_usage_in_bytes = line.split()[1].strip()
+                    split_line = line.split()
+                    if len(split_line) >= 2:
+                        cache_usage_in_bytes = split_line[1].strip()
+                    else:
+                        syslog.syslog(syslog.LOG_ERR, ERROR_CGROUP_MEMORY_STATS_LINE_FORMAT.format(docker_memory_stat_file_path, container_id))
+                        sys.exit(INTERNAL_ERROR)
                     break
     except IOError as err:
         syslog.syslog(syslog.LOG_ERR, ERROR_CONTAINER_CACHE_USAGE_NOT_FOUND.format(container_id))
