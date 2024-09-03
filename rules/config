@@ -168,6 +168,9 @@ ENABLE_NATIVE_WRITE = y
 # INCLUDE_MACSEC - build docker-macsec for macsec support
 INCLUDE_MACSEC = y
 
+# INCLUDE_STP - build docker-stp for stp support
+INCLUDE_STP = y
+
 # INCLUDE_GBSYNCD - build docker-gbsyncd-* for gearbox support
 INCLUDE_GBSYNCD ?= y
 

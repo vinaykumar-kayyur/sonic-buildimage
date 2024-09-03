@@ -9,7 +9,8 @@
 	url = https://github.com/sonic-net/sonic-sairedis
 [submodule "sonic-swss"]
 	path = src/sonic-swss
-	url = https://github.com/sonic-net/sonic-swss
+	url = https://github.com/bendrapubalareddy/sonic-swss
+	branch = pvst-dev
 [submodule "src/p4c-bm/p4c-bm"]
 	path = platform/p4/p4c-bm/p4c-bm
 	url = https://github.com/krambn/p4c-bm
@@ -30,7 +31,8 @@
 	url = https://github.com/p4lang/ptf.git
 [submodule "src/sonic-utilities"]
 	path = src/sonic-utilities
-	url = https://github.com/sonic-net/sonic-utilities
+	url = https://github.com/bendrapubalareddy/sonic-utilities.git
+	branch = pvst-dev
 [submodule "platform/broadcom/sonic-platform-modules-arista"]
 	path = platform/broadcom/sonic-platform-modules-arista
 	url = https://github.com/aristanetworks/sonic
@@ -124,3 +126,7 @@
 [submodule "platform/innovium/sonic-platform-marvell"]
 	path = platform/innovium/sonic-platform-marvell
 	url = https://github.com/Marvell-switching/sonic-platform-marvell
+[submodule "src/sonic-stp"]
+	path = src/sonic-stp
+	url = https://github.com/bendrapubalareddy/sonic-stp.git
+	branch = pvst-feature
