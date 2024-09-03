@@ -23,8 +23,8 @@
 #ifndef BCMCNET_CORE_H
 #define BCMCNET_CORE_H
 
-#include <bcmcnet/bcmcnet_types.h>
-#include <bcmcnet/bcmcnet_internal.h>
+#include "bcmcnet_types.h"
+#include "bcmcnet_internal.h"
 
 /*!
  * \brief Packet header structure.
