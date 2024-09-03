@@ -52,7 +52,7 @@ module sonic-portchannel {
                 key "name";
 
                 leaf name {
-                    type stypes:interface_name {
+                    type string {
                         pattern 'PortChannel[0-9]{1,4}';
                     }
                 }
