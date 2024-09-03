@@ -19,7 +19,7 @@ class TestMemoryChecker(unittest.TestCase):
         result = memory_checker.get_command_result(command)
 
         self.assertEqual(result, stdout.strip())
-        mock_popen.assert_called_once_with(command.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        mock_popen.assert_called_once_with(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                            universal_newlines=True)
         mock_popen.return_value.communicate.assert_called_once()
         mock_popen.return_value.communicate.assert_called_with()
@@ -28,7 +28,7 @@ class TestMemoryChecker(unittest.TestCase):
     @patch('memory_checker.get_command_result')
     def test_get_container_id(self, mock_get_command_result):
         container_name = 'your_container'
-        command = 'docker ps --no-trunc --filter name={}'.format(container_name)
+        command = ['docker', 'ps', '--no-trunc', '--filter', 'name=your_container']
         mock_get_command_result.return_value = ''
 
         with self.assertRaises(SystemExit) as cm:
