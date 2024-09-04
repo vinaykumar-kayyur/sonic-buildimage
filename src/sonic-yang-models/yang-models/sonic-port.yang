@@ -13,9 +13,9 @@ module sonic-port{
 		prefix ext;
 	}
 
-    import sonic-device_metadata {
-        prefix sdm;
-    }
+	import sonic-device_metadata {
+		prefix sdm;
+	}
 
 	import sonic-macsec {
 		prefix macsec;
@@ -72,11 +72,11 @@ module sonic-port{
 
 				leaf lanes {
 					when "not(not(/sdm:sonic-device_metadata/sdm:DEVICE_METADATA/sdm:localhost/sdm:asic_name) and
-					((/sdm:sonic-device_metadata/sdm:DEVICE_METADATA/sdm:localhost/sdm:switch_type ='voq') or 
-					(/sdm:sonic-device_metadata/sdm:DEVICE_METADATA/sdm:localhost/sdm:switch_type  = 'chassis-packet') or
-					(/sdm:sonic-device_metadata/sdm:DEVICE_METADATA/sdm:localhost/sdm:switch_type ='fabric')))";
+					((/sdm:sonic-device_metadata/sdm:DEVICE_METADATA/sdm:localhost/sdm:switch_type='voq') or 
+					(/sdm:sonic-device_metadata/sdm:DEVICE_METADATA/sdm:localhost/sdm:switch_type='chassis-packet') or
+					(/sdm:sonic-device_metadata/sdm:DEVICE_METADATA/sdm:localhost/sdm:switch_type='fabric')))";
 
-					description "Number of hardware lanes for the port. This is mandoatory for all devices except for chassis devices";
+					description "Number of hardware lanes for the port. This is mandatory for all devices except for chassis devices";
 					mandatory true;
 					type string {
 						length 1..128;
