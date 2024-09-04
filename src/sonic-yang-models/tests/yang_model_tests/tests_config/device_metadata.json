@@ -416,5 +416,23 @@
                 }
             }
         }
+    },
+    "DEVICE_METADATA_VALID_MGMT_UNSOLICITED_STATE": {
+        "sonic-device_metadata:sonic-device_metadata": {
+            "sonic-device_metadata:DEVICE_METADATA": {
+                "sonic-device_metadata:localhost": {
+                    "mgmt_unsolicited_state": "enabled"
+                }
+            }
+        }
+    },
+    "DEVICE_METADATA_INVALID_MGMT_UNSOLICITED_STATE": {
+        "sonic-device_metadata:sonic-device_metadata": {
+            "sonic-device_metadata:DEVICE_METADATA": {
+                "sonic-device_metadata:localhost": {
+                    "mgmt_unsolicited_state": "invalid"
+                }
+            }
+        }
     }
 }

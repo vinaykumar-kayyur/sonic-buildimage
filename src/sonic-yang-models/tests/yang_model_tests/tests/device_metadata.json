@@ -156,5 +156,12 @@
     "DEVICE_METADATA_INVALID_CREATE_ONLY_CONFIG_DB_BUFFERS": {
         "desc": "Verifying invalid create_only_config_db_buffers value",
         "eStrKey": "InvalidValue"
+    },
+    "DEVICE_METADATA_VALID_MGMT_UNSOLICITED_STATE": {
+        "desc": "Verifying valid mgmt_unsolicited_state value"
+    },
+    "DEVICE_METADATA_INVALID_MGMT_UNSOLICITED_STATE": {
+        "desc": "Verifying invalid mgmt_unsolicited_state value",
+        "eStrKey": "InvalidValue"
     }
 }
