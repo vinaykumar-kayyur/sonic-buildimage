@@ -59,6 +59,18 @@ class Sfp(PddfSfp):
 
         return name
 
+    def get_reset_status(self):
+        if self.sfp_type == "QSFP-DD":
+            return super().get_reset_status()
+        return False
+
+
+    def reset(self):
+        if self.sfp_type == "QSFP-DD":
+            return super().reset()
+        else:
+            return False    
+
     def __validate_eeprom_sfp(self):
         checksum_test = 0
         eeprom_raw = self.read_eeprom(0, 96)
