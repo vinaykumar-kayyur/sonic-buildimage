@@ -48,7 +48,9 @@ module sonic-fabric-monitor{
                 }
 
                 leaf monCapacityThreshWarn {
-                    type uint8;
+                    type uint8 {
+                        range 5..250;
+                    }
                     default 10;
                     description "Percentage of up fabric links.";
                 }
