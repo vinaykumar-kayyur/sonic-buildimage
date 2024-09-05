@@ -18,14 +18,14 @@ CPLD_ADDR_MAPPING = {
     "MB_CPLD1": ['20', '0x61'],
     "MB_CPLD2": ['21', '0x62'],
     "FAN_CPLD": ['17', '0x66'],
-    "CPU_CPLD": ['0', '0x65']
+    "CPU_CPLD": ['0',  '0x65']
 }
 SYSFS_PATH = "/sys/bus/i2c/devices/"
 BIOS_VERSION_PATH = "/sys/class/dmi/id/bios_version"
 COMPONENT_LIST= [
-   ("FPGA", "FPGA(0x60)"),
-   ("MB_CPLD1", "Mainboard CPLD(0x62)"),
-   ("MB_CPLD2", "Mainboard CPLD(0x64)"),
+   ("FPGA",     "FPGA(0x60)"),
+   ("MB_CPLD1", "Mainboard CPLD(0x61)"),
+   ("MB_CPLD2", "Mainboard CPLD(0x62)"),
    ("FAN_CPLD", "Fan board CPLD(0x66)"),
    ("CPU_CPLD", "CPU CPLD(0x65)"),
    ("BIOS", "Basic Input/Output System")
