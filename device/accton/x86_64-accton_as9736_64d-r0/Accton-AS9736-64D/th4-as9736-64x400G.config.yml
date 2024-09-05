@@ -1193,7 +1193,7 @@ device:
                 NUM_LANES: 1
                 MAX_FRAME_SIZE: 9416
         SER_CONFIG:
-            SER_ENABLE: 0
+            SER_ENABLE: 1
         PORT_CONFIG:
             PORT_SYSTEM_PROFILE_OPERMODE_PIPEUNIQUE: 1
 device:
