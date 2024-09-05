@@ -32,13 +32,17 @@ module sonic-fabric-monitor{
                 }
 
                 leaf monPollThreshIsolation {
-                    type uint8;
+                    type uint8 {
+                        range 1..10;
+                    }
                     default 1;
                     description "Consecutive polls with higher error rate for isolation.";
                 }
 
                 leaf monPollThreshRecovery {
-                    type uint8;
+                    type uint8 {
+                        range 1..10;
+                    }
                     default 8;
                     description "Consecutive polls with lesser error rate for inclusion.";
                 }
