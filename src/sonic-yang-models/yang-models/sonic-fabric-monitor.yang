@@ -5,6 +5,10 @@ module sonic-fabric-monitor{
     namespace "http://github.com/sonic-net/sonic-fabric-monitor";
     prefix fabric-monitor;
 
+    import sonic-types {
+        prefix stypes;
+    }
+
     description "FABRIC_MONITOR yang Module for SONiC OS";
 
     revision 2023-03-14 {
