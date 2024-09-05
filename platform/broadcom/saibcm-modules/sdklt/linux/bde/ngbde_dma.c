@@ -84,7 +84,7 @@ ngbde_dmamem_kapi_alloc(ngbde_dmactrl_t *dmactrl, ngbde_dmamem_t *dmamem)
         dmamem->baddr = baddr;
 
         /* Write small signature for debug purposes */
-        strcpy((char *)vaddr, "DMA_KAPI");
+        strlcpy((char *)vaddr, "DMA_KAPI", dmactrl->size);
 
         if (dma_debug) {
             printk("DMA: Allocated %d KB of KAPI memory at 0x%08lx\n",
@@ -131,7 +131,7 @@ ngbde_dmamem_pgmem_alloc(ngbde_dmactrl_t *dmactrl, ngbde_dmamem_t *dmamem)
         }
 
         /* Write small signature for debug purposes */
-        strcpy((char *)vaddr, "DMA_PGMEM");
+        strlcpy((char *)vaddr, "DMA_PGMEM", dmactrl->size);
 
         if (dma_debug) {
             printk("DMA: Allocated %d KB of PGMEM memory at 0x%08lx\n",
