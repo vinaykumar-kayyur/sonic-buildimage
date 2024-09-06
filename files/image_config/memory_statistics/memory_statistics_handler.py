@@ -1,6 +1,8 @@
 import os
 import signal
 import threading
+import configparser
+from swsscommon.swsscommon import ConfigDBConnector
 
 class MemoryStatisticsDaemon:
     """
@@ -33,6 +35,42 @@ class MemoryStatisticsDaemon:
         # Setup signal handlers for SIGHUP (reload) and SIGTERM (shutdown)
         signal.signal(signal.SIGHUP, self.handle_sighup)
         signal.signal(signal.SIGTERM, self.handle_sigterm)
+
+    def load_default_settings(self):
+        """
+        Load default settings from the config file.
+        If no config file is found, fallback values are used.
+        """
+        config = configparser.ConfigParser()
+        config.read('/etc/memory_statistics.conf')  # Read configuration from the config file
+        self.retention_period = config.getint('default', 'retention_period', fallback=15)  # Default retention period
+        self.sampling_interval = config.getint('default', 'sampling_interval', fallback=5)  # Default sampling interval
+
+    def load_config_from_db(self):
+        """
+        Load runtime configuration from the ConfigDB.
+        Retrieves enable/disable state, retention period, and sampling interval.
+        """
+        self.config_db = ConfigDBConnector()
+        self.config_db.connect()  # Connect to ConfigDB
+
+        try:
+            config = self.config_db.get_table('MEMORY_STATISTICS_TABLE')  # Get memory statistics config table
+
+            # Update retention period and sampling interval with values from the database
+            self.retention_period = int(config.get('retention-period', self.retention_period))
+            self.sampling_interval = int(config.get('sampling-interval', self.sampling_interval))
+
+            # Check if the daemon should be enabled or disabled
+            enable_state = config.get('enable', 'false').lower() == 'true'
+            if not enable_state:
+                self.logger.log("Received disable command, shutting down daemon.", logging.INFO)
+                self.handle_sigterm(None, None)
+
+            self.logger.log("Configuration reloaded from ConfigDB.", logging.INFO)
+        except Exception as e:
+            self.logger.log(f"Error loading configuration from ConfigDB: {e}", logging.ERROR)
+            raise
 
     def handle_sighup(self, signum, frame):
         """
