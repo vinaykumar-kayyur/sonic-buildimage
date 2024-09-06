@@ -1,4 +1,7 @@
+import gzip
+import psutil
 import os
+import sys
 import signal
 import threading
 import configparser
@@ -88,3 +91,55 @@ class MemoryStatisticsDaemon:
         self.logger.log("Received SIGTERM, shutting down gracefully.", logging.INFO)
         self.shutdown_event.set()  # Trigger shutdown
 
+    def collect_and_store_memory_statistics(self):
+        """
+        Main function for collecting and storing memory statistics.
+        Runs periodically based on the sampling interval and handles reloading config if needed.
+        """
+        while not self.shutdown_event.is_set():  # Run loop until shutdown event is triggered
+            if self.reloading.is_set():  # If reloading is requested
+                self.reloading.clear()  # Clear the reload flag
+                self.cleanup_old_files()  # Clean up old logs
+                self.load_config_from_db()  # Reload configuration from ConfigDB
+                continue  # Skip to the next loop iteration
+            
+            try:
+                # Collect and store memory statistics
+                memory_statistics = self.get_memory_statistics()  # Fetch memory statistics
+                self.store_memory_statistics(memory_statistics)  # Save memory statistics to file
+            except Exception as e:
+                # Log any errors during the collection or storage process
+                self.logger.log(f"Error collecting or storing memory statistics: {e}", logging.ERROR)
+
+            # Wait for the sampling interval before collecting statistics again
+            self.shutdown_event.wait(self.sampling_interval)
+
+    def get_memory_statistics(self):
+        """
+        Collect the system memory statistics using psutil.
+        Returns a dictionary with various memory statistics.
+        """
+        memdict = psutil.virtual_memory() # Collect system memory information
+        memory_statistics = {
+            'total_memory': memdict.total,
+            'used_memory': memdict.used,
+            'free_memory': memdict.free,
+            'available_memory': memdict.available,
+            'cached_memory': memdict.cached,
+            'buffer_memory': memdict.buffers,
+            'shared_memory': memdict.shared
+        }
+        return memory_statistics
+
+    def store_memory_statistics(self, memory_statistics):
+        """
+        Store the collected memory statistics in the log file.
+        Logs any errors if file writing fails.
+        """
+        try:
+            with gzip.open(self.filename, 'at') as f:  # Open the log file in append mode with gzip compression
+                f.write(f"{memory_statistics}\n")  # Write the memory statistics to the log
+            self.logger.log(f"Stored memory statistics: {memory_statistics}", logging.INFO)  # Log successful write
+        except Exception as e:
+            # Log any errors that occur while writing to the log file
+            self.logger.log(f"Error writing memory statistics to log file: {e}", logging.ERROR)
