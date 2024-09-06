@@ -6,7 +6,67 @@ import signal
 import time
 import threading
 import configparser
+import logging
 from swsscommon.swsscommon import ConfigDBConnector
+
+class Logger:
+    """
+    A simple logging utility class for handling log messages.
+
+    This class provides a flexible logging setup with options to log messages
+    to a file and/or to the console. It supports various logging levels and
+    formats for log messages.
+    """
+
+    def __init__(self, log_file, log_level=logging.INFO, log_console=False):
+        """
+        Initializes the Logger instance.
+
+        Args:
+            log_file (str): Path to the log file.
+            log_level (int): Logging level (default is logging.INFO).
+            log_console (bool): Whether to log messages to the console (default is False).
+        """
+        self.log_file = log_file
+        self.log_level = log_level
+        self.log_console = log_console
+        self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(log_level)
+
+        # Create file handler
+        file_handler = logging.FileHandler(self.log_file)
+        file_handler.setLevel(log_level)
+
+        # Create console handler if needed
+        if log_console:
+            console_handler = logging.StreamHandler()
+            console_handler.setLevel(log_level)
+            self.logger.addHandler(console_handler)
+
+        # Create formatter and set it for handlers
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        file_handler.setFormatter(formatter)
+        if log_console:
+            console_handler.setFormatter(formatter)
+
+        # Add handlers to the logger
+        self.logger.addHandler(file_handler)
+
+    def log(self, message, level=logging.INFO):
+        """
+        Logs a message with the specified severity level.
+
+        Args:
+            message (str): The message to log.
+            level (int): The severity level of the log message. Default is logging.INFO.
+        """
+        {
+            logging.DEBUG: self.logger.debug,
+            logging.INFO: self.logger.info,
+            logging.WARNING: self.logger.warning,
+            logging.ERROR: self.logger.error,
+            logging.CRITICAL: self.logger.critical,
+        }.get(level, self.logger.info)(message)
 
 class MemoryStatisticsDaemon:
     """
