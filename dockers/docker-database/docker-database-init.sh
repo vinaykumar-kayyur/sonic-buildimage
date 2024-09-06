@@ -48,8 +48,6 @@ mkdir -p /etc/supervisor/conf.d/
 # read SONiC immutable variables
 [ -f /etc/sonic/sonic-environment ] && . /etc/sonic/sonic-environment
 
-HWSKU=${HWSKU:-`sonic-cfggen -d -v "DEVICE_METADATA['localhost']['hwsku']"`}
-
 if [ -f /etc/sonic/database_config$NAMESPACE_ID.json ]; then
     cp /etc/sonic/database_config$NAMESPACE_ID.json $REDIS_DIR/sonic-db/database_config.json
 else
