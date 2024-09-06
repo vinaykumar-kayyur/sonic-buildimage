@@ -3,6 +3,7 @@ import psutil
 import os
 import sys
 import signal
+import time
 import threading
 import configparser
 from swsscommon.swsscommon import ConfigDBConnector
@@ -91,6 +92,19 @@ class MemoryStatisticsDaemon:
         self.logger.log("Received SIGTERM, shutting down gracefully.", logging.INFO)
         self.shutdown_event.set()  # Trigger shutdown
 
+    def cleanup_old_files(self):
+        """
+        Clean up old memory statistics log files.
+        Removes the current log file if it exists.
+        """
+        if os.path.exists(self.filename):  # Check if the log file exists
+            try:
+                os.remove(self.filename)  # Remove the log file
+                self.logger.log(f"Deleted old log file: {self.filename}", logging.INFO)
+            except Exception as e:
+                # Log any errors that occur during file deletion
+                self.logger.log(f"Error deleting old log file: {e}", logging.ERROR)
+
     def collect_and_store_memory_statistics(self):
         """
         Main function for collecting and storing memory statistics.
@@ -143,3 +157,24 @@ class MemoryStatisticsDaemon:
         except Exception as e:
             # Log any errors that occur while writing to the log file
             self.logger.log(f"Error writing memory statistics to log file: {e}", logging.ERROR)
+
+    def run(self):
+        """
+        Start the MemoryStatisticsDaemon.
+        Initiates the memory collection process if enabled and waits for shutdown or reload events.
+        """
+        self.logger.log("Memory statistics daemon started.", logging.INFO)
+
+        if self.initial_enable_state:  # Check if the daemon is initially enabled
+            # Start the memory statistics collection in a separate thread
+            memory_thread = threading.Thread(target=self.collect_and_store_memory_statistics)
+            memory_thread.daemon = True  # Make thread a daemon so it exits when main thread exits
+            memory_thread.start()
+
+            # Main thread loop: Wait for shutdown event, running at 1-second intervals
+            while not self.shutdown_event.is_set():
+                time.sleep(1)
+
+            memory_thread.join()  # Wait for memory collection thread to finish
+
+        self.logger.log("Memory statistics daemon stopped.", logging.INFO)  # Log shutdown
