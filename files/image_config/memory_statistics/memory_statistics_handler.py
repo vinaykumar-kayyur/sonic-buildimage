@@ -33,3 +33,20 @@ class MemoryStatisticsDaemon:
         # Setup signal handlers for SIGHUP (reload) and SIGTERM (shutdown)
         signal.signal(signal.SIGHUP, self.handle_sighup)
         signal.signal(signal.SIGTERM, self.handle_sigterm)
+
+    def handle_sighup(self, signum, frame):
+        """
+        Handle the SIGHUP signal for reloading configuration.
+        This sets the reloading flag to reload settings from the ConfigDB.
+        """
+        self.logger.log("Received SIGHUP, reloading configuration.", logging.INFO)
+        self.reloading.set()  # Trigger reload
+
+    def handle_sigterm(self, signum, frame):
+        """
+        Handle the SIGTERM signal for graceful shutdown.
+        This sets the shutdown event to stop the daemon's operation cleanly.
+        """
+        self.logger.log("Received SIGTERM, shutting down gracefully.", logging.INFO)
+        self.shutdown_event.set()  # Trigger shutdown
+
