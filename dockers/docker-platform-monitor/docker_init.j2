@@ -13,7 +13,6 @@ MODULAR_CHASSISDB_CONF_FILE="/usr/share/sonic/platform/chassisdb.conf"
 HAVE_SENSORS_CONF=0
 HAVE_FANCONTROL_CONF=0
 IS_MODULAR_CHASSIS=0
-IS_SMART_SWITCH=0
 # Default use python2 version
 SONIC_PLATFORM_API_PYTHON_VERSION=2
 
@@ -118,16 +117,6 @@ fi
 
 if [ -e $MODULAR_CHASSISDB_CONF_FILE ]; then
     IS_MODULAR_CHASSIS=1
-fi
-
-PLATFORM="$(sonic-cfggen -d -v DEVICE_METADATA.localhost.platform)"
-# Parse the platform.json file to get the platform specific information
-PLATFORM_JSON=/usr/share/sonic/device/$PLATFORM/platform.json
-if [ -f "$PLATFORM_JSON" ]; then
-    NUM_DPU=$(jq -r '.DPUS | length' $PLATFORM_JSON 2>/dev/null)
-    if [[ $NUM_DPU -gt 0 ]]; then
-        IS_SMART_SWITCH=1
-    fi
 fi
 
 confvar="{\"HAVE_SENSORS_CONF\":$HAVE_SENSORS_CONF, \"HAVE_FANCONTROL_CONF\":$HAVE_FANCONTROL_CONF, \"API_VERSION\":$SONIC_PLATFORM_API_PYTHON_VERSION, \"IS_MODULAR_CHASSIS\":$IS_MODULAR_CHASSIS}"
