@@ -11,9 +11,9 @@ class MemoryStatisticsDaemon:
     3) Handle retention of memory logs, deleting old logs when necessary.
     4) Respond to signals for reloading config (SIGHUP) and shutdown (SIGTERM).
     """
-    
+
     def __init__(self):
-        """
+        """git
         Initialize the MemoryStatisticsDaemon.
         Sets up directories, log files, and loads default settings.
         Also sets up signal handling for reloading and shutdown events.
