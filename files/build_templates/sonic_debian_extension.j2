@@ -99,6 +99,11 @@ sudo mkdir -p $FILESYSTEM_ROOT_USR_SHARE_SONIC_FIRMWARE/
 # Keeping it generic. It should not harm anyways.
 sudo mkdir -p $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM
 
+# Install sonic-nettools
+sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/sonic-nettools_*.deb || \
+    sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
+sudo setcap 'cap_net_raw=+ep' $FILESYSTEM_ROOT/usr/bin/wol
+
 # Install a patched version of ifupdown2  (and its dependencies via 'apt-get -y install -f')
 sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/ifupdown2_*.deb || \
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
@@ -399,7 +404,7 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
 sudo cp $IMAGE_CONFIGS/smartmontools/smartmontools $FILESYSTEM_ROOT/etc/default/smartmontools
 
 # Install custom-built openssh sshd
-sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/openssh-server_${OPENSSH_VERSION}_*.deb $debs_path/openssh-client_${OPENSSH_VERSION}_*.deb $debs_path/openssh-sftp-server_${OPENSSH_VERSION}_*.deb
+sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/openssh-server_${OPENSSH_VERSION_FULL}_*.deb $debs_path/openssh-client_${OPENSSH_VERSION_FULL}_*.deb $debs_path/openssh-sftp-server_${OPENSSH_VERSION_FULL}_*.deb
 
 {% if sonic_asic_platform == 'broadcom' %}
 # Install custom-built flashrom
@@ -1084,7 +1089,12 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
 sudo mkdir -p $FILESYSTEM_ROOT/etc/minicom/
 sudo cp platform/mellanox/minirc.dfl $FILESYSTEM_ROOT/etc/minicom/
 
-sudo LANG=C chroot $FILESYSTEM_ROOT systemctl disable rshim.service
+# Install rshim script
+sudo install -m 755 platform/mellanox/rshim/files/rshim.sh $FILESYSTEM_ROOT/usr/bin/rshim.sh
+
+# Install rshim services
+sudo cp platform/mellanox/rshim/files/rshim@.service $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM/
+sudo cp platform/mellanox/rshim/files/rshim-manager.service $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM/
 {% endif %}
 
 {% if sonic_asic_platform == "nvidia-bluefield" %}
