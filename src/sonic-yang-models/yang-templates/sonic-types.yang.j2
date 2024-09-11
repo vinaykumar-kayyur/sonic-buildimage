@@ -319,7 +319,7 @@ module sonic-types {
     typedef interface_name {
         description "Represents IFNAMSIZ defined in <net/if.h>";
         type string {
-            length 1..16 {
+            length 1..15 {
                 error-message "Invalid interface name length, it must not exceed 16 characters.";
                 error-app-tag invalid-interface-name-length;
             }
