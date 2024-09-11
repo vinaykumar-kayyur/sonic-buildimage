@@ -2487,14 +2487,6 @@
              }
          },
 
-         "MEMORY_STATISTICS_TABLE": {
-            "MemoryStats": {
-                "enabled": "true",
-                "sampling_interval": "5",
-                "retention_period": "15"
-            }
-        },
-        
          "ACL_TABLE_TYPE": {
              "CUSTOM_L3": {
                  "MATCHES": [
