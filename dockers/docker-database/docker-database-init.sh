@@ -45,8 +45,8 @@ REDIS_DIR=/var/run/redis$NAMESPACE_ID
 mkdir -p $REDIS_DIR/sonic-db
 mkdir -p /etc/supervisor/conf.d/
 
-# read SONiC immutable variables
-[ -f /etc/sonic/sonic-environment ] && . /etc/sonic/sonic-environment
+
+[ -f /usr/share/sonic/platform/default_sku ] && HWSKU=$(head -1 /usr/share/sonic/platform/default_sku | awk '{print $1}')
 
 if [ -f /etc/sonic/database_config$NAMESPACE_ID.json ]; then
     cp /etc/sonic/database_config$NAMESPACE_ID.json $REDIS_DIR/sonic-db/database_config.json
