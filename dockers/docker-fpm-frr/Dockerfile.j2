@@ -5,10 +5,12 @@ ARG docker_container_name
 ARG frr_user_uid
 ARG frr_user_gid
 ARG eventd_enabled
+ARG reduced_build_size
 
 # Make apt-get non-interactive
 ENV DEBIAN_FRONTEND=noninteractive
 ENV EVENTD_ENABLED=$eventd_enabled
+ENV REDUCED_BUILD_SIZE=$reduced_build_size
 
 # Update apt's cache of available packages
 # Install required packages

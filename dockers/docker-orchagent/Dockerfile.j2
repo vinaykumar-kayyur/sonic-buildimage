@@ -3,10 +3,12 @@ FROM docker-swss-layer-bookworm-{{DOCKER_USERNAME}}:{{DOCKER_USERTAG}}
 
 ARG docker_container_name
 ARG eventd_enabled
+ARG reduced_build_size
 
 # Make apt-get non-interactive
 ENV DEBIAN_FRONTEND=noninteractive
 ENV EVENTD_ENABLED=$eventd_enabled
+ENV REDUCED_BUILD_SIZE=$reduced_build_size
 
 RUN apt-get update &&       \
     apt-get install -f -y   \
