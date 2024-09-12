@@ -128,9 +128,9 @@ def get_voq_intf_attributes(ports):
             core_port_index = None
             speed = None
             for k,v in ports.get(port, {}).items():
-                if k.lower() == 'coreid':
+                if k.lower() == 'core_id':
                     core_id = v
-                if k.lower() == 'coreportid':
+                if k.lower() == 'core_port_id':
                     core_port_index = v
                 if k.lower() == 'speed':
                     speed = v
@@ -2612,7 +2612,7 @@ def parse_xml(filename, platform=None, port_config_file=None, asic_name=None, hw
         results['SYSLOG_SERVER'] = dict((item, {}) for item in syslog_servers)
         results['DHCP_SERVER'] = dict((item, {}) for item in dhcp_servers)
         results['DHCP_RELAY'] = dhcp_relay_table
-        results['NTP_SERVER'] = dict((item, {}) for item in ntp_servers)
+        results['NTP_SERVER'] = dict((item, {'iburst': 'on'}) for item in ntp_servers)
         # Set default DNS nameserver from dns.j2
         results['DNS_NAMESERVER'] = {}
         if os.environ.get("CFGGEN_UNIT_TESTING", "0") == "2":
@@ -2831,9 +2831,9 @@ def parse_device_desc_xml(filename):
         'hwsku': hwsku,
         }}
 
-    results['LOOPBACK_INTERFACE'] = {('lo', lo_prefix): {}}
+    results['LOOPBACK_INTERFACE'] = {'lo': {}, ('lo', lo_prefix): {}}
     if lo_prefix_v6:
-        results['LOOPBACK_INTERFACE'] = {('lo_v6', lo_prefix_v6): {}}
+        results['LOOPBACK_INTERFACE'] = {'lo_v6': {}, ('lo_v6', lo_prefix_v6): {}}
 
     results['MGMT_INTERFACE'] = {}
     if mgmt_prefix:

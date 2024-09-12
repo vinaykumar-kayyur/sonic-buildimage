@@ -476,6 +476,7 @@ class SFP(NvidiaSFPCommon):
             self.state = STATE_DOWN
         else:
             self.state = STATE_FCP_DOWN
+        self.processing_insert_event = False
 
     def __str__(self):
         return f'SFP {self.sdk_index}'
@@ -500,6 +501,21 @@ class SFP(NvidiaSFPCommon):
             return False
         eeprom_raw = self._read_eeprom(0, 1, log_on_error=False)
         return eeprom_raw is not None
+    
+    @classmethod
+    def wait_sfp_eeprom_ready(cls, sfp_list, wait_time):
+        not_ready_list = sfp_list
+        
+        while wait_time > 0:
+            not_ready_list = [s for s in not_ready_list if s.state == STATE_FW_CONTROL and s._read_eeprom(0, 2,False) is None]
+            if not_ready_list:
+                time.sleep(0.1)
+                wait_time -= 0.1
+            else:
+                return
+        
+        for s in not_ready_list:
+            logger.log_error(f'SFP {s.sdk_index} eeprom is not ready')
 
     # read eeprom specfic bytes beginning from offset with size as num_bytes
     def read_eeprom(self, offset, num_bytes):
@@ -1489,7 +1505,12 @@ class SFP(NvidiaSFPCommon):
                 sfp.set_hw_reset(1)
                 sfp.on_event(EVENT_RESET)
             else:
-                sfp.on_event(EVENT_POWER_ON)
+                if not sfp.processing_insert_event:
+                    sfp.on_event(EVENT_POWER_ON)
+                else:
+                    sfp.processing_insert_event = False
+                    logger.log_info(f'SFP {sfp.sdk_index} is processing insert event and needs to wait module ready')
+                    sfp.on_event(EVENT_RESET)
 
     @classmethod
     def action_fcp_on_start(cls, sfp):
@@ -1723,7 +1744,8 @@ class SFP(NvidiaSFPCommon):
                 logger.log_error(f'SFP {index} is not in stable state after initializing, state={s.state}')
             logger.log_notice(f'SFP {index} is in state {s.state} after module initialization')
 
-
+        cls.wait_sfp_eeprom_ready(sfp_list, 2)
+        
 class RJ45Port(NvidiaSFPCommon):
     """class derived from SFP, representing RJ45 ports"""
 
