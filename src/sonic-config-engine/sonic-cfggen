@@ -33,7 +33,6 @@ from config_samples import generate_sample_config, get_available_config
 from functools import partial
 from minigraph import minigraph_encoder, parse_xml, parse_device_desc_xml, parse_asic_sub_role, parse_asic_switch_type, parse_hostname
 from portconfig import get_port_config, get_breakout_mode
-from smartswitch_config import get_smartswitch_config
 from sonic_py_common.multi_asic import get_asic_id_from_name, get_asic_device_id, is_multi_asic
 from sonic_py_common import device_info
 from swsscommon.swsscommon import ConfigDBConnector, SonicDBConfig, ConfigDBPipeConnector
@@ -359,9 +358,9 @@ def main():
             }}}
         deep_update(data, hardware_data)
         if args.port_config is None:
-            args.port_config = device_info.get_path_to_port_config_file(hwsku)
+            args.port_config = device_info.get_path_to_port_config_file(hwsku, asic_id)
         load_namespace_config()
-        (ports, _, _) = get_port_config(hwsku, platform, args.port_config, asic_id)
+        (ports, _, _) = get_port_config(hwsku, platform, args.port_config, hwsku_config_file=args.hwsku_config, asic_name=asic_name)
         if ports is None:
             print('Failed to get port config', file=sys.stderr)
             sys.exit(1)
@@ -370,11 +369,6 @@ def main():
         brkout_table = get_breakout_mode(hwsku, platform, args.port_config)
         if  brkout_table is not None:
             deep_update(data, {'BREAKOUT_CFG': brkout_table})
-
-        # Read Smart Switch config
-        smartswitch_config = get_smartswitch_config(hwsku, platform)
-        if smartswitch_config:
-            deep_update(data, smartswitch_config)
 
     _process_json(args, data)
 
