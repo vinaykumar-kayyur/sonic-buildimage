@@ -2,9 +2,11 @@
 FROM docker-swss-layer-bookworm-{{DOCKER_USERNAME}}:{{DOCKER_USERTAG}}
 
 ARG docker_container_name
+ARG eventd_enabled
 
 # Make apt-get non-interactive
 ENV DEBIAN_FRONTEND=noninteractive
+ENV EVENTD_ENABLED=$eventd_enabled
 
 RUN apt-get update &&       \
     apt-get install -f -y   \
@@ -80,14 +82,14 @@ RUN sonic-cfggen -a "{\"ENABLE_ASAN\":\"{{ENABLE_ASAN}}\"}" -t /usr/share/sonic/
 RUN rm -f /usr/share/sonic/templates/docker-init.j2
 RUN chmod 755 /usr/bin/docker-init.sh
 
-{% if include_system_eventd == "y" and build_reduce_image_size != "y" %}
+mkdir -p /etc/rsyslog_plugin
+
 # Copy all regex json files and rsyslog_plugin.conf to rsyslog.d
-COPY ["*.json", "/etc/rsyslog.d/"]
-COPY ["files/rsyslog_plugin.conf.j2", "/etc/rsyslog.d/"]
+COPY ["*.json", "/etc/rsyslog_plugin/"]
+COPY ["files/rsyslog_plugin.conf.j2", "/etc/rsyslog_plugin/"]
 # Create swss rsyslog_plugin conf file
-RUN j2 -f json /etc/rsyslog.d/rsyslog_plugin.conf.j2 /etc/rsyslog.d/events_info.json  > /etc/rsyslog.d/swss_events.conf
-RUN rm -f /etc/rsyslog.d/rsyslog_plugin.conf.j2
-RUN rm -f /etc/rsyslog.d/events_info.json
-{% endif %}
+RUN j2 -f json /etc/rsyslog_plugin/rsyslog_plugin.conf.j2 /etc/rsyslog_plugin/events_info.json  > /etc/rsyslog_plugin/swss_events.conf
+RUN rm -f /etc/rsyslog_plugin/rsyslog_plugin.conf.j2
+RUN rm -f /etc/rsyslog_plugin/events_info.json
 
 ENTRYPOINT ["/usr/bin/docker-init.sh"]

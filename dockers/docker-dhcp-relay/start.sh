@@ -24,3 +24,8 @@ if [ $(supervisorctl status | grep -c "^dhcp-relay:") -gt 0 ]; then
     # lifetime of the process.
     /usr/bin/wait_for_intf.sh
 fi
+
+if [ "${EVENTD_ENABLED}" == "y" ]; then
+    cp /etc/rsyslog_plugin/dhcp_relay_events.conf /etc/rsyslog.d/
+    cp /etc/rsyslog_plugin/dhcp_relay_regex.json /etc/rsyslog.d/
+fi

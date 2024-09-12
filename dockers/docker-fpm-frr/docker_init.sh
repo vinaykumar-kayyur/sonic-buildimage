@@ -112,4 +112,9 @@ TZ=$(cat /etc/timezone)
 rm -rf /etc/localtime
 ln -sf /usr/share/zoneinfo/$TZ /etc/localtime
 
+if [ "${EVENTD_ENABLED}" == "y" ]; then
+    cp /etc/rsyslog_plugin/bgp_events.conf /etc/rsyslog.d/
+    cp /etc/rsyslog_plugin/bgp_regex.json /etc/rsyslog.d/
+fi
+
 exec /usr/local/bin/supervisord
