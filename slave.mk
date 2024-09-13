@@ -1186,8 +1186,7 @@ $(addprefix $(TARGET_PATH)/, $(DOCKER_IMAGES)) : $(TARGET_PATH)/%.gz : .platform
 			--build-arg SONIC_VERSION_CACHE=$(SONIC_VERSION_CACHE) \
 			--build-arg SONIC_VERSION_CACHE_SOURCE=$(SONIC_VERSION_CACHE_SOURCE) \
 			--build-arg image_version=$(SONIC_IMAGE_VERSION) \
-			--build-arg eventd_enabled=$(INCLUDE_SYSTEM_EVENTD) \
-			--build-arg reduced_build_size=$(BUILD_REDUCE_IMAGE_SIZE) \
+			--build-arg include_eventd=$(INCLUDE_SYSTEM_EVENTD) \
 			--label com.azure.sonic.manifest="$$(cat $($*.gz_PATH)/manifest.json)" \
 			--label Tag=$(SONIC_IMAGE_VERSION) \
 		        $($(subst -,_,$(notdir $($*.gz_PATH)))_labels) \

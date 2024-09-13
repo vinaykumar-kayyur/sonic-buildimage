@@ -3,16 +3,14 @@ FROM docker-config-engine-bookworm-{{DOCKER_USERNAME}}:{{DOCKER_USERTAG}}
 
 ARG docker_container_name
 ARG image_version
-ARG eventd_enabled
-ARG reduced_build_size
+ARG include_eventd
 
 # Make apt-get non-interactive
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Pass the image_version to container
 ENV IMAGE_VERSION=$image_version
-ENV EVENTD_ENABLED=$eventd_enabled
-ENV REDUCED_BUILD_SIZE=$reduced_build_size
+ENV EVENTD_ENABLED=$include_eventd
 
 # Update apt's cache of available packages
 RUN apt-get update
@@ -54,14 +52,10 @@ COPY ["files/supervisor-proc-exit-listener", "/usr/bin"]
 COPY ["critical_processes", "/etc/supervisor"]
 COPY ["cli", "/cli/"]
 
-RUN mkdir -p /etc/rsyslog_plugin
+RUN mkdir -p /usr/share/sonic/templates/rsyslog_plugin
 
-# Copy regex json and rsyslog_plugin.conf file into rsyslog.d
-COPY ["*.json", "/etc/rsyslog_plugin/"]
-COPY ["files/rsyslog_plugin.conf.j2", "/etc/rsyslog_plugin/"]
-# Create dhcp_relay_regex.conf
-RUN j2 -f json /etc/rsyslog_plugin/rsyslog_plugin.conf.j2 /etc/rsyslog_plugin/events_info.json  > /etc/rsyslog_plugin/dhcp_relay_events.conf
-RUN rm -f /etc/rsyslog_plugin/rsyslog_plugin.conf.j2
-RUN rm -f /etc/rsyslog_plugin/events_info.json
+# Copy rsyslog plugin configuration file and regexes to docker
+COPY ["*.json", "/usr/share/sonic/templates/rsyslog_plugin"]
+COPY ["files/rsyslog_plugin.conf.j2", "/usr/share/sonic/templates/rsyslog_plugin"]
 
 ENTRYPOINT ["/usr/bin/docker_init.sh"]

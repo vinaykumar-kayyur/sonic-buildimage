@@ -4,13 +4,11 @@ FROM docker-swss-layer-bookworm-{{DOCKER_USERNAME}}:{{DOCKER_USERTAG}}
 ARG docker_container_name
 ARG frr_user_uid
 ARG frr_user_gid
-ARG eventd_enabled
-ARG reduced_build_size
+ARG include_eventd
 
 # Make apt-get non-interactive
 ENV DEBIAN_FRONTEND=noninteractive
-ENV EVENTD_ENABLED=$eventd_enabled
-ENV REDUCED_BUILD_SIZE=$reduced_build_size
+ENV EVENTD_ENABLED=$include_eventd
 
 # Update apt's cache of available packages
 # Install required packages
@@ -62,13 +60,10 @@ RUN chmod a+x /usr/bin/TSA && \
     chmod a+x /usr/bin/TSC && \
     chmod a+x /usr/bin/zsocket.sh
 
-RUN mkdir -p /etc/rsyslog_plugin
+RUN mkdir -p /usr/share/sonic/templates/rsyslog_plugin
 
 # Copy rsyslog plugin configuration file and regexes to docker
-COPY ["*.json", "/etc/rsyslog_plugin/"]
-COPY ["files/rsyslog_plugin.conf.j2", "/etc/rsyslog_plugin/"]
-RUN j2 -f json /etc/rsyslog_plugin/rsyslog_plugin.conf.j2 /etc/rsyslog_plugin/events_info.json  > /etc/rsyslog_plugin/bgp_events.conf
-RUN rm -f /etc/rsyslog_plugin/rsyslog_plugin.conf.j2
-RUN rm -f /etc/rsyslog_plugin/events_info.json
+COPY ["*.json", "/usr/share/sonic/templates/rsyslog_plugin"]
+COPY ["files/rsyslog_plugin.conf.j2", "/usr/share/sonic/templates/rsyslog_plugin"]
 
 ENTRYPOINT ["/usr/bin/docker_init.sh"]

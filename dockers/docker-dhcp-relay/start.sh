@@ -25,7 +25,7 @@ if [ $(supervisorctl status | grep -c "^dhcp-relay:") -gt 0 ]; then
     /usr/bin/wait_for_intf.sh
 fi
 
-if [[ "${EVENTD_ENABLED}" == "y" ]] && [[ "${REDUCED_BUILD_SIZE}" == "n" ]]; then
-    cp /etc/rsyslog_plugin/dhcp_relay_events.conf /etc/rsyslog.d/
-    cp /etc/rsyslog_plugin/dhcp_relay_regex.json /etc/rsyslog.d/
-fi
+j2 -f json --import-env=ENVIRONMENT /usr/share/sonic/templates/rsyslog_plugin/rsyslog_plugin.conf.j2 /usr/share/sonic/templates/rsyslog_plugin/events_info.json  > /etc/rsyslog.d/dhcp_relay_events.conf
+rm -f /usr/share/sonic/templates/rsyslog_plugin/rsyslog_plugin.conf.j2
+rm -f /usr/share/sonic/templates/rsyslog_plugin/events_info.json
+
