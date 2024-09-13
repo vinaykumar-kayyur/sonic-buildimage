@@ -54,7 +54,7 @@ COPY ["files/supervisor-proc-exit-listener", "/usr/bin"]
 COPY ["critical_processes", "/etc/supervisor"]
 COPY ["cli", "/cli/"]
 
-mkdir -p /etc/rsyslog_plugin
+RUN mkdir -p /etc/rsyslog_plugin
 
 # Copy regex json and rsyslog_plugin.conf file into rsyslog.d
 COPY ["*.json", "/etc/rsyslog_plugin/"]

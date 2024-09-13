@@ -84,7 +84,7 @@ RUN sonic-cfggen -a "{\"ENABLE_ASAN\":\"{{ENABLE_ASAN}}\"}" -t /usr/share/sonic/
 RUN rm -f /usr/share/sonic/templates/docker-init.j2
 RUN chmod 755 /usr/bin/docker-init.sh
 
-mkdir -p /etc/rsyslog_plugin
+RUN mkdir -p /etc/rsyslog_plugin
 
 # Copy all regex json files and rsyslog_plugin.conf to rsyslog.d
 COPY ["*.json", "/etc/rsyslog_plugin/"]
