@@ -113,7 +113,5 @@ rm -rf /etc/localtime
 ln -sf /usr/share/zoneinfo/$TZ /etc/localtime
 
 j2 -f json --import-env=ENVIRONMENT /usr/share/sonic/templates/rsyslog_plugin/rsyslog_plugin.conf.j2 /usr/share/sonic/templates/rsyslog_plugin/events_info.json  > /etc/rsyslog.d/bgp_events.conf
-rm -f /usr/share/sonic/templates/rsyslog_plugin/rsyslog_plugin.conf.j2
-rm -f /usr/share/sonic/templates/rsyslog_plugin/events_info.json
 
 exec /usr/local/bin/supervisord

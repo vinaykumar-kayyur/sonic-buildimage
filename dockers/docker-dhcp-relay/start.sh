@@ -26,6 +26,3 @@ if [ $(supervisorctl status | grep -c "^dhcp-relay:") -gt 0 ]; then
 fi
 
 j2 -f json --import-env=ENVIRONMENT /usr/share/sonic/templates/rsyslog_plugin/rsyslog_plugin.conf.j2 /usr/share/sonic/templates/rsyslog_plugin/events_info.json  > /etc/rsyslog.d/dhcp_relay_events.conf
-rm -f /usr/share/sonic/templates/rsyslog_plugin/rsyslog_plugin.conf.j2
-rm -f /usr/share/sonic/templates/rsyslog_plugin/events_info.json
-
