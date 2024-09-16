@@ -63,7 +63,7 @@ RUN chmod a+x /usr/bin/TSA && \
 RUN mkdir -p /usr/share/sonic/templates/rsyslog_plugin
 
 # Copy rsyslog plugin configuration file and regexes to docker
-COPY ["*.json", "/usr/share/sonic/templates/rsyslog_plugin"]
-COPY ["files/rsyslog_plugin.conf.j2", "/usr/share/sonic/templates/rsyslog_plugin"]
+COPY ["*.json", "/usr/share/sonic/templates/rsyslog_plugin/"]
+COPY ["files/rsyslog_plugin.conf.j2", "/usr/share/sonic/templates/rsyslog_plugin/"]
 
 ENTRYPOINT ["/usr/bin/docker_init.sh"]
