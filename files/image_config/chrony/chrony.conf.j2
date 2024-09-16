@@ -51,19 +51,10 @@ confdir /etc/chrony/conf.d
 
 {% endfor -%}
 
-{# Access control options -#}
-{% set options = '' -%}
-
-{# Disable NTP server functionality. Should stay on when dhcp is enabled -#}
-{# {% if global.server_role == 'disabled' and global.dhcp == 'disabled' -%}
-    {% set options = options ~ ' ignore' -%}
+{# Enable NTP server functionality if server_role is enabled or DHCP configuration is enabled -#}
+{# {% if global.server_role == 'enabled' or global.dhcp == 'enabled' -%}
+allow
 {% endif -%} #}
-
-# Access control configuration
-# By default, exchange time with everybody, but don't allow configuration.
-# NTPsec doesn't establish peer associations, and so nopeer has no effect, and
-# has been removed from here
-restrict default kod nomodify noquery limited{{ options }}
 
 # Use time sources from DHCP.
 sourcedir /run/chrony-dhcp
