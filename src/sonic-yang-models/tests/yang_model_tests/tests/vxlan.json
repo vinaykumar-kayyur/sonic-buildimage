@@ -18,7 +18,7 @@
         "eStrKey": "Range"
     },
     "VXLAN_TUNNEL_NAME_VALID_TEST": {
-        "desc": "Tunnel Name string length 16 is valid"
+        "desc": "Tunnel Name string length 15 is valid"
     },
     "VXLAN_TUNNEL_NAME_INVALID_LENGTH_TEST": {
         "desc": "Tunnel Name string length exceeding 16 is invalid",
