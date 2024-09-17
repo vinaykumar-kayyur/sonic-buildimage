@@ -4,11 +4,9 @@ FROM docker-swss-layer-bookworm-{{DOCKER_USERNAME}}:{{DOCKER_USERTAG}}
 ARG docker_container_name
 ARG frr_user_uid
 ARG frr_user_gid
-ARG include_eventd
 
 # Make apt-get non-interactive
 ENV DEBIAN_FRONTEND=noninteractive
-ENV EVENTD_ENABLED=$include_eventd
 
 # Update apt's cache of available packages
 # Install required packages

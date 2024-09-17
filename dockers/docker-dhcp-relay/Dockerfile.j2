@@ -3,14 +3,12 @@ FROM docker-config-engine-bookworm-{{DOCKER_USERNAME}}:{{DOCKER_USERTAG}}
 
 ARG docker_container_name
 ARG image_version
-ARG include_eventd
 
 # Make apt-get non-interactive
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Pass the image_version to container
 ENV IMAGE_VERSION=$image_version
-ENV EVENTD_ENABLED=$include_eventd
 
 # Update apt's cache of available packages
 RUN apt-get update

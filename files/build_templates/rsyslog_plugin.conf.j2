@@ -1,6 +1,6 @@
 ## rsyslog-plugin for streaming telemetry via gnmi
 
-{% if ENVIRONMENT['EVENTD_ENABLED'] == "y" %}
+{% if ENVIRONMENT['EVENTD_STATE'] == "enabled" %}
 template(name="prog_msg" type="list") {
     property(name="msg")
     constant(value="\n")
