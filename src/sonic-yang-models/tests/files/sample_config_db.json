@@ -2486,7 +2486,6 @@
                 "memory": "0M-2G:256M,2G-4G:256M,4G-8G:384M,8G-:448M"
              }
          },
-
          "ACL_TABLE_TYPE": {
              "CUSTOM_L3": {
                  "MATCHES": [
