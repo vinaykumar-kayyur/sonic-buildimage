@@ -31,6 +31,8 @@ $(addprefix $(DEST)/, $(MLXBF3_PINCTRL_DRIVER)): $(DEST)/% :
 	${GET_PACKAGE} ${BSD_BASE_SOURCE_URL} ${MLXBF3_PINCTRL}
 
 	pushd ${MLXBF3_PINCTRL}
+	
+	sed -i 's/KERNEL_VERSION(6, 3, 0)/KERNEL_VERSION(6, 1, 0)/g' $(MODULE_DIR)/pinctrl-mlxbf3.c
 
 	# Build the package
 	make -C /lib/modules/$(KVERSION)/build M=$(MODULE_DIR)
