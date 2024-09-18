@@ -22,14 +22,14 @@ module memory-statistics {
             description "Enable or disable memory statistics collection.";
         }
 
-        leaf sampling-interval {
+        leaf sampling_interval {
             type uint16;
             units "minutes";
             default 5;  
             description "Interval for sampling memory statistics in minutes.";
         }
 
-        leaf retention-period {
+        leaf retention_period {
             type uint16;
             units "days";
             default 15; 
