@@ -1,0 +1,58 @@
+{
+    "MEMORY_STATISTICS_VALID_CONFIG": {
+        "sonic-memory-statistics:MemoryStatistics": {
+            "enabled": "true",
+            "sampling-interval": "5",
+            "retention-period": "15"
+        }
+    },
+    "MEMORY_STATISTICS_WITH_INVALID_SAMPLING_INTERVAL": {
+        "sonic-memory-statistics:MemoryStatistics": {
+            "enabled": "true",
+            "sampling-interval": "65536",
+            "retention-period": "20"
+        }
+    },
+    "MEMORY_STATISTICS_WITH_INVALID_RETENTION_PERIOD": {
+        "sonic-memory-statistics:MemoryStatistics": {
+            "enabled": "true",
+            "sampling-interval": "5",
+            "retention-period": "65536"
+        }
+    },
+    "MEMORY_STATISTICS_WITH_DISABLED_FEATURE": {
+        "sonic-memory-statistics:MemoryStatistics": {
+            "enabled": "false",
+            "sampling-interval": "5",
+            "retention-period": "30"
+        }
+    },
+    "MEMORY_STATISTICS_WITH_NEGATIVE_SAMPLING_INTERVAL": {
+        "sonic-memory-statistics:MemoryStatistics": {
+            "enabled": "true",
+            "sampling-interval": "-10",
+            "retention-period": "45"
+        }
+    },
+    "MEMORY_STATISTICS_WITH_NEGATIVE_RETENTION_PERIOD": {
+        "sonic-memory-statistics:MemoryStatistics": {
+            "enabled": "true",
+            "sampling-interval": "15",
+            "retention-period": "-10"
+        }
+    },
+    "MEMORY_STATISTICS_WITH_STRING_SAMPLING_INTERVAL": {
+        "sonic-memory-statistics:MemoryStatistics": {
+            "enabled": "true",
+            "sampling-interval": "fifteen",
+            "retention-period": "25"
+        }
+    },
+    "MEMORY_STATISTICS_WITH_STRING_RETENTION_PERIOD": {
+        "sonic-memory-statistics:MemoryStatistics": {
+            "enabled": "true",
+            "sampling-interval": "15",
+            "retention-period": "thirty"
+        }
+    }
+}
