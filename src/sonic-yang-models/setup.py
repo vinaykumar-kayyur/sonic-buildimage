@@ -239,7 +239,7 @@ setup(
                          './cvlyang-models/sonic-kdump.yang',
                          './cvlyang-models/sonic-kubernetes_master.yang',
                          './cvlyang-models/sonic-loopback-interface.yang',
-                         './cvlyang-models/sonic-memory-statistics.yang'
+                         './cvlyang-models/sonic-memory-statistics.yang',
                          './cvlyang-models/sonic-mgmt_interface.yang',
                          './cvlyang-models/sonic-mgmt_port.yang',
                          './cvlyang-models/sonic-mgmt_vrf.yang',
