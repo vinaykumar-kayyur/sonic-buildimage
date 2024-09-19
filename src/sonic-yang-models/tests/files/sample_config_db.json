@@ -2454,7 +2454,7 @@
                 "send_sci": "true",
                 "rekey_period": "3600"
             }
-        },
+        }, 
 
         "BGP_INTERNAL_NEIGHBOR": {
             "10.1.0.0": {
@@ -2487,7 +2487,7 @@
              }
          },
 
-        "MEMORY_STATISTICS_TABLE": {
+        "MEMORY_STATISTICS": {
             "MemoryStats": {
                 "enabled": "true",
                 "sampling_interval": "5",

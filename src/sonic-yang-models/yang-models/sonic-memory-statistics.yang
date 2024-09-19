@@ -1,4 +1,4 @@
-module memory-statistics {
+module sonic-memory-statistics {
     yang-version 1.1;
 
     namespace "http://github.com/sonic-net/sonic-memory-statistics";
@@ -13,7 +13,7 @@ module memory-statistics {
         description "First Revision";
     }
      
-    container MemoryStatistics {
+    container sonic-memory-statistics {
         description "Memory statistics configuration";
 
         leaf enabled {
