@@ -4,7 +4,7 @@
 arp_update_checker
 
 This script is intended to be run by Monit. It will write an alerting message into
-syslog if it found arp_update script stuck on ping command.
+syslog if it finds arp_update script stuck on ping command.
 Then it will attempt to restart arp_update script.
 
 The following is an example in Monit configuration file to show how Monit will run
@@ -44,12 +44,9 @@ def is_arp_update_stuck(timeout=TIMEOUT):
         arp_update_pid = subprocess.check_output(["pgrep", "-x", "arp_update"]).strip().decode('utf-8')
         child_pids = subprocess.check_output(["pgrep", "-P", arp_update_pid]).strip().decode('utf-8').split()
         for pid in child_pids:
-            cmd = subprocess.check_output(["ps", "-p", pid, "-o", "comm="]).strip().decode('utf-8')
+            (cmd, elapsed_time)=subprocess.check_output(["ps", "-p", "1550527", "-o", "comm=,etimes="]).strip().decode('utf-8').split()
 
             if "ping" in cmd:
-                start_time = subprocess.check_output(["ps", "-p", pid, "-o", "etime="]).strip().decode('utf-8')
-                elapsed_time = parse_elapsed_time(start_time)
-
                 # Check if the elapsed time is greater than the timeout
                 if elapsed_time > timeout:
                     return True
@@ -57,33 +54,13 @@ def is_arp_update_stuck(timeout=TIMEOUT):
     except subprocess.CalledProcessError:
         return False
 
-def parse_elapsed_time(etime):
-    """Convert elapsed time from ps command to seconds."""
-    parts = etime.split('-')
-    if len(parts) == 2:
-        days = int(parts[0])
-        time_part = parts[1]
-    else:
-        days = 0
-        time_part = parts[0]
-
-    time_parts = time_part.split(':')
-    if len(time_parts) == 3:
-        hours, minutes, seconds = map(float, time_parts)
-    elif len(time_parts) == 2:
-        hours = 0
-        minutes, seconds = map(float, time_parts)
-    else:
-        hours = 0
-        minutes = 0
-        seconds = float(time_parts[0])
-
-    total_seconds = days * 86400 + hours * 3600 + minutes * 60 + seconds
-    return total_seconds
-
 def restart_arp_update():
     """Restart the arp_update process."""
     try:
+        log_info("patching arp_update...")
+        sed_regex="s/ping6cmd=\"ping6/ping6cmd=\"timeout 0.2 ping6/"
+        subprocess.check_call(["docker", "exec", "swss", "sed", "-i", "-s", sed_regex, "/usr/bin/arp_update"])
+        # restart arp_update to make sure changes are in effect
         subprocess.check_call(["docker", "exec", "swss", "supervisorctl", "restart", "arp_update"])
         log_info("arp_update process restarted successfully.")
     except subprocess.CalledProcessError as e:
@@ -98,7 +75,7 @@ def main():
         if is_arp_update_stuck():
             log_warning("arp_update process is stuck. Restarting...")
             restart_arp_update()
-            sys.exit(2)
+            sys.exit(1)
     else:
         log_warning("arp_update process is not running.")
 
