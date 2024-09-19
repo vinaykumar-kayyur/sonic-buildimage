@@ -2489,7 +2489,7 @@
 
         "MEMORY_STATISTICS": {
             "MemoryStats": {
-                "enabled": "true",
+                "enabled": "false",
                 "sampling_interval": "5",
                 "retention_period": "15"
             }

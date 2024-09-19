@@ -1,57 +1,57 @@
 {
     "MEMORY_STATISTICS_VALID_CONFIG": {
         "sonic-memory-statistics:sonic-memory-statistics": {
-            "enabled": "true",
+            "enabled": "false",
             "sampling_interval": "5",
             "retention_period": "15"
         }
     },
     "MEMORY_STATISTICS_WITH_INVALID_SAMPLING_INTERVAL": {
         "sonic-memory-statistics:sonic-memory-statistics": {
-            "enabled": "true",
-            "sampling_interval": "65536",
-            "retention_period": "20"
+            "enabled": "false",
+            "sampling_interval": "31",
+            "retention_period": "15"
         }
     },
     "MEMORY_STATISTICS_WITH_INVALID_RETENTION_PERIOD": {
         "sonic-memory-statistics:sonic-memory-statistics": {
-            "enabled": "true",
+            "enabled": "false",
             "sampling_interval": "5",
-            "retention_period": "65536"
+            "retention_period": "31"
         }
     },
     "MEMORY_STATISTICS_WITH_DISABLED_FEATURE": {
         "sonic-memory-statistics:sonic-memory-statistics": {
-            "enabled": "false",
+            "enabled": "true",
             "sampling_interval": "5",
-            "retention_period": "30"
+            "retention_period": "15"
         }
     },
     "MEMORY_STATISTICS_WITH_NEGATIVE_SAMPLING_INTERVAL": {
         "sonic-memory-statistics:sonic-memory-statistics": {
-            "enabled": "true",
+            "enabled": "false",
             "sampling_interval": "-10",
-            "retention_period": "45"
+            "retention_period": "15"
         }
     },
     "MEMORY_STATISTICS_WITH_NEGATIVE_RETENTION_PERIOD": {
         "sonic-memory-statistics:sonic-memory-statistics": {
-            "enabled": "true",
-            "sampling_interval": "15",
+            "enabled": "false",
+            "sampling_interval": "5",
             "retention_period": "-10"
         }
     },
     "MEMORY_STATISTICS_WITH_STRING_SAMPLING_INTERVAL": {
         "sonic-memory-statistics:sonic-memory-statistics": {
-            "enabled": "true",
+            "enabled": "false",
             "sampling_interval": "fifteen",
-            "retention_period": "25"
+            "retention_period": "15"
         }
     },
     "MEMORY_STATISTICS_WITH_STRING_RETENTION_PERIOD": {
         "sonic-memory-statistics:sonic-memory-statistics": {
-            "enabled": "true",
-            "sampling_interval": "15",
+            "enabled": "false",
+            "sampling_interval": "5",
             "retention_period": "thirty"
         }
     }
