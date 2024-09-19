@@ -391,9 +391,6 @@ dport_map_port_42=78
 dport_map_port_43=79
 dport_map_port_44=80
 
-# VLAN Counter Disable
-sai_vlan_counter_alloc_disable=1
-
 sai_preinit_cmd_file=/usr/share/sonic/hwsku/sai_preinit_cmd.soc
 
 fpem_mem_entries=32768
