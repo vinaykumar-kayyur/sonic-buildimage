@@ -1,20 +1,12 @@
 #!/bin/bash
 
+# Source the platform_utils script
+source "$(dirname "$0")/platform_utils"
+
 # Restrict command to sudo users
 if [ "$EUID" -ne 0 ] ; then
   echo "Root priveleges are needed for this operation"
   exit 1
-fi
-
-PLATFORM="$(sonic-cfggen -d -v DEVICE_METADATA.localhost.platform)"
-SMARTSWITCH=false
-# Parse the platform.json file to get the platform specific information
-PLATFORM_JSON=/usr/share/sonic/device/$PLATFORM/platform.json
-if [ -f "$PLATFORM_JSON" ]; then
-    NUM_DPU=$(jq -r '.DPUS | length' $PLATFORM_JSON 2>/dev/null)
-    if [[ $NUM_DPU -gt 0 ]]; then
-        SMARTSWITCH=true
-    fi
 fi
 
 if [ -f /etc/sonic/chassisdb.conf ] && [ "$SMARTSWITCH" = false ] ; then
