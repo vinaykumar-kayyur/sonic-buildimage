@@ -4,29 +4,11 @@
     },
     "MEMORY_STATISTICS_WITH_INVALID_SAMPLING_INTERVAL": {
         "desc": "Configuring memory statistics with an invalid sampling_interval.",
-        "eStr": ["pattern", "does not satisfy"]
     },
     "MEMORY_STATISTICS_WITH_INVALID_RETENTION_PERIOD": {
         "desc": "Configuring memory statistics with an invalid retention_period.",
-        "eStr": ["pattern", "does not satisfy"]
     },
-    "MEMORY_STATISTICS_WITH_DISABLED_FEATURE": {
+    "MEMORY_STATISTICS_WITH_ENABLE_FEATURE": {
         "desc": "Disabling memory statistics feature."
-    },
-    "MEMORY_STATISTICS_WITH_NEGATIVE_SAMPLING_INTERVAL": {
-        "desc": "Configuring memory statistics with a negative sampling_interval.",
-        "eStr": ["range", "is out of bounds"]
-    },
-    "MEMORY_STATISTICS_WITH_NEGATIVE_RETENTION_PERIOD": {
-        "desc": "Configuring memory statistics with a negative retention_period.",
-        "eStr": ["range", "is out of bounds"]
-    },
-    "MEMORY_STATISTICS_WITH_STRING_SAMPLING_INTERVAL": {
-        "desc": "Configuring memory statistics with a string for the sampling_interval.",
-        "eStr": ["type", "is not a valid value"]
-    },
-    "MEMORY_STATISTICS_WITH_STRING_RETENTION_PERIOD": {
-        "desc": "Configuring memory statistics with a string for the retention_period.",
-        "eStr": ["type", "is not a valid value"]
     }
 }

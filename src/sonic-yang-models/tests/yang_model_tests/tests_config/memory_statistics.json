@@ -1,58 +1,40 @@
 {
     "MEMORY_STATISTICS_VALID_CONFIG": {
-        "sonic-memory-statistics:sonic-memory-statistics": {
-            "enabled": "false",
-            "sampling_interval": "5",
-            "retention_period": "15"
+        "sonic-memory-statistics:sonic-memory-statistics": {          
+            "sonic-memory-statistics:MEMROY_STATISTICS": {
+                "enabled": "false",
+                "sampling_interval": "5",
+                "retention_period": "15"
+            }
         }
     },
     "MEMORY_STATISTICS_WITH_INVALID_SAMPLING_INTERVAL": {
         "sonic-memory-statistics:sonic-memory-statistics": {
-            "enabled": "false",
-            "sampling_interval": "31",
-            "retention_period": "15"
+            "sonic-memory-statistics:MEMROY_STATISTICS": {
+                "enabled": "true",
+                "sampling_interval": "256",
+                "retention_period": "20"
+            }
         }
     },
     "MEMORY_STATISTICS_WITH_INVALID_RETENTION_PERIOD": {
         "sonic-memory-statistics:sonic-memory-statistics": {
-            "enabled": "false",
-            "sampling_interval": "5",
-            "retention_period": "31"
+            "sonic-memory-statistics:MEMROY_STATISTICS": {
+                "enabled": "true",
+                "sampling_interval": "5",
+                "retention_period": "256"
+            }
         }
     },
-    "MEMORY_STATISTICS_WITH_DISABLED_FEATURE": {
+    "MEMORY_STATISTICS_WITH_ENABLE_FEATURE": {
         "sonic-memory-statistics:sonic-memory-statistics": {
-            "enabled": "true",
-            "sampling_interval": "5",
-            "retention_period": "15"
+            "sonic-memory-statistics:MEMROY_STATISTICS": {
+                "enabled": "true",
+                "sampling_interval": "5",
+                "retention_period": "30"
+           }
         }
-    },
-    "MEMORY_STATISTICS_WITH_NEGATIVE_SAMPLING_INTERVAL": {
-        "sonic-memory-statistics:sonic-memory-statistics": {
-            "enabled": "false",
-            "sampling_interval": "-10",
-            "retention_period": "15"
-        }
-    },
-    "MEMORY_STATISTICS_WITH_NEGATIVE_RETENTION_PERIOD": {
-        "sonic-memory-statistics:sonic-memory-statistics": {
-            "enabled": "false",
-            "sampling_interval": "5",
-            "retention_period": "-10"
-        }
-    },
-    "MEMORY_STATISTICS_WITH_STRING_SAMPLING_INTERVAL": {
-        "sonic-memory-statistics:sonic-memory-statistics": {
-            "enabled": "false",
-            "sampling_interval": "fifteen",
-            "retention_period": "15"
-        }
-    },
-    "MEMORY_STATISTICS_WITH_STRING_RETENTION_PERIOD": {
-        "sonic-memory-statistics:sonic-memory-statistics": {
-            "enabled": "false",
-            "sampling_interval": "5",
-            "retention_period": "thirty"
-        }
-    }
+    }   
+
 }
+

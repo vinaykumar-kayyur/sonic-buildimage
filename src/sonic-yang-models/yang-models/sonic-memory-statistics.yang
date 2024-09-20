@@ -15,6 +15,7 @@ module sonic-memory-statistics {
     }
 
     container sonic-memory-statistics {
+        container MEMORY_STATISTICS {
         description "Memory statistics configuration parameters.";
 
         leaf enabled {
@@ -40,5 +41,7 @@ module sonic-memory-statistics {
             default 15;
             description "Retention period for memory statistics data, defined in days. Valid range is from 1 day to 30 days.";
         }
+    }
+    
     }
 }
