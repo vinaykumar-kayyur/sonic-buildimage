@@ -3,10 +3,10 @@
         "desc": "Configuring memory statistics with valid values."
     },
     "MEMORY_STATISTICS_WITH_INVALID_SAMPLING_INTERVAL": {
-        "desc": "Configuring memory statistics with an invalid sampling_interval.",
+        "desc": "Configuring memory statistics with an invalid sampling_interval."
     },
     "MEMORY_STATISTICS_WITH_INVALID_RETENTION_PERIOD": {
-        "desc": "Configuring memory statistics with an invalid retention_period.",
+        "desc": "Configuring memory statistics with an invalid retention_period."
     },
     "MEMORY_STATISTICS_WITH_ENABLE_FEATURE": {
         "desc": "Disabling memory statistics feature."
