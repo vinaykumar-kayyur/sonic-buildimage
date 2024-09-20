@@ -1,21 +1,19 @@
 /*
- * An wb_i2c_mux_pca9641 driver for pca9641 multiplexer/switch function
+ * I2C multiplexer driver for PCA9541 bus master selector
  *
- * Copyright (C) 2024 Micas Networks Inc.
+ * Copyright (c) 2010 Ericsson AB.
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
+ * Author: Guenter Roeck <linux@roeck-us.net>
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * Derived from:
+ *  pca954x.c
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  Copyright (c) 2008-2009 Rodolfo Giometti <giometti@linux.it>
+ *  Copyright (c) 2008-2009 Eurotech S.p.A. <info@eurotech.it>
+ *
+ * This file is licensed under the terms of the GNU General Public
+ * License version 2. This program is licensed "as is" without any
+ * warranty of any kind, whether express or implied.
  */
 
 #include <linux/version.h>
