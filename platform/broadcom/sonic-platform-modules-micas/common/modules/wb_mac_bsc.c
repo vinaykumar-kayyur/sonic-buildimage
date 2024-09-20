@@ -1,7 +1,6 @@
 /*
- * An wb_mac_bsc driver for mac bsc function
  *
- * Copyright (C) 2024 Micas Networks Inc.
+ * Copyright (c) 1998, 1999  Frodo Looijaard <frodol@dds.nl>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
