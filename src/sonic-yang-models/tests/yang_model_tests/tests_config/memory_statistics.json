@@ -12,7 +12,7 @@
         "sonic-memory-statistics:sonic-memory-statistics": {
             "sonic-memory-statistics:MEMORY_STATISTICS": {
                 "enabled": "true",
-                "sampling_interval": "256",
+                "sampling_interval": "45",
                 "retention_period": "20"
             }
         }
@@ -22,7 +22,7 @@
             "sonic-memory-statistics:MEMORY_STATISTICS": {
                 "enabled": "true",
                 "sampling_interval": "5",
-                "retention_period": "256"
+                "retention_period": "45"
             }
         }
     },
