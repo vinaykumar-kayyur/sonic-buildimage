@@ -42,6 +42,6 @@ module sonic-memory-statistics {
             description "Retention period for memory statistics data, defined in days. Valid range is from 1 day to 30 days.";
         }
     }
-    
+
     }
 }
