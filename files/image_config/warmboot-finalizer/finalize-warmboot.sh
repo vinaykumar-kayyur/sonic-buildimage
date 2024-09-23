@@ -10,6 +10,7 @@ declare -A RECONCILE_COMPONENTS=( \
                         ["swss"]="orchagent neighsyncd" \
                         ["bgp"]="bgp"                   \
                         ["nat"]="natsyncd"              \
+                        ["mux"]="linkmgrd"              \
                        )
 
 for reconcile_file in $(find /etc/sonic/ -iname '*_reconcile' -type f); do
@@ -51,6 +52,17 @@ function check_warm_boot()
     WARM_BOOT=`sonic-db-cli STATE_DB hget "WARM_RESTART_ENABLE_TABLE|system" enable`
 }
 
+function check_fast_reboot()
+{
+    debug "Checking if fast-reboot is enabled..."
+    FAST_REBOOT=`sonic-db-cli STATE_DB hget "FAST_RESTART_ENABLE_TABLE|system" enable`
+    if [[ x"${FAST_REBOOT}" == x"true" ]]; then
+       debug "Fast-reboot is enabled..."
+    else
+       debug "Fast-reboot is disabled..."
+    fi
+}
+
 
 function wait_for_database_service()
 {
@@ -62,7 +74,7 @@ function wait_for_database_service()
     done
 
     # Wait for configDB initialization
-    until [[ $(sonic-db-cli CONFIG_DB GET "CONFIG_DB_INITIALIZED") ]];
+    until [[ $(sonic-db-cli CONFIG_DB GET "CONFIG_DB_INITIALIZED") -eq 1 ]];
         do sleep 1;
     done
 
@@ -96,6 +108,13 @@ function finalize_warm_boot()
     sudo config warm_restart disable
 }
 
+function finalize_fast_reboot()
+{
+    debug "Finalizing fast-reboot..."
+    sonic-db-cli STATE_DB hset "FAST_RESTART_ENABLE_TABLE|system" "enable" "false" &>/dev/null
+    sonic-db-cli CONFIG_DB DEL "WARM_RESTART|teamd" &>/dev/null
+}
+
 function stop_control_plane_assistant()
 {
     if [[ -x ${ASSISTANT_SCRIPT} ]]; then
@@ -108,27 +127,30 @@ function restore_counters_folder()
 {
     debug "Restoring counters folder after warmboot..."
 
-    modules=("portstat-0" "dropstat" "pfcstat-0" "queuestat-0" "intfstat-0")
-    for module in ${modules[@]}
-    do
-        statfile="/host/counters/$module"
-        if [[ -d $statfile ]]; then
-            mv $statfile /tmp/
-        fi
-    done
+    cache_counters_folder="/host/counters"
+    if [[ -d $cache_counters_folder ]]; then
+        mv $cache_counters_folder /tmp/cache
+        chown -R admin:admin /tmp/cache
+    fi
 }
 
 
 wait_for_database_service
 
+check_fast_reboot
 check_warm_boot
 
 if [[ x"${WARM_BOOT}" != x"true" ]]; then
     debug "warmboot is not enabled ..."
-    exit 0
+    if [[ x"${FAST_REBOOT}" != x"true" ]]; then
+	    debug "fastboot is not enabled ..."
+	    exit 0
+    fi
 fi
 
-restore_counters_folder
+if [[ (x"${WARM_BOOT}" == x"true") && (x"${FAST_REBOOT}" != x"true") ]]; then
+    restore_counters_folder
+fi
 
 get_component_list
 
@@ -145,14 +167,22 @@ for i in `seq 60`; do
     sleep 5
 done
 
-stop_control_plane_assistant
-
-# Save DB after stopped control plane assistant to avoid extra entries
-debug "Save in-memory database after warm reboot ..."
-config save -y
+if [[ (x"${WARM_BOOT}" == x"true") && (x"${FAST_REBOOT}" != x"true") ]]; then
+   stop_control_plane_assistant
+fi
 
 if [[ -n "${list}" ]]; then
     debug "Some components didn't finish reconcile: ${list} ..."
 fi
 
-finalize_warm_boot
+if [ x"${FAST_REBOOT}" == x"true" ]; then
+    finalize_fast_reboot
+fi
+
+if [ x"${WARM_BOOT}" == x"true" ]; then
+    finalize_warm_boot
+fi
+
+# Save DB after stopped control plane assistant to avoid extra entries
+debug "Save in-memory database after warm/fast reboot ..."
+config save -y

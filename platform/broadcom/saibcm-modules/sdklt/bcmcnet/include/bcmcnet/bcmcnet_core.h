@@ -4,7 +4,7 @@
  *
  */
 /*
- * $Copyright: Copyright 2018-2020 Broadcom. All rights reserved.
+ * $Copyright: Copyright 2018-2023 Broadcom. All rights reserved.
  * The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries.
  * 
  * This program is free software; you can redistribute it and/or
@@ -45,8 +45,8 @@ struct pkt_hdr {
     /*! Data length */
     uint16_t data_len;
 
-    /*! Reserved */
-    uint16_t rsvd2;
+    /*! Header profile */
+    uint16_t hdr_prof;
 
     /*! Meta length */
     uint8_t meta_len;
@@ -66,8 +66,10 @@ struct pkt_hdr {
 #define PDMA_TX_BIND_QUE    (1 << 3)
     /*! Tx cookded header */
 #define PDMA_TX_HDR_COOKED  (1 << 4)
+    /*! Tx no pad */
+#define PDMA_TX_NO_PAD      (1 << 5)
     /*! Tx to HNET */
-#define PDMA_TX_TO_HNET     (1 << 5)
+#define PDMA_TX_TO_HNET     (1 << 6)
     /*! Rx to VNET */
 #define PDMA_RX_TO_VNET     (1 << 10)
     /*! Rx strip vlan tag */
@@ -123,10 +125,13 @@ struct intr_handle {
     void *priv;
 
     /*! Interrupt number */
-    int intr_num;
+    int inum;
 
     /*! Interrupt flags */
     uint32_t intr_flags;
+
+    /*! Extra polling after queue is empty */
+    bool extra_poll;
 };
 
 /*!
@@ -188,7 +193,7 @@ struct queue_group {
     uint32_t irq_mask;
 
     /*! Indicating the group is attached */
-    int attached;
+    bool attached;
 };
 
 /*!
@@ -208,16 +213,16 @@ struct dev_ctrl {
     struct queue_group grp[NUM_GRP_MAX];
 
     /*! Pointers to Rx queues */
-    void *rx_queue[NUM_QUE_MAX];
+    void *rx_queue[NUM_Q_MAX];
 
     /*! Pointers to Tx queues */
-    void *tx_queue[NUM_QUE_MAX];
+    void *tx_queue[NUM_Q_MAX];
 
     /*! Pointers to virtual Rx queues */
-    void *vnet_rxq[NUM_QUE_MAX];
+    void *vnet_rxq[NUM_Q_MAX];
 
     /*! Pointers to virtual Tx queues */
-    void *vnet_txq[NUM_QUE_MAX];
+    void *vnet_txq[NUM_Q_MAX];
 
     /*! Pointer to buffer manager */
     void *buf_mngr;
@@ -720,6 +725,20 @@ typedef int (*pdma_rx_f)(struct pdma_dev *dev, int queue, void *buf);
 typedef int (*pdma_tx_f)(struct pdma_dev *dev, int queue, void *buf);
 
 /*!
+ * Network device detach.
+ *
+ * \param [in] dev Pointer to device structure.
+ */
+typedef void (*sys_ndev_detach_f)(struct pdma_dev *dev);
+
+/*!
+ * Network device attach.
+ *
+ * \param [in] dev Pointer to device structure.
+ */
+typedef void (*sys_ndev_attach_f)(struct pdma_dev *dev);
+
+/*!
  * Suspend Tx queue.
  *
  * \param [in] dev Pointer to device structure.
@@ -742,10 +761,10 @@ typedef void (*sys_tx_resume_f)(struct pdma_dev *dev, int queue);
  * \param [in] group Channel group number.
  * \param [in] chan Channel number.
  * \param [in] reg Interrupt enable register.
- * \param [in] mask Interrupt mask.
+ * \param [in] val Interrupt enable register value.
  */
 typedef void (*sys_intr_unmask_f)(struct pdma_dev *dev, int group, int chan,
-                                  uint32_t reg, uint32_t mask);
+                                  uint32_t reg, uint32_t val);
 
 /*!
  * Disable interrupts.
@@ -753,11 +772,11 @@ typedef void (*sys_intr_unmask_f)(struct pdma_dev *dev, int group, int chan,
  * \param [in] dev Pointer to device structure.
  * \param [in] group Channel group number.
  * \param [in] chan Channel number.
- * \param [in] reg Interrupt enable register.
- * \param [in] mask Interrupt mask.
+ * \param [in] reg Interrupt disable register.
+ * \param [in] val Interrupt disable register value.
  */
 typedef void (*sys_intr_mask_f)(struct pdma_dev *dev, int group, int chan,
-                                uint32_t reg, uint32_t mask);
+                                uint32_t reg, uint32_t val);
 
 /*!
  * Wait for notification from the other side.
@@ -840,6 +859,12 @@ struct pdma_dev {
     /*! Packet transmission */
     pdma_tx_f pkt_xmit;
 
+    /*! Network device detach */
+    sys_ndev_detach_f ndev_detach;
+
+    /*! Network device attach */
+    sys_ndev_attach_f ndev_attach;
+
     /*! Tx suspend */
     sys_tx_suspend_f tx_suspend;
 
@@ -893,15 +918,23 @@ struct pdma_dev {
 #define PDMA_DESC_PREFETCH  (1 << 4)
     /*! VNET is docked */
 #define PDMA_VNET_DOCKED    (1 << 5)
+    /*! Abort PDMA mode for suspend and resume */
+#define PDMA_ABORT          (1 << 6)
+
+    /*! Extra poll time in microseconds */
+    int extra_poll_time;
 
     /*! Device mode */
     dev_mode_t mode;
 
     /*! Device is started */
-    int started;
+    bool started;
+
+    /*! Device is started but suspended */
+    bool suspended;
 
     /*! Device is initialized and HMI driver is attached */
-    int attached;
+    bool attached;
 };
 
 /*!
@@ -1261,10 +1294,10 @@ bcmcnet_group_intr_ack(struct pdma_dev *dev, int group);
  * \param [in] dev Device structure point.
  * \param [in] group Group number.
  *
- * \retval SHR_E_NONE No errors.
- * \retval SHR_E_XXXX Operation failed.
+ * \retval true Interrupt is active.
+ * \retval false Interrupt is not active.
  */
-extern int
+extern bool
 bcmcnet_group_intr_check(struct pdma_dev *dev, int group);
 
 /*!

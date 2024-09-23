@@ -94,7 +94,7 @@ static int mc24lc64t_probe(struct i2c_client *client,
                         sizeof(struct mc24lc64t_data), GFP_KERNEL)))
                 return -ENOMEM;
 
-        drvdata->fake_client = i2c_new_dummy(client->adapter, client->addr + 1);
+        drvdata->fake_client = i2c_new_dummy_device(client->adapter, client->addr + 1);
         if (!drvdata->fake_client)
                 return -ENOMEM;
 
@@ -108,15 +108,13 @@ static int mc24lc64t_probe(struct i2c_client *client,
         return err;
 }
 
-static int mc24lc64t_remove(struct i2c_client *client)
+static void mc24lc64t_remove(struct i2c_client *client)
 {
         struct mc24lc64t_data *drvdata = i2c_get_clientdata(client);
 
         i2c_unregister_device(drvdata->fake_client);
 
         sysfs_remove_bin_file(&client->dev.kobj, &mc24lc64t_bit_attr);
-
-        return 0;
 }
 
 static const struct i2c_device_id mc24lc64t_id[] = {

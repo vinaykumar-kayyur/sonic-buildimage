@@ -1,10 +1,10 @@
 # docker image for brcm syncd
 
 DOCKER_SYNCD_PLATFORM_CODE = brcm
-include $(PLATFORM_PATH)/../template/docker-syncd-base.mk
+include $(PLATFORM_PATH)/../template/docker-syncd-bullseye.mk
 
 $(DOCKER_SYNCD_BASE)_DEPENDS += $(SYNCD)
-$(DOCKER_SYNCD_BASE)_DEPENDS += $(BRCM_SAI)
+$(DOCKER_SYNCD_BASE)_DEPENDS += $(BRCM_XGS_SAI)
 $(DOCKER_SYNCD_BASE)_FILES += $(DSSERVE) $(BCMCMD)
 
 $(DOCKER_SYNCD_BASE)_DBG_DEPENDS += $(SYNCD_DBG) \

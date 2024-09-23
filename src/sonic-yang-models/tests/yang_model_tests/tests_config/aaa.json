@@ -4,9 +4,11 @@
             "sonic-system-aaa:AAA": {
                 "AAA_LIST": [{
                         "type": "authentication",
-                        "login": "tacacs+,local",
-                        "failthrough": "true",
-                        "debug": "true"
+                        "login": "local",
+                        "failthrough": "True",
+                        "fallback": "True",
+                        "trace": "True",
+                        "debug": "True"
                 }]
             }
         }
@@ -16,7 +18,17 @@
         "sonic-system-aaa:sonic-system-aaa": {
             "sonic-system-aaa:AAA": {
                 "AAA_LIST": [{
-                        "type": "authorization"
+                        "type": "unknowntype"
+                }]
+            }
+        }
+    },
+
+    "AAA_TEST_WRONG_LOGIN": {
+        "sonic-system-aaa:sonic-system-aaa": {
+            "sonic-system-aaa:AAA": {
+                "AAA_LIST": [{
+                        "login": "locallll"
                 }]
             }
         }
@@ -28,6 +40,47 @@
                 "AAA_LIST": [{
                         "type": "authentication",
                         "failthrough": "enable"
+                }]
+            }
+        }
+    },
+
+    "AAA_AUTHENTICATION_TEST": {
+        "sonic-system-aaa:sonic-system-aaa": {
+            "sonic-system-aaa:AAA": {
+                "AAA_LIST": [{
+                        "type": "authentication",
+                        "login": "tacacs+"
+                }]
+            }
+        },
+        "sonic-system-tacacs:sonic-system-tacacs": {
+            "sonic-system-tacacs:TACPLUS": {
+                "global": {
+                        "timeout": 5,
+                        "passkey": "aabb"
+                }
+            }
+        }
+    },
+
+    "AAA_AUTHENTICATION_TEST_TACACS_WITHOUT_TACPLUS": {
+        "sonic-system-aaa:sonic-system-aaa": {
+            "sonic-system-aaa:AAA": {
+                "AAA_LIST": [{
+                        "type": "authentication",
+                        "login": "tacacs+"
+                }]
+            }
+        }
+    },
+
+    "AAA_ACCOUNTING_TEST": {
+        "sonic-system-aaa:sonic-system-aaa": {
+            "sonic-system-aaa:AAA": {
+                "AAA_LIST": [{
+                        "type": "accounting",
+                        "login": "tacacs+"
                 }]
             }
         }

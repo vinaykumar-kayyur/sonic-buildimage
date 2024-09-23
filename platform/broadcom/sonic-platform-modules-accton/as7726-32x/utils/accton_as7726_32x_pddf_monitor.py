@@ -24,10 +24,10 @@
 # ------------------------------------------------------------------
 
 try:
-    import os
     import sys
     import getopt
     import logging
+    import subprocess
     import logging.config
     import logging.handlers
     import time
@@ -230,7 +230,7 @@ class device_monitor(object):
            if new_state==LEVEL_TEMP_CRITICAL:
                logging.critical('Alarm for temperature critical is detected, reboot DUT')
                time.sleep(2)
-               os.system('reboot')           
+               subprocess.call(['reboot'])
         if ori_state==LEVEL_FAN_MID:
             if new_state==LEVEL_TEMP_HIGH:
                 if alarm_state==0:
@@ -239,7 +239,7 @@ class device_monitor(object):
             if new_state==LEVEL_TEMP_CRITICAL:
                 logging.critical('Alarm for temperature critical is detected')
                 time.sleep(2)
-                os.system('reboot') 
+                subprocess.call(['reboot'])
         if ori_state==LEVEL_FAN_MAX:
             if new_state==LEVEL_TEMP_HIGH:
                 if alarm_state==0:
@@ -248,7 +248,7 @@ class device_monitor(object):
             if new_state==LEVEL_TEMP_CRITICAL:
                 logging.critical('Alarm for temperature critical is detected')
                 time.sleep(2)
-                os.system('reboot') 
+                subprocess.call(['reboot'])
             if alarm_state==1:
                 if temp_get < (fan_policy[3][0] - 5000):  #below 65 C, clear alarm
                     logging.warning('Alarm for temperature high is cleared')
@@ -257,7 +257,7 @@ class device_monitor(object):
             if new_state==LEVEL_TEMP_CRITICAL:
                 logging.critical('Alarm for temperature critical is detected')
                 time.sleep(2)
-                os.system('reboot')
+                subprocess.call(['reboot'])
             if new_state <= LEVEL_FAN_MID:
                 logging.warning('Alarm for temperature high is cleared')
                 alarm_state=0
@@ -279,11 +279,11 @@ def main(argv):
         try:
             opts, args = getopt.getopt(argv,'hdlt:',['lfile='])
         except getopt.GetoptError:
-            print('Usage: %s [-d] [-l <log_file>]' % sys.argv[0])
+            print(('Usage: %s [-d] [-l <log_file>]' % sys.argv[0]))
             return 0
         for opt, arg in opts:
             if opt == '-h':
-                print('Usage: %s [-d] [-l <log_file>]' % sys.argv[0])
+                print(('Usage: %s [-d] [-l <log_file>]' % sys.argv[0]))
                 return 0
             elif opt in ('-d', '--debug'):
                 log_level = logging.DEBUG

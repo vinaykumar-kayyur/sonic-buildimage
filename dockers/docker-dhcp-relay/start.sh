@@ -10,8 +10,12 @@ then
     ${CTR_SCRIPT} -f dhcp_relay -o ${RUNTIME_OWNER} -v ${IMAGE_VERSION}
 fi
 
-# If our supervisor config has entries in the "isc-dhcp-relay" group...
-if [ $(supervisorctl status | grep -c "^isc-dhcp-relay:") -gt 0 ]; then
+TZ=$(cat /etc/timezone)
+rm -rf /etc/localtime
+ln -sf /usr/share/zoneinfo/$TZ /etc/localtime
+
+# If our supervisor config has entries in the "dhcp-relay" group...
+if [ $(supervisorctl status | grep -c "^dhcp-relay:") -gt 0 ]; then
     # Wait for all interfaces to come up and be assigned IPv4 addresses before
     # starting the DHCP relay agent(s). If an interface the relay should listen
     # on is down, the relay agent will not start. If an interface the relay

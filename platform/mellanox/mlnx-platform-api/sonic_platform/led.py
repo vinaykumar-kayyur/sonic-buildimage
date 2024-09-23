@@ -1,272 +1,290 @@
+#
+# Copyright (c) 2020-2021 NVIDIA CORPORATION & AFFILIATES.
+# Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 import os
+import time
+
+from sonic_py_common.logger import Logger
+from . import utils
+from . import device_data
+
+logger = Logger()
 
 
 class Led(object):
     STATUS_LED_COLOR_GREEN = 'green'
-    STATUS_LED_COLOR_GREEN_BLINK = 'green_blink'
     STATUS_LED_COLOR_RED = 'red'
-    STATUS_LED_COLOR_RED_BLINK = 'red_blink'
     STATUS_LED_COLOR_ORANGE = 'orange'
-    STATUS_LED_COLOR_ORANGE_BLINK = 'orange_blink'
+    STATUS_LED_COLOR_BLUE = 'blue'
     STATUS_LED_COLOR_OFF = 'off'
+    STATUS_LED_COLOR_GREEN_BLINK = 'green_blink'
+    STATUS_LED_COLOR_RED_BLINK = 'red_blink'
+    STATUS_LED_COLOR_ORANGE_BLINK = 'orange_blink'
+    STATUS_LED_COLOR_BLUE_BLINK = 'blue_blink'
 
-    LED_ON = '1'
+    LED_ON = '255'
     LED_OFF = '0'
     LED_BLINK = '50'
 
+    SIMILAR_COLORS = {
+        'red': ('amber', 'orange'),
+        'amber': ('red', 'orange'),
+        'orange': ('red', 'amber')
+    }
+
+    PRIMARY_COLORS = {
+        'red': 'red',
+        'amber': 'red',
+        'orange': 'red',
+        'green': 'green',
+        'blue': 'blue'
+    }
+
     LED_PATH = "/var/run/hw-management/led/"
 
+    def __init__(self):
+        self.supported_colors = set()
+        self.supported_blinks = set()
+
+    def _get_actual_color(self, color):
+        # Different platform has different LED capability, this capability should be
+        # transparent for upper layer. So, here is the logic to help find actual color
+        # if the given color is not supported.
+        if color not in self.supported_colors:
+            return self._get_similar_color(color)
+        return color
+
+    def _get_similar_color(self, color):
+        # If a given color is not supported, we try to find a similar color from
+        # canditates
+        similar_colors = self.SIMILAR_COLORS.get(color)
+        if similar_colors:
+            for actual_color in similar_colors:
+                if actual_color in self.supported_colors:
+                    return actual_color
+        return None
+
+    def _get_primary_color(self, color):
+        # For backward compatible, we don't return the actual color here.
+        # We always return "green"(indicate a good status) or "red"(indicate a bad status) 
+        # which are the "primary" colors.
+        return self.PRIMARY_COLORS.get(color, color)
+
+    def _get_actual_blink_color(self, blink_color):
+        # Different platform has different LED capability, this capability should be
+        # transparent for upper layer. So, here is the logic to help find actual blink color
+        # if the given blink color is not supported.
+        if blink_color not in self.supported_blinks:
+            return self._get_similar_blink_color(blink_color)
+        return blink_color
+
+    def _get_similar_blink_color(self, color):
+        # If a given blink color is not supported, we try to find a similar blink color from
+        # canditates
+        similar_colors = self.SIMILAR_COLORS.get(color)
+        if similar_colors:
+            for actual_color in similar_colors:
+                if actual_color in self.supported_blinks:
+                    return actual_color
+        return None
+
     def set_status(self, color):
-        led_cap_list = self.get_capability()
-        if led_cap_list is None:
+        self.get_capability()
+        if not self.supported_colors:
+            if not device_data.DeviceDataManager.is_simx_platform():
+                logger.log_error(f'Failed to get LED capability for {self._led_id} LED')
             return False
 
         status = False
         try:
-            self._stop_blink(led_cap_list)
-            blink_pos = color.find('blink')
+            self._stop_blink()
+            blink_pos = color.find('_blink')
             if blink_pos != -1:
-                return self._set_status_blink(color, blink_pos, led_cap_list)
+                return self._set_status_blink(color[0:blink_pos])
 
-            if color == Led.STATUS_LED_COLOR_GREEN:
-                with open(self.get_green_led_path(), 'w') as led:
-                    led.write(Led.LED_ON)
-                    status = True
-            elif color == Led.STATUS_LED_COLOR_RED:
-                # Some led don't support red led but support orange led, in this case we set led to orange
-                if Led.STATUS_LED_COLOR_RED in led_cap_list:
-                    led_path = self.get_red_led_path()
-                elif Led.STATUS_LED_COLOR_ORANGE in led_cap_list:
-                    led_path = self.get_orange_led_path()
-                else:
+            if color != Led.STATUS_LED_COLOR_OFF:
+                actual_color = self._get_actual_color(color)
+                if not actual_color:
+                    logger.log_error(f'Set LED to color {color} is not supported')
                     return False
 
-                with open(led_path, 'w') as led:
-                    led.write(Led.LED_ON)
-                    status = True
-            elif color == Led.STATUS_LED_COLOR_OFF:
-                if Led.STATUS_LED_COLOR_GREEN in led_cap_list:
-                    with open(self.get_green_led_path(), 'w') as led:
-                        led.write(Led.LED_OFF)
-                if Led.STATUS_LED_COLOR_RED in led_cap_list:
-                    with open(self.get_red_led_path(), 'w') as led:
-                        led.write(Led.LED_OFF)
-                if Led.STATUS_LED_COLOR_ORANGE in led_cap_list:
-                    with open(self.get_orange_led_path(), 'w') as led:
-                        led.write(Led.LED_OFF)
-
+                utils.write_file(self.get_led_path(actual_color), Led.LED_ON)
                 status = True
             else:
-                status = False
+                for color in self.supported_colors:
+                    utils.write_file(self.get_led_path(color), Led.LED_OFF)
+
+                status = True
         except (ValueError, IOError):
             status = False
 
         return status
 
-    def _set_status_blink(self, color, blink_pos, led_cap_list):
-        if color not in led_cap_list:
-            if color == Led.STATUS_LED_COLOR_RED_BLINK and Led.STATUS_LED_COLOR_ORANGE_BLINK in led_cap_list:
-                color = Led.STATUS_LED_COLOR_ORANGE_BLINK
-            elif color == Led.STATUS_LED_COLOR_ORANGE_BLINK and Led.STATUS_LED_COLOR_RED_BLINK in led_cap_list:
-                color = Led.STATUS_LED_COLOR_RED_BLINK
-            else:
-                return False
-
-        if Led.STATUS_LED_COLOR_GREEN_BLINK == color:
-            self._set_led_blink_status(self.get_green_led_delay_on_path(), self.get_green_led_delay_off_path(), Led.LED_BLINK)
-        elif Led.STATUS_LED_COLOR_RED_BLINK == color:
-            self._set_led_blink_status(self.get_red_led_delay_on_path(), self.get_red_led_delay_off_path(), Led.LED_BLINK)
-        elif Led.STATUS_LED_COLOR_ORANGE_BLINK == color:
-            self._set_led_blink_status(self.get_orange_led_delay_on_path(), self.get_orange_led_delay_off_path(), Led.LED_BLINK)
-        else:
+    def _set_status_blink(self, color):
+        actual_color = self._get_actual_blink_color(color)
+        if not actual_color:
+            logger.log_error(f'Set LED to color {color}_blink is not supported')
             return False
 
-        return True
+        self._trigger_blink(self.get_led_trigger(actual_color))
+        return self._set_led_blink_status(actual_color)
 
-    def _stop_blink(self, led_cap_list):
+    def _stop_blink(self):
         try:
-            if Led.STATUS_LED_COLOR_GREEN_BLINK in led_cap_list:
-                self._set_led_blink_status(self.get_green_led_delay_on_path(), self.get_green_led_delay_off_path(), Led.LED_OFF)
-            if Led.STATUS_LED_COLOR_RED_BLINK in led_cap_list:
-                self._set_led_blink_status(self.get_red_led_delay_on_path(), self.get_red_led_delay_off_path(), Led.LED_OFF)
-            if Led.STATUS_LED_COLOR_ORANGE_BLINK in led_cap_list:
-                self._set_led_blink_status(self.get_orange_led_delay_on_path(), self.get_orange_led_delay_off_path(), Led.LED_OFF)
+            for color in self.supported_colors:
+                self._untrigger_blink(self.get_led_trigger(color))
         except Exception as e:
             return
 
-    def _set_led_blink_status(self, delay_on_file, delay_off_file, value):
-        with open(delay_on_file, 'w') as led:
-            led.write(value)
-        with open(delay_off_file, 'w') as led:
-            led.write(value)
+    def _trigger_blink(self, blink_trigger_file):
+        utils.write_file(blink_trigger_file, 'timer')
+
+    def _untrigger_blink(self, blink_trigger_file):
+        utils.write_file(blink_trigger_file, 'none')
+
+    def _set_led_blink_status(self, actual_color):
+        delay_on_file = self.get_led_delay_on_path(actual_color)
+        delay_off_file = self.get_led_delay_off_path(actual_color)
+        if not self._wait_files_ready((delay_on_file, delay_off_file)):
+            return False
+
+        utils.write_file(delay_on_file, Led.LED_BLINK)
+        utils.write_file(delay_off_file, Led.LED_BLINK)
+        return True
+
+    def _wait_files_ready(self, file_list):
+        """delay_off and delay_on sysfs will be available only if _trigger_blink is called. And once
+           _trigger_blink is called, driver might need time to prepare delay_off and delay_on. So,
+           need wait a few seconds here to make sure the sysfs is ready
+
+        Args:
+            file_list (list of str): files to be checked
+        """
+        wait_time = 5.0
+        initial_sleep = 0.01
+        while wait_time > 0:
+            if all([os.path.exists(x) for x in file_list]):
+                return True
+            time.sleep(initial_sleep)
+            wait_time -= initial_sleep
+            initial_sleep = initial_sleep * 2
+
+        return False
 
     def get_status(self):
-        led_cap_list = self.get_capability()
-        if led_cap_list is None:
+        self.get_capability()
+        if not self.supported_colors:
+            if not device_data.DeviceDataManager.is_simx_platform():
+                logger.log_error(f'Failed to get LED capability for {self._led_id} LED')
             return Led.STATUS_LED_COLOR_OFF
 
         try:
-            blink_status = self._get_blink_status(led_cap_list)
+            blink_status = self._get_blink_status()
             if blink_status is not None:
                 return blink_status
 
-            with open(self.get_green_led_path(), 'r') as led:
-                if Led.LED_OFF != led.read().rstrip('\n'):
-                    return Led.STATUS_LED_COLOR_GREEN
+            actual_color = None
+            for color in self.supported_colors:
+                if utils.read_str_from_file(self.get_led_path(color)) != Led.LED_OFF:
+                    actual_color = color
+                    break
 
-            if Led.STATUS_LED_COLOR_RED in led_cap_list:
-                with open(self.get_red_led_path(), 'r') as led:
-                    if Led.LED_OFF != led.read().rstrip('\n'):
-                        return Led.STATUS_LED_COLOR_RED
-            if Led.STATUS_LED_COLOR_ORANGE in led_cap_list:
-                with open(self.get_orange_led_path(), 'r') as led:
-                    if Led.LED_OFF != led.read().rstrip('\n'):
-                        return Led.STATUS_LED_COLOR_RED
+            if actual_color is not None:
+                return self._get_primary_color(actual_color)
         except (ValueError, IOError) as e:
             raise RuntimeError("Failed to read led status due to {}".format(repr(e)))
 
         return Led.STATUS_LED_COLOR_OFF
 
-    def _get_blink_status(self, led_cap_list):
+    def _get_blink_status(self):
         try:
-            if Led.STATUS_LED_COLOR_GREEN_BLINK in led_cap_list:
-                if self._is_led_blinking(self.get_green_led_delay_on_path(), self.get_green_led_delay_off_path()):
-                    return Led.STATUS_LED_COLOR_GREEN_BLINK
-            if Led.STATUS_LED_COLOR_RED_BLINK in led_cap_list:
-                if self._is_led_blinking(self.get_red_led_delay_on_path(), self.get_red_led_delay_off_path()):
-                    return Led.STATUS_LED_COLOR_RED_BLINK
-            if Led.STATUS_LED_COLOR_ORANGE_BLINK in led_cap_list:
-                if self._is_led_blinking(self.get_orange_led_delay_on_path(), self.get_orange_led_delay_off_path()):
-                    return Led.STATUS_LED_COLOR_ORANGE_BLINK
+            for color in self.supported_colors:
+                if self._is_led_blinking(color):
+                    return f'{color}_blink'
         except Exception as e:
             return None
 
         return None
 
-    def _is_led_blinking(self, delay_on_file, delay_off_file):
-        with open(delay_on_file, 'r') as led:
-            delay_on = led.read().rstrip('\n')
-        with open(delay_off_file, 'r') as led:
-            delay_off = led.read().rstrip('\n')
+    def _is_led_blinking(self, color):
+        delay_on = utils.read_str_from_file(self.get_led_delay_on_path(color), default=Led.LED_OFF, log_func=None)
+        delay_off = utils.read_str_from_file(self.get_led_delay_off_path(color), default=Led.LED_OFF, log_func=None)
         return delay_on != Led.LED_OFF and delay_off != Led.LED_OFF
 
     def get_capability(self):
-        cap_list = None
-        try:
-            with open(self.get_led_cap_path(), 'r') as led_cap:
-                caps = led_cap.read()
-                cap_list = set(caps.split())
-        except (ValueError, IOError):
-            pass
-        
-        return cap_list
+        caps = utils.read_str_from_file(self.get_led_cap_path())
+        for capability in caps.split():
+            if capability == 'none':
+                continue
 
-    def get_green_led_path(self):
-        pass
+            pos = capability.find('_blink')
+            if pos != -1:
+                self.supported_blinks.add(capability[0:pos])
+            else:
+                self.supported_colors.add(capability)
 
-    def get_green_led_delay_off_path(self):
-        return '{}_delay_off'.format(self.get_green_led_path())
+    def get_led_path(self, color):
+        return os.path.join(Led.LED_PATH, f'led_{self._led_id}_{color}')
 
-    def get_green_led_delay_on_path(self):
-        return '{}_delay_on'.format(self.get_green_led_path())
+    def get_led_trigger(self, color):
+        return os.path.join(Led.LED_PATH, f'led_{self._led_id}_{color}_trigger')
 
-    def get_red_led_path(self):
-        pass
+    def get_led_delay_off_path(self, color):
+        return os.path.join(Led.LED_PATH, f'led_{self._led_id}_{color}_delay_off')
 
-    def get_red_led_delay_off_path(self):
-        return '{}_delay_off'.format(self.get_red_led_path())
-
-    def get_red_led_delay_on_path(self):
-        return '{}_delay_on'.format(self.get_red_led_path())
-
-    def get_orange_led_path(self):
-        pass
-
-    def get_orange_led_delay_off_path(self):
-        return '{}_delay_off'.format(self.get_orange_led_path())
-
-    def get_orange_led_delay_on_path(self):
-        return '{}_delay_on'.format(self.get_orange_led_path())
+    def get_led_delay_on_path(self, color):
+        return os.path.join(Led.LED_PATH, f'led_{self._led_id}_{color}_delay_on')
 
     def get_led_cap_path(self):
-        pass
+        return os.path.join(Led.LED_PATH, f'led_{self._led_id}_capability')
 
- 
+
 class FanLed(Led):
-    LED_PATH = "/var/run/hw-management/led/"
-
     def __init__(self, index):
+        super().__init__()
         if index is not None:
-            self._green_led_path = os.path.join(Led.LED_PATH, "led_fan{}_green".format(index))
-            self._red_led_path = os.path.join(Led.LED_PATH, "led_fan{}_red".format(index))
-            self._orange_led_path = os.path.join(Led.LED_PATH, "led_fan{}_orange".format(index))
-            self._led_cap_path = os.path.join(Led.LED_PATH, "led_fan{}_capability".format(index))
+            self._led_id = 'fan{}'.format(index)
         else:
-            self._green_led_path = os.path.join(Led.LED_PATH, "led_fan_green")
-            self._red_led_path = os.path.join(Led.LED_PATH, "led_fan_red")
-            self._orange_led_path = os.path.join(Led.LED_PATH, "led_fan_orange")
-            self._led_cap_path = os.path.join(Led.LED_PATH, "led_fan_capability")
-
-    def get_green_led_path(self):
-        return self._green_led_path
-
-    def get_red_led_path(self):
-        return self._red_led_path
-
-    def get_orange_led_path(self):
-        return self._orange_led_path
-
-    def get_led_cap_path(self):
-        return self._led_cap_path
+            self._led_id = 'fan'
 
 
 class PsuLed(Led):
     def __init__(self, index):
+        super().__init__()
         if index is not None:
-            self._green_led_path = os.path.join(Led.LED_PATH, "led_psu{}_green".format(index))
-            self._red_led_path = os.path.join(Led.LED_PATH, "led_psu{}_red".format(index))
-            self._orange_led_path = os.path.join(Led.LED_PATH, "led_psu{}_orange".format(index))
-            self._led_cap_path = os.path.join(Led.LED_PATH, "led_psu{}_capability".format(index))
+            self._led_id = 'psu{}'.format(index)
         else:
-            self._green_led_path = os.path.join(Led.LED_PATH, "led_psu_green")
-            self._red_led_path = os.path.join(Led.LED_PATH, "led_psu_red")
-            self._orange_led_path = os.path.join(Led.LED_PATH, "led_psu_orange")
-            self._led_cap_path = os.path.join(Led.LED_PATH, "led_psu_capability")
-
-    def get_green_led_path(self):
-        return self._green_led_path
-
-    def get_red_led_path(self):
-        return self._red_led_path
-
-    def get_orange_led_path(self):
-        return self._orange_led_path
-
-    def get_led_cap_path(self):
-        return self._led_cap_path
+            self._led_id = 'psu'
 
 
 class SystemLed(Led):
     def __init__(self):
-        self._green_led_path = os.path.join(Led.LED_PATH, "led_status_green")
-        self._red_led_path = os.path.join(Led.LED_PATH, "led_status_red")
-        self._orange_led_path = os.path.join(Led.LED_PATH, "led_status_orange")
-        self._led_cap_path = os.path.join(Led.LED_PATH, "led_status_capability")
+        super().__init__()
+        self._led_id = 'status'
 
-    def get_green_led_path(self):
-        return self._green_led_path
 
-    def get_red_led_path(self):
-        return self._red_led_path
-
-    def get_orange_led_path(self):
-        return self._orange_led_path
-
-    def get_led_cap_path(self):
-        return self._led_cap_path
+class SystemUidLed(Led):
+    def __init__(self):
+        super().__init__()
+        self._led_id = 'uid'
 
 
 class SharedLed(object):
+    # for shared LED, blink is not supported for now. Currently, only PSU and fan LED
+    # might be shared LED, and there is no requirement to set PSU/fan LED to blink status.
     LED_PRIORITY = {
         Led.STATUS_LED_COLOR_RED: 0,
         Led.STATUS_LED_COLOR_GREEN: 1

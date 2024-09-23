@@ -3,14 +3,13 @@
  * NGKNET Callback module entry.
  */
 /*
- * $Copyright: (c) 2019 Broadcom.
+ * $Copyright: (c) 2022 Broadcom.
  * Broadcom Proprietary and Confidential. All rights reserved.$
  */
 
 #include <lkm/lkm.h>
 #include <ngknet_callback.h>
-#include "psample-cb.h"
-
+#include "bcmcnet/bcmcnet_core.h"
 /*! \cond */
 MODULE_AUTHOR("Broadcom Corporation");
 MODULE_DESCRIPTION("NGKNET Callback Module");
@@ -19,7 +18,7 @@ MODULE_LICENSE("GPL");
 
 /*! \cond */
 int debug = 0;
-MODULE_PARAM(debug, int, 0);
+module_param(debug, int, 0);
 MODULE_PARM_DESC(debug,
 "Debug level (default 0)");
 /*! \endcond */
@@ -64,6 +63,50 @@ strip_vlan_tag(struct sk_buff *skb)
     }
 }
 
+static uint32_t
+dev_id_get(char* dev_type)
+{
+    uint32_t dev_id = 0xb880;
+
+    if (0 == strcmp(dev_type, "bcm56880_a0"))
+    {
+        dev_id = 0xb880;
+    }
+    else if (0 == strcmp(dev_type, "bcm56780_a0"))
+    {
+        dev_id = 0xb780;
+    }
+    else if ((0 == strcmp(dev_type, "bcm56990_a0")) ||
+            (0 == strcmp(dev_type, "bcm56990_b0")))
+    {
+        dev_id = 0xb990;
+    }
+    else if ((0 == strcmp(dev_type, "bcm56996_a0")) ||
+            (0 == strcmp(dev_type, "bcm56996_b0")))
+    {
+        dev_id = 0xb996;
+    }
+    else if ((0== strcmp(dev_type, "bcm56995_a0")) ||
+            (0== strcmp(dev_type, "bcm56999_a0")))
+    {
+        dev_id = 0xb999;
+    }
+    else if ((0== strcmp(dev_type, "bcm56993_b0")) ||
+            (0== strcmp(dev_type, "bcm56998_a0")))
+    {
+        dev_id = 0xb993;
+    }
+    else if (0== strcmp(dev_type, "bcm78900_b0"))
+    {
+        dev_id = 0xf900;
+    }
+    else if (0== strcmp(dev_type, "bcm78905_a0"))
+    {
+        dev_id = 0xf905;
+    }
+    return dev_id;
+}
+
 /*
  * The function get_tag_status() returns the tag status.
  * 0 = Untagged
@@ -73,20 +116,33 @@ strip_vlan_tag(struct sk_buff *skb)
  * -1 = Unsupported type
  */
 static int
-get_tag_status(uint32_t dev_type, void *meta)
+get_tag_status(char* dev_type, char* dev_var, void *meta)
 {
     uint32_t  *valptr;
     uint32_t  fd_index;
     uint32_t  outer_l2_hdr;
     int tag_status = -1;
- 
-    if ((dev_type == 0xb880) || (dev_type == 0xb780))
+    uint32_t  match_id_minbit = 1;
+    uint32_t  outer_tag_match = 0x10;
+    uint32_t dev_id = 0xb880;
+
+    dev_id = dev_id_get(dev_type);
+#ifdef KNET_CB_DEBUG
+    if (debug & 0x1) {
+        printk("dev_type %s dev_var %s\n", dev_type, dev_var);
+    }
+#endif
+
+    if ((0xb880 == dev_id ) || (0xb780 == dev_id))
     {
         /* Field BCM_PKTIO_RXPMD_MATCH_ID_LO has tag status in RX PMD */
         fd_index = 2;
         valptr = (uint32_t *)meta;
-        outer_l2_hdr = (valptr[fd_index] >> ((dev_type == 0xb780) ? 2 : 1) & 0xFF);
-
+        match_id_minbit = (dev_id == 0xb780) ? 2 : 1;        
+        outer_l2_hdr = (valptr[fd_index] >> match_id_minbit & 0xFF);
+        outer_tag_match = (((dev_id == 0xb780) &&
+                           (((strncmp(dev_var, "DNA_", 4)) == 0)||
+                            ((strncmp(dev_var, "HNA_", 4)) == 0))) ? 0x8 : 0x10);
         if (outer_l2_hdr & 0x1) {
 #ifdef KNET_CB_DEBUG
             if (debug & 0x1) {
@@ -102,7 +158,7 @@ get_tag_status(uint32_t dev_type, void *meta)
 #endif
                 tag_status = 0;
             }
-            if (outer_l2_hdr & 0x10) {
+            if (outer_l2_hdr & outer_tag_match) {
 #ifdef KNET_CB_DEBUG
                 if (debug & 0x1) {
                     printk("  Outer Tagged\n");
@@ -122,13 +178,15 @@ get_tag_status(uint32_t dev_type, void *meta)
 #ifdef KNET_CB_DEBUG
                 if (debug & 0x1) {
                     printk("  Inner Tagged\n");
-                }
+        }
 #endif
                 tag_status = 1;
             }
         }
     }
-    else if ((dev_type == 0xb990)|| (dev_type == 0xb996))
+    else if ((dev_id == 0xb990)|| (dev_id == 0xb996) || 
+             (dev_id == 0xb999)|| (dev_id == 0xb993) ||
+             (dev_id == 0xf900)|| (dev_id == 0xf905))
     {
         fd_index = 9;
         valptr = (uint32_t *)meta;
@@ -137,8 +195,14 @@ get_tag_status(uint32_t dev_type, void *meta)
          * says there's a tag, then we don't want to strip.
          * Otherwise, we do.
          */
-        outer_l2_hdr = (valptr[fd_index] >> 13) & 3;
-
+        if ((dev_id == 0xf900) || (dev_id == 0xf905))
+        {
+            outer_l2_hdr = (valptr[fd_index]) & 1;
+        }
+        else 
+        {
+            outer_l2_hdr = (valptr[fd_index] >> 13) & 3;
+        }
         if (outer_l2_hdr)
         {
             tag_status = 2;
@@ -162,7 +226,7 @@ get_tag_status(uint32_t dev_type, void *meta)
     }
 #ifdef KNET_CB_DEBUG
     if (debug & 0x1) {
-        printk("%s; Device Type: %d; tag status: %d\n", __func__, dev_type, tag_status);
+        printk("%s; Device Type: %s; tag status: %d\n", __func__, dev_type, tag_status);
     }
 #endif
     return tag_status;
@@ -188,7 +252,7 @@ dump_buffer(uint8_t * data, int size)
             buffer_ptr = buffer;
             printk(KERN_INFO "%04X  %s\n", addr, buffer);
             addr = i + 1;
-        }
+    }
     }
 }
 
@@ -205,9 +269,9 @@ static void
 show_mac(uint8_t *pkt)
 {
     if (debug & 0x1) {
-        printk("DMAC=%02X:%02X:%02X:%02X:%02X:%02X\n",
-               pkt[0], pkt[1], pkt[2], pkt[3], pkt[4], pkt[5]);
-    }
+    printk("DMAC=%02X:%02X:%02X:%02X:%02X:%02X\n",
+           pkt[0], pkt[1], pkt[2], pkt[3], pkt[4], pkt[5]);
+}
 }
 #endif
 
@@ -215,11 +279,10 @@ static struct sk_buff *
 strip_tag_rx_cb(struct sk_buff *skb)
 {
     const struct ngknet_callback_desc *cbd = NGKNET_SKB_CB(skb);
-    const struct ngknet_private *priv = cbd->priv;
     int rcpu_mode = 0;
     int tag_status;
 
-    rcpu_mode = (priv->flags & NGKNET_NETIF_F_RCPU_ENCAP)? 1 : 0;
+    rcpu_mode = (cbd->netif->flags & NGKNET_NETIF_F_RCPU_ENCAP)? 1 : 0;
 #ifdef KNET_CB_DEBUG
     if (debug & 0x1)
     {
@@ -227,18 +290,18 @@ strip_tag_rx_cb(struct sk_buff *skb)
                "\n%4u --------------------------------------------------------------------------------\n",
                rx_count);
         printk(KERN_INFO
-               "RX KNET callback: dev_no=%1d; dev_id=0x%04X; type_str=%4s; RCPU: %3s \n",
-               cbd->dev_no, cbd->dev_id, cbd->type_str, rcpu_mode ? "yes" : "no");
+               "RX KNET callback: dev_no=%1d; dev_id=:%6s; type_str=%4s; RCPU: %3s \n",
+               cbd->dinfo->dev_no, cbd->dinfo->var_str, cbd->dinfo->type_str, rcpu_mode ? "yes" : "no");
         printk(KERN_INFO "                  pkt_len=%4d; pmd_len=%2d; SKB len: %4d\n",
                cbd->pkt_len, cbd->pmd_len, skb->len);
-        if (cbd->filt) {
+    if (cbd->filt) {
             printk(KERN_INFO "Filter user data: 0x%08x\n",
                    *(uint32_t *) cbd->filt->user_data);
-        }
+    }
         printk(KERN_INFO "Before SKB (%d bytes):\n", skb->len);
         dump_buffer(skb->data, skb->len);
-        printk("rx_cb for dev %d: id 0x%x, %s\n", cbd->dev_no, cbd->dev_id, cbd->type_str);
-        printk("netif user data: 0x%08x\n", *(uint32_t *)cbd->priv->user_data);
+        printk("rx_cb for dev %d: id %s, %s\n", cbd->dinfo->dev_no, cbd->dinfo->var_str, cbd->dinfo->type_str);
+        printk("netif user data: 0x%08x\n", *(uint32_t *)cbd->netif->user_data);
         show_pmd(cbd->pmd, cbd->pmd_len);
         if (rcpu_mode) {
             const int           RCPU_header_len = PKT_HDR_SIZE + cbd->pmd_len;
@@ -256,7 +319,9 @@ strip_tag_rx_cb(struct sk_buff *skb)
 
     if ((!rcpu_mode) && (cbd->filt)) {
         if (FILTER_TAG_ORIGINAL == cbd->filt->user_data[0]) {
-            tag_status = get_tag_status(cbd->dev_id, (void *)cbd->pmd);
+            tag_status = get_tag_status(cbd->dinfo->type_str,
+                                        cbd->dinfo->var_str,
+                                        (void *)cbd->pmd);
             if (tag_status < 0) {
                 strip_stats.skipped++;
                 goto _strip_tag_rx_cb_exit;
@@ -266,6 +331,10 @@ strip_tag_rx_cb(struct sk_buff *skb)
                 strip_stats.stripped++;
                 strip_vlan_tag(skb);
             }
+        }
+        if (FILTER_TAG_STRIP == cbd->filt->user_data[0]) {
+            strip_stats.stripped++;
+            strip_vlan_tag(skb);
         }
     }
 _strip_tag_rx_cb_exit:
@@ -288,7 +357,7 @@ strip_tag_tx_cb(struct sk_buff *skb)
     struct ngknet_callback_desc *cbd = NGKNET_SKB_CB(skb);
 
     if (debug & 0x1) {
-        printk("tx_cb for dev %d: %s\n", cbd->dev_no, cbd->type_str);
+    printk("tx_cb for dev %d: %s\n", cbd->dinfo->dev_no, cbd->dinfo->type_str);
     }
     show_pmd(cbd->pmd, cbd->pmd_len);
     show_mac(cbd->pmd + cbd->pmd_len);
@@ -300,9 +369,6 @@ static struct sk_buff *
 ngknet_rx_cb(struct sk_buff *skb)
 {
     skb = strip_tag_rx_cb(skb);
-#ifdef PSAMPLE_SUPPORT
-    skb = psample_rx_cb(skb); 
-#endif
     return skb;
 }
 
@@ -311,26 +377,6 @@ ngknet_tx_cb(struct sk_buff *skb)
 {
     skb = strip_tag_tx_cb(skb);
     return skb;
-}
-
-static int
-ngknet_netif_create_cb(struct net_device *dev)
-{
-    int retv = 0;
-#ifdef PSAMPLE_SUPPORT
-    retv = psample_netif_create_cb(dev); 
-#endif
-    return retv;
-}
-
-static int
-ngknet_netif_destroy_cb(struct net_device *dev)
-{
-    int retv = 0;
-#ifdef PSAMPLE_SUPPORT
-    retv = psample_netif_destroy_cb(dev); 
-#endif
-    return retv;
 }
 
 /*!
@@ -380,7 +426,7 @@ ngknetcb_mmap(struct file *filp, struct vm_area_struct *vma)
 }
 
 static struct file_operations ngknetcb_fops = {
-    .owner = THIS_MODULE,
+    PROC_OWNER(THIS_MODULE)
     .open = ngknetcb_open,
     .read = seq_read,
     .write = ngknetcb_write,
@@ -389,6 +435,19 @@ static struct file_operations ngknetcb_fops = {
     .unlocked_ioctl = ngknetcb_ioctl,
     .compat_ioctl = ngknetcb_ioctl,
     .mmap = ngknetcb_mmap,
+};
+
+/* Added this for PROC_CREATE */
+static struct proc_ops ngknetcb_proc_ops = {
+    PROC_OWNER(THIS_MODULE)
+    .proc_open = ngknetcb_open,
+    .proc_read = seq_read,
+    .proc_write = ngknetcb_write,
+    .proc_lseek = seq_lseek,
+    .proc_release = ngknetcb_release,
+    .proc_ioctl = ngknetcb_ioctl,
+    .proc_compat_ioctl = ngknetcb_ioctl,
+    .proc_mmap = ngknetcb_mmap,
 };
 
 static int __init
@@ -404,7 +463,7 @@ ngknetcb_init_module(void)
         return rv;
     }
 
-    PROC_CREATE(entry, NGKNETCB_MODULE_NAME, 0666, NULL, &ngknetcb_fops);
+    PROC_CREATE(entry, NGKNETCB_MODULE_NAME, 0666, NULL, &ngknetcb_proc_ops);
     if (entry == NULL) {
         printk(KERN_ERR "%s: proc_mkdir failed\n",
                 NGKNETCB_MODULE_NAME);
@@ -413,25 +472,12 @@ ngknetcb_init_module(void)
     ngknet_rx_cb_register(ngknet_rx_cb);
     ngknet_tx_cb_register(ngknet_tx_cb);
 
-#ifdef PSAMPLE_SUPPORT
-    psample_init();
-#endif
-
-    ngknet_netif_create_cb_register(ngknet_netif_create_cb);
-    ngknet_netif_destroy_cb_register(ngknet_netif_destroy_cb);
     return 0;
 }
 
 static void __exit
 ngknetcb_exit_module(void)
 {
-    ngknet_netif_create_cb_unregister(ngknet_netif_create_cb);
-    ngknet_netif_destroy_cb_unregister(ngknet_netif_destroy_cb);
-
-#ifdef PSAMPLE_SUPPORT
-    psample_cleanup();
-#endif
-
     ngknet_rx_cb_unregister(ngknet_rx_cb);
     ngknet_tx_cb_unregister(ngknet_tx_cb);
 

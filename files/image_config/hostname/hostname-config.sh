@@ -3,13 +3,24 @@
 CURRENT_HOSTNAME=`hostname`
 HOSTNAME=`sonic-cfggen -d -v DEVICE_METADATA[\'localhost\'][\'hostname\']`
 
+if [ -z "$HOSTNAME" ] ; then
+       echo "Missing hostname in the config file, setting to default 'sonic'"
+       HOSTNAME='sonic'
+fi
+
 echo $HOSTNAME > /etc/hostname
 hostname -F /etc/hostname
+
+#Don't update the /etc/hosts if hostname is not changed
+#This is to prevent intermittent redis_chassis.server reachability issue
+if [ $CURRENT_HOSTNAME == $HOSTNAME ] ;  then
+    exit 0
+fi
 
 # Remove the old hostname entry from hosts file.
 # But, 'localhost' entry is used by multiple applications. Don't remove it altogether.
 # Edit contents of /etc/hosts and put in /etc/hosts.new
-if [ $CURRENT_HOSTNAME  != "localhost" ] || [ $CURRENT_HOSTNAME == $HOSTNAME ] ;  then
+if [ $CURRENT_HOSTNAME  != "localhost" ] ;  then
     sed "/\s$CURRENT_HOSTNAME$/d" /etc/hosts > /etc/hosts.new
 else
     cp -f /etc/hosts /etc/hosts.new

@@ -13,13 +13,13 @@ include /usr/share/dpkg/pkg-info.mk
 
 export INSTALL_MOD_DIR:=extra
 
-PYTHON         ?= python2
+PYTHON3        ?= python3
 
 PACKAGE_PRE_NAME := sonic-platform-alphanetworks
 KVERSION   ?= $(shell uname -r)
 KERNEL_SRC :=  /lib/modules/$(KVERSION)
 MOD_SRC_DIR:= $(shell pwd)
-MODULE_DIRS:= snh60a0-320fv2 snh60b0-640f
+MODULE_DIRS:= snh60a0-320fv2 snh60b0-640f snj60d0-320f bes2348t
 MODULE_DIR := modules
 UTILS_DIR := utils
 SERVICE_DIR := service
@@ -38,7 +38,18 @@ build:
 	#make modules -C $(KERNEL_SRC)/build M=$(MODULE_SRC)
 	(for mod in $(MODULE_DIRS); do \
 		make modules -C $(KERNEL_SRC)/build M=$(MOD_SRC_DIR)/$${mod}/modules; \
-		$(PYTHON) $${mod}/setup.py build; \
+		cd $(MOD_SRC_DIR)/$${mod}; \
+		if [ -f setup.py ]; then \
+			$(PYTHON3) setup.py bdist_wheel -d $(MOD_SRC_DIR)/$${mod}; \
+		fi; \
+		if [ -d $(MOD_SRC_DIR)/$${mod}/pddf ]; then \
+			cd $(MOD_SRC_DIR)/$${mod}/pddf; \
+			if [ -f sonic_platform_setup.py ]; then \
+				$(PYTHON3) sonic_platform_setup.py bdist_wheel -d $(MOD_SRC_DIR)/$${mod}/pddf; \
+				echo "Finished makig pddf whl package for $$mod"; \
+			fi; \
+		fi; \
+		cd $(MOD_SRC_DIR); \
 	done)
 
 binary: binary-arch binary-indep
@@ -59,13 +70,17 @@ binary-indep:
 
 	# Custom package commands
 	(for mod in $(MODULE_DIRS); do \
-		dh_installdirs -p$(PACKAGE_PRE_NAME)-$${mod}/$(KERNEL_SRC)/$(INSTALL_MOD_DIR); \
-		dh_installdirs -p$(PACKAGE_PRE_NAME)-$${mod}/usr/local/bin; \
-		dh_installdirs -p$(PACKAGE_PRE_NAME)-$${mod}/lib/systemd/system; \
+		dh_installdirs -p$(PACKAGE_PRE_NAME)-$${mod} $(KERNEL_SRC)/$(INSTALL_MOD_DIR); \
+		dh_installdirs -p$(PACKAGE_PRE_NAME)-$${mod} usr/local/bin; \
+		dh_installdirs -p$(PACKAGE_PRE_NAME)-$${mod} lib/systemd/system; \
 		cp $(MOD_SRC_DIR)/$${mod}/$(MODULE_DIR)/*.ko debian/$(PACKAGE_PRE_NAME)-$${mod}/$(KERNEL_SRC)/$(INSTALL_MOD_DIR); \
 		cp $(MOD_SRC_DIR)/$${mod}/$(UTILS_DIR)/* debian/$(PACKAGE_PRE_NAME)-$${mod}/usr/local/bin/; \
 		cp $(MOD_SRC_DIR)/$${mod}/$(SERVICE_DIR)/*.service debian/$(PACKAGE_PRE_NAME)-$${mod}/lib/systemd/system/; \
-		$(PYTHON) $${mod}/setup.py install --root=$(MOD_SRC_DIR)/debian/$(PACKAGE_PRE_NAME)-$${mod} --install-layout=deb; \
+		cd $(MOD_SRC_DIR)/$${mod}; \
+		if [ -f setup.py ]; then \
+			$(PYTHON3) setup.py install --root=$(MOD_SRC_DIR)/debian/$(PACKAGE_PRE_NAME)-$${mod} --install-layout=deb; \
+		fi; \
+		cd $(MOD_SRC_DIR); \
 	done)
 	# Resuming debhelper scripts
 	dh_testroot

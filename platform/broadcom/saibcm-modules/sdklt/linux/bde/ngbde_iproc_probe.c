@@ -8,7 +8,7 @@
  *
  */
 /*
- * $Copyright: Copyright 2018-2020 Broadcom. All rights reserved.
+ * $Copyright: Copyright 2018-2023 Broadcom. All rights reserved.
  * The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries.
  * 
  * This program is free software; you can redistribute it and/or
@@ -30,7 +30,7 @@
 
 /*! \cond */
 static int iproc_debug = 0;
-module_param(iproc_debug, int, 0);
+module_param(iproc_debug, int, S_IRUSR | S_IWUSR);
 MODULE_PARM_DESC(iproc_debug,
 "IPROC debug output enable (default 0).");
 /*! \endcond */
@@ -65,7 +65,7 @@ iproc_cmicd_probe(struct platform_device *pldev)
                (void *)memres->start, (void *)memres->end);
     }
 
-    base_address = ioremap_nocache(memres->start, size);
+    base_address = ioremap(memres->start, size);
     if (!base_address) {
         printk(KERN_WARNING "Error mapping iProc CMIC registers");
         return -1;

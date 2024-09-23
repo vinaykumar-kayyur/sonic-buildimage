@@ -1,5 +1,7 @@
-/*
- * Copyright 2007-2020 Broadcom Inc. All rights reserved.
+/***********************************************************************
+ *
+ * $Id: linux_dma.h,v 1.24 Broadcom SDK $
+ * $Copyright: 2007-2023 Broadcom Inc. All rights reserved.
  * 
  * Permission is granted to use, copy, modify and/or distribute this
  * software under either one of the licenses below.
@@ -22,13 +24,8 @@
  * License Option 2: Broadcom Open Network Switch APIs (OpenNSA) license
  * 
  * This software is governed by the Broadcom Open Network Switch APIs license:
- * https://www.broadcom.com/products/ethernet-connectivity/software/opennsa
- */
-/***********************************************************************
- *
- * $Id: linux_dma.h,v 1.24 Broadcom SDK $
- * $Copyright: (c) 2016 Broadcom Corp.
- * All Rights Reserved.$
+ * https://www.broadcom.com/products/ethernet-connectivity/software/opennsa $
+ * 
  *
  **********************************************************************/
 
@@ -43,13 +40,6 @@
 #define KMALLOC(size, flags)    __kmalloc(size, flags)
 #else
 #define KMALLOC(size, flags)    kmalloc(size, flags)
-#endif
-
-#if defined(CONFIG_IDT_79EB334) || defined(CONFIG_BCM4702)
-/* ioremap is broken in kernel */
-#define IOREMAP(addr, size) ((void *)KSEG1ADDR(addr))
-#else
-#define IOREMAP(addr, size) ioremap_nocache(addr, size)
 #endif
 
 #if defined (__mips__)
@@ -69,7 +59,8 @@
 #define DMA_BIT_MASK(n) (((n) == 64) ? ~0ULL : ((1ULL<<(n))-1))
 #endif
 
-extern void _dma_init(int dev_index);
+extern void _dma_init(void);
+extern void _dma_per_device_init(int dev_index);
 extern int _dma_cleanup(void);
 extern void _dma_pprint(struct seq_file *m);
 extern uint32_t *_salloc(int d, int size, const char *name);

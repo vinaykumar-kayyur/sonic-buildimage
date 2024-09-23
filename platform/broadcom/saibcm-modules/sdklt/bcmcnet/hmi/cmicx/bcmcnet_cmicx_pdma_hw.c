@@ -4,7 +4,7 @@
  *
  */
 /*
- * $Copyright: Copyright 2018-2020 Broadcom. All rights reserved.
+ * $Copyright: Copyright 2018-2023 Broadcom. All rights reserved.
  * The term 'Broadcom' refers to Broadcom Inc. and/or its subsidiaries.
  * 
  * This program is free software; you can redistribute it and/or
@@ -59,6 +59,11 @@ cmicx_pdma_intr_enable(struct pdma_hw *hw, int cmc, int chan, uint32_t mask)
 {
     uint32_t reg, irq_mask;
 
+    if (hw->dev->mode == DEV_MODE_UNET || hw->dev->mode == DEV_MODE_VNET) {
+        hw->dev->intr_unmask(hw->dev, cmc, chan, 0, 0);
+        return;
+    }
+
     hw->dev->ctrl.grp[cmc].irq_mask |= mask;
     irq_mask = hw->dev->ctrl.grp[cmc].irq_mask;
     if (cmc == 0) {
@@ -85,6 +90,11 @@ cmicx_pdma_intr_disable(struct pdma_hw *hw, int cmc, int chan, uint32_t mask)
 {
     uint32_t reg, irq_mask;
 
+    if (hw->dev->mode == DEV_MODE_UNET || hw->dev->mode == DEV_MODE_VNET) {
+        hw->dev->intr_mask(hw->dev, cmc, chan, 0, 0);
+        return;
+    }
+
     hw->dev->ctrl.grp[cmc].irq_mask &= ~mask;
     irq_mask = hw->dev->ctrl.grp[cmc].irq_mask;
     if (cmc == 0) {
@@ -104,36 +114,6 @@ cmicx_pdma_intr_disable(struct pdma_hw *hw, int cmc, int chan, uint32_t mask)
 }
 
 /*!
- * Release Packet DMA credits to EP.
- */
-static int
-cmicx_pdma_credits_release(struct pdma_hw *hw)
-{
-    int credits;
-    uint32_t val;
-
-    /*
-     * Since only 6 bits of iproc_cmic_to_ep_credits[5:0] are being used,
-     * so we have to set the max credits value twice in order to release
-     * 64 credits to EP.
-     * Only do this once when HW is initialized.
-     */
-    hw->hdls.reg_rd32(hw, CMICX_EPINTF_RELEASE_CREDITS, &val);
-    if (!val) {
-        credits = 63;
-        hw->hdls.reg_wr32(hw, CMICX_EPINTF_MAX_CREDITS, (0x1 << 8) | credits);
-        hw->hdls.reg_wr32(hw, CMICX_EPINTF_RELEASE_CREDITS, 1);
-
-        hw->hdls.reg_wr32(hw, CMICX_EPINTF_RELEASE_CREDITS, 0);
-        credits = 1;
-        hw->hdls.reg_wr32(hw, CMICX_EPINTF_MAX_CREDITS, (0x1 << 8) | credits);
-        hw->hdls.reg_wr32(hw, CMICX_EPINTF_RELEASE_CREDITS, 1);
-    }
-
-    return SHR_E_NONE;
-}
-
-/*!
  * Initialize HW
  */
 static int
@@ -147,9 +127,6 @@ cmicx_pdma_hw_init(struct pdma_hw *hw)
         mode = DEV_MODE_VNET;
         hw->dev->mode = DEV_MODE_UNET;
     }
-
-    /* Release Packet DMA credits to EP. */
-    cmicx_pdma_credits_release(hw);
 
     hw->info.name = CMICX_DEV_NAME;
     hw->info.dev_id = hw->dev->dev_id;
@@ -240,12 +217,13 @@ cmicx_pdma_hw_config(struct pdma_hw *hw)
         hw->hdls.reg_wr32(hw, CMICX_PDMA_CTRL(grp, que), val);
     }
 
+    hw->hdls.reg_rd32(hw, CMICX_TOP_CONFIG, &val);
     if (ip_if_hdr_endian == 1) {
-        hw->hdls.reg_rd32(hw, CMICX_TOP_CONFIG, &val);
         val |= 0x80;
-        hw->hdls.reg_wr32(hw, CMICX_TOP_CONFIG, val);
+    } else {
+        val &= ~0x80;
     }
-
+    hw->hdls.reg_wr32(hw, CMICX_TOP_CONFIG, val);
     return SHR_E_NONE;
 }
 
@@ -512,61 +490,61 @@ cmicx_pdma_chan_reg_dump(struct pdma_hw *hw, int chan)
     que = chan % CMICX_PDMA_CMC_CHAN;
 
     hw->hdls.reg_rd32(hw, CMICX_PDMA_CTRL(grp, que), &val);
-    CNET_PR("CMIC_CMC%d_DMA_CH%d_CTRL: 0x%08x\n", grp, que, val);
+    CNET_INFO(hw->unit, "CMIC_CMC%d_DMA_CH%d_CTRL: 0x%08x\n", grp, que, val);
 
     hw->hdls.reg_rd32(hw, CMICX_PDMA_DESC_LO(grp, que), &val);
-    CNET_PR("CMIC_CMC%d_DMA_CH%d_DESC_LO: 0x%08x\n", grp, que, val);
+    CNET_INFO(hw->unit, "CMIC_CMC%d_DMA_CH%d_DESC_LO: 0x%08x\n", grp, que, val);
 
     hw->hdls.reg_rd32(hw, CMICX_PDMA_DESC_HI(grp, que), &val);
-    CNET_PR("CMIC_CMC%d_DMA_CH%d_DESC_HI: 0x%08x\n", grp, que, val);
+    CNET_INFO(hw->unit, "CMIC_CMC%d_DMA_CH%d_DESC_HI: 0x%08x\n", grp, que, val);
 
     hw->hdls.reg_rd32(hw, CMICX_PDMA_CURR_DESC_LO(grp, que), &val);
-    CNET_PR("CMIC_CMC%d_DMA_CH%d_CURR_DESC_LO: 0x%08x\n", grp, que, val);
+    CNET_INFO(hw->unit, "CMIC_CMC%d_DMA_CH%d_CURR_DESC_LO: 0x%08x\n", grp, que, val);
 
     hw->hdls.reg_rd32(hw, CMICX_PDMA_CURR_DESC_HI(grp, que), &val);
-    CNET_PR("CMIC_CMC%d_DMA_CH%d_CURR_DESC_HI: 0x%08x\n", grp, que, val);
+    CNET_INFO(hw->unit, "CMIC_CMC%d_DMA_CH%d_CURR_DESC_HI: 0x%08x\n", grp, que, val);
 
     hw->hdls.reg_rd32(hw, CMICX_PDMA_DESC_HALT_LO(grp, que), &val);
-    CNET_PR("CMIC_CMC%d_DMA_CH%d_DESC_HALT_ADDR_LO: 0x%08x\n", grp, que, val);
+    CNET_INFO(hw->unit, "CMIC_CMC%d_DMA_CH%d_DESC_HALT_ADDR_LO: 0x%08x\n", grp, que, val);
 
     hw->hdls.reg_rd32(hw, CMICX_PDMA_DESC_HALT_HI(grp, que), &val);
-    CNET_PR("CMIC_CMC%d_DMA_CH%d_DESC_HALT_ADDR_HI: 0x%08x\n", grp, que, val);
+    CNET_INFO(hw->unit, "CMIC_CMC%d_DMA_CH%d_DESC_HALT_ADDR_HI: 0x%08x\n", grp, que, val);
 
     hw->hdls.reg_rd32(hw, CMICX_PDMA_COS_CTRL_RX0(grp, que), &val);
-    CNET_PR("CMIC_CMC%d_DMA_CH%d_COS_CTRL_RX_0: 0x%08x\n", grp, que, val);
+    CNET_INFO(hw->unit, "CMIC_CMC%d_DMA_CH%d_COS_CTRL_RX_0: 0x%08x\n", grp, que, val);
 
     hw->hdls.reg_rd32(hw, CMICX_PDMA_COS_CTRL_RX1(grp, que), &val);
-    CNET_PR("CMIC_CMC%d_DMA_CH%d_COS_CTRL_RX_1: 0x%08x\n", grp, que, val);
+    CNET_INFO(hw->unit, "CMIC_CMC%d_DMA_CH%d_COS_CTRL_RX_1: 0x%08x\n", grp, que, val);
 
     hw->hdls.reg_rd32(hw, CMICX_PDMA_INTR_COAL(grp, que), &val);
-    CNET_PR("CMIC_CMC%d_DMA_CH%d_INTR_COAL: 0x%08x\n", grp, que, val);
+    CNET_INFO(hw->unit, "CMIC_CMC%d_DMA_CH%d_INTR_COAL: 0x%08x\n", grp, que, val);
 
     hw->hdls.reg_rd32(hw, CMICX_PDMA_RBUF_THRE(grp, que), &val);
-    CNET_PR("CMIC_CMC%d_DMA_CH%d_RXBUF_THRESHOLD_CONFIG: 0x%08x\n", grp, que, val);
+    CNET_INFO(hw->unit, "CMIC_CMC%d_DMA_CH%d_RXBUF_THRESHOLD_CONFIG: 0x%08x\n", grp, que, val);
 
     hw->hdls.reg_rd32(hw, CMICX_PDMA_STAT(grp, que), &val);
-    CNET_PR("CMIC_CMC%d_DMA_CH%d_STAT: 0x%08x\n", grp, que, val);
+    CNET_INFO(hw->unit, "CMIC_CMC%d_DMA_CH%d_STAT: 0x%08x\n", grp, que, val);
 
     hw->hdls.reg_rd32(hw, CMICX_PDMA_COUNT_RX(grp, que), &val);
-    CNET_PR("CMIC_CMC%d_DMA_CH%d_PKT_COUNT_RXPKT: 0x%08x\n", grp, que, val);
+    CNET_INFO(hw->unit, "CMIC_CMC%d_DMA_CH%d_PKT_COUNT_RXPKT: 0x%08x\n", grp, que, val);
 
     hw->hdls.reg_rd32(hw, CMICX_PDMA_COUNT_TX(grp, que), &val);
-    CNET_PR("CMIC_CMC%d_DMA_CH%d_PKT_COUNT_TXPKT: 0x%08x\n", grp, que, val);
+    CNET_INFO(hw->unit, "CMIC_CMC%d_DMA_CH%d_PKT_COUNT_TXPKT: 0x%08x\n", grp, que, val);
 
     hw->hdls.reg_rd32(hw, CMICX_PDMA_COUNT_RX_DROP(grp, que), &val);
-    CNET_PR("CMIC_CMC%d_DMA_CH%d_PKT_COUNT_RXPKT_DROP: 0x%08x\n", grp, que, val);
+    CNET_INFO(hw->unit, "CMIC_CMC%d_DMA_CH%d_PKT_COUNT_RXPKT_DROP: 0x%08x\n", grp, que, val);
 
     hw->hdls.reg_rd32(hw, CMICX_PDMA_IRQ_STAT(grp), &val);
-    CNET_PR("CMIC_CMC%d_IRQ_STAT: 0x%08x\n", grp, val);
+    CNET_INFO(hw->unit, "CMIC_CMC%d_IRQ_STAT: 0x%08x\n", grp, val);
 
     hw->hdls.reg_rd32(hw, CMICX_PDMA_IRQ_STAT_CLR(grp), &val);
-    CNET_PR("CMIC_CMC%d_IRQ_STAT_CLR: 0x%08x\n", grp, val);
+    CNET_INFO(hw->unit, "CMIC_CMC%d_IRQ_STAT_CLR: 0x%08x\n", grp, val);
 
     val = hw->dev->ctrl.grp[grp].irq_mask;
-    CNET_PR("CMIC_CMC%d_IRQ_ENAB: 0x%08x\n", grp, val);
+    CNET_INFO(hw->unit, "CMIC_CMC%d_IRQ_ENAB: 0x%08x\n", grp, val);
 
     hw->hdls.reg_rd32(hw, CMICX_EP_TO_CPU_HEADER_SIZE, &val);
-    CNET_PR("CMIC_EP_TO_CPU_HEADER_SIZE: 0x%08x\n", val);
+    CNET_INFO(hw->unit, "CMIC_EP_TO_CPU_HEADER_SIZE: 0x%08x\n", val);
 
     return SHR_E_NONE;
 }

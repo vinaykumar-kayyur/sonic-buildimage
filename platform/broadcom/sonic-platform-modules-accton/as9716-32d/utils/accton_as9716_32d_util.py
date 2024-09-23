@@ -32,6 +32,7 @@ import sys
 import logging
 import re
 import time
+from sonic_py_common.general import getstatusoutput_noshell
 
 PROJECT_NAME = 'as9716_32d'
 version = '0.0.1'
@@ -106,8 +107,8 @@ logging.basicConfig(level=logging.INFO)
 
 
 if DEBUG == True:
-    print(sys.argv[0])
-    print('ARGV      :', sys.argv[1:])
+    print((sys.argv[0]))
+    print(('ARGV      :', sys.argv[1:]))
 
 
 def main():
@@ -125,7 +126,7 @@ def main():
     if DEBUG == True:
         print(options)
         print(args)
-        print(len(sys.argv))
+        print((len(sys.argv)))
 
     for opt, arg in options:
         if opt in ('-h', '--help'):
@@ -149,20 +150,20 @@ def main():
     return 0
 
 def show_help():
-    print( __doc__ % {'scriptName' : sys.argv[0].split("/")[-1]})
+    print(( __doc__ % {'scriptName' : sys.argv[0].split("/")[-1]}))
     sys.exit(0)
 
 def dis_i2c_ir3570a(addr):
-    cmd = "i2cset -y 0 0x%x 0xE5 0x01" % addr
-    status, output = subprocess.getstatusoutput(cmd)
-    cmd = "i2cset -y 0 0x%x 0x12 0x02" % addr
-    status, output = subprocess.getstatusoutput(cmd)
+    cmd = ["i2cset", "-y", "0", "0x"+"%x"%addr, "0xE5", "0x01"]
+    status, output = getstatusoutput_noshell(cmd)
+    cmd = ["i2cset", "-y", "0", "0x"+"%x"%addr, "0x12", "0x02"]
+    status, output = getstatusoutput_noshell(cmd)
     return status
 
 def ir3570_check():
-    cmd = "i2cdump -y 0 0x42 s 0x9a"
+    cmd = ["i2cdump", "-y", "0", "0x42", "s", "0x9a"]
     try:
-        status, output = subprocess.getstatusoutput(cmd)
+        status, output = getstatusoutput_noshell(cmd)
         lines = output.split('\n')
         hn = re.findall(r'\w+', lines[-1])
         version = int(hn[1], 16)
@@ -171,14 +172,14 @@ def ir3570_check():
         else:
             ret = 0
     except Exception as e:
-        print( "Error on ir3570_check() e:" + str(e))
+        print(( "Error on ir3570_check() e:" + str(e)))
         return -1
     return ret
 
 
 def my_log(txt):
     if DEBUG == True:
-        print("[ACCTON DBG]: "+txt)
+        print(("[ACCTON DBG]: "+txt))
     return
 
 def log_os_system(cmd, show):
@@ -192,7 +193,7 @@ def log_os_system(cmd, show):
     if status:
         logging.info('Failed :'+cmd)
         if show:
-            print('Failed :'+cmd)
+            print(('Failed :'+cmd))
     return  status, output
 
 def driver_inserted():
@@ -345,7 +346,7 @@ def do_install():
             if FORCE == 0:
                 return  status
     else:
-        print(PROJECT_NAME.upper()+" drivers detected....")
+        print((PROJECT_NAME.upper()+" drivers detected...."))
 
     ir3570_check()
 
@@ -355,12 +356,12 @@ def do_install():
             if FORCE == 0:
                 return  status
     else:
-        print(PROJECT_NAME.upper()+" devices detected....")
+        print((PROJECT_NAME.upper()+" devices detected...."))
     return
 
 def do_uninstall():
     if not device_exist():
-        print(PROJECT_NAME.upper()+" has no device installed....")
+        print((PROJECT_NAME.upper()+" has no device installed...."))
     else:
         print("Removing device....")
         status = device_uninstall()
@@ -369,7 +370,7 @@ def do_uninstall():
                 return  status
 
     if driver_inserted()== False :
-        print(PROJECT_NAME.upper()+" has no driver installed....")
+        print((PROJECT_NAME.upper()+" has no driver installed...."))
     else:
         print("Removing installed driver....")
         status = driver_uninstall()
