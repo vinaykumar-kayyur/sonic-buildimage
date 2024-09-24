@@ -3,7 +3,7 @@ Description=Memory Statistics Daemon
 After=network.target
 
 [Service]
-ExecStart=/usr/local/bin/memorystatsd
+ExecStart=/usr/bin/memorystatsd
 Restart=on-failure
 RestartSec=5
 EnvironmentFile=-/etc/memorystats.conf
