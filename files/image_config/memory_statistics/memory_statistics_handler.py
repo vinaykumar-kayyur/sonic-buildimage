@@ -114,7 +114,7 @@ class MemoryStatisticsDaemon:
         self.config_db.connect()  # Connect to ConfigDB
 
         try:
-            config = self.config_db.get_table('MEMORY_STATISTICS_TABLE')  # Get memory statistics config table
+            config = self.config_db.get_table('MEMORY_STATISTICS')  # Get memory statistics config table
 
             # Update retention period and sampling interval with values from the database
             self.retention_period = int(config.get('retention-period', self.retention_period))
