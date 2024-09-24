@@ -2488,7 +2488,7 @@
          },
 
         "MEMORY_STATISTICS": {
-            "MemoryStats": {
+            "memory_statistics": {
                 "enabled": "false",
                 "sampling_interval": "5",
                 "retention_period": "15"
