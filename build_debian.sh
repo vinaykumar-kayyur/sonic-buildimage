@@ -331,7 +331,6 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y in
     vim                     \
     tcpdump                 \
     dbus                    \
-    ntpstat                 \
     openssh-server          \
     python3-apt             \
     traceroute              \
