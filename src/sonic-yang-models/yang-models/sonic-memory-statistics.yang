@@ -30,7 +30,7 @@ module sonic-memory-statistics {
                     }
                     units "minutes";
                     default 5;
-                    description "Time interval in minutes for sampling memory statistics. Valid range is between 3 minutes to 30 minutes.";
+                    description "Time interval in minutes for sampling memory statistics. Valid range, is between 3 minutes to 30 minutes.";
                 }
 
                 leaf retention_period {
