@@ -79,7 +79,7 @@ LOCALHOST_SUBTYPE=`sonic-db-cli CONFIG_DB hget "DEVICE_METADATA|localhost" "subt
 if [[ x"${LOCALHOST_SUBTYPE}" == x"SmartSwitch" ]]; then
     midplane_mgmt_ip=$( ip -json -4 addr show eth0-midplane | jq -r ".[0].addr_info[0].local" )
     mgmt_ip=$( ip -json -4 addr show eth0 | jq -r ".[0].addr_info[0].local" )
-    if [[ $midplane_ip != "" ]]; then
+    if [[ $midplane_mgmt_ip != "" ]]; then
         # Enable ZMQ with eth0-midplane address
         ORCHAGENT_ARGS+=" -q tcp://${midplane_mgmt_ip}:8100"
     elif [[ $mgmt_ip != "" ]] && [[ $mgmt_ip != "null" ]]; then
@@ -88,6 +88,12 @@ if [[ x"${LOCALHOST_SUBTYPE}" == x"SmartSwitch" ]]; then
     else
         ORCHAGENT_ARGS+=" -q tcp://127.0.0.1:8100"
     fi
+fi
+
+# Add VRF parameter when mgmt-vrf enabled
+MGMT_VRF_ENABLED=`sonic-db-cli CONFIG_DB hget  "MGMT_VRF_CONFIG|vrf_global" "mgmtVrfEnabled"`
+if [[ x"${MGMT_VRF_ENABLED}" == x"true" ]]; then
+    ORCHAGENT_ARGS+=" -v mgmt"
 fi
 
 exec /usr/bin/orchagent ${ORCHAGENT_ARGS}
