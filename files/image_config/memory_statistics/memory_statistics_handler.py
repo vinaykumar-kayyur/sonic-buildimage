@@ -92,7 +92,7 @@ class MemoryStatisticsDaemon:
         signal.signal(signal.SIGHUP, self.handle_sighup)
         signal.signal(signal.SIGTERM, self.handle_sigterm)
 
-        # Load default settings
+        # Load default setting
         self.load_default_settings()
 
     def load_default_settings(self):
