@@ -74,14 +74,16 @@ else
     TELEMETRY_ARGS+=" -v=2"
 fi
 
-ENABLE_CRL=$(echo $GNMI | jq -r '.enable_crl')
-if [ $ENABLE_CRL == "true" ]; then
-    TELEMETRY_ARGS+=" --enable_crl"
-fi
+if [ -nz "$GNMI" ]; then
+    ENABLE_CRL=$(echo $GNMI | jq -r '.enable_crl')
+    if [ $ENABLE_CRL == "true" ]; then
+        TELEMETRY_ARGS+=" --enable_crl"
+    fi
 
-CRL_EXPIRE_DURATION=$(echo $GNMI | jq -r '.crl_expire_duration')
-if [ -n $CRL_EXPIRE_DURATION ]; then
-    TELEMETRY_ARGS+=" --crl_expire_duration $CRL_EXPIRE_DURATION"
+    CRL_EXPIRE_DURATION=$(echo $GNMI | jq -r '.crl_expire_duration')
+    if [ -n $CRL_EXPIRE_DURATION ]; then
+        TELEMETRY_ARGS+=" --crl_expire_duration $CRL_EXPIRE_DURATION"
+    fi
 fi
 
 # gNMI save-on-set behavior is disabled by default.
