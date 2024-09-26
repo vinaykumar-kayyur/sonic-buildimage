@@ -47,7 +47,7 @@ mkdir -p /etc/supervisor/conf.d/
 
 multidb_hwsku_check() {
     local hwsku=$1
-    local hwsku_enable_list="Force10-S6000 cisco-8101-p4-32x100-vs"
+    local hwsku_enable_list="cisco-8101-p4-32x100-vs"
     
     if echo "$hwsku_enable_list" | grep -qw "$hwsku"; then
         return 0 
