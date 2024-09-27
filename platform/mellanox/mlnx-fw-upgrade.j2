@@ -210,16 +210,20 @@ function WaitForDevice() {
     local -i QUERY_RETRY_COUNT_MAX="10"
     local -i QUERY_RETRY_COUNT="0"
     local -r DEVICE_TYPE=$(GetMstDeviceType)
+    local SPC_MST_DEV
+    local QUERY_RC=""
 
-    local SPC_MST_DEV=$(GetSPCMstDevice)
-
-    while [[ ("${QUERY_RETRY_COUNT}" -lt "${QUERY_RETRY_COUNT_MAX}") && ("${SPC_MST_DEV}" == "${UNKN_MST}") ]]; do
+    while : ; do
+        SPC_MST_DEV=$(GetSPCMstDevice)
+        ${QUERY_XML} -d ${SPC_MST_DEV} -o ${QUERY_FILE}
+        QUERY_RC="$?"
+        [[ ("${QUERY_RETRY_COUNT}" -lt "${QUERY_RETRY_COUNT_MAX}") && ("${QUERY_RC}" != "${EXIT_SUCCESS}") ]] || break
         sleep 1s
         ((QUERY_RETRY_COUNT++))
-        SPC_MST_DEV=$(GetSPCMstDevice)
+        LogInfo "Retrying MST device query ${QUERY_RETRY_COUNT}"
     done
 
-    if [[ "${SPC_MST_DEV}" == "${UNKN_MST}" ]]; then
+    if [[ "${QUERY_RC}" != "${EXIT_SUCCESS}" ]]; then
         # Couldn't Detect the Spectrum ASIC. Exit failure and print the detailed information
         output=$(${QUERY_CMD})
         failure_msg="${output#*Fail : }"
@@ -265,7 +269,7 @@ function GetSPCMstDevice() {
 
     if [[ ! -c "${_MST_DEVICE}" ]]; then
         echo "${UNKN_MST}"
-    else 
+    else
         echo "${_MST_DEVICE}"
     fi
 
