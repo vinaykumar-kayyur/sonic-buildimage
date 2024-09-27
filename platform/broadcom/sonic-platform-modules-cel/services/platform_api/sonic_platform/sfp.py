@@ -819,6 +819,7 @@ class Sfp(SfpBase):
                 sfp_interface_bulk_raw[start: end], 0)
 
             transceiver_info_dict['type'] = sfp_interface_bulk_data['data']['type']['value']
+            transceiver_info_dict['type_abbrv_name'] = sfp_interface_bulk_data['data']['type_abbrv_name']['value']
             transceiver_info_dict['manufacturer'] = sfp_vendor_name_data['data']['Vendor Name']['value']
             transceiver_info_dict['model'] = sfp_vendor_pn_data['data']['Vendor PN']['value']
             transceiver_info_dict['vendor_rev'] = sfp_vendor_rev_data['data']['Vendor Rev']['value']
@@ -2035,3 +2036,6 @@ class Sfp(SfpBase):
             return True
 
         return False
+
+    def read_eeprom(self, offset, num_bytes):
+        return self._read_eeprom_specific_bytes(offset, num_bytes)
