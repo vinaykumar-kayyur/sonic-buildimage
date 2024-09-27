@@ -151,17 +151,10 @@ dependent_startup_wait_for=vrrpd:running
 {% if DEVICE_METADATA.localhost.frr_mgmt_framework_config is defined and DEVICE_METADATA.localhost.frr_mgmt_framework_config == "true" %}
 [program:frrcfgd]
 command=/usr/local/bin/frrcfgd
-priority=6
-autostart=false
-autorestart=false
-startsecs=0
-stdout_logfile=syslog
-stderr_logfile=syslog
-dependent_startup=true
-dependent_startup_wait_for=bgpd:running
 {% else %}
 [program:bgpcfgd]
 command=/usr/local/bin/bgpcfgd
+{% endif %}
 priority=6
 autostart=false
 autorestart=false
@@ -170,18 +163,6 @@ stdout_logfile=syslog
 stderr_logfile=syslog
 dependent_startup=true
 dependent_startup_wait_for=bgpd:running
-
-[program:vrrpcfgd]
-command=/usr/local/bin/vrrpcfgd
-priority=6
-autostart=false
-autorestart=true
-startsecs=0
-stdout_logfile=syslog
-stderr_logfile=syslog
-dependent_startup=true
-dependent_startup_wait_for=bgpd:running
-{% endif %}
 
 {% if DEVICE_METADATA.localhost.frr_mgmt_framework_config is defined and DEVICE_METADATA.localhost.frr_mgmt_framework_config == "true" %}
 {% else %}
