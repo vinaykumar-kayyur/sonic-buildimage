@@ -990,7 +990,7 @@ endif
 
 # start docker daemon
 docker-start :
-	$(Q)sudo sed -i 's/--storage-driver=vfs/--storage-driver=$(SONIC_SLAVE_DOCKER_DRIVER)/' /etc/default/docker
+	$(Q)sudo sed -i 's/--storage-driver=native/--storage-driver=$(SONIC_SLAVE_DOCKER_DRIVER)/' /etc/default/docker
 	$(Q)sudo sed -i -e '/http_proxy/d' -e '/https_proxy/d' /etc/default/docker
 	$(Q)sudo bash -c "{ echo \"export http_proxy=$$http_proxy\"; \
 	            echo \"export https_proxy=$$https_proxy\"; \
