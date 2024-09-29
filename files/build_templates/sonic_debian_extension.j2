@@ -277,7 +277,6 @@ sudo dpkg --root=$FILESYSTEM_ROOT -i $debs_path/sonic-ztp_*.deb || \
     sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y install -f
 {% endif %}
 
-
 {% for machine_debs in lazy_build_installer_debs.strip().split() -%}
 {% set machine, pkgname = machine_debs.split('|') %}
 if [[ -z "{{machine}}" || -n "{{machine}}" && $TARGET_MACHINE == "{{machine}}" ]]; then
