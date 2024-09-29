@@ -376,7 +376,7 @@ MAC_DEFAULT_PARAM = [
 
 
 DRIVERLISTS = [
-    {"name": "wb_pinctrl_intel", "delay": 0},
+    {"name": "wb_pinctrl_intel", "delay": 30},
     {"name": "wb_gpio_c3000", "delay": 0},
     {"name": "wb_gpio_c3000_device", "delay": 0},
     {"name": "i2c_ismt", "delay": 0},
