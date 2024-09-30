@@ -72,6 +72,7 @@ function PrintHelp() {
     echo "  -u, --upgrade  Upgrade ASIC firmware using next boot image (useful after SONiC-To-SONiC update)"
     echo "  -s, --syslog   Use syslog logger (enabled when -u|--upgrade)"
     echo "  -v, --verbose  Verbose mode (enabled when -u|--upgrade)"
+    echo "  -c, --clear-semaphore   Clear hw resources before updating firmware"
     echo "  -h, --help     Print help"
     echo
     echo "Examples:"
@@ -94,6 +95,9 @@ function ParseArguments() {
             ;;
             -s|--syslog)
                 SYSLOG_LOGGER="${YES_PARAM}"
+            ;;
+            -c|--clear-semaphore)
+                CLEAR_SEMAPHORE="${YES_PARAM}"
             ;;
             -h|--help)
                 PrintHelp
@@ -398,6 +402,15 @@ function Cleanup() {
     fi
 }
 
+function ClearSemaphore() {
+    if [[ "${CLEAR_SEMAPHORE}" == "${YES_PARAM}" ]]; then
+        local -r _MST_DEVICE="$(GetSPCMstDevice)"
+        if [[ "${_MST_DEVICE}" != "${UNKN_MST}" ]]; then
+            /usr/bin/flint -d $_MST_DEVICE --clear_semaphore
+        fi
+    fi
+}
+
 trap Cleanup EXIT
 
 ParseArguments "$@"
@@ -407,6 +420,8 @@ ExitIfQEMU
 LockStateChange
 
 WaitForDevice
+
+ClearSemaphore
 
 if [ "${IMAGE_UPGRADE}" != "${YES_PARAM}" ]; then
     UpgradeFW

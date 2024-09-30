@@ -36,12 +36,7 @@ function startplatform() {
         debug "Starting Firmware update procedure"
         /usr/bin/mst start --with_i2cdev
 
-        local -r _MST_DEVICE="$(GetMstDevice)"
-        if [[ "${_MST_DEVICE}" != "${UNKN_MST}" ]]; then
-            /usr/bin/flint -d $_MST_DEVICE --clear_semaphore
-        fi
-
-        /usr/bin/mlnx-fw-upgrade.sh -v
+        /usr/bin/mlnx-fw-upgrade.sh -c -v
         if [[ "$?" -ne "${EXIT_SUCCESS}" ]]; then
             debug "Failed to upgrade fw. " "$?" "Restart syncd"
             exit 1
