@@ -1086,6 +1086,18 @@
         <ASKL1plt:supportDynamicPortBrkout ASKL1plt:type="boolean-type">false</ASKL1plt:supportDynamicPortBrkout>
         <ASKL1plt:laneList-list>
           <ASKL1plt:laneNumber ASKL1plt:type="uint32">6</ASKL1plt:laneNumber>
+          <ASKL1plt:txParams-list>
+            <ASKL1plt:tx-param ASKL1plt:type="tx-param-type">pre</ASKL1plt:tx-param>
+            <ASKL1plt:tx-param-uint32-value ASKL1plt:type="uint32">8</ASKL1plt:tx-param-uint32-value>
+          </ASKL1plt:txParams-list>
+          <ASKL1plt:txParams-list>
+            <ASKL1plt:tx-param ASKL1plt:type="tx-param-type">peak</ASKL1plt:tx-param>
+            <ASKL1plt:tx-param-uint32-value ASKL1plt:type="uint32">8</ASKL1plt:tx-param-uint32-value>
+          </ASKL1plt:txParams-list>
+          <ASKL1plt:txParams-list>
+            <ASKL1plt:tx-param ASKL1plt:type="tx-param-type">post</ASKL1plt:tx-param>
+            <ASKL1plt:tx-param-uint32-value ASKL1plt:type="uint32">2</ASKL1plt:tx-param-uint32-value>
+          </ASKL1plt:txParams-list>
         </ASKL1plt:laneList-list>
       </ASKL1plt:port-list>
       <ASKL1plt:port-list>
@@ -1096,6 +1108,18 @@
         <ASKL1plt:supportDynamicPortBrkout ASKL1plt:type="boolean-type">false</ASKL1plt:supportDynamicPortBrkout>
         <ASKL1plt:laneList-list>
           <ASKL1plt:laneNumber ASKL1plt:type="uint32">7</ASKL1plt:laneNumber>
+          <ASKL1plt:txParams-list>
+            <ASKL1plt:tx-param ASKL1plt:type="tx-param-type">pre</ASKL1plt:tx-param>
+            <ASKL1plt:tx-param-uint32-value ASKL1plt:type="uint32">8</ASKL1plt:tx-param-uint32-value>
+          </ASKL1plt:txParams-list>
+          <ASKL1plt:txParams-list>
+            <ASKL1plt:tx-param ASKL1plt:type="tx-param-type">peak</ASKL1plt:tx-param>
+            <ASKL1plt:tx-param-uint32-value ASKL1plt:type="uint32">8</ASKL1plt:tx-param-uint32-value>
+          </ASKL1plt:txParams-list>
+          <ASKL1plt:txParams-list>
+            <ASKL1plt:tx-param ASKL1plt:type="tx-param-type">post</ASKL1plt:tx-param>
+            <ASKL1plt:tx-param-uint32-value ASKL1plt:type="uint32">2</ASKL1plt:tx-param-uint32-value>
+          </ASKL1plt:txParams-list>
         </ASKL1plt:laneList-list>
       </ASKL1plt:port-list>
       <ASKL1plt:port-list>
@@ -1106,6 +1130,18 @@
         <ASKL1plt:supportDynamicPortBrkout ASKL1plt:type="boolean-type">false</ASKL1plt:supportDynamicPortBrkout>
         <ASKL1plt:laneList-list>
           <ASKL1plt:laneNumber ASKL1plt:type="uint32">8</ASKL1plt:laneNumber>
+          <ASKL1plt:txParams-list>
+            <ASKL1plt:tx-param ASKL1plt:type="tx-param-type">pre</ASKL1plt:tx-param>
+            <ASKL1plt:tx-param-uint32-value ASKL1plt:type="uint32">8</ASKL1plt:tx-param-uint32-value>
+          </ASKL1plt:txParams-list>
+          <ASKL1plt:txParams-list>
+            <ASKL1plt:tx-param ASKL1plt:type="tx-param-type">peak</ASKL1plt:tx-param>
+            <ASKL1plt:tx-param-uint32-value ASKL1plt:type="uint32">8</ASKL1plt:tx-param-uint32-value>
+          </ASKL1plt:txParams-list>
+          <ASKL1plt:txParams-list>
+            <ASKL1plt:tx-param ASKL1plt:type="tx-param-type">post</ASKL1plt:tx-param>
+            <ASKL1plt:tx-param-uint32-value ASKL1plt:type="uint32">2</ASKL1plt:tx-param-uint32-value>
+          </ASKL1plt:txParams-list>
         </ASKL1plt:laneList-list>
       </ASKL1plt:port-list>
       <ASKL1plt:port-list>
@@ -1116,6 +1152,18 @@
         <ASKL1plt:supportDynamicPortBrkout ASKL1plt:type="boolean-type">false</ASKL1plt:supportDynamicPortBrkout>
         <ASKL1plt:laneList-list>
           <ASKL1plt:laneNumber ASKL1plt:type="uint32">9</ASKL1plt:laneNumber>
+          <ASKL1plt:txParams-list>
+            <ASKL1plt:tx-param ASKL1plt:type="tx-param-type">pre</ASKL1plt:tx-param>
+            <ASKL1plt:tx-param-uint32-value ASKL1plt:type="uint32">8</ASKL1plt:tx-param-uint32-value>
+          </ASKL1plt:txParams-list>
+          <ASKL1plt:txParams-list>
+            <ASKL1plt:tx-param ASKL1plt:type="tx-param-type">peak</ASKL1plt:tx-param>
+            <ASKL1plt:tx-param-uint32-value ASKL1plt:type="uint32">8</ASKL1plt:tx-param-uint32-value>
+          </ASKL1plt:txParams-list>
+          <ASKL1plt:txParams-list>
+            <ASKL1plt:tx-param ASKL1plt:type="tx-param-type">post</ASKL1plt:tx-param>
+            <ASKL1plt:tx-param-uint32-value ASKL1plt:type="uint32">2</ASKL1plt:tx-param-uint32-value>
+          </ASKL1plt:txParams-list>
         </ASKL1plt:laneList-list>
       </ASKL1plt:port-list>
       <ASKL1plt:port-list>
@@ -1126,6 +1174,18 @@
         <ASKL1plt:supportDynamicPortBrkout ASKL1plt:type="boolean-type">false</ASKL1plt:supportDynamicPortBrkout>
         <ASKL1plt:laneList-list>
           <ASKL1plt:laneNumber ASKL1plt:type="uint32">10</ASKL1plt:laneNumber>
+          <ASKL1plt:txParams-list>
+            <ASKL1plt:tx-param ASKL1plt:type="tx-param-type">pre</ASKL1plt:tx-param>
+            <ASKL1plt:tx-param-uint32-value ASKL1plt:type="uint32">8</ASKL1plt:tx-param-uint32-value>
+          </ASKL1plt:txParams-list>
+          <ASKL1plt:txParams-list>
+            <ASKL1plt:tx-param ASKL1plt:type="tx-param-type">peak</ASKL1plt:tx-param>
+            <ASKL1plt:tx-param-uint32-value ASKL1plt:type="uint32">8</ASKL1plt:tx-param-uint32-value>
+          </ASKL1plt:txParams-list>
+          <ASKL1plt:txParams-list>
+            <ASKL1plt:tx-param ASKL1plt:type="tx-param-type">post</ASKL1plt:tx-param>
+            <ASKL1plt:tx-param-uint32-value ASKL1plt:type="uint32">2</ASKL1plt:tx-param-uint32-value>
+          </ASKL1plt:txParams-list>
         </ASKL1plt:laneList-list>
       </ASKL1plt:port-list>
       <ASKL1plt:port-list>
@@ -1136,6 +1196,18 @@
         <ASKL1plt:supportDynamicPortBrkout ASKL1plt:type="boolean-type">false</ASKL1plt:supportDynamicPortBrkout>
         <ASKL1plt:laneList-list>
           <ASKL1plt:laneNumber ASKL1plt:type="uint32">11</ASKL1plt:laneNumber>
+          <ASKL1plt:txParams-list>
+            <ASKL1plt:tx-param ASKL1plt:type="tx-param-type">pre</ASKL1plt:tx-param>
+            <ASKL1plt:tx-param-uint32-value ASKL1plt:type="uint32">8</ASKL1plt:tx-param-uint32-value>
+          </ASKL1plt:txParams-list>
+          <ASKL1plt:txParams-list>
+            <ASKL1plt:tx-param ASKL1plt:type="tx-param-type">peak</ASKL1plt:tx-param>
+            <ASKL1plt:tx-param-uint32-value ASKL1plt:type="uint32">8</ASKL1plt:tx-param-uint32-value>
+          </ASKL1plt:txParams-list>
+          <ASKL1plt:txParams-list>
+            <ASKL1plt:tx-param ASKL1plt:type="tx-param-type">post</ASKL1plt:tx-param>
+            <ASKL1plt:tx-param-uint32-value ASKL1plt:type="uint32">2</ASKL1plt:tx-param-uint32-value>
+          </ASKL1plt:txParams-list>
         </ASKL1plt:laneList-list>
       </ASKL1plt:port-list>
     </ASKL1plt:Port>
