@@ -2,18 +2,6 @@
 
 . /usr/local/bin/syncd_common.sh
 
-declare -r UNKN_MST="unknown"
-
-function GetMstDevice() {
-    local _MST_DEVICE="$(ls /dev/mst/*_pci_cr0 2>&1)"
-
-    if [[ ! -c "${_MST_DEVICE}" ]]; then
-        echo "${UNKN_MST}"
-    else
-        echo "${_MST_DEVICE}"
-    fi
-}
-
 function startplatform() {
 
     # platform specific tasks
