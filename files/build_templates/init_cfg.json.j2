@@ -186,5 +186,15 @@
             "admin_state": "enabled",
             "vrf": "default"
         }
+    },
+    "events": {
+{%- if include_system_eventd == y" %}
+        "xsub_path": "tcp://240.127.1.1:5570",
+        "xpub_path": "tcp://240.127.1.1:5571",
+        "req_rep_path": "tcp://240.127.1.1:5572",
+        "capture_path": "tcp://240.127.1.1:5573",
+        "stats_upd_secs": "5",
+        "cache_max_cnt": ""
+{% endif %}
     }
 }
