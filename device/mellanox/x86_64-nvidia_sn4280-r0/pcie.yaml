@@ -275,11 +275,6 @@
   fn: '4'
   id: '1458'
   name: 'Ethernet controller: Advanced Micro Devices, Inc. [AMD] XGMAC 10GbE Controller'
-- bus: 0a
-  dev: '00'
-  fn: '5'
-  id: '1458'
-  name: 'Ethernet controller: Advanced Micro Devices, Inc. [AMD] XGMAC 10GbE Controller'
 - bus: '40'
   dev: '00'
   fn: '0'
