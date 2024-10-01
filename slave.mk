@@ -2,6 +2,7 @@
 ## Presettings
 ###############################################################################
 
+#slave.mk
 # Select bash for commands 
 .ONESHELL:
 SHELL = /bin/bash
