@@ -14,6 +14,7 @@ confdir /etc/chrony/conf.d
 
 {# Adding NTP servers. We need to know if we have some pools, to set proper config -#}
 {% set ns = namespace(is_pools=false) %}
+{% set ip_ver_ns = namespace(ipv4_server=false, ipv6_server=false) %}
 {% for server in NTP_SERVER if NTP_SERVER[server].admin_state != 'disabled' -%}
     {% set config = NTP_SERVER[server] -%}
     {# Server options -#}
@@ -48,6 +49,13 @@ confdir /etc/chrony/conf.d
     {% endif -%}
 
 {{ association_type }} {{ resolve_as }}{{ soptions }}
+
+{% if resolve_as | ipv4 -%}
+    {% set ip_ver_ns.ipv4_server = true %}
+{% elif resolve_as | ipv6 %}
+    {% set ip_ver_ns.ipv6_server = true %}
+{% endif -%}
+
 
 {% endfor -%}
 
