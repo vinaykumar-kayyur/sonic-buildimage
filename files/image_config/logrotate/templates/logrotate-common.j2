@@ -1,5 +1,7 @@
 {% macro postrotate_action() -%}
-    /bin/kill -HUP $(cat /var/run/rsyslogd.pid)
+    if [ -f /var/run/rsyslogd.pid ]; then
+        /bin/kill -HUP $(cat /var/run/rsyslogd.pid)
+    fi
 {%- endmacro -%}
 
 {% macro postrotate() -%}
