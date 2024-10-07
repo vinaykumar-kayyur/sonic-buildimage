@@ -63,8 +63,8 @@ class DeviceGlobalCfgMgr(Manager):
         if "idf_isolation_state" in data:
             self.directory.put(self.db_name, self.table_name, "idf_isolation_state", data["idf_isolation_state"])
             if idf_isolation_state != data["idf_isolation_state"]:
-                if self.switch_type and self.switch_type != "SpineRouter":
-                    log_debug("DeviceGlobalCfgMgr:: Skipping IDF isolation configuration on Switch type: %s" % self.switch_type)
+                if self.switch_role and self.switch_role != "SpineRouter":
+                    log_debug("DeviceGlobalCfgMgr:: Skipping IDF isolation configuration on Switch type: %s" % self.switch_role)
                     return True
                 self.downstream_isolate_unisolate(data["idf_isolation_state"])
             
