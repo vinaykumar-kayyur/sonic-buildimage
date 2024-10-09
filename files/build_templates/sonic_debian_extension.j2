@@ -399,8 +399,10 @@ sudo cp $IMAGE_CONFIGS/chrony/chrony.conf.j2 $FILESYSTEM_ROOT_USR_SHARE_SONIC_TE
 sudo cp $IMAGE_CONFIGS/chrony/chrony.keys.j2 $FILESYSTEM_ROOT_USR_SHARE_SONIC_TEMPLATES/
 sudo cp $IMAGE_CONFIGS/chrony/chronyd-starter.sh $FILESYSTEM_ROOT/usr/local/sbin/
 sudo mkdir $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM/chrony.service.d
+# Don't start chrony with multi-user.target, add our override, and start it with sonic.target
+sudo LANG=C chroot $FILESYSTEM_ROOT systemctl disable chrony.service
 sudo cp $IMAGE_CONFIGS/chrony/override.conf $FILESYSTEM_ROOT_USR_LIB_SYSTEMD_SYSTEM/chrony.service.d/
-echo "chrony.service" | sudo tee -a $GENERATED_SERVICE_FILE
+sudo LANG=C chroot $FILESYSTEM_ROOT systemctl enable chrony.service
 
 # Copy DNS templates
 sudo cp $BUILD_TEMPLATES/dns.j2 $FILESYSTEM_ROOT_USR_SHARE_SONIC_TEMPLATES/
