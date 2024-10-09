@@ -132,5 +132,7 @@ rm -rf /etc/localtime
 ln -sf /usr/share/zoneinfo/$TZ /etc/localtime
 
 chown -R redis:redis $REDIS_DIR
+REDIS_BMP_DIR="/var/lib/redis_bmp"
+chown -R redis:redis $REDIS_BMP_DIR
 
 exec /usr/local/bin/supervisord
