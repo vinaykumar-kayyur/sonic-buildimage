@@ -15,10 +15,15 @@ route-map FROM_VOQ_CHASSIS_V4_PEER permit 2
   set local-preference 80
   on-match next
 !
+{% if CONFIG_DB__DEVICE_METADATA['localhost']['subtype'] == 'UpstreamLC' %}
+route-map FROM_VOQ_CHASSIS_V4_PEER deny 3
+  match community DEVICE_INTERNAL_FALLBACK_COMMUNITY
+{% else %}
 route-map FROM_VOQ_CHASSIS_V4_PEER permit 3
   match community DEVICE_INTERNAL_FALLBACK_COMMUNITY
   set comm-list DEVICE_INTERNAL_FALLBACK_COMMUNITY delete
   set tag {{ constants.bgp.route_eligible_for_fallback_to_default_tag }}
+{% endif %}
 !
 route-map FROM_VOQ_CHASSIS_V4_PEER permit 100
 !
@@ -42,10 +47,15 @@ route-map FROM_VOQ_CHASSIS_V6_PEER permit 3
   set local-preference 80
   on-match next
 !
+{% if CONFIG_DB__DEVICE_METADATA['localhost']['subtype'] == 'UpstreamLC' %}
+route-map FROM_VOQ_CHASSIS_V6_PEER deny 4
+  match community DEVICE_INTERNAL_FALLBACK_COMMUNITY
+{% else %}
 route-map FROM_VOQ_CHASSIS_V6_PEER permit 4
   match community DEVICE_INTERNAL_FALLBACK_COMMUNITY
   set comm-list DEVICE_INTERNAL_FALLBACK_COMMUNITY delete
   set tag {{ constants.bgp.route_eligible_for_fallback_to_default_tag }}
+{% endif %}
 !
 route-map FROM_VOQ_CHASSIS_V6_PEER permit 100
 !
