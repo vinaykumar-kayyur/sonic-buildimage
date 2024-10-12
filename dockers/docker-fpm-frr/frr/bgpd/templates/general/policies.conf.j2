@@ -2,6 +2,8 @@
 ! template: bgpd/templates/general/policies.conf.j2
 !
 !
+ip prefix-list DEFAULT_IPV4 permit 0.0.0.0/0
+ipv6 prefix-list DEFAULT_IPV6 permit ::/0
 !
 {% if constants.bgp.allow_list is defined and constants.bgp.allow_list.enabled is defined and constants.bgp.allow_list.enabled and constants.bgp.allow_list.drop_community is defined %}
 !
@@ -47,7 +49,7 @@ route-map FROM_BGP_PEER_V4 permit 13
 {% else %}
   set tag {{ constants.bgp.route_eligible_for_fallback_to_default_tag }}
 {% endif %}
-set community {{ constants.bgp.internal_fallback_community }} additive                                                                                                                                         
+  set community {{ constants.bgp.internal_fallback_community }} additive                                                                                                                                         
 {% endif %}                                                                                                                                                                                                      !                                 
 !
 route-map FROM_BGP_PEER_V6 permit 10
