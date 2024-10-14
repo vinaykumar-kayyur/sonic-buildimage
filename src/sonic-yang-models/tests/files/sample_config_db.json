@@ -2723,6 +2723,12 @@
             }
         }
     },
+
+    "XCVRD_LOG": {
+        "Y_CABLE": {
+            "log_verbosity": "notice"
+        }
+    },
     "STORMOND_CONFIG": {
         "INTERVALS": {
             "daemon_polling_interval" : "3600",

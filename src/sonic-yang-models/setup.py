@@ -266,6 +266,7 @@ setup(
                          './cvlyang-models/sonic-vlan.yang',
                          './cvlyang-models/sonic-vrf.yang',
                          './cvlyang-models/sonic-warm-restart.yang',
+                         './cvlyang-models/sonic-xcvrd-log.yang',
                          './cvlyang-models/sonic-lldp.yang',
                          './cvlyang-models/sonic-scheduler.yang',
                          './cvlyang-models/sonic-wred-profile.yang',
