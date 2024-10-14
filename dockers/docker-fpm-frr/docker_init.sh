@@ -11,7 +11,6 @@ CFGGEN_PARAMS=" \
     -t /usr/share/sonic/templates/supervisord/critical_processes.j2,/etc/supervisor/critical_processes \
     -t /usr/share/sonic/templates/isolate.j2,/usr/sbin/bgp-isolate \
     -t /usr/share/sonic/templates/unisolate.j2,/usr/sbin/bgp-unisolate \
-    -t /usr/share/sonic/templates/bgpd_wait_for_intf.sh.j2,/usr/bin/bgpd_wait_for_intf.sh \
 "
 
 FRR_VARS=$(sonic-cfggen $CFGGEN_PARAMS)
@@ -89,6 +88,7 @@ elif [ "$CONFIG_TYPE" == "unified" ]; then
     CFGGEN_PARAMS=" \
         -d \
         -y /etc/sonic/constants.yml \
+        -T /usr/local/sonic/frrcfgd \
         -t /usr/share/sonic/templates/gen_frr.conf.j2,/etc/frr/frr.conf \
     "
     sonic-cfggen $CFGGEN_PARAMS
@@ -112,6 +112,7 @@ TZ=$(cat /etc/timezone)
 rm -rf /etc/localtime
 ln -sf /usr/share/zoneinfo/$TZ /etc/localtime
 
-chmod +x /usr/bin/bgpd_wait_for_intf.sh
+export EVENTD_STATE=$(sonic-db-cli -s CONFIG_DB HGET 'FEATURE|eventd' 'state')
+j2 -f json --import-env=ENVIRONMENT /usr/share/sonic/templates/rsyslog_plugin/rsyslog_plugin.conf.j2 /usr/share/sonic/templates/rsyslog_plugin/events_info.json  > /etc/rsyslog.d/bgp_events.conf
 
 exec /usr/local/bin/supervisord
