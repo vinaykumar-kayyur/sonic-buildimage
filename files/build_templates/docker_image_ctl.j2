@@ -90,7 +90,6 @@ function preStartAction()
         if [[ ("$BOOT_TYPE" == "warm" || "$BOOT_TYPE" == "fastfast" || "$BOOT_TYPE" == "fast")  && -f $WARM_DIR/dump.rdb ]]; then
             # Load redis content from /host/warmboot/dump.rdb
             docker cp $WARM_DIR/dump.rdb database$DEV:/var/lib/redis/dump.rdb
-            docker cp $WARM_DIR/dump.rdb database$DEV:/var/lib/redis_bmp/dump.rdb
         else
             # Create an emtpy file and overwrite any RDB if already there
             echo -n > /tmp/dump.rdb
