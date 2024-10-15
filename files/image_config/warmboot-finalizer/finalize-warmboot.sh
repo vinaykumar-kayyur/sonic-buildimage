@@ -116,7 +116,7 @@ function finalize_common() {
 
     if [[ "$asic_type" == "mellanox" ]]; then
         # Read default governor from kernel config
-        local -r default_governor=$(cat "/boot/config-$(uname -r)" | grep -o 'CONFIG_CPU_FREQ_DEFAULT_GOV_[^=]*=y')
+        local -r default_governor=$(cat "/boot/config-$(uname -r)" | grep -E 'CONFIG_CPU_FREQ_DEFAULT_GOV_.*=y' | sed -E 's/CONFIG_CPU_FREQ_DEFAULT_GOV_(.*)=y/\1/')
         set_cpufreq_governor "$default_governor"
     fi
 }
