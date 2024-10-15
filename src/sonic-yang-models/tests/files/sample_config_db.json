@@ -2703,6 +2703,11 @@
                 "midplane_interface": "dpu1"
             }
         },
+	"XCVRD_LOG": {
+	    "Y_CABLE": {
+		"log_verbosity": "notice"
+	    }
+	},
         "BANNER_MESSAGE": {
             "global": {
                 "state": "enabled",
@@ -2724,11 +2729,6 @@
         }
     },
 
-    "XCVRD_LOG": {
-        "Y_CABLE": {
-            "log_verbosity": "notice"
-        }
-    },
     "STORMOND_CONFIG": {
         "INTERVALS": {
             "daemon_polling_interval" : "3600",
