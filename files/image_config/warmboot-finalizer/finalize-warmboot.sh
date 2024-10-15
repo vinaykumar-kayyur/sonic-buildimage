@@ -2,6 +2,9 @@
 
 VERBOSE=no
 
+# read SONiC immutable variables
+[ -f /etc/sonic/sonic-environment ] && . /etc/sonic/sonic-environment
+
 # Define components that needs to reconcile during warm
 # boot:
 #       The key is the name of the service that the components belong to.
@@ -109,9 +112,13 @@ function set_cpufreq_governor() {
 }
 
 function finalize_common() {
-    # Read default governor from kernel config
-    local -r default_governor=$(cat "/boot/config-$(uname -r)" | grep -o 'CONFIG_CPU_FREQ_DEFAULT_GOV_[^=]*=y')
-    set_cpufreq_governor "$default_governor"
+    local -r asic_type=${ASIC_TYPE:-`sonic-cfggen -y /etc/sonic/sonic_version.yml -v asic_type`}
+
+    if [[ "$asic_type" == "mellanox" ]]; then
+        # Read default governor from kernel config
+        local -r default_governor=$(cat "/boot/config-$(uname -r)" | grep -o 'CONFIG_CPU_FREQ_DEFAULT_GOV_[^=]*=y')
+        set_cpufreq_governor "$default_governor"
+    fi
 }
 
 function finalize_warm_boot()
