@@ -2728,7 +2728,6 @@
             }
         }
     },
-
     "STORMOND_CONFIG": {
         "INTERVALS": {
             "daemon_polling_interval" : "3600",
