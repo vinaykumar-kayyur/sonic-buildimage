@@ -398,6 +398,9 @@ LogsDirectory=audit
 LogsDirectoryMode=0750
 EOF
 
+# Limit auditd CPU max usage to 10%
+sudo sed -t '/\[Service\]/a CPUQuota=10%' $FILESYSTEM_ROOT/lib/systemd/system/auditd.service
+
 # latest tcpdump control resource access with AppArmor.
 # override tcpdump profile to allow tcpdump access TACACS config file.
 sudo cp files/apparmor/usr.bin.tcpdump $FILESYSTEM_ROOT/etc/apparmor.d/local/usr.bin.tcpdump
