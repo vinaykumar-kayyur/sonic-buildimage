@@ -182,7 +182,7 @@ INCLUDE_GBSYNCD ?= y
 # INCLUDE_TEAMD - build docker-teamd for LAG protocol support
 INCLUDE_TEAMD ?= y
 
-# INCLUDE_STP - build docker-stp for stp support
+# INCLUDE_STP - build docker-stp for stp/pvst support
 INCLUDE_STP = y
 
 # INCLUDE_ROUTER_ADVERTISER - build docker-router-advertiser for router advertisements support
