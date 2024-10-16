@@ -3,7 +3,7 @@
         "desc": "Configuring memory statistics with valid values."
     },
     "MEMORY_STATISTICS_WITH_INVALID_SAMPLING_INTERVAL": {
-        "desc": "Configuring memory statistics with an invalid sampling_interval (out of acceptable range).",
+        "desc": "Configuring memory statistics with an invalid sampling_interval ( out of acceptable range).",
         "eStrKey": "Range",
         "eStr": "3..30"
     },
