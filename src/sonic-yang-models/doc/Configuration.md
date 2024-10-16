@@ -1486,7 +1486,7 @@ The memory statistics configuration is stored in the **MEMORY_STATISTICS** table
         }
     }
 }
-  
+
 ```
 - **enabled**: Defines whether the memory statistics collection is active (true or false).
 - **sampling_interval**: Interval between data collection.
