@@ -127,7 +127,7 @@ index ae375f6..117ebdc 100644
  			}
 -
 -
-+		} else if (!strcmp(arg, "require_message_authenticator")) {
++		} else if (!strncmp(*argv, "require_message_authenticator")) {
 +			conf->require_message_authenticator = TRUE;
  		} else if (!strncmp(*argv, "statistics=", 11)) {
  			/* Verify filename doesn't contain '/'.
