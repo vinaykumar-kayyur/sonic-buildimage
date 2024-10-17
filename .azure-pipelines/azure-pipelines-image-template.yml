@@ -59,9 +59,8 @@ jobs:
     postSteps:
       - script: |
           BUILD_REASON=$(Build.Reason)
-          if [[ "$BUILD_REASON" != "PullRequest" && "$GROUP_NAME" == "vs" ]]
+          if [[ "$BUILD_REASON" != "PullRequest" && "$BUILD_DEFINITIONNAME" == "Azure.sonic-buildimage.official.vs" ]]
           then
-            SONIC_VERSION=$(cat target/sonic.version)
             PORT=443
             DOCKERS=$(ls target/docker-ptf.gz)
             BRANCH=$(Build.SourceBranchName)
