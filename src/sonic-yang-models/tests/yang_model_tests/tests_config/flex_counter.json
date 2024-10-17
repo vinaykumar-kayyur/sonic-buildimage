@@ -9,6 +9,10 @@
                 "DEBUG_COUNTER": {
                     "FLEX_COUNTER_STATUS": "enable"
                 },
+                "ENI": {
+                    "FLEX_COUNTER_STATUS": "enable",
+                    "POLL_INTERVAL": 10000
+                },
                 "PFCWD": {
                     "FLEX_COUNTER_STATUS": "enable"
                 },
@@ -54,6 +58,14 @@
                 "FLOW_CNT_ROUTE": {
                     "FLEX_COUNTER_STATUS": "enable",
                     "POLL_INTERVAL": 10000
+                },
+                "WRED_ECN_QUEUE": {
+                    "FLEX_COUNTER_STATUS": "enable",
+                    "POLL_INTERVAL": 10000
+                },
+                "WRED_ECN_PORT": {
+                    "FLEX_COUNTER_STATUS": "enable",
+                    "POLL_INTERVAL": 1000
                 }
             }
         }
@@ -111,6 +123,14 @@
                     "POLL_INTERVAL": 99
                 },
                 "FLOW_CNT_ROUTE": {
+                    "FLEX_COUNTER_STATUS": "enable",
+                    "POLL_INTERVAL": 99
+                },
+                "WRED_ECN_QUEUE": {
+                    "FLEX_COUNTER_STATUS": "enable",
+                    "POLL_INTERVAL": 99
+                },
+                "WRED_ECN_PORT": {
                     "FLEX_COUNTER_STATUS": "enable",
                     "POLL_INTERVAL": 99
                 }

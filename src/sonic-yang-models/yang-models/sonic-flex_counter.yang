@@ -68,6 +68,19 @@ module sonic-flex_counter {
                 }
             }
 
+            container ENI {
+                /* ENI_STAT_COUNTER_FLEX_COUNTER_GROUP */
+                leaf FLEX_COUNTER_STATUS {
+                    type flex_status;
+                }
+                leaf FLEX_COUNTER_DELAY_STATUS {
+                    type flex_delay_status;
+                }
+                leaf POLL_INTERVAL {
+                    type poll_interval;
+                }
+            }
+
             container PFCWD {
                 /* PFC_WD_FLEX_COUNTER_GROUP */
                 leaf FLEX_COUNTER_STATUS {
@@ -230,6 +243,32 @@ module sonic-flex_counter {
 
             container TUNNEL {
                 /* TUNNEL_STAT_COUNTER_FLEX_COUNTER_GROUP */
+                leaf FLEX_COUNTER_STATUS {
+                    type flex_status;
+                }
+                leaf FLEX_COUNTER_DELAY_STATUS {
+                    type flex_delay_status;
+                }
+                leaf POLL_INTERVAL {
+                    type poll_interval;
+                }
+            }
+
+            container WRED_ECN_QUEUE {
+                /* WRED_ECN_QUEUE_FLEX_COUNTER_GROUP  */
+                leaf FLEX_COUNTER_STATUS {
+                    type flex_status;
+                }
+                leaf FLEX_COUNTER_DELAY_STATUS {
+                    type flex_delay_status;
+                }
+                leaf POLL_INTERVAL {
+                    type poll_interval;
+                }
+            }
+
+            container WRED_ECN_PORT {
+                /* WRED_ECN_QUEUE_FLEX_COUNTER_GROUP */
                 leaf FLEX_COUNTER_STATUS {
                     type flex_status;
                 }

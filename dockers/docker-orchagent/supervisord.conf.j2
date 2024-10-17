@@ -14,7 +14,7 @@ buffer_size=1024
 
 [eventlistener:supervisor-proc-exit-listener]
 command=/usr/bin/supervisor-proc-exit-listener --container-name swss
-events=PROCESS_STATE_EXITED,PROCESS_STATE_RUNNING
+events=PROCESS_STATE_EXITED,PROCESS_STATE_RUNNING,PROCESS_COMMUNICATION_STDOUT
 autostart=true
 autorestart=unexpected
 buffer_size=1024
@@ -75,6 +75,7 @@ command=/usr/bin/orchagent.sh
 priority=4
 autostart=false
 autorestart=false
+stdout_capture_maxbytes=1MB
 stdout_logfile=syslog
 stderr_logfile=syslog
 dependent_startup=true
@@ -188,6 +189,19 @@ dependent_startup_wait_for=swssconfig:exited
 environment=ASAN_OPTIONS="log_path=/var/log/asan/portmgrd-asan.log{{ asan_extra_options }}"
 {% endif %}
 {%- endif %}
+
+[program:fabricmgrd]
+command=/usr/bin/fabricmgrd
+priority=10
+autostart=false
+autorestart=false
+stdout_logfile=syslog
+stderr_logfile=syslog
+dependent_startup=true
+dependent_startup_wait_for=swssconfig:exited
+{% if ENABLE_ASAN == "y" %}
+environment=ASAN_OPTIONS="log_path=/var/log/asan/fabricmgrd-asan.log{{ asan_extra_options }}"
+{% endif %}
 
 {% if is_fabric_asic == 0 %}
 [program:buffermgrd]

@@ -11,7 +11,7 @@ extern "C"
 #include <vector>
 #include <string>
 #include <regex>
-#include "json.hpp"
+#include <nlohmann/json.hpp>
 #include "events.h"
 #include "timestamp_formatter.h"
 
@@ -36,7 +36,7 @@ struct RegexStruct {
  */
 
 class SyslogParser {
-public: 
+public:
     unique_ptr<TimestampFormatter> m_timestampFormatter;
     vector<RegexStruct> m_regexList;
     bool parseMessage(string message, string& tag, event_params_t& paramDict, lua_State* luaState);

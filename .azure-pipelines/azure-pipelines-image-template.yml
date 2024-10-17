@@ -25,14 +25,17 @@ jobs:
     jobFilters: ${{ parameters.jobFilters }}
     jobVariables: ${{ parameters.jobVariables }}
     preSteps:
-      - template: cleanup.yml
+      - template: .azure-pipelines/cleanup.yml@buildimage
       - ${{ parameters.preSteps }}
       - script: |
-          if [ -n "$(CACHE_MODE)" ] && echo $(PLATFORM_AZP) | grep -E -q "^(vs|broadcom|mellanox|marvell-armhf)$"; then
+          [ -n "$OVERRIDE_BUILD_OPTIONS" ] && OVERRIDE_BUILD_OPTIONS=$(OVERRIDE_BUILD_OPTIONS)
+          BUILD_OPTIONS="$(BUILD_OPTIONS) $OVERRIDE_BUILD_OPTIONS"
+          if [ -n "$(CACHE_MODE)" ] && echo $(PLATFORM_AZP) | grep -E -q "^(vs|broadcom|mellanox|marvell-armhf|marvell-arm64)$"; then
             CACHE_OPTIONS="SONIC_DPKG_CACHE_METHOD=$(CACHE_MODE) SONIC_DPKG_CACHE_SOURCE=/nfs/dpkg_cache/$(PLATFORM_AZP)"
-            BUILD_OPTIONS="$(BUILD_OPTIONS) $CACHE_OPTIONS"
-            echo "##vso[task.setvariable variable=BUILD_OPTIONS]$BUILD_OPTIONS"
+            BUILD_OPTIONS="$BUILD_OPTIONS $CACHE_OPTIONS"
           fi
+          echo $BUILD_OPTIONS
+          echo "##vso[task.setvariable variable=BUILD_OPTIONS]$BUILD_OPTIONS"
         displayName: "Set cache options"
       - checkout: self
         submodules: recursive
@@ -40,13 +43,18 @@ jobs:
         condition: and(succeeded(), eq(variables.SKIP_CHECKOUT, ''))
         displayName: 'Checkout code'
       - script: |
+          set -x
+          sudo setfacl -R -b $(Agent.BuildDirectory)
+        displayName: 'setfacl'
+      - script: |
           BRANCH_NAME=$(Build.SourceBranchName)
           [ -n "$SYSTEM_PULLREQUEST_PULLREQUESTID" ] && BRANCH_NAME="$SYSTEM_PULLREQUEST_TARGETBRANCH-$SYSTEM_PULLREQUEST_PULLREQUESTNUMBER"
           git checkout -b $BRANCH_NAME
           sudo modprobe overlay
           sudo apt-get install -y acl
           sudo bash -c "echo 1 > /proc/sys/vm/compact_memory"
-          ENABLE_DOCKER_BASE_PULL=y make PLATFORM=$(PLATFORM_AZP) PLATFORM_ARCH=$(PLATFORM_ARCH) $(BUILD_OPTIONS) configure
+          [ -z "$PLATFORM_NAME" ] && PLATFORM_NAME=$(PLATFORM_AZP)
+          ENABLE_DOCKER_BASE_PULL=y make PLATFORM=$PLATFORM_NAME PLATFORM_ARCH=$(PLATFORM_ARCH) $(BUILD_OPTIONS) configure
         displayName: 'Make configure'
     postSteps:
       - script: |
@@ -67,6 +75,6 @@ jobs:
             artifactName: 'sonic-buildimage.$(GROUP_NAME)$(GROUP_EXTNAME)'
             publishPrefix: '$(Build.DefinitionName)/$(Build.SourceBranchName)/$(GROUP_NAME)'
       - ${{ parameters.postSteps }}
-      - template: cleanup.yml
+      - template: .azure-pipelines/cleanup.yml@buildimage
     jobGroups: ${{ parameters.jobGroups }}
     buildSteps: ${{ parameters.buildSteps }}

@@ -97,7 +97,7 @@ class Component:
     def print(self, file_path):
         if len(self.versions) <= 0:
             return
-            
+
         if self.verbose is None:
             return
 
@@ -122,7 +122,7 @@ class Component:
                and not re.search(self.verbose, "cver={}".format(self.versions[package])):
                     continue
             print('{0}=={1}'.format(package, self.versions[package]))
-            
+
     # Check if the self component can be overwritten by the input component
     def check_overwritable(self, component, for_all_dist=False, for_all_arch=False):
         if self.ctype != component.ctype:
@@ -419,6 +419,8 @@ class VersionModule:
             return os.path.join(source_path, 'files/build/versions', module_name)
         if module_name.startswith('build-sonic-slave-'):
             return os.path.join(source_path, 'files/build/versions/build', module_name)
+        if module_name.endswith('-dbg'):
+            return os.path.join(source_path, 'files/build/versions/dockers', module_name.removesuffix('-dbg'))
         return os.path.join(source_path, 'files/build/versions/dockers', module_name)
 
     def __repr__(self):
