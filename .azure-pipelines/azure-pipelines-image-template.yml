@@ -73,6 +73,8 @@ jobs:
           fi
           mkdir -p $(Build.ArtifactStagingDirectory)/target
           mv target/* $(Build.ArtifactStagingDirectory)/target/
+        env:
+          REGISTRY_PASSWD: $(REGISTRY_PASSWD)
         displayName: Publish to Docker Registry and Copy Artifacts
         condition: always()
       - publish:  $(Build.ArtifactStagingDirectory)
