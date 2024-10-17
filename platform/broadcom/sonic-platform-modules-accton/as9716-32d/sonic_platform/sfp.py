@@ -179,16 +179,18 @@ class Sfp(PddfSfp):
             if checksum_test != eeprom_raw[127]:
                 return False
 
-        checksum_test = 0
-        eeprom_raw = self.read_eeprom(640, 128)
-        if eeprom_raw is None:
-            return None
-
-        for i in range(0, 127):
-            checksum_test = (checksum_test + eeprom_raw[i]) & 0xFF
-        else:
-            if checksum_test != eeprom_raw[127]:
-                return False
+        # CMIS_5.0 starts to support the checksum of page 04h
+        cmis_rev = float(api.get_cmis_rev())
+        if cmis_rev >= 5.0:
+            checksum_test = 0
+            eeprom_raw = self.read_eeprom(640, 128)
+            if eeprom_raw is None:
+                return None
+            for i in range(0, 127):
+                checksum_test = (checksum_test + eeprom_raw[i]) & 0xFF
+            else:
+                if checksum_test != eeprom_raw[127]:
+                    return False
 
         return True
 
