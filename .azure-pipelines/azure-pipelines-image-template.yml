@@ -58,9 +58,24 @@ jobs:
         displayName: 'Make configure'
     postSteps:
       - script: |
+          BUILD_REASON=$(Build.Reason)
+          GROUP_NAME=$(GROUP_NAME)
+          if [[ "$BUILD_REASON" != "PullRequest" && "$GROUP_NAME" == "vs" ]]
+          then
+            SONIC_VERSION=$(cat target/sonic.version)
+            PORT=443
+            DOCKERS=$(ls target/docker-ptf.gz)
+            BRANCH=$(Build.SourceBranchName)
+            LABELS="$BRANCH"
+            [[ "$BRANCH" == "master" ]] && LABELS="$LABELS latest"
+            for f in $DOCKERS; do
+              echo $f
+              ./push_docker.sh $f $(REGISTRY_SERVER_PUBLIC) $PORT $(REGISTRY_USERNAME) "$REGISTRY_PASSWD" "$LABELS"
+            done
+          fi
           mkdir -p $(Build.ArtifactStagingDirectory)/target
           mv target/* $(Build.ArtifactStagingDirectory)/target/
-        displayName: Copy Artifacts
+        displayName: Publish to Docker Registry and Copy Artifacts
         condition: always()
       - publish:  $(Build.ArtifactStagingDirectory)
         artifact: 'sonic-buildimage.$(GROUP_NAME)$(GROUP_EXTNAME)'
