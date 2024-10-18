@@ -17,6 +17,6 @@
         "eStr": ["pattern", "does not satisfy"]
     },
     "KDUMP_WITH_VALID_REMOTE_VALUES": {
-        "desc": "Configuring the kdump with valid remote values."
+        "desc": "Configuring the kdump with valid remote ssh values."
     }
 }
