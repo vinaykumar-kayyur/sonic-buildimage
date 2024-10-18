@@ -98,7 +98,7 @@
 	path = src/sonic-p4rt/sonic-pins
 	url = https://github.com/sonic-net/sonic-pins.git
 [submodule "src/ptf-py3"]
-	path = src/ptf-py3branch = pvst-dev
+	path = src/ptf-py3branch
 	url = https://github.com/p4lang/ptf.git
 [submodule "src/dhcprelay"]
 	path = src/dhcprelay
