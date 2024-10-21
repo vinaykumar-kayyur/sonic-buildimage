@@ -1,3 +1,23 @@
+/*
+ * An dfd_cfg driver for cfg function
+ *
+ * Copyright (C) 2024 Micas Networks Inc.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+
 #include <linux/list.h>
 #include <linux/string.h>
 #include <linux/types.h>
@@ -226,7 +246,7 @@ static int dfd_ko_cfg_add_str_item(int key, char *str, int line_num)
             return -1;
         }
         mem_clear(str_cfg, DFD_CFG_STR_MAX_LEN);
-        strlcpy(str_cfg, str, DFD_CFG_STR_MAX_LEN);
+        strncpy(str_cfg, str, DFD_CFG_STR_MAX_LEN - 1);
 
         rv = lnode_insert_node(&dfd_ko_cfg_list_root, key, str_cfg);
         if (rv == 0) {
@@ -240,7 +260,7 @@ static int dfd_ko_cfg_add_str_item(int key, char *str, int line_num)
     } else {
         DBG_DEBUG(DBG_WARN, "line%d: replace string item[%s->%s], key=0x%08x\n", line_num, str_cfg, str, key);
         mem_clear(str_cfg, DFD_CFG_STR_MAX_LEN);
-        strlcpy(str_cfg, str, DFD_CFG_STR_MAX_LEN);
+        strncpy(str_cfg, str, DFD_CFG_STR_MAX_LEN - 1);
     }
 
     return 0;
@@ -434,7 +454,7 @@ static void dfd_ko_cfg_set_info_ctrl_mem_value(info_ctrl_t *info_ctrl, info_ctrl
         break;
     case INFO_CTRL_MEM_FPATH:
         mem_clear(info_ctrl->fpath, sizeof(info_ctrl->fpath));
-        strlcpy(info_ctrl->fpath, buf_val, sizeof(info_ctrl->fpath));
+        strncpy(info_ctrl->fpath, buf_val, sizeof(info_ctrl->fpath) - 1);
         break;
     case INFO_CTRL_MEM_ADDR:
         dfd_ko_cfg_get_value_from_char(buf_val, &(info_ctrl->addr), line_num);
@@ -447,7 +467,7 @@ static void dfd_ko_cfg_set_info_ctrl_mem_value(info_ctrl_t *info_ctrl, info_ctrl
         break;
     case INFO_CTRL_MEM_STR_CONS:
         mem_clear(info_ctrl->str_cons, sizeof(info_ctrl->str_cons));
-        strlcpy(info_ctrl->str_cons, buf_val, sizeof(info_ctrl->str_cons));
+        strncpy(info_ctrl->str_cons, buf_val, sizeof(info_ctrl->str_cons) - 1);
         break;
     case INFO_CTRL_MEM_INT_EXTRA1:
         dfd_ko_cfg_get_value_from_char(buf_val, &(info_ctrl->int_extra1), line_num);
