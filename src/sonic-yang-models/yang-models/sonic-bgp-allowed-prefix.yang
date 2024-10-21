@@ -62,14 +62,14 @@ module sonic-bgp-allowed-prefix {
                + '( (le|ge) (([0-9])|([0-9]{2})|(1[0-1][0-9])|(12[0-8])))?';
        }
        description
-        "The bgp-allowed-ipv4-prefix type represents an IPv4 address prefix
+        "The bgp-allowed-ipv6-prefix type represents an IPv6 address prefix
          in BGP allowed prefix format.
 
-         The string format is an inet:ipv4-prefix (defined in RFC 6991) value
+         The string format is an inet:ipv6-prefix (defined in RFC 6991) value
          appended with an optional suffix.
          
          The optional suffix consists of a string 'le' or 'ge' followed by a
-         number which is less than or equal to 32.";
+         number which is less than or equal to 128.";
     }
 
     container sonic-bgp-allowed-prefix {
