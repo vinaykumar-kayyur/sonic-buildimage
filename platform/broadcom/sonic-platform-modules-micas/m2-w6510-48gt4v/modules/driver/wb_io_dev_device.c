@@ -1,5 +1,5 @@
 /*
- * An wb_io_dev_device driver for io device function
+ * An wb_i2c_dev_device driver for i2c io device function
  *
  * Copyright (C) 2024 Micas Networks Inc.
  *
