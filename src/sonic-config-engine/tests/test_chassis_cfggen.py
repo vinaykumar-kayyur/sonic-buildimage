@@ -139,7 +139,7 @@ class TestVoqChassisSingleAsic(TestChassis):
             'switch_id': 20,
             'max_cores': 64,
             'slice_type': 'AZNG_Production',
-            'sub_type': 'UpstreamLC'})
+            'subtype': 'UpstreamLC'})
 
     def test_port(self):
         argument = ['-m', self.sample_graph, '-p',
@@ -447,7 +447,7 @@ class TestVoqChassisMultiAsic(TestChassis):
             'cluster': 'TestbedForstr-sonic',
             'switch_type': 'voq',
             'max_cores': 64,
-            'sub_type': 'DownstreamLC'})
+            'subtype': 'DownstreamLC'})
 
     def test_device_metadata_for_namespace(self):
         argument = [
@@ -925,7 +925,7 @@ class TestVoqChassisSup(TestChassis):
                 "switch_type": "fabric",
                 "sub_role": "fabric",
                 "max_cores": 64,
-                "sub_type": "Supervisor"
+                "subtype": "Supervisor"
             }
         )
 
