@@ -25,7 +25,7 @@ endif
 $(DOCKER_STP)_LOAD_DOCKERS = $(DOCKER_CONFIG_ENGINE_BULLSEYE)
 
 $(DOCKER_STP)_CONTAINER_NAME = stp
-$(DOCKER_STP)_RUN_OPT += --privileged -t
+$(DOCKER_STP)_RUN_OPT += -t --cap-add=NET_ADMIN --cap-add=SYS_ADMIN
 $(DOCKER_STP)_RUN_OPT += -v /etc/sonic:/etc/sonic:ro
 
 $(DOCKER_STP)_BASE_IMAGE_FILES += stpctl:/usr/bin/stpctl
