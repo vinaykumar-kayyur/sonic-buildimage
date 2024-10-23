@@ -97,19 +97,17 @@ class SyslogLogger:
         """
         syslog.closelog()    
 
-#####################################################################################################################################################
-
 class Utility:
     """
     A utility class offering methods for date handling, time delta formatting, and memory size formatting.
     This class also includes enhanced logging and error handling.
     """
     @staticmethod
-    def fetch_current_date(request=None, time_key='ctime', date_format="%Y-%m-%d %H:%M:%S"):
+    def fetch_current_date(request=None, time_key='current_time', date_format="%Y-%m-%d %H:%M:%S"):
         """
         Fetches or parses the current date or a user-specified date.
         :param request: contain none.
-        :param time_key: The key to extract the date from the request (default: 'ctime').
+        :param time_key: The key to extract the date from the request (default: 'current_time').
         :param date_format: The format in which the date should be returned.
         :return: The formatted date string.
         """
@@ -177,8 +175,14 @@ class Utility:
         
         return f"{size}B" if size >= 0 else f"-{size}B"
 
-#######################################################################################################################################################################
 class TimeProcessor:
+    """
+    The TimeProcessor class manages time validation and calculations for data collection within 
+    defined sampling intervals and retention periods. It ensures valid time ranges, corrects date 
+    formats, and calculates differences in days and hours, total duration in minutes/hours, and 
+    remaining days since specified times. Additionally, it processes request data to ensure 
+    compliance with retention limits and sampling requirements.
+    """
     def __init__(self, sampling_interval: int, retention_period: int):
         """
         Initializes TimeProcessor with the provided collection interval and retention period.
@@ -189,7 +193,6 @@ class TimeProcessor:
         self.date_time_format = "%Y-%m-%d %H:%M:%S"
         self.short_date_format = "%Y-%m-%d"
         
-        # Validate input parameters
         if not (3 <= sampling_interval <= 15):
             raise ValueError("Data collection interval must be between 3 and 15 minutes.")
         if not (1 <= retention_period <= 30):
@@ -199,6 +202,12 @@ class TimeProcessor:
         self.retention_period = retention_period
 
     def ensure_valid_time_range(self, request_data: Dict[str, Any]) -> None:
+        """
+        Ensures that the 'from' and 'to' time values in the request data are valid.
+        If 'to' time is earlier than 'from', they are swapped.
+
+        :param request_data: Dictionary containing request parameters including 'from' and 'to' dates.
+        """
         try:
             from_time_str = Utility.fetch_current_date(request_data, 'from', self.date_time_format)
             to_time_str = Utility.fetch_current_date(request_data, 'to', self.date_time_format)
@@ -217,22 +226,41 @@ class TimeProcessor:
             raise ValueError("Invalid 'from' or 'to' date format.") from error
 
     def _parse_and_validate_dates(self, request_data: Dict[str, Any]) -> None:
+        """
+        Parses and validates 'from' and 'to' dates in the request data.
+        If absent, defaults 'to' to the current time and 'from' to the retention period ago.
+
+        :param request_data: Dictionary containing request parameters with potential date values.
+        """
         if not request_data.get('to'):
             request_data['to'] = "now"
         if not request_data.get('from'):
-            request_data['from'] = f"-{self.retention_period} days"  # Use retention period as default for 'from'
+            request_data['from'] = f"-{self.retention_period} days"  
 
         self.ensure_valid_time_range(request_data)
 
     def _fetch_time_values(self, request_data: Dict[str, Any]) -> Dict[str, datetime]:
+        """
+        Fetches and converts 'from', 'to', and current time values from request data.
+
+        :param request_data: Dictionary containing request parameters including time values.
+        :return: Dictionary with start_time, end_time, and current_time as datetime objects.
+        """
         return {
             'start_time': datetime.fromisoformat(Utility.fetch_current_date(request_data, 'from', self.date_time_format)),
             'end_time': datetime.fromisoformat(Utility.fetch_current_date(request_data, 'to', self.date_time_format)),
-            'current_time': datetime.fromisoformat(Utility.fetch_current_date({}, 'ctime', self.date_time_format))
+            'current_time': datetime.fromisoformat(Utility.fetch_current_date({}, 'current_time', self.date_time_format))
         }
 
     def _validate_time_ranges(self, start_time: datetime, end_time: datetime, current_time: datetime, time_difference: timedelta) -> None:
-        """Validates the time ranges provided."""
+        """
+        Validates the provided time ranges to ensure they adhere to defined constraints.
+
+        :param start_time: The start time of the data collection period.
+        :param end_time: The end time of the data collection period.
+        :param current_time: The current time for comparison.
+        :param time_difference: The difference between end_time and start_time.
+        """
         time_difference_obj = Utility.convert_timedelta_to_obj(time_difference)
         
         if end_time > current_time:
@@ -243,6 +271,14 @@ class TimeProcessor:
             raise ValueError(f"Datetime format error: time difference should be at least {self.sampling_interval} minutes.")
 
     def _calculate_day_and_hour_differences(self, start_time: datetime, end_time: datetime, request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Calculates the number of days and hour differences between start and end times.
+
+        :param start_time: The starting point of the data collection period.
+        :param end_time: The ending point of the data collection period.
+        :param request_data: Dictionary containing request parameters for fetching dates.
+        :return: Dictionary containing the number of days and hour differences.
+        """
         start_date_str = Utility.fetch_current_date(request_data, 'from', self.short_date_format)
         end_date_str = Utility.fetch_current_date(request_data, 'to', self.short_date_format)
         
@@ -262,6 +298,12 @@ class TimeProcessor:
         }
 
     def _calculate_total_hours_and_minutes(self, time_diff: timedelta) -> Dict[str, int]:
+        """
+        Calculates the total hours and minutes from a given time difference.
+
+        :param time_diff: The time difference as a timedelta object.
+        :return: Dictionary containing total hours and total minutes.
+        """
         time_diff_obj = Utility.convert_timedelta_to_obj(time_diff)
         total_hours = (time_diff_obj.days * 24) + time_diff_obj.hours
         total_minutes = (time_diff_obj.days * 24 * 60) + (time_diff_obj.hours * 60) + time_diff_obj.minutes
@@ -271,6 +313,13 @@ class TimeProcessor:
         }
 
     def _calculate_remaining_days_since_end(self, end_time: datetime, current_time: datetime) -> Dict[str, int]:
+        """
+        Calculates the remaining days since the end time and prepares related data.
+
+        :param end_time: The ending time of the data collection period.
+        :param current_time: The current time for calculation.
+        :return: Dictionary containing remaining days since end and the next day.
+        """
         time_since_end = current_time - end_time
         time_since_end_obj = Utility.convert_timedelta_to_obj(time_since_end)
         
@@ -280,6 +329,12 @@ class TimeProcessor:
         }
 
     def process_time_information(self, request_data: Dict[str, Any]) -> None:
+        """
+        Main method to process time information from request data.
+        It validates dates, fetches time values, validates time ranges, and calculates various time metrics.
+
+        :param request_data: Dictionary containing request parameters to be processed.
+        """
         self._parse_and_validate_dates(request_data)
 
         time_values = self._fetch_time_values(request_data)
@@ -293,7 +348,6 @@ class TimeProcessor:
         day_and_hour_diffs = self._calculate_day_and_hour_differences(start_time, end_time, request_data)
         total_time = self._calculate_total_hours_and_minutes(time_difference)
 
-        # Use retention period in days
         retention_period_days = self.retention_period
 
         remaining_days_start = (current_time - start_time).days
@@ -314,8 +368,6 @@ class TimeProcessor:
             "start_day": remaining_days_start,
             "end_day": remaining_days_end
         }
-
-###############################################################################################################################################################
 
 class MemoryReportGenerator:
     def __init__(self, request, step):
@@ -410,8 +462,6 @@ class MemoryReportGenerator:
         header += separator
 
         return fmt + header
-
-#################################################################################################################################################################
 
 class MemoryStatisticsCollector:
     def __init__(self, sampling_interval: int, retention_period: int):
@@ -544,10 +594,10 @@ class MemoryStatisticsCollector:
         total_dict['count'] = int(total_dict['count']) + 1
 
         # Update the current time and record
-        ctime = Utility.fetch_current_date()
+        current_time = Utility.fetch_current_date()
 
-        total_dict['ctime'] = ctime
-        mem_dict = {"ctime": ctime, "system_memory": sysmem_dict, "count": 1}
+        total_dict['current_time'] = current_time
+        mem_dict = {"current_time": current_time, "system_memory": sysmem_dict, "count": 1}
 
         if collect_only is True:
             return mem_dict
@@ -570,7 +620,7 @@ class MemoryStatisticsCollector:
     def enforce_retention_policy(self, total_dict):
         """This function enforces a retention policy for memory statistics by identifying and removing entries in total_dict
            that are older than the configured retention period. 
-           total_dict (dict): A dictionary containing memory statistics, where each entry is expected to include a 'ctime' field.
+           total_dict (dict): A dictionary containing memory statistics, where each entry is expected to include a 'current_time' field.
         """
         retention_delta = timedelta(days=self.retention_period)
         current_time = datetime.now()  # Use current time directly
@@ -580,16 +630,16 @@ class MemoryStatisticsCollector:
 
         # Identify and remove entries older than the retention period
         for key in list(total_dict.keys()):
-            if key == 'ctime':
+            if key == 'current_time':
                 continue  # Skip the current time key
 
-            # Ensure the entry has a 'ctime' key
-            if 'ctime' not in total_dict[key]:
-                logging.warning(f"Key '{key}' does not have 'ctime'; skipping.")
+            # Ensure the entry has a 'current_time' key
+            if 'current_time' not in total_dict[key]:
+                logging.warning(f"Key '{key}' does not have 'current_time'; skipping.")
                 continue
             
             try:
-                entry_time = datetime.fromisoformat(total_dict[key]['ctime'])
+                entry_time = datetime.fromisoformat(total_dict[key]['current_time'])
                 if current_time - entry_time > retention_delta:
                     logging.info(f"Removing old memory entry: {key} (age: {current_time - entry_time})")
                     del total_dict[key]
@@ -599,8 +649,6 @@ class MemoryStatisticsCollector:
                 logging.error(f"Invalid date format for entry '{key}': {ve}. Skipping entry.")
             except Exception as e:
                 logging.error(f"Error processing entry '{key}': {e}. Skipping entry.")
-
-###################################################################################################################################################################
 
 class MemoryEntryManager:
     def add_memory_entry(self, request, total_entries_all, global_entries, local_entries, new_entry, item, category, entry_list):
@@ -1014,7 +1062,7 @@ class MemoryStatisticsProcessor:
         This method checks if the memory entry's creation time falls within the specified time range 
         and adds it to the appropriate time group in the summary.
         """
-        rtime = datetime.fromisoformat(memory_entry['ctime'])
+        rtime = datetime.fromisoformat(memory_entry['current_time'])
         if start_time_obj <= rtime <= end_time_obj:
             slot = self.get_time_slot_index(rtime, start_time_obj, step, first_interval_unit, second_interval_unit, first_interval_rate, request_data['duration'])
             if slot < num_columns:
@@ -1150,6 +1198,15 @@ class MemoryStatisticsProcessor:
             raise ValueError(f"Invalid period: {period}")
 
     def calculate_memory_statistics_period(self, memory_statistics_request):
+        """
+        Determines the duration of memory statistics collection based on the provided time range. 
+        Updates the request with the appropriate duration unit (days, hours, or minutes).
+
+        :param memory_statistics_request: Dictionary containing 'from', 'to', and 'time_data' 
+                                        with calculated time metrics.
+        :raises ValueError: If the time interval is zero.
+        :return: Updated memory_statistics_request with the calculated 'duration'.
+        """
         time_info = memory_statistics_request['time_data']
         from_time = memory_statistics_request['from']
         to_time = memory_statistics_request['to']
@@ -1167,19 +1224,23 @@ class MemoryStatisticsProcessor:
 
         return self.generate_memory_statistics(memory_statistics_request)
 
-######################################################################################################################################################################
-
 class SocketHandler:
-    """Handles UNIX socket creation, listening, and request processing."""
+    """Handles the creation, listening, and processing of UNIX socket connections."""
 
     def __init__(self, address, command_handler):
+        """
+        Initializes the SocketHandler with a socket address and a command handler.
+
+        :param address: The file system path for the UNIX socket.
+        :param command_handler: A callable to process commands received through the socket.
+        """
         self.address = address
         self.command_handler = command_handler
         self.listener_socket = None
-        self.listener_thread = None  # Add a listener_thread attribute
+        self.listener_thread = None  
 
     def safe_remove_file(self, filepath):
-        """Remove a file if it exists."""
+        """Remove a file if it exists to avoid socket binding issues."""
         try:
             if os.path.exists(filepath):
                 os.remove(filepath)
@@ -1188,7 +1249,7 @@ class SocketHandler:
             logger.log_error(f"Failed to remove file {filepath}: {e}")
 
     def create_unix_socket(self):
-        """Create and return a UNIX socket with correct permissions."""
+        """Create and bind a UNIX socket, setting the appropriate permissions."""
         self.listener_socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         self.listener_socket.bind(self.address)
         os.chmod(self.address, stat.S_IRWXU | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH | stat.S_IWOTH)
@@ -1196,13 +1257,13 @@ class SocketHandler:
         logger.log_info(f"UNIX socket created and listening at {self.address}")
 
     def send_response(self, connection, response_data):
-        """Send JSON response data to the client."""
+        """Send a JSON-encoded response to the connected client."""
         response_json = json.dumps(response_data)
         connection.sendall(response_json.encode('utf-8'))
         logger.log_debug(f"Sent response: {response_json}")
 
     def handle_connection(self, connection):
-        """Handle a single socket connection."""
+        """Process a single incoming connection, handling requests and sending responses."""
         error_response = {"status": False, "msg": None}
         try:
             request_data = connection.recv(4096)
@@ -1215,10 +1276,8 @@ class SocketHandler:
             command_name = request_json['command']
             command_data = request_json['data']
 
-            # Dynamically call the appropriate function based on the command
             response = self.command_handler(command_name, command_data)
 
-            # Send the response back to the client
             self.send_response(connection, response)
 
         except Exception as error:
@@ -1232,7 +1291,7 @@ class SocketHandler:
             logger.log_debug("Connection closed")
 
     def start_listening(self):
-        """Start listening for incoming socket connections."""
+        """Begin listening for incoming socket connections and process them."""
         self.safe_remove_file(self.address)
         self.create_unix_socket()
 
@@ -1244,78 +1303,98 @@ class SocketHandler:
             except Exception as error:
                 logger.log_error(f"Socket error: {error}")
                 self.safe_remove_file(self.address)
-                time.sleep(1)  # Pause before restarting the listener
-                self.create_unix_socket()
+                time.sleep(1)  
 
     def close_socket(self):
-        """Close the listener socket."""
+        """Close the listener socket gracefully."""
         if self.listener_socket:
             self.listener_socket.close()
             logger.log_info("Listener socket closed.")
-                
+
     def shutdown(self):
-        """Shut down the socket listener and remove the socket file."""
+        """Shut down the socket listener and clean up the socket file."""
         if self.listener_socket:
             self.listener_socket.close()
             logger.log_info("Socket listener shut down.")
         self.safe_remove_file(self.address)
 
-#######################################################################################################################################################################
-
 class Daemonizer:
-    """Handles daemonization of the process."""
+    """Facilitates the daemonization of the process, allowing it to run in the background."""
 
-    def __init__(self,pid_file):
+    def __init__(self, pid_file):
+        """
+        Initializes the Daemonizer with a specified PID file path.
+
+        :param pid_file: The file path where the daemon's process ID (PID) will be stored.
+        """
         self.pid_file = pid_file
 
     def daemonize(self):
-        """Fork the current process to run as a background daemon."""
+        """Fork the current process to run as a background daemon.
+
+        This method performs double-forking to create a daemon process. It:
+        1. Forks the process and exits the parent.
+        2. Creates a new session and forks again to ensure the daemon is not a session leader.
+        3. Writes the daemon's PID to the specified file and redirects standard file descriptors.
+        """
         try:
             pid = os.fork()
             if pid > 0:
-                sys.exit(0)
+                sys.exit(0)  # Exit the parent process
         except OSError as e:
             logger.log_error(f"First fork failed: {e}")
             sys.exit(1)
 
-        os.setsid()
+        os.setsid()  # Start a new session
 
         try:
             pid = os.fork()
             if pid > 0:
-                sys.exit(0)
+                sys.exit(0)  # Exit the first child
         except OSError as e:
             logger.log_error(f"Second fork failed: {e}")
             sys.exit(1)
 
-        # After the second fork, we're in the daemon process
+        # Now in the daemon process
         logger.log_info(f"Daemonization successful with PID: {os.getpid()}")
         self.write_pid_to_file()
         self.redirect_standard_file_descriptors()
 
     def write_pid_to_file(self):
-        """Write the daemon's PID to a file for later management."""
+        """Write the daemon's PID to the specified file for management purposes.
+
+        This method creates or overwrites the PID file with the current process ID
+        to facilitate later management, such as stopping the daemon.
+        """
         with open(self.pid_file, 'w') as f:
             f.write(f"{os.getpid()}\n")
         logger.log_debug(f"Daemon PID written to {self.pid_file}")
 
     def redirect_standard_file_descriptors(self):
-        """Redirect standard file descriptors to /dev/null."""
-        sys.stdout.flush()
-        sys.stderr.flush()
+        """Redirect standard input, output, and error streams to /dev/null.
+
+        This method ensures that the daemon does not retain control of the terminal
+        by redirecting all standard file descriptors to /dev/null, effectively silencing
+        any output or input.
+        """
+        sys.stdout.flush()  
+        sys.stderr.flush()  
         with open(os.devnull, 'r') as devnull:
-            os.dup2(devnull.fileno(), sys.stdin.fileno())
+            os.dup2(devnull.fileno(), sys.stdin.fileno())  
         with open(os.devnull, 'a+') as devnull:
-            os.dup2(devnull.fileno(), sys.stdout.fileno())
-            os.dup2(devnull.fileno(), sys.stderr.fileno())
+            os.dup2(devnull.fileno(), sys.stdout.fileno())  
+            os.dup2(devnull.fileno(), sys.stderr.fileno())  
         logger.log_debug("Standard file descriptors redirected to /dev/null")
 
-#######################################################################################################################################################################
-
 class MemoryStatisticsService:
-    """Orchestrates the Memory Statistics Service with dynamic configuration and signal handling."""
+    """Orchestrates the Memory Statistics Service, managing memory data collection, dynamic configuration, and signal handling."""
 
     def __init__(self, config):
+        """
+        Initializes the MemoryStatisticsService with the provided configuration.
+
+        :param config: A dictionary containing configuration parameters for the service, such as socket address and log directory.
+        """
         self.config = config
         self.memory_statistics_lock = threading.Lock()
         self.socket_handler = SocketHandler(
@@ -1328,7 +1407,14 @@ class MemoryStatisticsService:
         self.reload_event = threading.Event()
 
     def handle_command(self, command_name, command_data):
-        """Handles incoming commands via the socket."""
+        """Handles incoming commands received through the socket.
+
+        Executes the command if it is recognized, otherwise logs a warning and returns an error response.
+
+        :param command_name: The name of the command to execute.
+        :param command_data: The data associated with the command.
+        :return: A response indicating success or failure.
+        """
         if hasattr(self, command_name):
             command_method = getattr(self, command_name)
             return command_method(command_data)
@@ -1337,7 +1423,13 @@ class MemoryStatisticsService:
             return {"status": False, "msg": "Unknown command"}
 
     def memory_statistics_command_request_handler(self, request):
-        """Handles memory Statistics requests."""
+        """Handles requests for memory statistics.
+
+        Collects current memory usage, updates time information, and calculates memory statistics.
+
+        :param request: A dictionary containing request data, including any time-related information.
+        :return: A response containing the calculated memory statistics or an error message.
+        """
         try:
             logger.log_info(f"Received memory statistics request: {request}")
             with self.memory_statistics_lock:
@@ -1361,13 +1453,19 @@ class MemoryStatisticsService:
             return {"status": False, "error": str(error)}
 
     def start_socket_listener(self):
-        """Starts the socket listener in a separate thread."""
+        """Starts the socket listener in a separate thread.
+
+        This method initiates the socket handler's listener thread, enabling the service to process incoming commands.
+        """
         self.socket_handler.listener_thread = threading.Thread(target=self.socket_handler.start_listening, name='SocketListener', daemon=True)
         self.socket_handler.listener_thread.start()
         logger.log_info("Socket listener thread started.")
 
     def collect_memory_statistics(self):
-        """Collects memory statistics at specified intervals."""
+        """Continuously collects memory statistics at specified intervals.
+
+        The method runs in a loop, collecting memory statistics and checking for configuration reloads or shutdown signals.
+        """
         logger.log_info("Starting Memory Statistics Collection")
         while not self.shutdown_event.is_set():
             if self.reload_event.is_set():
@@ -1384,7 +1482,10 @@ class MemoryStatisticsService:
             self.shutdown_event.wait(self.processor.sampling_interval * 60)  # Wait for the configured interval in seconds
 
     def cleanup_old_files(self):
-        """Clean up old log files."""
+        """Cleans up old log files from the log directory.
+
+        This method removes all .gz log files to prevent excessive disk usage and maintain log management.
+        """
         try:
             log_directory = self.config['LOG_DIRECTORY']
             for file in os.listdir(log_directory):
@@ -1399,7 +1500,11 @@ class MemoryStatisticsService:
             logger.log_error(f"Error during log file cleanup process: {e}")
 
     def load_default_settings(self):
-        """Loads default settings for sampling interval and retention period from the config file."""
+        """Loads default settings for sampling interval and retention period from the configuration file.
+
+        This method reads the configuration file and updates the processor's settings with default values,
+        falling back if the settings are not found.
+        """
         logger.log_info("Loading default settings from memory_statistics.conf.")
         
         config = configparser.ConfigParser()
@@ -1407,8 +1512,8 @@ class MemoryStatisticsService:
         
         try:
             # Load the sampling interval and retention period from the config file
-            self.processor.sampling_interval = config.getint('DEFAULT', 'sampling_interval', fallback=3)  # Default to 5 minutes if not set
-            self.processor.retention_period = config.getint('DEFAULT', 'retention_period', fallback=30)   # Default to 15 days if not set
+            self.processor.sampling_interval = config.getint('DEFAULT', 'sampling_interval', fallback=3)  # Default to 3 minutes if not set
+            self.processor.retention_period = config.getint('DEFAULT', 'retention_period', fallback=30)   # Default to 30 days if not set
 
             logger.log_info(f"Default settings loaded: sampling_interval={self.processor.sampling_interval}, retention_period={self.processor.retention_period}")
         except Exception as e:
@@ -1417,8 +1522,11 @@ class MemoryStatisticsService:
             self.processor.retention_period = 15
 
     def load_config_from_db(self):
-        """Loads configuration from a configuration database or file."""
-           
+        """Loads configuration settings from a configuration database.
+
+        This method retrieves the memory statistics configuration from the database and updates
+        the sampling interval and retention period with the retrieved values.
+        """
         self.config_db = ConfigDBConnector()
         self.config_db.connect()  # Connect to ConfigDB
 
@@ -1437,19 +1545,28 @@ class MemoryStatisticsService:
             logger.log_error(f"Failed to reload config from DB: {e}")
 
     def reload_signal_handler(self, signum, frame):
-        """Handles SIGHUP for configuration reload."""
+        """Handles SIGHUP signal for configuration reload.
+
+        Sets the reload event to trigger a configuration reload in the main collection loop.
+        """
         logger.log_info("Received SIGHUP signal, reloading configuration.")
         self.cleanup_old_files()
         self.reload_event.set()
 
     def shutdown_signal_handler(self, signum, frame):
-        """Handles SIGTERM for graceful shutdown."""
+        """Handles SIGTERM signal for graceful shutdown.
+
+        Sets the shutdown event to signal the collection loop to terminate and perform cleanup.
+        """
         logger.log_info("Received SIGTERM signal, shutting down.")
         self.shutdown_event.set()
 
     def run(self):
-        """Runs the Memory Statistics Daemon."""
-        # self.load_default_settings()
+        """Runs the Memory Statistics Daemon.
+
+        Initiates the daemon process, starts the socket listener, sets up signal handlers,
+        and begins collecting memory statistics until a shutdown signal is received.
+        """
         logger.log_info("Starting Memory Statistics Daemon.")
         self.daemonizer.daemonize()
         self.start_socket_listener()
@@ -1463,9 +1580,12 @@ class MemoryStatisticsService:
         self.cleanup_old_files()  # Clean up files during shutdown
         self.socket_handler.shutdown()  # Shut down the socket handler
 
-#######################################################################################################################################################################
-
 if __name__ == '__main__':
+    """
+    Main execution block for the Memory Statistics Daemon.
+    This block initializes the configuration settings for logging and memory statistics,
+    sets up the logger, and starts the memory statistics service daemon.
+    """
     memory_statistics_config = {
         'LOG_DIRECTORY': "/var/log/memory_statistics",
         'MEMORY_STATISTICS_LOG_FILENAME': "/var/log/memory_statistics/memory-stats.log.gz",
@@ -1478,8 +1598,6 @@ if __name__ == '__main__':
         identifier=memory_statistics_config['SYSLOG_ID'],
         log_to_console=memory_statistics_config['SYSLOG_CONSOLE']
     )
-    logging.basicConfig(filename='mem_stats_debug.log', level=logging.DEBUG, 
-                        format='%(asctime)s - %(levelname)s - %(message)s') 
 
     daemon = MemoryStatisticsService(memory_statistics_config)
     daemon.run()
