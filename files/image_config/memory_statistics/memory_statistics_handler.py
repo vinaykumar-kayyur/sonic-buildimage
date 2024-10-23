@@ -1,65 +1,97 @@
-import gzip
 import psutil
 import os
-import sys
 import signal
+import sys
 import time
+import logging
+import gzip
+import json
 import threading
 import configparser
-import logging
+import syslog
+import shutil
+import re
+import math
+import socket
+import stat
+import copy
+from typing import Dict, Any
+from collections import Counter
+from datetime import datetime, timedelta
 from swsscommon.swsscommon import ConfigDBConnector
+import argparse
+import dateparser
+import traceback
 
-class Logger:
+class SyslogLogger:
     """
-    A simple logging utility class for handling log messages.
-    This class provides a flexible logging setup with options to log messages
-    to a file and/or to the console. It supports various logging levels and
-    formats for log messages.
+    A general-purpose logger class for logging messages using syslog.
+    Provides the ability to log messages with different severity levels,
+    and optionally print the messages to the console.
     """
 
-    def __init__(self, log_file, log_level=logging.INFO, log_console=False):
+    def __init__(self, identifier, log_to_console=False):
         """
-        Initializes the Logger instance.
-        Args:
-            log_file (str): Path to the log file.
-            log_level (int): Logging level (default is logging.INFO).
-            log_console (bool): Whether to log messages to the console (default is False).
+        Initializes the logger with a syslog identifier and optional console logging.
+        :param identifier: A string that identifies the syslog entries.
+        :param log_to_console: A boolean indicating whether to also print log messages to the console.
         """
-        self.log_file = log_file
-        self.log_level = log_level
-        self.log_console = log_console
-        self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(log_level)
+        self.syslog_identifier = identifier
+        self.log_to_console = log_to_console
 
-        if not any(isinstance(h, logging.FileHandler) for h in self.logger.handlers):
-            file_handler = logging.FileHandler(self.log_file)
-            file_handler.setLevel(log_level)
-            self.logger.addHandler(file_handler)
+        # Open the syslog connection with the given identifier
+        syslog.openlog(ident=self.syslog_identifier, logoption=syslog.LOG_PID, facility=syslog.LOG_DAEMON)
 
-        if log_console and not any(isinstance(h, logging.StreamHandler) for h in self.logger.handlers):
-            console_handler = logging.StreamHandler()
-            console_handler.setLevel(log_level)
-            self.logger.addHandler(console_handler)
-
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        file_handler.setFormatter(formatter)
-        if log_console:
-            console_handler.setFormatter(formatter)
-
-    def log(self, message, level=logging.INFO):
+    def log(self, level, message):
         """
-        Logs a message with the specified severity level.
-        Args:
-            message (str): The message to log.
-            level (int): The severity level of the log message. Default is logging.INFO.
+        Logs a message to syslog and optionally to the console.
+        :param level: The severity level (e.g., syslog.LOG_ERR, syslog.LOG_INFO, etc.).
+        :param message: The log message to be recorded.
         """
-        {
-            logging.DEBUG: self.logger.debug,
-            logging.INFO: self.logger.info,
-            logging.WARNING: self.logger.warning,
-            logging.ERROR: self.logger.error,
-            logging.CRITICAL: self.logger.critical,
-        }.get(level, self.logger.info)(message)
+        # Log to syslog
+        syslog.syslog(level, message)
+
+        # If console logging is enabled, print the message
+        if self.log_to_console:
+            print(message)
+
+    def log_emergency(self, message):
+        """Logs a message with the 'EMERGENCY' level."""
+        self.log(syslog.LOG_EMERG, message)
+
+    def log_alert(self, message):
+        """Logs a message with the 'ALERT' level."""
+        self.log(syslog.LOG_ALERT, message)
+
+    def log_critical(self, message):
+        """Logs a message with the 'CRITICAL' level."""
+        self.log(syslog.LOG_CRIT, message)
+
+    def log_error(self, message):
+        """Logs a message with the 'ERROR' level."""
+        self.log(syslog.LOG_ERR, message)
+
+    def log_warning(self, message):
+        """Logs a message with the 'WARNING' level."""
+        self.log(syslog.LOG_WARNING, message)
+
+    def log_notice(self, message):
+        """Logs a message with the 'NOTICE' level."""
+        self.log(syslog.LOG_NOTICE, message)
+
+    def log_info(self, message):
+        """Logs a message with the 'INFO' level."""
+        self.log(syslog.LOG_INFO, message)
+
+    def log_debug(self, message):
+        """Logs a message with the 'DEBUG' level."""
+        self.log(syslog.LOG_DEBUG, message)
+
+    def close_logger(self):
+        """
+        Closes the syslog connection.
+        """
+        syslog.closelog()
 
 class MemoryStatisticsDaemon:
     """
@@ -80,7 +112,7 @@ class MemoryStatisticsDaemon:
         self.hdir = "var/log/memory_statistics"
         self.filename = os.path.join(self.hdir, "memory-statistics.log.gz")
         self.log_file = "var/log/memory_statistics_daemon.log"
-        self.logger = Logger(self.log_file, log_console=False)  # Initialize logger
+        self.logger = logger(self.log_file, log_console=False)  # Initialize logger
         os.makedirs(self.hdir, exist_ok=True)  # Ensure memory statistics directory exists
 
         # Set up threading events to control running, reloading, and shutdown behavior
@@ -224,6 +256,16 @@ class MemoryStatisticsDaemon:
 
 
 if __name__ == "__main__":
+
+    memory_statistics_config = {
+        'SYSLOG_ID': "memstats#log",
+        'SYSLOG_CONSOLE': True,
+    }
+    logger = SyslogLogger(
+        identifier=memory_statistics_config['SYSLOG_ID'],
+        log_to_console=memory_statistics_config['SYSLOG_CONSOLE']
+    )
+
     try:
         daemon = MemoryStatisticsDaemon()
         daemon.run()
